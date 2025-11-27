@@ -819,7 +819,7 @@ static void near install_handlers(void)
 {
   /* Initialize the null-pointer check module */
   
-  nullptr();  
+  nullptrcheck();  
 }
 
 

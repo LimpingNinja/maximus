@@ -7,8 +7,12 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <string.h>
-#include <pty.h>
-#include <utmp.h>
+#if defined(__APPLE__) || defined(DARWIN)
+# include <util.h>
+#else
+# include <pty.h>
+# include <utmp.h>
+#endif
 #include "process.h"
 #include "io.h"
 #include "prog.h"

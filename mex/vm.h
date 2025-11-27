@@ -127,7 +127,7 @@ struct _opproc
 #ifdef DEBUGVM
   char *lit;
 #endif
-} __attribute__((packed));
+} /* no packed - contains function pointer that needs alignment on ARM64 */;
 
 
 /* _rtsym - Run-time symbol table (for global references only) */
@@ -164,7 +164,7 @@ vm_extern struct _usrfunc
   char *name;
   word (EXPENTRY *fn)(void);
   VMADDR quad;
-} __attribute__((packed)) *usrfn;
+} *usrfn;
 
 
 /*****************************************************************************
@@ -272,7 +272,7 @@ struct _funcdef
   char *name;
   VMADDR quad;
   struct _funcdef *next;
-} __attribute__((packed));
+} /* no packed - contains pointers */;
 
 
 /* LList of structure used for each function CALLED in our program */
@@ -283,7 +283,7 @@ struct _fcall
   VMADDR quad; /* Quad number FROM WHICH THE FUNCTION WAS CALLED */
   word written; /* Has this already been written to disk? */
   struct _fcall *next;
-} __attribute__((packed));
+} /* no packed - contains pointers */;
 
 
 /*****************************************************************************

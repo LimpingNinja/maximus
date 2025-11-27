@@ -22,7 +22,7 @@ else
     for file in etc/max.ctl etc/areas.bbs etc/compress.cfg etc/squish.cfg etc/sqafix.cfg
     do
       echo " - ${file}"
-      cat "${PREFIX}/${file}" | sed "s;/var/max;${PREFIX};g" > "${PREFIX}/${file}.tmp"
+      LC_ALL=C cat "${PREFIX}/${file}" | LC_ALL=C sed "s;/var/max;${PREFIX};g" > "${PREFIX}/${file}.tmp"
       mv -f "${PREFIX}/${file}.tmp" "${PREFIX}/${file}"
     done
   fi

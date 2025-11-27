@@ -2,7 +2,16 @@ include ../vars.mk
 
 LANGHDR     	:=  ../lang/english.lth
 LANGSRC     	:=  ../lang/english.mad
+# smserial is OS/2-only, skip on UNIX platforms
+ifeq ($(PLATFORM),darwin)
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbt -lmaxdb -lxfer -lcomm -lcompat
+else ifeq ($(PLATFORM),linux)
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbt -lmaxdb -lxfer -lcomm -lcompat
+else ifeq ($(PLATFORM),freebsd)
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbt -lmaxdb -lxfer -lcomm -lcompat
+else
 LOADLIBES	+= -lmexvm -lmsgapi -lsmserial -lmax -lmaxbt -lmaxdb -lxfer -lcomm -lcompat
+endif
 CFLAGS 		+= -USWAP -UOVERLAY_BUILD
 CPPFLAGS	+= -I../lang
 
@@ -96,7 +105,7 @@ max:
 # max2 is the same as max, but most of the object files are
 # moved into an solib, to allow use to track function calls
 # with truss -ulibmax2
-libmax2.so: LD=gcc -shared
+libmax2.so: LD=$(CC) -shared
 max2:	$(MAXOBJ) cppmain.o date.o
 	$(CXX) $(CFLAGS) $(LDFLAGS) $^ -lmax2 $(LOADLIBES) -o $@
 

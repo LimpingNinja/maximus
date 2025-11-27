@@ -21,5 +21,9 @@
 # undef offsetof /* stddef.h has it */
 #endif
 
-#include <malloc.h>
+#if defined(__APPLE__) || defined(DARWIN) || defined(__FreeBSD__)
+# include <stdlib.h>
+#else
+# include <malloc.h>
+#endif
 #include <string.h>

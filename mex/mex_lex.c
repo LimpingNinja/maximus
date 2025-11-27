@@ -72,7 +72,9 @@ int push_fstk(char *fname)
     return FALSE;
   }
 
-  strcpy(filename, fname);
+  /* Avoid overlapping strcpy when fname already points at global filename */
+  if (fname != filename)
+    strcpy(filename, fname);
   fstk[++iStack].name=strdup(fname);
   fstk[iStack].save_linenum=linenum;
   linenum=1;
@@ -506,6 +508,7 @@ static void near process_include(char *name)
   char *mex_include=getenv("MEX_INCLUDE");
   char fname[PATHLEN];
   char *tok, *p;
+  char incbuf[PATHLEN];
 
   if (name==NULL)
   {
@@ -521,13 +524,17 @@ static void near process_include(char *name)
     return;
   }
 
-  if (!fexist(tok))
+  if (!fexist(tok) && mex_include && *mex_include)
   {
-    p=strtok(mex_include, semicolon);
+    /* Work on a copy of MEX_INCLUDE so we don't modify the env buffer */
+    strncpy(incbuf, mex_include, sizeof(incbuf)-1);
+    incbuf[sizeof(incbuf)-1] = '\0';
+
+    p=strtok(incbuf, semicolon);
 
     while (p)
     {
-      strcpy(fname, mex_include);
+      strcpy(fname, p);
       Add_Trailing(fname, PATH_DELIM);
       strcat(fname, tok);
 

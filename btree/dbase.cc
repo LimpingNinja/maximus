@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <new.h>
+#include <new>
 #include "dbase.h"
 
 #ifndef max

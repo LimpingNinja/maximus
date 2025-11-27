@@ -13,7 +13,11 @@ install_libs: libcomm.so
 install: install_libs
 
 libcomm.so: ipcomm.o common.o modemcom.o wincomm.o
-	$(CC) $(CFLAGS) -ggdb -shared $^ -lutil $(LDFLAGS) -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) $(CFLAGS) -ggdb -shared -install_name @rpath/$@ -undefined dynamic_lookup $^ -lutil $(LDFLAGS) -lmax -lcompat -o $@
+else
+	$(CC) $(CFLAGS) -ggdb -shared $^ -lutil $(LDFLAGS) -lmax -lcompat -o $@
+endif
 
 
 clean:

@@ -11,7 +11,11 @@ install_libs: libcompat.so
 install: install_libs
 
 libcompat.so: adcase.o dosio.o winstr.o conio.o viocurses.o dossem.o dosproc.o xpunix.o process.o
-	$(CC) $(CFLAGS) -ggdb -shared $^ -lutil $(LDFLAGS) -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) $(CFLAGS) -ggdb -shared -install_name @rpath/$@ $^ -lutil -lncurses $(LDFLAGS) -o $@
+else
+	$(CC) $(CFLAGS) -ggdb -shared $^ -lutil -lncurses $(LDFLAGS) -o $@
+endif
 
 
 clean:

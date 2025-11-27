@@ -31,7 +31,7 @@
 # include <sys/statvfs.h>
 typedef struct statvfs st_statfs;
 # define statfs(a,b) statvfs(a,b)
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__APPLE__) || defined(DARWIN)
 #include <sys/param.h>
 #include <sys/mount.h>
 typedef struct statfs st_statfs;

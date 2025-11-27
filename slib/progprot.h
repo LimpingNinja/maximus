@@ -53,7 +53,7 @@ char * _fast stristr(char *string,char *search);
 int _fast stristrm(char *string,char *search[],int stopbit);
 int _fast stricmpm(char *string,char *search[],int stopbit);
 long _fast stristrml(char *string,char *search[],long stopbit);
-int _fast nullptr(void);
+int _fast nullptrcheck(void);
 long _stdc timerset(unsigned int duration);
 int _stdc timeup(long timer);
 int _fast sbsearch(char *key,char *base[],unsigned int num);

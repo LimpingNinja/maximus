@@ -145,8 +145,8 @@ unsigned long coreleft(void)
   long pagesAvail;
   long pageSize;
 
-#if defined(__FreeBSD__)
-  /* FreeBSD doesn't have _SC_PAGE_SIZE or _SC_AVPHYS_PAGES, so make up a number */
+#if defined(__FreeBSD__) || defined(__APPLE__) || defined(DARWIN)
+  /* FreeBSD and Darwin don't have _SC_AVPHYS_PAGES, so make up a number */
   pageSize = 64 * 1024;
   pagesAvail = 42;
 #else

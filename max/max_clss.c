@@ -27,7 +27,9 @@
 #include <io.h>
 #include <fcntl.h>
 #include <share.h>
+#if !defined(__APPLE__) && !defined(DARWIN) && !defined(__FreeBSD__)
 #include <malloc.h>
+#endif
 #include "prog.h"
 #include "mm.h"
 #include "max_oldu.h"

@@ -36,11 +36,19 @@ install:	install_libs install_bin
 
 tracklib:	libmaxbt.so libmaxdb.so
 
-libmaxdb.so:	$(TRACK_OBJ)
-		gcc -shared -nostartfiles $^ -o $@
+libmaxdb.so:	$(TRACK_OBJ) libmaxbt.so
+ifeq ($(PLATFORM),darwin)
+		$(CXX) -shared -install_name @rpath/$@ $(TRACK_OBJ) $(LDFLAGS) -lmaxbt -lcompat -o $@
+else
+		$(CXX) -shared $(TRACK_OBJ) $(LDFLAGS) -lmaxbt -lcompat -o $@
+endif
 
 libmaxbt.so:	$(BTREE_OBJ)
-		gcc -shared -nostartfiles $^ -o $@
+ifeq ($(PLATFORM),darwin)
+		$(CXX) -shared -install_name @rpath/$@ $^ $(LDFLAGS) -lcompat -o $@
+else
+		$(CXX) -shared $^ $(LDFLAGS) -lcompat -o $@
+endif
 
 audit:		audit.o cppmain.o
 

@@ -6,7 +6,11 @@ CPPFLAGS += -I../lang
 all: libxfer.so
 
 libxfer.so: $(OBJS)
-	gcc -shared $^ -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) -shared -install_name @rpath/$@ -undefined dynamic_lookup $^ $(LDFLAGS) -lmax -lcompat -o $@
+else
+	$(CC) -shared $^ $(LDFLAGS) -lmax -lcompat -o $@
+endif
 
 install_libs install: libxfer.so
 	cp libxfer.so $(LIB)

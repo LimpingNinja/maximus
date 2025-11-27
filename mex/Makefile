@@ -40,7 +40,11 @@ mex: $(TABOBJ) $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LOADLIBES)
 
 $(VMDLL): $(VMALL_OBJS)
-	gcc -shared $^ -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) -shared -install_name @rpath/$@ -undefined dynamic_lookup $^ $(LDFLAGS) -lmax -lcompat -o $@
+else
+	$(CC) -shared $^ $(LDFLAGS) -lmax -lcompat -o $@
+endif
 
 vm_dll.obj: vm_dll.c
 	$(CC) $(CFLAGS) $(C_DLL) vm_dll

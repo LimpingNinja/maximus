@@ -1,0 +1,54 @@
+# Build output
+build/
+
+# Unpacked data files (from max-3.03-etc.tar.gz)
+install_tree/
+*.o
+*.so
+*.a
+*.dylib
+
+# Generated files
+vars.mk
+vars_local.mk
+slib/compiler_details.h
+depend.mk
+*/depend.mk
+*/depend.mk.bak
+
+# Binaries
+squish/squish
+squish/sqfix
+squish/sqpack
+squish/sqconv
+squish/sqinfo
+squish/sqset
+squish/sstat
+squish/sqreidx
+btree/trackexp
+btree/trackimp
+btree/bttest
+mex/mex
+util/maid
+util/silt
+util/mecca
+util/accem
+util/bldupd
+util/fb
+util/mr
+util/oracle
+util/maxcomm
+max/max
+
+# Editor/IDE
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.DS_Store
+
+# Test files
+*.i00
+*.bts
+trk*

@@ -24,6 +24,15 @@
 # define O_NOINHERIT 0x20000
 #endif
 
+#if defined(__APPLE__) || defined(DARWIN)
+# include <fcntl.h>
+# ifdef O_CLOEXEC
+#  define O_NOINHERIT O_CLOEXEC
+# else
+#  define O_NOINHERIT 0x1000000
+# endif
+#endif
+
 #ifndef O_NOINHERIT
 # error You must choose a value for O_NOINHERIT which does not conflict with other vendor open flags!
 #endif

@@ -26,10 +26,18 @@ squish.o squish: CPPFLAGS += -DINSTALL_PREFIX=\"$(PREFIX)\"
 squish: $(SQUISH_OBJS)
 
 libkillrcat.so: killrcat.o
-	gcc -shared $^ -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) -shared -install_name @rpath/$@ $^ $(LDFLAGS) -lcompat -o $@
+else
+	$(CC) -shared $^ $(LDFLAGS) -lcompat -o $@
+endif
 
 libmsgtrack.so: msgtrack.o
-	gcc -shared $^ -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) -shared -install_name @rpath/$@ $^ $(LDFLAGS) -lcompat -o $@
+else
+	$(CC) -shared $^ $(LDFLAGS) -lcompat -o $@
+endif
 
 install: install_libs install_binaries
 

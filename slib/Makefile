@@ -43,7 +43,16 @@ $(COMP)_misc.obJ vio.obJ align.obJ
 
 .PHONY: all install install_libs
 
+# libsmserial.so is OS/2-specific, skip on UNIX
+ifeq ($(PLATFORM),darwin)
+all: libmax.so
+else ifeq ($(PLATFORM),linux)
+all: libmax.so
+else ifeq ($(PLATFORM),freebsd)
+all: libmax.so
+else
 all: libsmserial.so libmax.so
+endif
 
 #OBJS += dv.obJ       dv_attr.obJ  dv_cls.obJ       \
 #        dv_getxy.obJ dv_goxy.obJ        \
@@ -54,12 +63,25 @@ OBJS := $(OBJS:.obJ=.o) os2file.o os2key.o
 DEPEND_FILES=$(OBJS:.o=.c)
 
 libsmserial.so: smserial.o
-	gcc -shared $^ -o $@
+	$(CC) -shared $^ $(LDFLAGS) -lcompat -o $@
 
 libmax.so: $(OBJS)
-	gcc -shared $^ -o $@
+ifeq ($(PLATFORM),darwin)
+	$(CC) -shared -install_name @rpath/$@ -undefined dynamic_lookup $^ $(LDFLAGS) -lcompat -lncurses -o $@
+else
+	$(CC) -shared $^ $(LDFLAGS) -lcompat -lncurses -o $@
+endif
 
+# Install only what was built for this platform
+ifeq ($(PLATFORM),darwin)
+install_libs: libmax.so
+else ifeq ($(PLATFORM),linux)
+install_libs: libmax.so
+else ifeq ($(PLATFORM),freebsd)
+install_libs: libmax.so
+else
 install_libs: libsmserial.so libmax.so
+endif
 	cp -f $^ "$(LIB)"
 
 install:  install_libs

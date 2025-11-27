@@ -128,7 +128,7 @@ config_install:
 
 	@[ ! -f ${PREFIX}/etc/user.bbs ] || echo "This is not a fresh install -- not creating new user.bbs"
 	@[ -f ${PREFIX}/etc/user.bbs ] || echo "Creating user.bbs"
-	@[ -f ${PREFIX}/etc/user.bbs ] || (cd ${PREFIX} && bin/max etc/max -c || /bin/true)
+	@[ -f ${PREFIX}/etc/user.bbs ] || (cd ${PREFIX} && bin/max etc/max -c || true)
 	@echo
 	@echo "Configuration complete."
 
@@ -147,7 +147,7 @@ reconfig:
 	@cd $(PREFIX) && bin/silt etc/max -x
 
 	@echo " - Compiling MEX files"
-	@cd $(PREFIX)/m && $(foreach FILE, *.mex, ../bin/mex $(FILE:.mex=);)
+	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
 
 	@echo
 	@echo "Pass two"
@@ -163,5 +163,5 @@ build:	squish sqafix max
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::
-	@[ -x /usr/bin/less ] && cat LICENSE | /usr/bin/less || /bin/true
-	@[ ! -x /usr/bin/less ] && cat LICENSE | more || /bin/true
+	@[ -x /usr/bin/less ] && cat LICENSE | /usr/bin/less || true
+	@[ ! -x /usr/bin/less ] && cat LICENSE | more || true

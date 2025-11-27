@@ -679,7 +679,7 @@ int Display_Options(char *first_name, XMSG *msg)
       title_temp=menu.m.title ? MNU(menu, m.title) : name;
       Parse_Outside_Cmd(title_temp, title);
 
-      if (nullptr())
+      if (nullptrcheck())
         Got_A_Null_Pointer(blank_str, menu_name);
 
       if (next_menu_char==-1)

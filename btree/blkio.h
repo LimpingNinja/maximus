@@ -33,7 +33,7 @@ class BLKIO
   unsigned uiBlkSize;                   // Block size for this file
   unsigned fShareLoaded;                // Is SHARE.EXE loaded?
 
-  int BLKIO::position(NNUM nn);
+  int position(NNUM nn);
 
 public:
 

@@ -1,0 +1,16 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     sqfix
+relocations:
+  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _NoMem, symObjAddr: 0x0, symBinAddr: 0x1000028F0, symSize: 0x2C }
+  - { offset: 0x5F, size: 0x8, addend: 0x0, symName: _begin, symObjAddr: 0x72A8, symBinAddr: 0x100008410, symSize: 0x0 }
+  - { offset: 0x74, size: 0x8, addend: 0x0, symName: _here, symObjAddr: 0x72B0, symBinAddr: 0x100008418, symSize: 0x0 }
+  - { offset: 0x89, size: 0x8, addend: 0x0, symName: _free_frames, symObjAddr: 0x7298, symBinAddr: 0x100008400, symSize: 0x0 }
+  - { offset: 0xA5, size: 0x8, addend: 0x0, symName: _damaged_frames, symObjAddr: 0x729C, symBinAddr: 0x100008404, symSize: 0x0 }
+  - { offset: 0xBA, size: 0x8, addend: 0x0, symName: _ok_frames, symObjAddr: 0x72A0, symBinAddr: 0x100008408, symSize: 0x0 }
+  - { offset: 0x7B6, size: 0x8, addend: 0x0, symName: _NoMem, symObjAddr: 0x0, symBinAddr: 0x1000028F0, symSize: 0x2C }
+  - { offset: 0x7CD, size: 0x8, addend: 0x0, symName: _save_lastreads, symObjAddr: 0x2C, symBinAddr: 0x10000291C, symSize: 0x2D4 }
+  - { offset: 0x888, size: 0x8, addend: 0x0, symName: _save_lastreads, symObjAddr: 0x2C, symBinAddr: 0x10000291C, symSize: 0x2D4 }
+  - { offset: 0x13A0, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x300, symBinAddr: 0x100002BF0, symSize: 0xCC8 }
+  - { offset: 0x21BA, size: 0x8, addend: 0x0, symName: _rlcomp, symObjAddr: 0xFC8, symBinAddr: 0x1000038B8, symSize: 0x50 }
+...

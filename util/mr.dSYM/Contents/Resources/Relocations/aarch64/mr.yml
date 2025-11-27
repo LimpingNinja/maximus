@@ -1,0 +1,17 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     mr
+relocations:
+  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _NoMem, symObjAddr: 0x0, symBinAddr: 0x1000029D0, symSize: 0x2C }
+  - { offset: 0x4D, size: 0x8, addend: 0x0, symName: _orig_path, symBinAddr: 0x100008010, symSize: 0x0 }
+  - { offset: 0x73, size: 0x8, addend: 0x0, symName: _orig_disk, symBinAddr: 0x100008008, symSize: 0x0 }
+  - { offset: 0x94, size: 0x8, addend: 0x0, symName: _total, symObjAddr: 0x8AD0, symBinAddr: 0x100008000, symSize: 0x0 }
+  - { offset: 0x556, size: 0x8, addend: 0x0, symName: _NoMem, symObjAddr: 0x0, symBinAddr: 0x1000029D0, symSize: 0x2C }
+  - { offset: 0x56D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x2C, symBinAddr: 0x1000029FC, symSize: 0x398 }
+  - { offset: 0x153B, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x2C, symBinAddr: 0x1000029FC, symSize: 0x398 }
+  - { offset: 0x18E2, size: 0x8, addend: 0x0, symName: _renumber_area, symObjAddr: 0x3D8, symBinAddr: 0x100002DA8, symSize: 0xA74 }
+  - { offset: 0x211C, size: 0x8, addend: 0x0, symName: _restore_dirs, symObjAddr: 0x3C4, symBinAddr: 0x100002D94, symSize: 0x14 }
+  - { offset: 0x2CBF, size: 0x8, addend: 0x0, symName: _lastread, symObjAddr: 0xE4C, symBinAddr: 0x10000381C, symSize: 0x1E4 }
+  - { offset: 0x2EB8, size: 0x8, addend: 0x0, symName: _msgcomp, symObjAddr: 0x1030, symBinAddr: 0x100003A00, symSize: 0x10 }
+  - { offset: 0x2EF5, size: 0x8, addend: 0x0, symName: _msgcomp, symObjAddr: 0x1030, symBinAddr: 0x100003A00, symSize: 0x10 }
+...
