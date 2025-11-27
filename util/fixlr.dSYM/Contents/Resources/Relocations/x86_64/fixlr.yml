@@ -1,8 +1,0 @@
----
-triple:          'x86_64-apple-darwin'
-binary-path:     fixlr
-relocations:
-  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _FixUser, symObjAddr: 0x0, symBinAddr: 0x100000C50, symSize: 0x100 }
-  - { offset: 0x49, size: 0x8, addend: 0x0, symName: _FixUser, symObjAddr: 0x0, symBinAddr: 0x100000C50, symSize: 0x100 }
-  - { offset: 0x305, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x100, symBinAddr: 0x100000D50, symSize: 0x14B }
-...

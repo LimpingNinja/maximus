@@ -1,7 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     setlr
-relocations:
-  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100003AE4, symSize: 0x278 }
-  - { offset: 0xDB, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100003AE4, symSize: 0x278 }
-...

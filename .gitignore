@@ -38,7 +38,21 @@ util/fb
 util/mr
 util/oracle
 util/maxcomm
+util/ansi2bbs
+util/ansi2mec
+util/cvtusr
+util/editcall
+util/fixlr
+util/scanbld
+util/setlr
+sqafix/sqafix
 max/max
+
+# Debug symbol directories (macOS)
+*.dSYM/
+
+# MEX compiled output
+*.vm
 
 # Editor/IDE
 *.swp

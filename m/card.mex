@@ -196,7 +196,7 @@ int sum_cards(struct hand: hnd)
 
 // Take a card off the top of the deck, and return its value
 
-void deal_card(ref struct hand: hnd)
+void deal_card(ref struct hand: h)
 {
   // If we're out of cards, recreate the deck
     
@@ -206,10 +206,10 @@ void deal_card(ref struct hand: hnd)
     shuffle_deck();
   }
   
-  hnd.n_cards:=hnd.n_cards+1;
+  h.n_cards:=h.n_cards+1;
 
-  hnd.cards[hnd.n_cards].face:=deck.cards[deck.n_cards].face;
-  hnd.cards[hnd.n_cards].suit:=deck.cards[deck.n_cards].suit;
+  h.cards[h.n_cards].face:=deck.cards[deck.n_cards].face;
+  h.cards[h.n_cards].suit:=deck.cards[deck.n_cards].suit;
 
   deck.n_cards:=deck.n_cards-1;
 }
@@ -267,7 +267,7 @@ void card_top(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "ÚÄÄÄÄ¿" COL_GRAY " ");
+    print(COL_WHITEONGREEN "ÃšÃ„Ã„Ã„Ã„Â¿" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -282,7 +282,7 @@ void card_bot(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "ÀÄÄÄÄÙ" COL_GRAY " ");
+    print(COL_WHITEONGREEN "Ã€Ã„Ã„Ã„Ã„Ã™" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -297,7 +297,7 @@ void card_mid(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "³    ³" COL_GRAY " ");
+    print(COL_WHITEONGREEN "Â³    Â³" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -321,19 +321,19 @@ void display_cards(ref struct hand: hnd, int: hide_card)
   while (i <= hnd.n_cards)
   {
     if (i <= hide_card)
-      print(COL_WHITEONGREEN "³ úú ³" COL_GRAY " ");
+      print(COL_WHITEONGREEN "Â³ ÃºÃº Â³" COL_GRAY " ");
     else
     {
       // Pad the card's name to three characters
 
-      print(COL_WHITEONGREEN "³ ");
+      print(COL_WHITEONGREEN "Â³ ");
 
       if (hnd.cards[i].suit=5 or hnd.cards[i].suit=6)
         print(COL_BLACKONGREEN);
       else
         print(COL_REDONGREEN);
 
-      print(hnd.cards[i], COL_WHITEONGREEN "³" COL_GRAY " ");
+      print(hnd.cards[i], COL_WHITEONGREEN "Â³" COL_GRAY " ");
     }
 
     i:=i+1;
@@ -540,7 +540,7 @@ int main()
   id.instant_video:=0;
 
   print(AVATAR_CLS COL_LGREEN "Max21 - \"BlackJack\" to the Max!\n");
-  print("ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n\n");
+  print("Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„Ã„\n\n");
 
   print(COL_WHITE "This game was written entirely in " COL_YELLOW "MEX" COL_WHITE ","
         " the " COL_YELLOW "M" COL_WHITE "aximus " COL_YELLOW "EX" COL_WHITE
