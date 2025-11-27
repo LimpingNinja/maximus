@@ -39,7 +39,7 @@
 vm_extern byte pascal regs_1[VM_LEN(MAX_REGS)]; /* Array of virtual regs (bytes) */
 vm_extern word pascal regs_2[VM_LEN(MAX_REGS)]; /* Array of virtual regs (words) */
 vm_extern dword pascal regs_4[VM_LEN(MAX_REGS)]; /* Array of virtual regs (dwords) */
-vm_extern char pascal regs_6[VM_LEN(MAX_REGS)][6]; /* Array of virtual regs (hexwords) */
+vm_extern IADDR pascal regs_6[VM_LEN(MAX_REGS)]; /* Array of virtual regs (IADDR/strings) */
 
 int    EXPENTRY MexExecute(char *pszFile, char *pszArgs, dword fFlag,
                            unsigned short uscIntrinsic, struct _usrfunc *puf,

@@ -233,7 +233,7 @@ ADDRESS GetTemporary(TYPEDESC *td)
   /* Set up the new temporary with some defaults */
   
   new->addr.segment=SEG_TEMP;
-  new->addr.offset=1+(td->size*MAX_TEMP);
+  new->addr.offset=1+TEMP_BASE_FOR_TYPE(td);
   new->addr.indirect=FALSE;
   new->addr.typedesc=td;
   new->next=NULL;
@@ -250,7 +250,7 @@ ADDRESS GetTemporary(TYPEDESC *td)
       /* Now scan this list, to find a gap in the registers allocated */
       
       for (reg=1, last=NULL, tl=t->tlist; 
-           tl && tl->addr.offset==reg+(td->size*MAX_TEMP);
+           tl && tl->addr.offset==reg+TEMP_BASE_FOR_TYPE(td);
            last=tl, tl=tl->next, reg++)
         ;
       
@@ -264,7 +264,7 @@ ADDRESS GetTemporary(TYPEDESC *td)
         last->next=new;
       else t->tlist=new;
 
-      new->addr.offset=reg+(td->size*MAX_TEMP);
+      new->addr.offset=reg+TEMP_BASE_FOR_TYPE(td);
       new->next=tl;
       
       #ifdef DECLDEBUG

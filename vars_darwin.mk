@@ -17,6 +17,13 @@ OS_LIBS		= -lpthread -lncurses
 # makedepend flags for Darwin
 MDFLAGS		+= -D__APPLE__ -D__DARWIN__ -DBSD
 
+# Architecture override (set ARCH=x86_64 for Rosetta testing)
+ifdef ARCH
+CFLAGS		+= -arch $(ARCH)
+CXXFLAGS	+= -arch $(ARCH)
+LDFLAGS		+= -arch $(ARCH)
+endif
+
 # Position-independent code for shared libraries
 CFLAGS		+= -fPIC
 CXXFLAGS	+= -fPIC

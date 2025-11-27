@@ -1,0 +1,15 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     sqinfo
+relocations:
+  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _divider, symObjAddr: 0x0, symBinAddr: 0x1000009B0, symSize: 0x20 }
+  - { offset: 0x4D, size: 0x8, addend: 0x0, symName: _quiet, symObjAddr: 0x4A44, symBinAddr: 0x100003000, symSize: 0x0 }
+  - { offset: 0x70, size: 0x8, addend: 0x0, symName: _findbug, symObjAddr: 0x4A48, symBinAddr: 0x100003004, symSize: 0x0 }
+  - { offset: 0x8C, size: 0x8, addend: 0x0, symName: _batch, symObjAddr: 0x4A4C, symBinAddr: 0x100003008, symSize: 0x0 }
+  - { offset: 0xCD, size: 0x8, addend: 0x0, symName: _divider, symObjAddr: 0x0, symBinAddr: 0x1000009B0, symSize: 0x20 }
+  - { offset: 0xE0, size: 0x8, addend: 0x0, symName: _frtype, symObjAddr: 0x20, symBinAddr: 0x1000009D0, symSize: 0x30 }
+  - { offset: 0x11B, size: 0x8, addend: 0x0, symName: _debug_chain, symObjAddr: 0x50, symBinAddr: 0x100000A00, symSize: 0x710 }
+  - { offset: 0x7BD, size: 0x8, addend: 0x0, symName: _sqvalidate, symObjAddr: 0x760, symBinAddr: 0x100001110, symSize: 0x2D0 }
+  - { offset: 0x9B7, size: 0x8, addend: 0x0, symName: _squishtest, symObjAddr: 0xA30, symBinAddr: 0x1000013E0, symSize: 0x160 }
+  - { offset: 0xC15, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0xB90, symBinAddr: 0x100001540, symSize: 0x122 }
+...

@@ -53,6 +53,18 @@
 #define AR_CONTROL_DATA (sizeof(byte *)+sizeof(VMADDR)) /* Size of word to hold addr + bp */
 #define GLOB_CONTROL_DATA 0             /* Start of global data seg         */
 #define MAX_TEMP        1000            /* Max # of temporaries of one size */
+
+/* Temp register base offsets - form-based, not size-based */
+#define TEMP_BASE_BYTE   1000
+#define TEMP_BASE_WORD   2000
+#define TEMP_BASE_DWORD  4000
+#define TEMP_BASE_ADDR   6000           /* For IADDR/strings regardless of actual size */
+
+/* Map a TYPEDESC to the correct temp register base offset */
+#define TEMP_BASE_FOR_TYPE(td) \
+  ((td)->form == FormString || (td)->form == FormAddr ? TEMP_BASE_ADDR : \
+   (td)->form == FormDword ? TEMP_BASE_DWORD : \
+   (td)->form == FormWord ? TEMP_BASE_WORD : TEMP_BASE_BYTE)
 #define MAX_ID_LEN      32              /* Max length of an identifier      */
 #define MAX_ERRMSG_LEN  180             /* Max length of an err msg         */
 #define SYMTAB_SIZE     512             /* # of symbol table entries        */
@@ -84,12 +96,13 @@
 
 typedef char *string;
 
-typedef dword VMADDR;  /* Virtual machine address */
-#define VMADDR_FORMAT "%ld"
-
-#if 0
-typedef byte * VMADDR;
-#define VMADDR_FORMAT "%p"
+/* VMADDR: Virtual machine address - must be pointer-sized for 64-bit systems */
+#if defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || defined(__aarch64__)
+typedef uint64_t VMADDR;
+#define VMADDR_FORMAT "%llu"
+#else
+typedef dword VMADDR;  /* 32-bit systems */
+#define VMADDR_FORMAT "%lu"
 #endif
 
 typedef byte IDTYPE;

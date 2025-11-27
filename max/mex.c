@@ -187,7 +187,8 @@ static struct _usrfunc _intrinfunc[]=
   {"vidsync",                 intrin_vidsync,                 0},
   {"write",                   intrin_write,                   0},
   {"writeln",                 intrin_writeln,                 0},
-  {"xfertime",                intrin_xfertime,                0}
+  {"xfertime",                intrin_xfertime,                0},
+  {NULL,                      NULL,                           0}  /* Terminator */
 };
 
 /* EnterSymtabBlank

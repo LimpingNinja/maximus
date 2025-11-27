@@ -637,7 +637,7 @@ static void near handle_func_arg(INST *inst, QUADOP op, DATAOBJ *o, DATAOBJ *o2)
   inst->flag |= FLAG_ARG1_ADDR;
 
   if (o->objform==ObjformAddress &&
-      ((int)o2 != 0 || o->form.addr.indirect)) /*SJD Sat  05-18-1991  23:12:41 */
+      (o2 != NULL || o->form.addr.indirect)) /*SJD Sat  05-18-1991  23:12:41 */
   {
     inst->arg1.addr.indirect=TRUE;
   }

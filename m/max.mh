@@ -480,9 +480,10 @@ struct _instancedata
 
 struct _ffind
 {
-    long:           finddata;
+    long:           finddata_lo;   // Pointer split for 64-bit compatibility
+    long:           finddata_hi;   // (C uses 8-byte pointer)
     string:         filename;
-    unsigned long:  filesize;
+    unsigned long:  filesize;      // 4 bytes (C uses dword)
     struct _stamp:  filedate;
     unsigned int:   fileattr;
 };

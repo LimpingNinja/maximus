@@ -387,7 +387,7 @@ static int near add_intrinsic_functions(unsigned short uscIntrinsic,
 
   usrfn=puf;
 
-  for (uf=usrfn, i=(VMADDR)-2L; uf < usrfn+uscIntrinsic; uf++, i--)
+  for (uf=usrfn, i=(VMADDR)-2L; uf < usrfn+uscIntrinsic && uf->name; uf++, i--)
   {
     /* Assign a unique quad number to each intrinsic function */
 

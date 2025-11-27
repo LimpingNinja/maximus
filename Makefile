@@ -83,6 +83,7 @@ clean:
 	$(foreach DIR, $(DIRS) configuration-tests, cd $(DIR) && $(MAKE) -k $@; cd ..; )
 	-rm depend.mk.bak depend.mk
 	-rm */depend.mk.bak */depend.mk
+	-find $(PREFIX)/etc/m -name "*.vm" -delete 2>/dev/null || true
 
 dist-clean distclean: clean
 	-rm slib/compiler_details.h
@@ -103,6 +104,11 @@ max_install: mkdirs
 	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE) install_libs; cd ..; )
 	cd util && $(MAKE)
 	$(foreach DIR, $(PROG_DIRS), cd $(DIR) && $(MAKE) install; cd ..; )
+ifeq ($(PLATFORM),darwin)
+	@echo "Codesigning binaries for macOS..."
+	@for f in $(BIN)/*; do codesign -f -s - "$$f" 2>/dev/null || true; done
+	@for f in $(LIB)/*; do codesign -f -s - "$$f" 2>/dev/null || true; done
+endif
 
 squish:
 	$(foreach DIR, $(SQUISH_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
@@ -148,6 +154,7 @@ reconfig:
 
 	@echo " - Compiling MEX files"
 	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
+	@cp -f $(PREFIX)/m/*.vm $(PREFIX)/etc/m/ 2>/dev/null || true
 
 	@echo
 	@echo "Pass two"
@@ -159,7 +166,7 @@ reconfig:
 
 install: mkdirs squish_install sqafix_install max_install config_install
 
-build:	squish sqafix max
+build:	mkdirs squish sqafix max install_libs
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::

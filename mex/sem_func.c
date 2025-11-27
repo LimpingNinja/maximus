@@ -290,7 +290,7 @@ void GenFuncRet(DATAOBJ *o, ATTRIBUTES *f)
     fret->objform=ObjformAddress;
 
     fret->form.addr.segment=SEG_TEMP;
-    fret->form.addr.offset=fret->type->size*1000;
+    fret->form.addr.offset=TEMP_BASE_FOR_TYPE(fret->type);
     fret->form.addr.indirect=FALSE;
 
     Generate(fret->type==&StringType ? QOP_SCOPY : QOP_ASSIGN, obj, fret, NULL);
@@ -674,7 +674,7 @@ DATAOBJ * EndFuncCall(FUNCCALL *f, DATAOBJ *args)
 
     ret->objform=ObjformAddress;
     ret->form.addr.segment=SEG_TEMP;
-    ret->form.addr.offset=f->func->c.f.ret_type->size*1000;
+    ret->form.addr.offset=TEMP_BASE_FOR_TYPE(f->func->c.f.ret_type);
     ret->form.addr.indirect=FALSE;
     ret->form.addr.typedesc=f->func->c.f.ret_type;
 

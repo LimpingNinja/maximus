@@ -136,7 +136,7 @@ struct mex_usr
   struct mex_stamp  xp_date;    /* If it is past this date, the user has */
                                 /* expired. */
 
-  long    xp_mins;              /* The user has this many minutes left */
+  dword   xp_mins;              /* The user has this many minutes left */
                                 /* before expiring. */
 
   /* XPflag */
@@ -163,9 +163,9 @@ struct mex_usr
                                 /*      -6 = Zmodem */
                                 /*    0-16 = external protocol */
 
-  long    up;                   /* Kilobytes uploaded, for all calls */
-  long    down;                 /* Kilobytes downloaded, for all calls */
-  long    downtoday;            /* Kilobytes downloaded today */
+  dword   up;                   /* Kilobytes uploaded, for all calls */
+  dword   down;                 /* Kilobytes downloaded, for all calls */
+  dword   downtoday;            /* Kilobytes downloaded today */
 
   IADDR   msg;                  /* Current message area */
   IADDR   files;                /* Last message area */
@@ -232,7 +232,7 @@ struct mex_ffind
 {
   struct _ffind * finddata;
   IADDR   filename;
-  long    filesize;
+  dword   filesize;
   struct mex_stamp filedate;
   word    fileattr;
 } __attribute__((packed));
