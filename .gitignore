@@ -1,7 +1,7 @@
 # Build output
 build/
 
-# Unpacked data files (from max-3.03-etc.tar.gz)
+# Unpacked data files (extract from install_tree.tar.gz)
 install_tree/
 *.o
 *.so

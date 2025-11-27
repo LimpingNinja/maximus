@@ -62,8 +62,24 @@ xcode-select --install   # Provides clang, make, bison
 ### Prerequisites
 
 **Important:** The `install_tree/` directory must exist with the base configuration
-files. This is normally included in source distributions. If missing, obtain it
-from the Maximus distribution archives.
+files. This contains the default control files, language files, MEX scripts, help
+screens, and directory structure needed for a working BBS.
+
+If `install_tree/` is missing, extract it from the included archive:
+
+```bash
+tar -xzvf install_tree.tar.gz
+```
+
+The archive contains:
+- `etc/` - Configuration files (max.ctl, access.ctl, menus.ctl, etc.)
+- `etc/lang/` - Language definition files
+- `etc/help/` - Help screen templates (.mec)
+- `etc/misc/` - Display file templates (.mec)
+- `etc/m/` - MEX scripts and headers (.mex, .mh)
+- `etc/rip/` - RIP graphics files
+- `spool/` - Default spool directories for mail/files
+- `man/` - Documentation
 
 ### Quick Start
 
