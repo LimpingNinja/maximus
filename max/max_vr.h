@@ -2,6 +2,9 @@
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
  *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -41,6 +44,10 @@
       #define SLASH_2 "/2"
     #elif defined(NT)
       #define SLASH_2 "/NT"
+    #elif defined(__APPLE__)
+      #define SLASH_2 "/OSX"
+    #elif defined(__linux__)
+      #define SLASH_2 "/LINUX"
     #elif defined(UNIX)
       #define SLASH_2 "/UNIX"
     #else
@@ -55,21 +62,18 @@
 
     #define MAX_VER_INT 3
     #define VER_MAJ     "3"
-    #define VER_MIN     "03"
-    #define TEAR_TEST   "b"
+    #define VER_MIN     "04"
+    #define VER_SUFFIX  "a"   /* "a"=alpha, "b"=beta, "rc1"=release candidate, ""=stable */
 
-    #define VER_CHECKSUM (~'3'+~'0'+~'3')
-    #define NAME_CHEKSUM (~'M'+~'A'+~'X')
-
-    #define VER         VER_MAJ "." VER_MIN
+    #define VER         VER_MAJ "." VER_MIN VER_SUFFIX
 
     #define VERSION     VER
 
     ver_extern char *version VER_IS(VERSION);
     ver_extern char *version_short VER_IS(VER_MAJ);
     ver_extern char *xfer_id VER_IS("Maximus " VERSION);
-    ver_extern char test[VER_LEN(20)] VER_IS(TEAR_TEST "\0\0");
-    ver_extern char tear_ver[VER_LEN(20)] VER_IS(VER TEAR_TEST);
+    ver_extern char test[VER_LEN(20)] VER_IS(VER_SUFFIX "\0\0");
+    ver_extern char tear_ver[VER_LEN(20)] VER_IS(VER);
 
     #undef SLASH_2
     #undef stringize

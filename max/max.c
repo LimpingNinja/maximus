@@ -2,6 +2,9 @@
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
  *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -75,9 +78,25 @@ int _stdc c_main(int argc,char *argv[])
   Init_Variables();
 
 #if defined(UNIX)
-  chdir(INSTALL_PREFIX);
-  if (!getenv("MAXIMUS"))
-    putenv("MAXIMUS=" INSTALL_PREFIX "/etc/max.prm");
+  {
+    char *install_path = getenv("MAX_INSTALL_PATH");
+    
+    /* Use MAX_INSTALL_PATH if set, otherwise default to current directory */
+    if (!install_path)
+      install_path = ".";
+    
+    /* Only chdir if path is not "." (current directory) */
+    if (strcmp(install_path, ".") != 0)
+      chdir(install_path);
+    
+    /* Set MAXIMUS env if not already set */
+    if (!getenv("MAXIMUS"))
+    {
+      static char maximus_env[PATHLEN];
+      snprintf(maximus_env, sizeof(maximus_env), "MAXIMUS=%s/etc/max.prm", install_path);
+      putenv(maximus_env);
+    }
+  }
 #endif
 
   if ((ctlname=(char *)malloc(PATHLEN))==NULL)

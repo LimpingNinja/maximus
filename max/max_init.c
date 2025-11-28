@@ -2,6 +2,9 @@
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
  *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -251,21 +254,6 @@ char * Startup(void)
 
   if (!dsp_set)
     displaymode=prm.video;
-  
-  /* Make sure that the version string is ok */
-
-  if (~version[0]+~version[2]+~version[3] != VER_CHECKSUM ||
-      ~tear_ver[0]+~tear_ver[2]+~tear_ver[3] != VER_CHECKSUM ||
-      ~xfer_id[8]+~xfer_id[10]+~xfer_id[11] != VER_CHECKSUM ||
-      ~tear_ver[0]+~tear_ver[2]+~tear_ver[3] != VER_CHECKSUM ||
-      ~us_short[0]+~toupper(us_short[1])+
-                   ~toupper(us_short[2]) != NAME_CHEKSUM ||
-      ~name[0]+~name[1]+~name[2] != NAME_CHEKSUM ||
-      ~xfer_id[0]+~toupper(xfer_id[1])+~toupper(xfer_id[2]) != NAME_CHEKSUM)
-  {
-    logit(grunged_exe);
-    quit(ERROR_CRITICAL);
-  }
   
   /* Open a couple of files to prepare for the caller */
 

@@ -2,6 +2,9 @@
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
  *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2

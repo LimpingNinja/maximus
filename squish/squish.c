@@ -2,6 +2,9 @@
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
  *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -89,7 +92,16 @@ int _stdc main(int argc, char *argv[])
 
 #ifdef UNIX
   if (!getenv("SQUISH"))
-    putenv("SQUISH=" INSTALL_PREFIX "/etc/squish.cfg");
+  {
+    char *install_path = getenv("MAX_INSTALL_PATH");
+    static char squish_env[PATHLEN];
+    
+    if (!install_path)
+      install_path = ".";
+    
+    snprintf(squish_env, sizeof(squish_env), "SQUISH=%s/etc/squish.cfg", install_path);
+    putenv(squish_env);
+  }
 #endif
 
   if (!fexist(ar.cfgname) && (p=getenv("SQUISH")) != NULL)

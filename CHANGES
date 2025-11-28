@@ -1,30 +1,70 @@
-Tue May 13 02:00:27 EDT 2003 - Maximus/UNIX 3.02 
+Thu Nov 27 23:30:00 PST 2025 - Maximus/UNIX 3.04a [alpha]
 
-	Initial Release, so Tony Summerfelt can play with squish.
-	Current Status: Squish "works for me"
+	Modern macOS/Darwin Revival Release
+	Maintainer: Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+	Current Status: Operational on macOS arm64, builds on x86_64
 
-Sat May 24 00:50:45 EDT 2003 - Maximus/UNIX 3.03a
+	Major Changes:
+		- Full macOS (Darwin) support for arm64 and x86_64 architectures
+		- MEX VM fixed for 64-bit systems (struct alignment, pointer handling)
+		- Removed vestigial anti-tampering checks (VER_CHECKSUM, KEY system)
+		- Added MAX_INSTALL_PATH environment variable for portable installs
+		- Version now includes VER_SUFFIX for consistent release tagging
+		- Platform identification (/OSX, /LINUX) in version strings
 
-	Initial Public Release. Bumped version number 3.03 to avoid confusion.
-	Current Status: Everything but Maximus "works for me"
+	Build System:
+		- Cross-architecture build support (arm64/x86_64 on Apple Silicon)
+		- Release packaging scripts (make-release.sh, make-all-releases.sh)
+		- Version extracted from max/max_vr.h for releases
 
-	Major Problem Areas:
-		- No Installer
-		- Local console output is buggy (always one keystroke behind)
-		- fdcomm.so comm driver is buggy and does not speak telnet 
-		- fdcomm.so comm driver only allows one concurrent session
-		- MexVM crashes regularly on 64-bit arch. Don't know about
-		  32-bit.
+	MEX Compiler/VM Fixes:
+		- Fixed 64-bit pointer alignment in _usrfunc struct
+		- Added NULL terminator to intrinsic function table
+		- Fixed IADDR struct packing for proper string handling
+		- Documented parameter scoping bug in MEX compiler
 
-	Problems Fixed:
-		- Too many to mention.
+	Tested Functionality:
+		- Local console mode (max -c) login and operation
+		- MEX scripts: card.mex, dorinfo.mex, stats.mex, userlist.mex
+		- Tools: maid, silt, mecca, mex compiler
+		- User data structures readable and writable
 
-	Added Features:
-		- max -p2000 makes Maximus listen on TCP port 2000
-		- Added more options to master makefile; now tries to
-		  compiler Maximus control files during make install
-		- Added a simple ./configure script, to try and reduce
-		  confusion among users.
+	Known Issues:
+		- Stability not fully validated across all features
+		- Network/telnet modes untested in this release
+		- Some MEX scripts may need parameter renaming (scoping bug)
+
+Wed Jun 11 11:01:10 EDT 2003, Maximus/UNIX 3.03b [pre-release]
+
+	- More changes to allow support for Sparc and other BIG_ENDIAN 
+	  platforms. Data files are still not binary compatible with other
+	  systems, BEWARE. The Sparc port is at where it is right now in 
+	  order to help me debug the code body; My sun is fast and has a
+	  pleasant development environment, where as my old RedHat
+	  5.2, Alpha UDB box is NOT fast and does NOT have the 
+	  development environment I enjoy.
+
+	- Massive work done on configure script and Makefile rules, to allow
+	  a cleaner "from-scratch" build. Now we detect platform endianness 
+	  rather than trying to read it from C header files (this was causing 
+	  problems for Vince Koen and Andrew Clarke). Make configure_install
+	  should now be smart enough to rebuild all maximus control files
+	  into a useable state, but (theoretically) not overwrite anything
+	  you need.
+
+	- Changed struct _stamp to union _stampu and (hopefully) adjusted
+	  code appropriately. This should allow proper sizing, comparison,
+	  and endianness of the dos date/time stamps, union stamp_combo,
+	  etc. under non-x86 hardware.
+
+	- Fixed lack-of-responsiveness in keyboard/video driver in max -c
+	  and max -k modes, but introduced a bug where the cursor is often
+	  positioned one linefeed lower than it ought to be.
+
+	- Integrated patches from Andrew Clarke to allow building under
+	  FreeBSD.
+
+	- Many other changes; see CVS for details.
 
 Fri Jun  6 20:22:09 EDT 2003 - Maximus/UNIX 3.03b [pre-release]
 
@@ -66,68 +106,30 @@ Fri Jun  6 20:22:09 EDT 2003 - Maximus/UNIX 3.03b [pre-release]
 
 	- Many other changes -- see CVS for complete details.
 
-Wed Jun 11 11:01:10 EDT 2003, Maximus/UNIX 3.03b [pre-release]
+Sat May 24 00:50:45 EDT 2003 - Maximus/UNIX 3.03a
 
-	- More changes to allow support for Sparc and other BIG_ENDIAN 
-	  platforms. Data files are still not binary compatible with other
-	  systems, BEWARE. The Sparc port is at where it is right now in 
-	  order to help me debug the code body; My sun is fast and has a
-	  pleasant development environment, where as my old RedHat
-	  5.2, Alpha UDB box is NOT fast and does NOT have the 
-	  development environment I enjoy.
+	Initial Public Release. Bumped version number 3.03 to avoid confusion.
+	Current Status: Everything but Maximus "works for me"
 
-	- Massive work done on configure script and Makefile rules, to allow
-	  a cleaner "from-scratch" build. Now we detect platform endianness 
-	  rather than trying to read it from C header files (this was causing 
-	  problems for Vince Koen and Andrew Clarke). Make configure_install
-	  should now be smart enough to rebuild all maximus control files
-	  into a useable state, but (theoretically) not overwrite anything
-	  you need.
+	Major Problem Areas:
+		- No Installer
+		- Local console output is buggy (always one keystroke behind)
+		- fdcomm.so comm driver is buggy and does not speak telnet 
+		- fdcomm.so comm driver only allows one concurrent session
+		- MexVM crashes regularly on 64-bit arch. Don't know about
+		  32-bit.
 
-	- Changed struct _stamp to union _stampu and (hopefully) adjusted
-	  code appropriately. This should allow proper sizing, comparison,
-	  and endianness of the dos date/time stamps, union stamp_combo,
-	  etc. under non-x86 hardware.
+	Problems Fixed:
+		- Too many to mention.
 
-	- Fixed lack-of-responsiveness in keyboard/video driver in max -c
-	  and max -k modes, but introduced a bug where the cursor is often
-	  positioned one linefeed lower than it ought to be.
+	Added Features:
+		- max -p2000 makes Maximus listen on TCP port 2000
+		- Added more options to master makefile; now tries to
+		  compiler Maximus control files during make install
+		- Added a simple ./configure script, to try and reduce
+		  confusion among users.
 
-	- Integrated patches from Andrew Clarke to allow building under
-	  FreeBSD.
+Tue May 13 02:00:27 EDT 2003 - Maximus/UNIX 3.02 
 
-	- Many other changes; see CVS for details.
-
-Wed Jun 11 23:58:30 EDT 2003, Maximus/UNIX 3.03b [tagged release]
-
-	- Changes to build under GNU CC 3.2. Biggest problem stems from the
-          requirement for a new shared library when executing C++ code as
-	  of GCC 3.0. This means that programs with C++ components must
-	  either link the library with 'gcc', or be linked with g++.
-	  Unfortunately, GNU Make (3.79.1) doesn't know (and can't know?)
-	  anything about this, so the default (implicit) rules get broken.
-
-	- Changes to try and detect whether to declare timer_t.
-
-	- Changes to the configuration scripts for (yet again) cleaner
-	  building. Extensive from-scratch with my buddy's uber-fast
-	  box. I think it's RedHat 8.0.
-
-	- Bugs fixed with respect to non-/var/max install PREFIX
-
-	- Many other changes; see CVS for details.
-
-Sun Aug 17 01:47:00 CET 2003, Squish, Sqafix and Msgapi
-
- 	- After serveral fixes in the UNIX version of Squish, is Squish pretty
-	  stable under Linux. The fixes includes correction of MSGID Dupe 
-	  checking, file case fixes. The version number is now 1.12.002 BETA
-	  
-	- Sqafix is finally ported, but it's in a very early version on the
-	  UNIX platform. Some of the routines needs to be rewritten.
-	  
-	- Msgapi is considered stable after making UNIX specific changes
-	
-	  
-	  
-	  
+	Initial Release, so Tony Summerfelt can play with squish.
+	Current Status: Squish "works for me"

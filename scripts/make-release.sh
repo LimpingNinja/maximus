@@ -1,6 +1,10 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
 # make-release.sh - Create a release package for Maximus BBS
+#
+# Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+# https://github.com/LimpingNinja
 #
 # Usage: ./scripts/make-release.sh [arch]
 #   arch: arm64, x86_64, or auto (default: auto-detect)
@@ -9,8 +13,18 @@
 set -e
 
 # Configuration
-VERSION="3.03"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Extract version from max/max_vr.h
+VER_MAJ=$(grep '#define VER_MAJ' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
+VER_MIN=$(grep '#define VER_MIN' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
+VER_SUFFIX=$(grep '#define VER_SUFFIX' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
+VERSION="${VER_MAJ}.${VER_MIN}${VER_SUFFIX}"
+
+if [ -z "$VERSION" ] || [ "$VERSION" = "." ]; then
+    echo "Error: Could not extract version from max/max_vr.h"
+    exit 1
+fi
 BUILD_DIR="${PROJECT_ROOT}/build"
 RELEASE_DIR="${PROJECT_ROOT}/release"
 
@@ -129,33 +143,47 @@ create_release_package() {
     rm -rf "$release_path"
     mkdir -p "$release_path"
     
-    # Create directory structure
-    mkdir -p "$release_path/bin"
-    mkdir -p "$release_path/lib"
-    mkdir -p "$release_path/etc"
-    mkdir -p "$release_path/m"
-    mkdir -p "$release_path/log"
-    mkdir -p "$release_path/docs"
+    # Copy fresh install_tree as base (clean config, no user data)
+    log_info "Copying fresh install_tree..."
+    cp -rp "${PROJECT_ROOT}/install_tree/"* "$release_path/"
     
-    # Copy binaries
+    # Replace /var/max paths with relative paths for portable release
+    log_info "Updating config paths..."
+    for file in etc/max.ctl etc/areas.bbs etc/compress.cfg etc/squish.cfg etc/sqafix.cfg; do
+        if [ -f "$release_path/$file" ]; then
+            # Replace both /var/max/ and /var/max (with or without trailing slash)
+            LC_ALL=C sed -i.bak -e "s;/var/max/;./;g" -e "s;/var/max$;.;g" -e "s;/var/max\([^/]\);./\1;g" "$release_path/$file"
+            rm -f "$release_path/$file.bak"
+        fi
+    done
+    
+    # Copy binaries (overwrites empty bin/ from install_tree)
     log_info "Copying binaries..."
     cp -f "${BUILD_DIR}/bin/"* "$release_path/bin/" 2>/dev/null || true
     
-    # Copy libraries
+    # Copy libraries (overwrites empty lib/ from install_tree)
     log_info "Copying libraries..."
     cp -f "${BUILD_DIR}/lib/"*.so "$release_path/lib/" 2>/dev/null || true
     cp -f "${BUILD_DIR}/lib/"*.dylib "$release_path/lib/" 2>/dev/null || true
     
-    # Copy configuration
-    log_info "Copying configuration..."
-    cp -rf "${BUILD_DIR}/etc/"* "$release_path/etc/" 2>/dev/null || true
+    # Copy compiled display files (.bbs) from build
+    log_info "Copying compiled display files..."
+    cp -f "${BUILD_DIR}/etc/misc/"*.bbs "$release_path/etc/misc/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/etc/help/"*.bbs "$release_path/etc/help/" 2>/dev/null || true
     
-    # Copy MEX files
-    log_info "Copying MEX files..."
-    cp -rf "${BUILD_DIR}/m/"* "$release_path/m/" 2>/dev/null || true
+    # Copy compiled language file
+    log_info "Copying compiled language file..."
+    cp -f "${BUILD_DIR}/etc/lang/"*.ltf "$release_path/etc/lang/" 2>/dev/null || true
+    
+    # Copy compiled MEX files (.vm)
+    log_info "Copying compiled MEX files..."
+    mkdir -p "$release_path/etc/m"
+    cp -f "${BUILD_DIR}/m/"*.vm "$release_path/m/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/etc/m/"*.vm "$release_path/etc/m/" 2>/dev/null || true
     
     # Copy documentation
     log_info "Copying documentation..."
+    mkdir -p "$release_path/docs"
     cp -f "${PROJECT_ROOT}/docs/"*.md "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/README"* "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/LICENSE"* "$release_path/docs/" 2>/dev/null || true
@@ -169,10 +197,52 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
 export LD_LIBRARY_PATH="${BASE_DIR}/lib:$LD_LIBRARY_PATH"
 export DYLD_LIBRARY_PATH="${BASE_DIR}/lib:$DYLD_LIBRARY_PATH"
+export MEX_INCLUDE="${BASE_DIR}/m"
 cd "$BASE_DIR"
 exec "${SCRIPT_DIR}/max" etc/max "$@"
 EOF
     chmod +x "$release_path/bin/runbbs.sh"
+    
+    # Create recompile script for end users
+    cat > "$release_path/bin/recompile.sh" << 'EOF'
+#!/bin/bash
+# Recompile all Maximus configuration files
+# Run this after modifying .ctl, .mec, .mad, or .mex files
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BASE_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$BASE_DIR"
+
+export LD_LIBRARY_PATH="${BASE_DIR}/lib:$LD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="${BASE_DIR}/lib:$DYLD_LIBRARY_PATH"
+export MEX_INCLUDE="${BASE_DIR}/m"
+
+echo "=== Recompiling Maximus Configuration ==="
+echo
+
+echo "Step 1: Compiling language file (english.mad)..."
+(cd etc/lang && ../../bin/maid english -p)
+
+echo "Step 2: Compiling help display files (.mec -> .bbs)..."
+bin/mecca etc/help/*.mec
+
+echo "Step 3: Compiling misc display files (.mec -> .bbs)..."
+bin/mecca etc/misc/*.mec
+
+echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
+(cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
+cp -f m/*.vm etc/m/ 2>/dev/null || true
+
+echo "Step 5: Compiling configuration (max.ctl -> max.prm)..."
+bin/silt etc/max -x
+
+echo "Step 6: Re-linking language file..."
+(cd etc/lang && ../../bin/maid english -d -s -p../max)
+
+echo
+echo "=== Recompilation complete ==="
+EOF
+    chmod +x "$release_path/bin/recompile.sh"
     
     # Create README for release
     cat > "$release_path/README.txt" << EOF
@@ -183,19 +253,44 @@ Platform: ${os} (${arch})
 Build Date: $(date +%Y-%m-%d)
 
 Quick Start:
-1. Edit etc/max.ctl to configure your BBS
-2. Run: bin/silt etc/max -p
-3. Run: bin/runbbs.sh
+-----------
+1. Run BBS in local mode:  bin/runbbs.sh -w -pt1
+
+The release comes with pre-compiled configuration files. If you need to 
+modify any configuration, edit the source files and run bin/recompile.sh
 
 Directory Structure:
-  bin/    - Executables
-  lib/    - Shared libraries
-  etc/    - Configuration files
-  m/      - MEX scripts and includes
-  log/    - Log files (created at runtime)
-  docs/   - Documentation
+-------------------
+  bin/      - Executables (max, mex, silt, maid, squish, etc.)
+  lib/      - Shared libraries
+  etc/      - Configuration files
+    *.ctl   - Source config files (edit these)
+    misc/   - Display files (.mec source, .bbs compiled)
+    help/   - Help files (.mec source, .bbs compiled)  
+    lang/   - Language files (.mad source, .ltf compiled)
+  m/        - MEX scripts (.mex source, .vm compiled)
+  spool/    - Message bases and file areas
+  log/      - Log files
+  docs/     - Documentation
 
-For more information, see docs/BUILD.md and docs/64BIT_FIXES.md
+After Modifying Config Files:
+----------------------------
+If you edit .ctl, .mec, .mad, or .mex files, run:
+  bin/recompile.sh
+
+Or manually:
+  bin/mecca etc/misc/*.mec    # Recompile display files
+  bin/maid english -p         # Recompile language (in etc/lang/)
+  bin/mex script.mex          # Recompile a MEX script (in m/)
+  bin/silt etc/max -x         # Recompile main config
+
+Environment Variables:
+---------------------
+  MEX_INCLUDE      - Path to MEX include files (set by runbbs.sh)
+  MAX_INSTALL_PATH - Override install path (default: current directory)
+  AFTER_MAX        - Optional command to run after max exits
+
+For more information, see docs/BUILD.md
 
 EOF
     

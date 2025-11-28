@@ -1,6 +1,10 @@
 #! /bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
 # copy_install_tree.sh - Copy install_tree to PREFIX
+#
+# Copyright (C) 2003 Wes Garland
+# Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
 #
 # Usage: copy_install_tree.sh [PREFIX] [--force]
 #   --force: Overwrite existing files (creates backups)

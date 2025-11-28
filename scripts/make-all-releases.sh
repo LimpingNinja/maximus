@@ -1,6 +1,10 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
 # make-all-releases.sh - Build releases for multiple architectures
+#
+# Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+# https://github.com/LimpingNinja
 #
 # On macOS (Apple Silicon), can build:
 #   - arm64 (native)
