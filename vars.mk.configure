@@ -1,9 +1,10 @@
-CC		= gcc
-CXX		= gcc
-AR		= ar
-RANLIB		= ranlib
-YACC		= yacc
-SED		= sed
+# Allow CC/CXX to be overridden from environment or command line
+CC		?= gcc
+CXX		?= gcc
+AR		?= ar
+RANLIB		?= ranlib
+YACC		?= yacc
+SED		?= sed
 RM		= rm -f
 MV		= mv -f
 BSD_INSTALL	= install
@@ -41,6 +42,10 @@ MDFLAGS		= -D__MAKEDEPEND__
 ifneq (,$(findstring gcc,$(CC)))
 include 	$(SRC)/vars_gcc.mk
 endif
+
+# Export key variables to sub-makes for cross-compilation support
+# This must come AFTER all includes that modify these variables
+export CC CXX AR RANLIB CFLAGS CXXFLAGS LDFLAGS CPPFLAGS ARCH
 
 .PHONY:		top build_debug depend
 

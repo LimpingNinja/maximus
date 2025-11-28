@@ -1,8 +1,10 @@
 # Build output
 build/
+release/
 
-# Unpacked data files (extract from install_tree.tar.gz)
-install_tree/
+# Note: install_tree/ is now tracked for MEX fixes and config updates
+# The install_tree.tar.gz can be regenerated with:
+#   tar -czvf install_tree.tar.gz install_tree/
 *.o
 *.so
 *.a

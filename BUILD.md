@@ -129,6 +129,7 @@ make install
 | `max_install` | Build and install Maximus |
 | `config_install` | Install configuration files |
 | `clean` | Remove build artifacts |
+| `archclean` | Clean + remove build/lib (for cross-arch builds) |
 | `distclean` | Remove all generated files |
 
 ## Library Dependencies
@@ -258,6 +259,30 @@ bin/max etc/max -w -pt1
 bin/max etc/max -w
 ```
 
+### Fresh Install / Reset
+
+To reset to a fresh install state (removes all user data, message bases, etc.):
+
+```bash
+# Option 1: Remove and rebuild PREFIX directory (complete reset)
+rm -rf build/
+./configure --prefix=$(pwd)/build
+make install
+
+# Option 2: Force reinstall config files (backs up existing)
+scripts/copy_install_tree.sh build --force
+cd build && bin/silt etc/max -x
+# Backups saved to build/backup-YYYYMMDD-HHMMSS/
+
+# Option 3: Manual reset of specific directories
+rm -rf build/etc build/m build/spool
+scripts/copy_install_tree.sh build
+cd build && bin/silt etc/max -x
+```
+
+Note: The `m/` directory in the source tree contains the canonical MEX scripts
+with bug fixes applied. The `install_tree/m/` is kept in sync with these fixes.
+
 ### Configuration Workflow
 
 1. Edit `.ctl` files in `etc/` to customize your BBS
@@ -279,7 +304,14 @@ bin/max etc/max -w
 ### General
 - Big-endian platforms may have issues with FidoNet packet handling
 - C++ code in btree/ generates warnings with modern compilers
-- `card.mex` has source code bugs (3 errors) - not a build issue
+
+### MEX Compiler Scope Bug
+
+The MEX compiler has a parameter scoping bug that causes "redeclaration of argument"
+errors when multiple functions use the same parameter name. See `docs/MEX_COMPILER_SCOPE_BUG.md`
+for details. Workaround: use unique parameter names across functions.
+
+`card.mex` has been fixed in the `m/` directory (renamed parameter `hnd` → `h`).
 
 ## Telnet Server
 
@@ -299,16 +331,51 @@ See `docs/` for systemd socket activation examples.
 
 ## Cross-Compilation
 
+### macOS Cross-Architecture (ARM64 ↔ x86_64)
+
+On Apple Silicon Macs, you can build for both architectures:
+
+```bash
+# Native ARM64 build
+make clean
+make install
+
+# x86_64 build (requires Rosetta: softwareupdate --install-rosetta)
+make archclean
+make ARCH=x86_64 install
+```
+
+The `ARCH` variable adds `-arch x86_64` flags to compiler and linker.
+Use `archclean` when switching architectures to remove old libraries.
+
+### Release Packaging
+
+Use the release scripts to create distributable packages:
+
+```bash
+# Build ARM64 release
+./scripts/make-release.sh arm64
+
+# Build x86_64 release  
+./scripts/make-release.sh x86_64
+
+# Build all available architectures
+./scripts/make-all-releases.sh --all
+```
+
+Release packages are created in `release/maximus-VERSION-OS-ARCH.tar.gz`
+
 ### Windows (MinGW)
 
-Not currently supported. Would require:
-- Restoring Windows-specific code paths
-- Creating MinGW build configuration
-- Handling Windows socket API differences
+Windows code exists in the codebase (`#ifdef NT` blocks, `comdll/ntcomm.c`)
+but is not currently buildable. Would require:
+- Creating `Makefile.mingw` build configuration
+- Testing/fixing Windows-specific code paths
+- mingw-w64 cross-compiler: `brew install mingw-w64` (macOS)
 
-### Linux to macOS
+### Linux Cross-Compile
 
-Use osxcross or native macOS for best results.
+Use Docker or native Linux VM for best results.
 
 ## File Locations
 

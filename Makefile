@@ -85,6 +85,11 @@ clean:
 	-rm */depend.mk.bak */depend.mk
 	-find $(PREFIX)/etc/m -name "*.vm" -delete 2>/dev/null || true
 
+# archclean: Also clean build/lib for cross-architecture builds
+archclean: clean
+	-rm -f $(LIB)/*.so $(LIB)/*.dylib $(LIB)/*.a
+	@echo "Architecture-clean complete. Ready for cross-arch build."
+
 dist-clean distclean: clean
 	-rm slib/compiler_details.h
 	-rm vars.mk vars_local.mk
@@ -166,7 +171,7 @@ reconfig:
 
 install: mkdirs squish_install sqafix_install max_install config_install
 
-build:	mkdirs squish sqafix max install_libs
+build:	mkdirs install_libs squish sqafix max
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::
