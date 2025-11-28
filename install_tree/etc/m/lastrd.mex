@@ -1,0 +1,21 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: lastrd.mex
+//
+// Desc: Sample MEX program to display a user's lastread pointer in
+//       a message area.
+//
+// Copyright 1995 by Lanius Corporation.  All rights reserved.
+//
+// $Id: LASTRD.MEX 1.4 1995/07/31 14:55:09 sjd Exp $
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+#include <max.mh>
+
+void main()
+{
+  print(COL_WHITE "\nYour lastread pointer is ", msg.current, ".\n");
+}
+

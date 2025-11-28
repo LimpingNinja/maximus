@@ -1,0 +1,48 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: longpad.mh
+//
+// Desc: MEX header for padding strings of longs
+//
+// Copyright 1990, 1995 by Lanius Corporation.  All rights reserved.
+//
+// $Id: LONGPAD.MH 1.2 1995/04/30 19:02:24 sjd Exp $
+//
+//////////////////////////////////////////////////////////////////////////////
+
+string longpad(long: i, int: len)
+{
+    return strpad(ltostr(i), len, ' ');
+}
+
+string ulongpad(unsigned long: i, int: len)
+{
+    return strpad(ultostr(i), len, ' ');
+}
+
+string longpadleft(long: i, int: len, int: ch)
+{
+        string: itos;
+        string: rc;
+
+        itos:=ltostr(i);
+
+        rc:=strpad("", len - strlen(itos), ch);
+
+        return rc + itos;
+}
+
+string ulongpadleft(unsigned long: i, int: len, int: ch)
+{
+        string: itos;
+        string: rc;
+
+        itos:=ultostr(i);
+
+        rc:=strpad("", len - strlen(itos), ch);
+
+        return rc + itos;
+}
+
+
+

@@ -1,0 +1,14 @@
+; $Id: MEXCHAT.LH 1.2 1995/07/24 14:27:59 sjd Exp $
+; 
+; Language file for MEXChat
+;
+
+#define MEXCHAT_VER 1.0
+
+=mexchat
+
+chat_greets=        "Hi ";
+chat_whoami=        ", this is your sysop\n";
+chat_status=        " MEXChat V" MEXCHAT_VER;
+chat_needremote=    LRED "\nMEXChat can only be used with a remote user.\n";
+

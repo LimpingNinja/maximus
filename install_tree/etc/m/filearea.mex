@@ -1,0 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: filearea.mex
+//
+// Desc: FileAreas replacement when RIP graphics are being used
+//
+// Copyright 1995 by Lanius Corporation.  All rights reserved.
+//
+// $Id: FILEAREA.MEX 1.2 1995/04/27 15:19:46 sjd Exp $
+//
+//////////////////////////////////////////////////////////////////////////////
+
+#include <max.mh>
+#include <rip.mh>
+
+#define FILEAREA
+
+#define ATYPE "FILE"
+#define AREAT _farea
+#define ARVAR farea
+#define AreaFindFirst fileareafindfirst
+#define AreaFindNext  fileareafindnext
+#define AreaFindClose fileareafindclose
+#define AreaSelect    fileareaselect
+
+#include "areachg.mh"
+
+

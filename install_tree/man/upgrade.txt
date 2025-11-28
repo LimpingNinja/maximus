@@ -1,0 +1,177 @@
+                Maximus 3.0 Manual Upgrade Procedure
+                ====================================
+
+This document describes the MANUAL conversion procedure for
+upgrading a Maximus 2.0 system to Maximus 3.0.
+
+In almost all cases, you will want to use the AUTOMATIC conversion
+procedure to do the upgrade.  Only use the MANUAL conversion procedure
+if your Maximus control files are extremely complex and the automatic
+conversion procedure does not convert the control files properly.
+
+Please see the README.1ST file for information on the AUTOMATIC
+upgrade procedure.
+
+Manual upgrade steps
+--------------------
+
+- MAKE A BACKUP OF YOUR ENTIRE SYSTEM.
+
+- Run the install program.  Select "upgrade", but in the upgrade
+  screen, DESELECT all options except for the "Extract 3.0 files"
+  and "convert tag file" options.
+
+* Convert EVENTS file to the new format.  (See the system
+  documentation.)
+
+* MAX.CTL: Remove "Area Data" and "Area Index"; add "MessageData
+  MAREA" and "FileData FAREA".  Change "File Password User.Bbs" to
+  "File Password User".
+
+* Convert msgarea.ctl / filearea.ctl to the new control file format.
+  See the program documentation for more details on the new syntax.
+
+* Edit menus.ctl to change:
+
+        Area_Change File        -> File_Area
+        Contents                -> File_Contents
+        Download                -> File_Download
+        Locate                  -> File_Locate
+        NewFiles                -> File_NewFiles
+        Upload                  -> File_Upload
+        Type                    -> File_View
+        Raw                     -> File_Raw
+        Override_Path           -> File_Override
+        Area_Change Message     -> Msg_Area
+        Enter_Message           -> Msg_Enter
+        Forward                 -> Msg_Forward
+        Xport                   -> Msg_Xport
+        Statistics              -> MEX  m\stats
+
+        Remember that "Area_Change File" becomes just "File_Area",
+        and similarly with "Area_Change Message".  The new commands
+        need no arguments.  The final line should look something
+        like this:
+
+        Msg_Area                                Twit  "Area Change"
+
+        Also, the replacement for the old Statistics command should
+        look something like this:
+
+                MEX     m\stats                 Twit "Statistics"
+
+* Add the following to MENU MESSAGE:
+
+  NoDsp   Msg_Change                                 Twit "`46"   ; alt-c
+  NoDsp   Read_Previous                              Twit "`75"   ; left
+  NoDsp   Read_Original                              Twit "`115"  ; ctrl-left
+  NoDsp   Read_Next                                  Twit "`77"   ; right
+  NoDsp   Read_Reply                                 Twit "`116"  ; ctrl-right
+  NoDsp   Msg_Reply                                  Twit "`16"   ; alt-q
+  NoDsp   Msg_Reply                                  Twit "`19"   ; alt-r
+  NoDsp   Msg_Kill                                   Twit "`37" "="; alt-k
+  %Msg_Download_Attach                           Disgrace "!Download Attaches"
+  %Msg_Reply_Area  .                             Disgrace "&Reply Elsewhere"
+
+* Remove all "MenuHeader" lines from MENUS.CTL.
+
+* Add the following to the MESSAGE, FILE, CHAT and CHANGE menus
+  (respectively):
+
+  HeaderFile :m\headmsg
+  HeaderFile :m\headfile
+  HeaderFile :m\headchat
+  HeaderFile :m\headchg
+
+* In MAX.CTL, revise "Format {Msg/File}Format" to use "%-20"
+  instead of "%-9.9".
+
+* Add to the SYSTEM section of MAX.CTL:
+        %File Callers    Callers
+        MCP Pipe        \pipe\maximus\mcp
+        MCP Sessions    16
+        File Access     Access
+
+* Remove these statements from the SESSION section of MAX.CTL:
+        Userlist Minimum
+        Userlist Maximum
+        Ratio Threshold
+        Upload Reward
+        Define <priv> <keyword>
+
+* Add these statements to the SESSION section of MAX.CTL:
+
+        Check    RIP
+        MaxMsgSize      8192
+        Min RIP Baud    65535
+        RIP Path        RIP
+        Track Base      Trk
+        Track View      Sysop
+        Track Modify    Sysop
+        Uses EntryHelp  Misc\Msgentry
+        Uses HeaderHelp Misc\Hdrentry
+        Attach Base     Att
+        Attach Path     Attaches
+        Attach Archiver ZIP
+        Kill Attach Ask Normal
+
+* Add this statement to the MATRIX section of MAX.CTL:
+
+    Message Edit Ask LocalAttach Normal
+
+* Add "Include Access.Ctl" immediately after the "End System
+  Section" line in MAX.CTL.
+
+* Add to the READER menu in menus.ctl:
+
+          Msg_Restrict                          Disgrace "Restrict Date"
+
+* Remove all of the following lines from colours.ctl:
+
+    Menu        {Name,Highlight,Text}
+    Hotflash    {Bar,More,Clear}
+    File        {Name,Size,Date,Desc,Find,Offline,New}
+    Message     {From,FromTxt,To,ToTxt,Subj,SubjTxt,Attrib,Date,
+                 Address,Locus,Body,Quote,Kludge}
+    FSR         {MsgNum,MsgLinks,Attribute,MsgInfo,Date,Address,Static,
+                 Border}
+
+* Add "set maximus=d:\path\max.prm" to autoexec.bat (DOS) or
+  config.sys (OS/2).
+
+* Remove all "Define xxx" statements from the SESSION section of
+  max.ctl.
+
+* Change to your \max\olr\dats directory and run "del *.*". This
+  will cause a one-time loss of the users' off-line reader area
+  mappings.  Users who upload packets which are replies to messages
+  created by Max 2.x will be prompted to enter a new area when
+  uploading those packets.
+
+* Change to your \max directory and run "cvtusr -p".
+
+* Change to your \max\rip directory, "mecca *.mec" and "mecca
+  *.mer".
+
+* Change to your \max\misc directory, and "mecca *.mec".
+
+* Change to your \max\hlp directory, and "mecca *.mec".
+
+* Change to your \max\lang directory, and "maid english".
+
+* Change to your \max\m directory, and enter at the command prompt:
+
+  for %f in (*.mex) do mex %f
+
+  (If you run this from a .bat or .cmd file, replace "%f" with
+  "%%f".)
+
+* Change to your \max directory and run:
+
+  silt max -u
+
+* Change to your \max directory and run:
+
+  fb -a
+
+                                ###

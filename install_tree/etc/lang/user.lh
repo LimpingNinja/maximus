@@ -1,0 +1,6 @@
+; $Id: USER.LH 1.2 1995/04/27 15:19:15 sjd Exp $
+; Include file for user language heaps
+
+#include <../m/mexbank.lh>
+#include <../m/mexchat.lh>
+
