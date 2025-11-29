@@ -202,7 +202,9 @@ static void near Logo(char *key_info)
 
   mdm_dump(DUMP_INPUT);
 
-  Putc('\n');
+  /* Only output newline for modem/serial - socket connections are clean */
+  if (!tcpip)
+    Putc('\n');
 
 #ifdef EMSI
   EmsiTxFrame(EMSI_IRQ);

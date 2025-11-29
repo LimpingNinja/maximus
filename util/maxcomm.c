@@ -1,3 +1,15 @@
+/*
+ * maxcomm - Telnet to UNIX socket bridge for Maximus BBS
+ *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * https://github.com/LimpingNinja
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -16,6 +28,8 @@
 #include "../comdll/telnet.h"
 
 static int transmit_binary = 0;
+static int telnet_mode = 0;     /* Client supports telnet negotiation */
+static int ansi_mode = 0;       /* Client supports ANSI escape codes */
 
 int to_read (int fd, char* buf, int count, int timeout)
 {
@@ -199,37 +213,172 @@ int writeWIAC(int fd, unsigned char* buf, int count)
 
 
 
-void negotiateTelnetOptions(int preferBinarySession)
+/*
+ * detectAndNegotiate - Auto-detect client capabilities and negotiate accordingly
+ *
+ * Sends two probes:
+ *   1. ESC[6n (ANSI Device Status Report - cursor position query)
+ *   2. IAC DO SGA (Telnet Suppress Go Ahead request)
+ *
+ * Waits 200ms for responses:
+ *   - IAC response -> telnet client, full negotiation
+ *   - ESC[...R response -> ANSI terminal, skip telnet
+ *   - Neither -> dumb terminal, raw mode
+ *
+ * All probe responses are consumed and discarded to prevent them
+ * from leaking to Maximus.
+ */
+void detectAndNegotiate(int preferBinarySession)
 {
-  unsigned char command[4];  /* 3 bytes + null terminator */
-
-  /* Send all telnet options without blocking reads.
-   * Responses are handled by telnetInterpret() in the main loop.
-   */
+  unsigned char probe[8];
+  unsigned char buf[256];
+  int buflen = 0;
+  fd_set rfds;
+  struct timeval tv;
+  int n, i;
+  int got_iac = 0;
+  int got_ansi = 0;
   
-  command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_ENVIRON;
-  write(1, command, 3);
+  /* Print detection message */
+  write(1, "\r\nDetecting terminal...", 24);
+  
+  /* Send Telnet probe first: IAC DO SGA */
+  probe[0] = cmd_IAC;
+  probe[1] = cmd_DO;
+  probe[2] = opt_SGA;
+  write(1, probe, 3);
+  
+  /* Wait briefly for telnet response */
+  tv.tv_sec = 0;
+  tv.tv_usec = 150000;  /* 150ms */
+  
+  FD_ZERO(&rfds);
+  FD_SET(0, &rfds);
+  
+  while (select(1, &rfds, NULL, NULL, &tv) > 0)
+  {
+    n = read(0, buf + buflen, sizeof(buf) - buflen - 1);
+    if (n <= 0) break;
+    buflen += n;
+    
+    /* Reset for next select iteration - wait for more data */
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+    tv.tv_sec = 0;
+    tv.tv_usec = 50000;  /* 50ms more for additional chunks */
+  }
+  
+  /* Check if we got telnet response */
+  for (i = 0; i < buflen; i++)
+  {
+    if (buf[i] == cmd_IAC)
+    {
+      got_iac = 1;
+      break;
+    }
+  }
+  
+  /* If telnet detected, assume ANSI (telnet clients almost always support ANSI) */
+  if (got_iac)
+  {
+    got_ansi = 1;  /* Assume ANSI for telnet clients */
+  }
+  else
+  {
+    /* No telnet - send ANSI probe to check for ANSI support */
+    probe[0] = 0x1B;  /* ESC */
+    probe[1] = '[';
+    probe[2] = '6';
+    probe[3] = 'n';
+    write(1, probe, 4);
+    
+    /* Wait for ANSI response */
+    buflen = 0;
+    tv.tv_sec = 0;
+    tv.tv_usec = 200000;  /* 200ms */
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+    
+    while (select(1, &rfds, NULL, NULL, &tv) > 0)
+    {
+      n = read(0, buf + buflen, sizeof(buf) - buflen - 1);
+      if (n <= 0) break;
+      buflen += n;
+      FD_ZERO(&rfds);
+      FD_SET(0, &rfds);
+      tv.tv_sec = 0;
+      tv.tv_usec = 50000;
+    }
+    
+    /* Check for ANSI response (ESC[...R) */
+    for (i = 0; i < buflen; i++)
+    {
+      if (buf[i] == 0x1B && i + 1 < buflen && buf[i+1] == '[')
+      {
+        got_ansi = 1;
+        break;
+      }
+    }
+  }
+  
+  /* Set global mode flags */
+  telnet_mode = got_iac;
+  ansi_mode = got_ansi;
+  
+  /* Clear any garbage on the line, then report detection results */
+  /* ESC[2K = clear entire line, \r = return to start of line */
+  write(1, "\x1B[2K\rDetecting terminal...", 26);
+  
+  if (got_iac && got_ansi)
+    write(1, " Telnet+ANSI\r\n", 14);
+  else if (got_iac)
+    write(1, " Telnet\r\n", 9);
+  else if (got_ansi)
+    write(1, " ANSI\r\n", 7);
+  else
+    write(1, " Raw\r\n", 6);
+  
+  /* Drain any remaining input that might have arrived late */
+  tv.tv_sec = 0;
+  tv.tv_usec = 50000;  /* 50ms */
+  FD_ZERO(&rfds);
+  FD_SET(0, &rfds);
+  while (select(1, &rfds, NULL, NULL, &tv) > 0)
+  {
+    n = read(0, buf, sizeof(buf));
+    if (n <= 0) break;
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+    tv.tv_sec = 0;
+    tv.tv_usec = 50000;
+  }
+  
+  /* Only send full telnet negotiation if client responded to IAC */
+  if (telnet_mode)
+  {
+    unsigned char command[4];
+    
+    command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_ENVIRON;
+    write(1, command, 3);
 
-  command[0] = cmd_IAC; command[1] = cmd_DO; command[2] = opt_SGA;
-  write(1, command, 3);
+    command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_ECHO;
+    write(1, command, 3);
 
-  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_ECHO;
-  write(1, command, 3);
+    command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_SGA;
+    write(1, command, 3);
 
-  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_SGA;
-  write(1, command, 3);
+    command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_NAWS;
+    write(1, command, 3);
 
-  command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_NAWS;
-  write(1, command, 3);
+    if (preferBinarySession)
+    {
+      command[0] = cmd_IAC; command[1] = cmd_DO; command[2] = opt_TRANSMIT_BINARY;
+      write(1, command, 3);
 
-  if (!preferBinarySession)
-    return;
-
-  command[0] = cmd_IAC; command[1] = cmd_DO; command[2] = opt_TRANSMIT_BINARY;
-  write(1, command, 3);
-
-  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_TRANSMIT_BINARY;
-  write(1, command, 3);
+      command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_TRANSMIT_BINARY;
+      write(1, command, 3);
+    }
+  }
 }
 
 int fexist(char* filename)
@@ -306,7 +455,7 @@ int main(void)
 	exit(1);
     }
     
-    negotiateTelnetOptions(1);    
+    detectAndNegotiate(1);    
 
     for(;;)
     {
