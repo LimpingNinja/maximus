@@ -68,3 +68,5 @@ max/max
 *.i00
 *.bts
 trk*
+docs/FDCOMM_ANALYSIS.md
+.gitignore
