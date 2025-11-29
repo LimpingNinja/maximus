@@ -8,6 +8,11 @@ For now, new tasks appear at the top, and disappear into the CHANGES file.
 
 Programmer	Task Description					Status
 --------------- ------------------------------------------------------- --------------
+Kevin Morgan	util/maxcomm.c telnetInterpret() improvements:		Not Started
+		- Blocking to_read() + sleep(1) causes delays
+		- Default case passes through bytes after IAC (wrong)
+		- No response to option requests (doesn't send WILL/WONT)
+		- No persistent state: IAC at buffer boundary not handled
 Wes Garland	Modify ./configure replace PREFIX in default configs	Not Started
 Unassigned	Verify that config files ctl/ match max-3.03-etc.tar.gz Not Started
 Unassigned	Change /var/max to PREFIX in default config files	Not Started

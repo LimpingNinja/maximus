@@ -20,14 +20,58 @@ This fork focuses on getting Maximus compiling and running on modern systems - p
 - Local login via `max -c`
 
 **In Progress:**
-- Telnet server integration (maxcomm exists but needs testing)
 - Cross-compilation targets for other platforms
 - Packaging and release automation
 
 **Untested:**
 - Linux builds (should work, just haven't tried recently)
 - FreeBSD/Solaris (historically supported)
-- Actual telnet connectivity
+
+## Telnet Access
+
+Maximus supports telnet connections via `maxcomm`, which bridges TCP connections to Maximus's UNIX sockets.
+
+### Quick Setup
+
+```bash
+cd build
+
+# Start Maximus nodes (in screen sessions with TTY)
+./bin/start-nodes.sh 4    # Start 4 nodes
+
+# Start telnet listener
+socat TCP-LISTEN:2323,fork,reuseaddr EXEC:"./bin/maxcomm"
+
+# Connect
+telnet localhost 2323
+```
+
+### Scripts
+
+- **`max-node.sh <N>`** - Runs a single Maximus node in a loop. Restarts after each session ends. Designed to run inside screen/tmux.
+- **`start-nodes.sh [count]`** - Spawns multiple nodes using screen. Default: 4 nodes.
+
+### How It Works
+
+1. Each `max` instance runs with `-w -pt<N>` and creates a UNIX socket (`maxipc<N>`)
+2. `maxcomm` finds an available socket and bridges the telnet connection to it
+3. When the session ends, `max-node.sh` restarts the node for the next caller
+
+### Manual Node Management
+
+```bash
+# Start a single node manually
+screen -dmS max1 ./bin/max-node.sh 1
+
+# List running screen sessions
+screen -ls
+
+# Attach to a node's screen session
+screen -r max1
+
+# Stop all nodes
+screen -S max1 -X quit
+```
 
 ## Quick Start
 

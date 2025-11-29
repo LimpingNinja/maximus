@@ -201,43 +201,35 @@ int writeWIAC(int fd, unsigned char* buf, int count)
 
 void negotiateTelnetOptions(int preferBinarySession)
 {
-  unsigned char command[3];
-  int 		ch;
+  unsigned char command[4];  /* 3 bytes + null terminator */
 
-  ch = read(0, &ch, 1);	/* Get the ball rolling */
+  /* Send all telnet options without blocking reads.
+   * Responses are handled by telnetInterpret() in the main loop.
+   */
+  
+  command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_ENVIRON;
+  write(1, command, 3);
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_DONT, opt_ENVIRON);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
+  command[0] = cmd_IAC; command[1] = cmd_DO; command[2] = opt_SGA;
+  write(1, command, 3);
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_DO, opt_SGA);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
+  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_ECHO;
+  write(1, command, 3);
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_WILL, opt_ECHO);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
+  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_SGA;
+  write(1, command, 3);
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_WILL, opt_SGA);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
-
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_DONT, opt_NAWS);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
+  command[0] = cmd_IAC; command[1] = cmd_DONT; command[2] = opt_NAWS;
+  write(1, command, 3);
 
   if (!preferBinarySession)
     return;
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_DO, opt_TRANSMIT_BINARY);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
+  command[0] = cmd_IAC; command[1] = cmd_DO; command[2] = opt_TRANSMIT_BINARY;
+  write(1, command, 3);
 
-  sprintf(command, "%c%c%c", cmd_IAC, cmd_WILL, opt_TRANSMIT_BINARY);
-  write(0, command, 3);
-    ch = read(0, &ch, 1);
-
-  return;
+  command[0] = cmd_IAC; command[1] = cmd_WILL; command[2] = opt_TRANSMIT_BINARY;
+  write(1, command, 3);
 }
 
 int fexist(char* filename)
@@ -269,32 +261,52 @@ int main(void)
         exit(1);
     }
 
-    dir = opendir(getcwd(tmptext, 128));
+    if (getcwd(tmptext, 128) == NULL)
+    {
+        perror("getcwd");
+        exit(1);
+    }
+    
+    dir = opendir(tmptext);
+    if (dir == NULL)
+    {
+        perror("opendir");
+        exit(1);
+    }
 
+    remote.sun_path[0] = '\0';  /* Initialize to empty */
+    
     while((dirp = readdir(dir)))
     {
         if(strstr(dirp->d_name, "maxipc") 
            && !strstr(dirp->d_name, ".lck"))
         {
-    	    sprintf(lockpath, "%s.lck", dirp->d_name);
+    	    sprintf(lockpath, "%s/%s.lck", tmptext, dirp->d_name);
 	    if(fexist(lockpath))
 	        continue;        
 	    
-	    strcpy(remote.sun_path, dirp->d_name);
+	    /* Use absolute path for socket */
+	    snprintf(remote.sun_path, sizeof(remote.sun_path), "%s/%s", tmptext, dirp->d_name);
     	    remote.sun_family = AF_UNIX;
 	    break;
 	}
     }
+    closedir(dir);
+    
+    if (remote.sun_path[0] == '\0')
+    {
+        fprintf(stderr, "No available Maximus nodes found in %s\n", tmptext);
+        exit(1);
+    }
 
-    negotiateTelnetOptions(1);
-
-
-    len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+    len = sizeof(remote);
     if (connect(s, (struct sockaddr *)&remote, len) == -1) 
     {
 	perror("Sorry no more free nodes!");
 	exit(1);
-    }    
+    }
+    
+    negotiateTelnetOptions(1);    
 
     for(;;)
     {

@@ -244,6 +244,12 @@ echo "=== Recompilation complete ==="
 EOF
     chmod +x "$release_path/bin/recompile.sh"
     
+    # Copy telnet helper scripts
+    log_info "Copying telnet scripts..."
+    cp -f "${PROJECT_ROOT}/scripts/max-node.sh" "$release_path/bin/"
+    cp -f "${PROJECT_ROOT}/scripts/start-nodes.sh" "$release_path/bin/"
+    chmod +x "$release_path/bin/max-node.sh" "$release_path/bin/start-nodes.sh"
+    
     # Create README for release
     cat > "$release_path/README.txt" << EOF
 Maximus BBS v${VERSION}
@@ -252,9 +258,20 @@ Maximus BBS v${VERSION}
 Platform: ${os} (${arch})
 Build Date: $(date +%Y-%m-%d)
 
-Quick Start:
------------
-1. Run BBS in local mode:  bin/runbbs.sh -w -pt1
+Quick Start (Local Mode):
+------------------------
+  bin/runbbs.sh -c
+
+Quick Start (Telnet):
+--------------------
+  # Start Maximus nodes (requires 'screen')
+  bin/start-nodes.sh 4
+
+  # Start telnet listener (requires 'socat')
+  socat TCP-LISTEN:2323,fork,reuseaddr EXEC:"./bin/maxcomm"
+
+  # Connect
+  telnet localhost 2323
 
 The release comes with pre-compiled configuration files. If you need to 
 modify any configuration, edit the source files and run bin/recompile.sh
@@ -283,6 +300,18 @@ Or manually:
   bin/maid english -p         # Recompile language (in etc/lang/)
   bin/mex script.mex          # Recompile a MEX script (in m/)
   bin/silt etc/max -x         # Recompile main config
+
+Telnet Scripts:
+--------------
+  bin/max-node.sh <N>    - Run a single node in a loop (use inside screen/tmux)
+  bin/start-nodes.sh [n] - Start n nodes using screen (default: 4)
+  bin/maxcomm            - Bridges telnet connections to Maximus sockets
+
+How Telnet Works:
+----------------
+  1. Each max instance creates a UNIX socket (maxipc<N>)
+  2. maxcomm finds an available socket and bridges the connection
+  3. When session ends, max-node.sh restarts for the next caller
 
 Environment Variables:
 ---------------------
