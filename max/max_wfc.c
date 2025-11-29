@@ -860,7 +860,7 @@ static void near Update_Callers(void)
 
 static void near Update_Lastuser(void)
 {
-  char temp[80];
+  char temp[PATHLEN];
   struct _usr user;
   int lu;
 

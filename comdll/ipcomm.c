@@ -110,6 +110,7 @@ static char rcs_id[]="$Id: ipcomm.c,v 1.18 2004/06/06 21:46:58 paltas Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -376,7 +377,10 @@ BOOL COMMAPI IpComClose(HCOMM hc)
 
   hc->fDCD = FALSE;		/* TCP/IP shutdown: remove "carrier" signal */
 
-  if(hc->device)
+  /* Only free device if it looks like a valid heap pointer.
+   * Small values (< 0x1000) are likely corrupted/uninitialized.
+   */
+  if(hc->device && (uintptr_t)hc->device > 0x1000)
      free((char *)hc->device);
   if(hc)
      free(hc);
