@@ -63,7 +63,7 @@
     #define MAX_VER_INT 3
     #define VER_MAJ     "3"
     #define VER_MIN     "04"
-    #define VER_SUFFIX  "a"   /* "a"=alpha, "b"=beta, "rc1"=release candidate, ""=stable */
+    #define VER_SUFFIX  "a-r2"   /* "a"=alpha, "b"=beta, "rc1"=release candidate, ""=stable */
 
     #define VER         VER_MAJ "." VER_MIN VER_SUFFIX
 

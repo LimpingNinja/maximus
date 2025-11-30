@@ -16,9 +16,9 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Extract version from max/max_vr.h
-VER_MAJ=$(grep '#define VER_MAJ' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
-VER_MIN=$(grep '#define VER_MIN' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
-VER_SUFFIX=$(grep '#define VER_SUFFIX' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*"\([^"]*\)".*/\1/')
+VER_MAJ=$(grep '#define VER_MAJ' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_MAJ[[:space:]]*"\([^"]*\)".*/\1/')
+VER_MIN=$(grep '#define VER_MIN' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_MIN[[:space:]]*"\([^"]*\)".*/\1/')
+VER_SUFFIX=$(grep '#define VER_SUFFIX' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_SUFFIX[[:space:]]*"\([^"]*\)".*/\1/')
 VERSION="${VER_MAJ}.${VER_MIN}${VER_SUFFIX}"
 
 if [ -z "$VERSION" ] || [ "$VERSION" = "." ]; then
