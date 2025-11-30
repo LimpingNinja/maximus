@@ -34,7 +34,8 @@ SQAFIX_LIB_DIRS = msgapi sqafix
 MAX_LIB_DIRS	= slib unix msgapi mex prot comdll 
 LIB_DIRS	= $(SQUISH_LIB_DIRS) $(SQAFIX_LIB_DIRS) $(MAX_LIB_DIRS)
 PROG_DIRS	= squish max mex util 
-DIRS		= $(LIB_DIRS) $(PROG_DIRS) sqafix
+MAXTEL_DIR	= maxtel
+DIRS		= $(LIB_DIRS) $(PROG_DIRS) sqafix $(MAXTEL_DIR)
 NO_DEPEND_RULE	:= TRUE
 
 topmost:: header usage
@@ -43,7 +44,7 @@ include vars.mk
 MAXIMUS=$(PREFIX)/etc/max.prm
 
 .PHONY: all depend clean install mkdirs squish max install_libs install_binaries \
-	usage topmost build config_install configure reconfig sqafix
+	usage topmost build config_install configure reconfig sqafix maxtel maxtel_install
 
 header::
 	@echo "Maximus-CBCS Master Makefile"
@@ -71,6 +72,8 @@ usage::
 	@echo "         sqafix_install build and install SqaFix"
 	@echo "         max            build maximus"
 	@echo "         max_install    build and install maximus"
+	@echo "         maxtel         build maxtel supervisor"
+	@echo "         maxtel_install build and install maxtel"
 	@echo
 
 mkdirs:
@@ -127,6 +130,13 @@ max:
 	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
 	cd util && $(MAKE)
 	$(foreach DIR, $(PROG_DIRS), cd $(DIR) && $(MAKE); cd ..; )
+
+maxtel:
+	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
+	cd maxtel && $(MAKE)
+
+maxtel_install: mkdirs maxtel
+	cd maxtel && $(MAKE) install
 
 configure:
 	./configure "--prefix=$(PREFIX)"
