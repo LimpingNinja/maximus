@@ -99,10 +99,10 @@ void Msg_Xport(void)
     fprintf(out, xp_hdr1, MAS(mah, name),  msgnum, MsgDate(&msg, temp));
 
     fprintf(out, xp_hdr2, msg.from, lf, 
-            doit ? Address(&msg.orig) : blank_str, ri);
+            doit ? (char *)Address(&msg.orig) : blank_str, ri);
 
     fprintf(out, xp_hdr3, msg.to,   lf, 
-            doit ? Address(&msg.dest) : blank_str, ri);
+            doit ? (char *)Address(&msg.dest) : blank_str, ri);
 
     fprintf(out, xp_hdr4, msg.subj);
   }

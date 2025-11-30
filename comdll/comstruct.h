@@ -25,6 +25,6 @@ struct _hcomm
   telnet_moption_t      telnetPendingOptions;   /**< Unprocessed option requests from remote */
   telnet_moption_t      telnetOptions;          /**< Current telnet options (bitmask) */
 #endif
-} _hcomm;
+};  /* struct _hcomm */
 
 

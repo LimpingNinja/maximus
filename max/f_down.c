@@ -331,7 +331,7 @@ int File_Get_Download_Names(int do_tag,sword protocol)
 
             sprintf(temp,
                     fn_format,
-                    *fpath ? fpath : FAS(fah, downpath),
+                    *fpath ? (char *)fpath : FAS(fah, downpath),
                     MAX_FN_LEN, 
                     ff->szName);
 

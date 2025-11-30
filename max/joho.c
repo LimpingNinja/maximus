@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: joho.c,v 1.4 2004/01/27 21:00:29 paltas Exp $";
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <io.h>
 #include <fcntl.h>
 #include <sys/types.h>

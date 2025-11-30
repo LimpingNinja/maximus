@@ -1,14 +1,14 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -33,133 +31,94 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Tokens.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
+#ifndef YY_YY_MEX_TAB_H_INCLUDED
+# define YY_YY_MEX_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     T_BYTE = 258,
-     T_WORD = 259,
-     T_DWORD = 260,
-     T_STRING = 261,
-     T_VOID = 262,
-     T_BEGIN = 263,
-     T_END = 264,
-     T_IF = 265,
-     T_THEN = 266,
-     T_ELSE = 267,
-     T_GOTO = 268,
-     T_WHILE = 269,
-     T_DO = 270,
-     T_FOR = 271,
-     T_STRUCT = 272,
-     T_DOT = 273,
-     T_ELLIPSIS = 274,
-     T_LPAREN = 275,
-     T_RPAREN = 276,
-     T_LBRACKET = 277,
-     T_RBRACKET = 278,
-     T_REF = 279,
-     T_RETURN = 280,
-     T_COMMA = 281,
-     T_SEMICOLON = 282,
-     T_COLON = 283,
-     T_ARRAY = 284,
-     T_RANGE = 285,
-     T_OF = 286,
-     T_UNSIGNED = 287,
-     T_SIGNED = 288,
-     T_SIZEOF = 289,
-     T_ASSIGN = 290,
-     T_LOR = 291,
-     T_LAND = 292,
-     T_EQUAL = 293,
-     T_NOTEQUAL = 294,
-     T_GT = 295,
-     T_GE = 296,
-     T_LT = 297,
-     T_LE = 298,
-     T_BOR = 299,
-     T_BAND = 300,
-     T_SHR = 301,
-     T_SHL = 302,
-     T_MINUS = 303,
-     T_BPLUS = 304,
-     T_BMODULUS = 305,
-     T_BDIVIDE = 306,
-     T_BMULTIPLY = 307,
-     T_CONSTBYTE = 308,
-     T_CONSTWORD = 309,
-     T_CONSTDWORD = 310,
-     T_CONSTSTRING = 311,
-     T_ID = 312
-   };
+  enum yytokentype
+  {
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    T_BYTE = 258,                  /* T_BYTE  */
+    T_WORD = 259,                  /* T_WORD  */
+    T_DWORD = 260,                 /* T_DWORD  */
+    T_STRING = 261,                /* T_STRING  */
+    T_VOID = 262,                  /* T_VOID  */
+    T_BEGIN = 263,                 /* T_BEGIN  */
+    T_END = 264,                   /* T_END  */
+    T_IF = 265,                    /* T_IF  */
+    T_THEN = 266,                  /* T_THEN  */
+    T_ELSE = 267,                  /* T_ELSE  */
+    T_GOTO = 268,                  /* T_GOTO  */
+    T_WHILE = 269,                 /* T_WHILE  */
+    T_DO = 270,                    /* T_DO  */
+    T_FOR = 271,                   /* T_FOR  */
+    T_STRUCT = 272,                /* T_STRUCT  */
+    T_DOT = 273,                   /* T_DOT  */
+    T_ELLIPSIS = 274,              /* T_ELLIPSIS  */
+    T_LPAREN = 275,                /* T_LPAREN  */
+    T_RPAREN = 276,                /* T_RPAREN  */
+    T_LBRACKET = 277,              /* T_LBRACKET  */
+    T_RBRACKET = 278,              /* T_RBRACKET  */
+    T_REF = 279,                   /* T_REF  */
+    T_RETURN = 280,                /* T_RETURN  */
+    T_COMMA = 281,                 /* T_COMMA  */
+    T_SEMICOLON = 282,             /* T_SEMICOLON  */
+    T_COLON = 283,                 /* T_COLON  */
+    T_ARRAY = 284,                 /* T_ARRAY  */
+    T_RANGE = 285,                 /* T_RANGE  */
+    T_OF = 286,                    /* T_OF  */
+    T_UNSIGNED = 287,              /* T_UNSIGNED  */
+    T_SIGNED = 288,                /* T_SIGNED  */
+    T_SIZEOF = 289,                /* T_SIZEOF  */
+    T_ASSIGN = 290,                /* T_ASSIGN  */
+    T_LAND = 291,                  /* T_LAND  */
+    T_LOR = 292,                   /* T_LOR  */
+    T_NOTEQUAL = 293,              /* T_NOTEQUAL  */
+    T_EQUAL = 294,                 /* T_EQUAL  */
+    T_LE = 295,                    /* T_LE  */
+    T_LT = 296,                    /* T_LT  */
+    T_GE = 297,                    /* T_GE  */
+    T_GT = 298,                    /* T_GT  */
+    T_SHL = 299,                   /* T_SHL  */
+    T_SHR = 300,                   /* T_SHR  */
+    T_BAND = 301,                  /* T_BAND  */
+    T_BOR = 302,                   /* T_BOR  */
+    T_BPLUS = 303,                 /* T_BPLUS  */
+    T_MINUS = 304,                 /* T_MINUS  */
+    T_BMULTIPLY = 305,             /* T_BMULTIPLY  */
+    T_BDIVIDE = 306,               /* T_BDIVIDE  */
+    T_BMODULUS = 307,              /* T_BMODULUS  */
+    T_CONSTBYTE = 308,             /* T_CONSTBYTE  */
+    T_CONSTWORD = 309,             /* T_CONSTWORD  */
+    T_CONSTDWORD = 310,            /* T_CONSTDWORD  */
+    T_CONSTSTRING = 311,           /* T_CONSTSTRING  */
+    T_ID = 312                     /* T_ID  */
+  };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
-#define T_BYTE 258
-#define T_WORD 259
-#define T_DWORD 260
-#define T_STRING 261
-#define T_VOID 262
-#define T_BEGIN 263
-#define T_END 264
-#define T_IF 265
-#define T_THEN 266
-#define T_ELSE 267
-#define T_GOTO 268
-#define T_WHILE 269
-#define T_DO 270
-#define T_FOR 271
-#define T_STRUCT 272
-#define T_DOT 273
-#define T_ELLIPSIS 274
-#define T_LPAREN 275
-#define T_RPAREN 276
-#define T_LBRACKET 277
-#define T_RBRACKET 278
-#define T_REF 279
-#define T_RETURN 280
-#define T_COMMA 281
-#define T_SEMICOLON 282
-#define T_COLON 283
-#define T_ARRAY 284
-#define T_RANGE 285
-#define T_OF 286
-#define T_UNSIGNED 287
-#define T_SIGNED 288
-#define T_SIZEOF 289
-#define T_ASSIGN 290
-#define T_LOR 291
-#define T_LAND 292
-#define T_EQUAL 293
-#define T_NOTEQUAL 294
-#define T_GT 295
-#define T_GE 296
-#define T_LT 297
-#define T_LE 298
-#define T_BOR 299
-#define T_BAND 300
-#define T_SHR 301
-#define T_SHL 302
-#define T_MINUS 303
-#define T_BPLUS 304
-#define T_BMODULUS 305
-#define T_BDIVIDE 306
-#define T_BMULTIPLY 307
-#define T_CONSTBYTE 308
-#define T_CONSTWORD 309
-#define T_CONSTDWORD 310
-#define T_CONSTSTRING 311
-#define T_ID 312
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
-#line 193 "mex_tab.y"
+union YYSTYPE
 {
+#line 193 "mex_tab.y"
+
           IDTYPE *id;
           TYPEDESC *typedesc;
           ATTRIBUTES *attrdesc;
@@ -175,14 +134,21 @@ typedef union YYSTYPE
           OPTTYPE opt;
           FORTYPE fr;
           word size;
-        }
-/* Line 1529 of yacc.c.  */
-#line 181 "mex_tab.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+        
+
+#line 140 "mex_tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
 #endif
+
 
 extern YYSTYPE yylval;
 
+
+int yyparse (void);
+
+
+#endif /* !YY_YY_MEX_TAB_H_INCLUDED  */

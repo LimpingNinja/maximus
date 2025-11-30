@@ -69,7 +69,7 @@ libmax.so: $(OBJS)
 ifeq ($(PLATFORM),darwin)
 	$(CC) -shared -install_name @rpath/$@ -undefined dynamic_lookup $^ $(LDFLAGS) -lcompat -lncurses -o $@
 else
-	$(CC) -shared $^ $(LDFLAGS) -lcompat -lncurses -o $@
+	$(CC) -shared -Wl,--allow-shlib-undefined $^ $(LDFLAGS) -lcompat -lncurses -o $@
 endif
 
 # Install only what was built for this platform

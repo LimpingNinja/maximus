@@ -22,9 +22,8 @@
 #include <stdio.h>
 #include "prog.h"
 
-int __dll_initialize(void)
+__dll_initialize(void)
 {
   grow_handles(40);
-  return 1;
 }
 

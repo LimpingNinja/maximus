@@ -19,6 +19,9 @@
 #include "comstruct.h"
 #include "comprots.h"
 
+/* Logging function from max/log.c - needed for modem operations */
+extern void cdecl logit(char *format, ...);
+
 static char filename[128];
 static char lockname[128];
 

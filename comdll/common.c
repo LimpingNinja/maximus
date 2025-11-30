@@ -10,7 +10,8 @@
 
 extern int tcpip;
 
-extern struct CommApi_ CommApi;
+/* Definition of CommApi - declared extern in ntcomm.h */
+struct CommApi_ CommApi;
 
 void SetCommApi()
 {

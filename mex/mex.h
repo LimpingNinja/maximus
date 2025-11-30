@@ -26,6 +26,7 @@
 #ifndef __TYPEDEFS_H_DEFINED
 #include "typedefs.h"
 #endif
+#include <stdint.h>  /* For uint64_t */
 
 
 #ifdef OS_2
@@ -231,7 +232,7 @@ typedef struct _iaddr
 
 typedef struct _opttype
 {
-  word bool;
+  word boolval;  /* Renamed from 'bool' - conflicts with C23 keyword */
 } __attribute__((packed)) OPTTYPE;
 
 typedef struct _symtab

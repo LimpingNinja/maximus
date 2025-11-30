@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
@@ -22,13 +23,13 @@ int main(int argc, char *argv[])
 
   if (sizeof(int) != sizeof(test))
   {
-    fprintf(stderr, "Error: Size of int is %i; size of union is %i!\n", sizeof(int), sizeof(test));
+    fprintf(stderr, "Error: Size of int is %zu; size of union is %zu!\n", sizeof(int), sizeof(test));
     exit(1);
   }
 
   if (sizeof(int) != 4)
   {
-    fprintf(stderr, "Error: Size of int is %i; expecting 4\n", sizeof(int));
+    fprintf(stderr, "Error: Size of int is %zu; expecting 4\n", sizeof(int));
     exit(2);
   }
 

@@ -29,9 +29,9 @@
 #
 #
 
-SQUISH_LIB_DIRS = btree slib unix msgapi squish
+SQUISH_LIB_DIRS = btree unix slib msgapi squish
 SQAFIX_LIB_DIRS = msgapi sqafix
-MAX_LIB_DIRS	= slib unix msgapi mex prot comdll 
+MAX_LIB_DIRS    = unix slib msgapi mex prot comdll 
 LIB_DIRS	= $(SQUISH_LIB_DIRS) $(SQAFIX_LIB_DIRS) $(MAX_LIB_DIRS)
 PROG_DIRS	= squish max mex util 
 MAXTEL_DIR	= maxtel
@@ -179,9 +179,9 @@ reconfig:
 	@sleep 2 # Quell Warnings in max
 	@cd $(PREFIX) && bin/silt etc/max -p
 
-install: mkdirs squish_install sqafix_install max_install config_install
+install: mkdirs squish_install sqafix_install max_install maxtel_install config_install
 
-build:	mkdirs install_libs squish sqafix max
+build:	mkdirs install_libs squish sqafix max maxtel
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::

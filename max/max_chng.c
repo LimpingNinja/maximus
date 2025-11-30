@@ -422,7 +422,7 @@ void Chg_Alias(void)
 
   cfancy_str(temp);
 
-  strncpy(usr.alias, *temp ? temp : usr.name, sizeof(usr.alias)-1);
+  strncpy(usr.alias, *temp ? temp : (char *)usr.name, sizeof(usr.alias)-1);
   usr.alias[sizeof(usr.alias)-1]='\0';
 
   SetUserName(&usr, usrname);

@@ -65,7 +65,7 @@ struct _feat_init
                                                      * SEE BELOW!           */
   ULONG ulFlag;                                     /* Flags filled in by   *
                                                      * DLL.                 */
-} _feat_init;
+};
 
 /* NOTE!  The format of the string passed to the LogMsg function must be
  * as follows:

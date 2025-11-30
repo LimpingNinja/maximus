@@ -67,4 +67,11 @@ void fixPathMove(char *filename);
 int sopen(const char *filename, int openMode, int shacc, ...);
 long tell(int fd);
 int fputchar(int c);
+
+/* DOS/OS2 spawn compatibility - P_WAIT means wait for child */
+#ifndef P_WAIT
+#define P_WAIT 0
+#endif
+int spawnlp(int mode, const char *cmdname, const char *arg0, ...);
+
 #endif

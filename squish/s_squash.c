@@ -350,7 +350,7 @@ int Merge_Pkts(byte *from,byte *to)
   if ((fromfile=sopen(from, O_RDONLY | O_BINARY, SH_DENYNO, S_IREAD | S_IWRITE))==-1)
     return -1;
   
-  if ((tofile=open(to, O_RDWR | O_BINARY, SH_DENYNO, S_IREAD | S_IWRITE))==-1 ||
+  if ((tofile=sopen(to, O_RDWR | O_BINARY, SH_DENYNO, S_IREAD | S_IWRITE))==-1 ||
       lseek(tofile, -(long)sizeof(word), SEEK_END)==-1 ||
       read(tofile, (char *)&tempint, (unsigned)sizeof(word)) != (int)sizeof(word) ||
       tempint != 0 ||

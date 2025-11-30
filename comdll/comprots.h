@@ -41,6 +41,7 @@ BOOL COMMAPI ModemComOpen(LPTSTR pszDevice, HCOMM *phc, DWORD dwRxBuf,
 DWORD dwTxBuf);
 BOOL COMMAPI ModemComClose(HCOMM hc);
 USHORT COMMAPI ModemComIsOnline(HCOMM hc);
+int ModemComIsOnlineNow(HCOMM hc);
 BOOL COMMAPI ModemComWrite(HCOMM hc, PVOID pvBuf, DWORD dwCount);
 BOOL COMMAPI ModemComRead(HCOMM hc, PVOID pvBuf, DWORD dwBytesToRead, 
 PDWORD pdwBytesRead);

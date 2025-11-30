@@ -33,6 +33,11 @@ static char rcs_id[]="$Id: vm_heap.c,v 1.6 2005/10/19 10:57:10 paltas Exp $";
 #include "prog.h"
 #include "vm.h"
 
+/* Forward declaration for heap check function */
+#ifdef HEAP_PROBLEMS
+int hpcheck(void);
+#endif
+
 
 void hpinit(void)
 {

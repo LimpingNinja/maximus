@@ -46,6 +46,10 @@
 #include "prog.h"
 #include "wincomm.h"
 
+/* Stub functions for modem DTR control - not implemented for Unix telnet */
+static void ModemRaiseDTR(int fd, int baud, int rts) { (void)fd; (void)baud; (void)rts; }
+static void ModemLowerDTR(int fd) { (void)fd; }
+
 /** UNIX approximation for information referenced in Windows by
  *  an hfComm/COMMHANDLE. In Windows, this is basically like a
  *  file descriptor (HFILE) with the extra settings being magically

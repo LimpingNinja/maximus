@@ -116,6 +116,7 @@ int  mdm_blockwrite(int max_chars, char *offset);
     word carrier(void);
     word real_carrier(void);
     int GetConnectionType(void);
+    int ModemComIsOnlineNow(HCOMM hc);
 #else
 
     #ifdef __WATCOMC__  /* in-line FOSSIL call */

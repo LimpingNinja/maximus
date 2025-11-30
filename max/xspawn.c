@@ -12,6 +12,9 @@
 #include "process.h"
 #include "io.h"
 
+/* Forward declaration for Puts from max_out.c */
+extern void Puts(char *s);
+
 #define unixfd(hc)      FileHandle_fromCommHandle(ComGetHandle(hc))
 
 static void noop(int sig)

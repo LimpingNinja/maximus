@@ -70,22 +70,18 @@
 
 #define NW(var) (void)var
 
-#if defined(__GNUC__) && (__GNUC__ > 2) && (__GNU_MINOR__ > 0)
-# define __dll_initialize(...)	dll_initialize(__VA_ARGS__)__attribute__((constructor))__
-# define __dll_terminate(...)	dll_terminate(__VA_ARGS__)__attribute__((destructor))__
+/* DLL init/fini - _init/_fini conflict with glibc on modern Linux.
+ * Use constructor/destructor attributes instead. */
+#if defined(__GNUC__)
+# define DLL_CONSTRUCTOR __attribute__((constructor))
+# define DLL_DESTRUCTOR  __attribute__((destructor))
 #else
-# define __dll_initialize	_init
-# define __dll_terminate	_fini
+# define DLL_CONSTRUCTOR
+# define DLL_DESTRUCTOR
 #endif
-
-/* _init and _fini *should work* but can cause problems. Best fix: GCC 3.1+ 
- *
- * later comments -- looks like Scott doesn't use DLL initialization
- * much anyhow -- wes
-#if defined(__GNUC__) && !((__GNUC__ > 2) && (__GNU_MINOR__ > 0))
-# warning You need to upgrade your compiler to gcc 3.1 or better!
-#endif
-*/
+/* Legacy macro - expands to a static constructor function */
+# define __dll_initialize DLL_CONSTRUCTOR static void _maximus_dll_init_func
+# define __dll_terminate  DLL_DESTRUCTOR static void _maximus_dll_fini_func
 
 #define mkdir(a) mkdir(a, 0777)
 #endif /* ! __COMPILER_UNIX_H_DEFINED */

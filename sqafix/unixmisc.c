@@ -29,7 +29,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-int spawnlp(char* cmd, ...)
+/* spawnlp is now provided by unix/dosproc.c with correct DOS API signature:
+ * int spawnlp(int mode, const char *cmdname, const char *arg0, ...)
+ * The old implementation here had wrong signature (missing mode parameter).
+ int spawnlp(char* cmd, ...)
 {
     va_list var_args;
     char * tmp;
@@ -48,5 +51,6 @@ int spawnlp(char* cmd, ...)
     }
     return system(syscmd);
 }
+ */
 
 

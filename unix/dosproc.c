@@ -102,3 +102,48 @@ inline void DosSleep (unsigned long usec)
   usleep(usec);
 }
 
+#include <stdarg.h>
+#include <sys/wait.h>
+
+/* DOS/OS2 spawnlp compatibility - spawn a process and optionally wait */
+int spawnlp(int mode, const char *cmdname, const char *arg0, ...)
+{
+  va_list ap;
+  const char *argv[64];  /* max 64 args should be enough */
+  int argc = 0;
+  pid_t pid;
+  int status;
+
+  /* Build argv array from varargs */
+  argv[argc++] = arg0;
+  va_start(ap, arg0);
+  while (argc < 63) {
+    const char *arg = va_arg(ap, const char *);
+    argv[argc++] = arg;
+    if (arg == NULL) break;
+  }
+  va_end(ap);
+  argv[argc] = NULL;
+
+  pid = fork();
+  if (pid == -1) {
+    return -1;  /* fork failed */
+  } else if (pid == 0) {
+    /* Child process */
+    execvp(cmdname, (char *const *)argv);
+    _exit(127);  /* exec failed */
+  }
+
+  /* Parent process */
+  if (mode == 0) {  /* P_WAIT */
+    if (waitpid(pid, &status, 0) == -1) {
+      return -1;
+    }
+    if (WIFEXITED(status)) {
+      return WEXITSTATUS(status);
+    }
+    return -1;
+  }
+
+  return pid;  /* P_NOWAIT - return child PID */
+}

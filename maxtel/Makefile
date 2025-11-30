@@ -18,7 +18,8 @@ ifeq ($(PLATFORM),darwin)
     CPPFLAGS += -DDARWIN
     MAXTEL_LIBS = -lmax -lcompat -lncurses
 else
-    MAXTEL_LIBS = -lmax -lcompat -lncurses -lutil
+    # Note: -lmsgapi needed for SquishHash used by libmax
+    MAXTEL_LIBS = -lmax -lcompat -lncurses -lutil -lmsgapi
 endif
 
 .PHONY: all clean install install_libs

@@ -517,6 +517,10 @@ int PushMsgAreaSt(PMAH pmah, BARINFO *pbi);
 int maximus_atexit( register void ( *func )( void ) );
 void maximus_exit(int status);
 
+/* Functions defined in various max source files - declarations for Linux */
+int mdm_nowonline(void);
+int xxspawnvp(int mode, const char *Cfile, char *const argv[]);
+void beep(void);
 
 cpp_end()
 

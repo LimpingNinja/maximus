@@ -323,14 +323,14 @@ argument        :       opt_ref typename id
                                 { $$=smalloc(sizeof(FUNCARGS));
                                   $$->type=$2; $$->name=sstrdup($3);
                                   $$->next=NULL;
-                                  $$->ref=$1.bool;
+                                  $$->ref=$1.boolval;
                                 }
                 ;
                 
 opt_ref         :       /* epsilon */
-                                { $$.bool=FALSE; }
+                                { $$.boolval=FALSE; }
                 |       T_REF
-                                { $$.bool=TRUE; }
+                                { $$.boolval=TRUE; }
                 ;
                             
 
@@ -513,7 +513,7 @@ else_part       :       /* epsilon */
                                   $$.else_label=this_quad;
                                 }
                 |       T_ELSE 
-                                { ElseHandler(&$$); }
+                                { ElseHandler(&$<elsetype>$); }
                         statement
                                 { $$=$<elsetype>2; }
                 ;

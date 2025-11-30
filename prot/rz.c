@@ -306,7 +306,7 @@ IsAnyLower(char *s)
 static int near
 closeit(void)
 {
-  time_t time();
+  /* time() already declared in time.h */
   int rc=0;
 
   if (fout)

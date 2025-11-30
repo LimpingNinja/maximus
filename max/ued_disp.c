@@ -42,27 +42,27 @@ static int near MKD(void);
 
 /*                1               2               3               4
    123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-1  User ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Last call                   ÄÄÄÄÄÄÄÄÄÄÄÄ¿
-2   ³ Name      123456789012345678 Alias      1234567890123456789012345         ³
-3   ³ City      Kingston           VoicePhone 123456789012345 Sex  Female       ³
-4   À Password  1234567890123456   DataPhone  (613)634-3058   Bday 74-03-24     Ù
-5  A)ccess ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿    S)ettings ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-6   ³ Priv level AsstSysop   Credit    65500   ³     ³ Width      80            ³
-7   ³ Keys       12345678901 Debit     7952    ³     ³ Length     25            ³
-8   ³ Group Num  0           Used Pts  12345678³     ³ Nulls      0             ³
-9   ³ Alloc Pts  1234567890  ShowUlist YES     ³     ³ Msg Area   MAX.MUFFIN    ³
-a   À Nerd       NO                            Ù     ³ File Area  12345678901234³
-b  I)nformation ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ ³ Video Mode AVATAR        ³
-c   ³ DL (all) 800K / 52222    Cur. time  12345    ³ ³ Help       REGULAR       ³
-d   ³ Today DL 0K / 0          Added time 12345    ³ ³ !Language  English       ³
-e   ³ Uploads  1234567K / 2233 # calls    7723     ³ ³ Protocol   Zmodem        ³
-f   ³ PostMsgs 1234            ReadMsgs   22       ³ À Compress   1234567890123 Ù
-10  À 1stCall  03/22/94        !PwdDate   03/22/94 Ù
-11 F)lags ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ E)xpiry ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-12  ³ Hotkeys YES  IBM Chars    YES  ScrnClr   YES ³  ³ Expire by 1234567890    ³
-13  ³ MaxEd   YES  Pause (More) YES  AvailChat  NO ³  ³ Action    12345678901234³
-14  ³ Tabs    YES  CalledBefore YES  FSR       YES ³  À Date      NONE          Ù
-15  À RIP      NO                                  Ù
+1  User ------------------------------- Last call                   -----------Ä¿
+2   - Name      123456789012345678 Alias      1234567890123456789012345         -
+3   - City      Kingston           VoicePhone 123456789012345 Sex  Female       -
+4   - Password  1234567890123456   DataPhone  (613)634-3058   Bday 74-03-24     -
+5  A)ccess -----------------------------------Ä¿    S)ettings -----------------Ä¿
+6   - Priv level AsstSysop   Credit    65500   -     - Width      80            -
+7   - Keys       12345678901 Debit     7952    -     - Length     25            -
+8   - Group Num  0           Used Pts  12345678-     - Nulls      0             -
+9   - Alloc Pts  1234567890  ShowUlist YES     -     - Msg Area   MAX.MUFFIN    -
+a   - Nerd       NO                            -     - File Area  12345678901234-
+b  I)nformation ----------------------------------Ä¿ - Video Mode AVATAR        -
+c   - DL (all) 800K / 52222    Cur. time  12345    - - Help       REGULAR       -
+d   - Today DL 0K / 0          Added time 12345    - - !Language  English       -
+e   - Uploads  1234567K / 2233 # calls    7723     - - Protocol   Zmodem        -
+f   - PostMsgs 1234            ReadMsgs   22       - - Compress   1234567890123 -
+10  - 1stCall  03/22/94        !PwdDate   03/22/94 -
+11 F)lags ----------------------------------------Ä¿ E)xpiry ------------------Ä¿
+12  - Hotkeys YES  IBM Chars    YES  ScrnClr   YES -  - Expire by 1234567890    -
+13  - MaxEd   YES  Pause (More) YES  AvailChat  NO -  - Action    12345678901234-
+14  - Tabs    YES  CalledBefore YES  FSR       YES -  - Date      NONE          -
+15  - RIP      NO                                  -
 16
 17  Select: Aasdf)
 18          Foo)
@@ -200,7 +200,7 @@ void DisplayUser(void)
   Printf(ued_scity,        user.city);
   if (MKD()) goto Dump;
 #ifdef CANENCRYPT
-  Printf(ued_spwd,         Show_Pwd((user.bits & BITS_ENCRYPT) ? brackets_encrypted : user.pwd, pwd, (char)(disp_pwd ? 0 : '.')));
+  Printf(ued_spwd,         Show_Pwd((user.bits & BITS_ENCRYPT) ? brackets_encrypted : (char *)user.pwd, pwd, (char)(disp_pwd ? 0 : '.')));
 #else
   Printf(ued_spwd,         Show_Pwd(user.pwd, pwd, (char)(disp_pwd ? 0 : '.')));
 #endif
