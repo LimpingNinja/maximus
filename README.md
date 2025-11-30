@@ -1,6 +1,6 @@
 # Maximus BBS
 
-A classic bulletin board system from the DOS/OS2 era, now running on modern UNIX systems.
+A classic bulletin board system from the DOS/OS2 era, now running on modern operating systems based on UNIX (macOS, Linux, FreeBSD, etc.)
 
 ![Maximus running on macOS ARM64](docs/screenshot.png)
 
@@ -20,11 +20,11 @@ This fork focuses on getting Maximus compiling and running on modern systems so 
 | Linux arm64 | Should work |
 | FreeBSD | Supported |
 
-**What works:** Full BBS operation, telnet access via MAXTEL, MEX scripting, FidoNet messaging, file transfers, all utilities (maid, silt, mecca, mex compiler).
+**What works:** Full BBS operation via telnet access (MAXTEL), MEX scripting, all utilities (maid, silt, mecca, mex compiler). Most features should continue to work as expected and are assumed to work unless otherwise noted (e.g. FidoNet messaging, file transfers).
 
 ## Quick Start: Running Your Own BBS
 
-Want to be a SysOp? Ready to command your own retro battle station? You don't need to compile anything - just grab a release and go.
+Want to be a SysOp? Ready to command your own retro battle station? You don't need to compile anything - just grab a release and go. The release packages include everything you need to run a BBS. 
 
 ### 1. Download and Extract
 
@@ -77,6 +77,34 @@ To test without telnet, run in local console mode:
 ```bash
 bin/max etc/max -c
 ```
+
+### Upgrading Your BBS
+
+When a new version is released, you only need to update the executables and libraries. Your configuration, message bases, and user data are preserved. If there are new configurations, scripts, display files, or help files these will be noted in the release notes and [CHANGES.md](CHANGES.md) file. 
+
+```bash
+# Download and extract the new release
+tar -xzvf maximus-NEW-VERSION.tar.gz
+
+# Copy only bin/ and lib/ to your existing installation
+cp -r maximus-NEW-VERSION/bin/* /path/to/your/bbs/bin/
+cp -r maximus-NEW-VERSION/lib/* /path/to/your/bbs/lib/
+
+# Optionally update docs
+cp -r maximus-NEW-VERSION/docs/* /path/to/your/bbs/docs/
+```
+
+**What to update:**
+- `bin/` and `lib/` - Always safe, contains executables and libraries
+
+**What to keep:**
+- `etc/*.ctl` - Your BBS configuration
+- `spool/` - Message bases and file areas
+- User database files
+
+**Optional updates:**
+- `m/*.mex` - MEX scripts (only if you haven't customized them)
+- `etc/misc/`, `etc/help/` - Display files (only if you haven't customized them)
 
 ## Telnet: MAXTEL Supervisor
 

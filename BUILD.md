@@ -46,17 +46,22 @@ Linux, FreeBSD, and macOS (Darwin).
 apt install build-essential libncurses-dev bison
 ```
 
-**FreeBSD:**
-```bash
-pkg install gmake gcc ncurses bison
-```
-
 **macOS (Darwin):**
 ```bash
 xcode-select --install   # Provides clang, make, bison
 # ncurses is included in macOS SDK
 ```
 
+**WSL (Windows Subsystem for Linux with Ubuntu) /Untested/:**
+```bash
+sudo apt update
+sudo apt install build-essential libncurses-dev bison
+```
+
+**FreeBSD /Untested/:**
+```bash
+pkg install gmake gcc ncurses bison
+```
 ## Build Instructions
 
 ### Prerequisites
