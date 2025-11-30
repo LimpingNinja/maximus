@@ -2,10 +2,29 @@
 
 ---
 
-## Sat Nov 29 2025 - Maximus/UNIX 3.04a-r2 [alpha]
+## Sat Nov 30 2025 - Maximus/UNIX 3.04a-r2 [alpha]
 
-**MAXTEL Telnet Supervisor Release**  
+**MAXTEL + Linux Support Release**  
 Maintainer: Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+
+### New: Linux x86_64 Support
+
+- **Full Linux build support** alongside macOS (arm64/x86_64)
+- GCC compatibility fixes for stricter type checking
+- POSIX `spawnlp()` implementation for process spawning
+- Tested on Debian/Ubuntu x86_64 (OrbStack, native)
+
+**Linux-Specific Changes:**
+- Added missing function declarations for GCC strictness
+- Explicit pointer casts for `byte*`/`char*` type mismatches
+- Added `<ctype.h>` includes where needed
+- Fixed linker dependencies for shared libraries
+
+**Platform Support:**
+- macOS arm64 (Apple Silicon) - native
+- macOS x86_64 (Intel/Rosetta) - native
+- Linux x86_64 - native
+- Linux arm64 - untested but should work
 
 ### New: MAXTEL Telnet Supervisor
 
@@ -31,8 +50,10 @@ Maintainer: Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
 ### Build System Updates
 
 - MAXTEL included in release packages
+- Linux release packaging support in make-release.sh
 - Release README updated with MAXTEL quick-start instructions
 - Documentation (.txt and .md) included in release archives
+- See `code-docs/LINUX_PORT_CHANGES.md` for detailed porting notes
 
 ---
 

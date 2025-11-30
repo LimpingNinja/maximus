@@ -81,10 +81,31 @@ The archive contains:
 - `spool/` - Default spool directories for mail/files
 - `man/` - Documentation
 
-### Quick Start
+### Quick Start (Recommended)
+
+Use the platform-specific build scripts for the easiest experience:
+
+**macOS:**
+```bash
+./scripts/build-macos.sh              # Build for native arch (auto-detect)
+./scripts/build-macos.sh arm64        # Build for Apple Silicon
+./scripts/build-macos.sh x86_64       # Build for Intel (via Rosetta on AS)
+./scripts/build-macos.sh release      # Build + create release package
+./scripts/build-macos.sh arm64 release # Specific arch + release
+```
+
+**Linux:**
+```bash
+./scripts/build-linux.sh              # Build for native arch
+./scripts/build-linux.sh release      # Build + create release package
+```
+
+These scripts handle `./configure`, cleaning, building, and optionally packaging.
+
+### Manual Build
 
 ```bash
-# For local development build (recommended)
+# For local development build
 ./configure --prefix=$(pwd)/build
 make build
 make install
@@ -149,10 +170,11 @@ libcomm.so    <- libmax.so, libcompat.so
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Linux x86_64 | ✓ Supported | Primary development platform |
+| macOS arm64 | ✓ Tested | Apple Silicon native |
+| macOS x86_64 | ✓ Tested | Intel or Rosetta on AS |
+| Linux x86_64 | ✓ Tested | GCC, OrbStack, native |
 | Linux ARM64 | ✓ Should work | Untested |
 | FreeBSD | ✓ Supported | Use gmake |
-| macOS (Darwin) | ✓ Supported | ARM64 and x86_64 |
 | Solaris/SunOS | ✓ Supported | Big-endian issues with FidoNet packets |
 | Windows | ✗ Broken | Would need significant work |
 
@@ -246,17 +268,27 @@ To make permanent, add to your shell config (`~/.bashrc`, `~/.zshrc`, or `~/.con
 
 ### Running the BBS
 
+**Recommended: Use MAXTEL for telnet access**
+
+MAXTEL is the multi-node telnet supervisor with a real-time ncurses dashboard:
+
+```bash
+cd $PREFIX
+bin/maxtel -p 2323 -n 4         # Start 4 nodes on port 2323
+```
+
+See `docs/maxtel.md` for full documentation including headless and daemon modes.
+
+**Alternative: Direct execution**
+
 ```bash
 cd $PREFIX
 
-# Create initial user database (first time only)
+# Local console mode (testing)
 bin/max etc/max -c
 
-# Run in local mode for testing
+# Single node with wait-for-call
 bin/max etc/max -w -pt1
-
-# Run with wait-for-call (telnet/modem)
-bin/max etc/max -w
 ```
 
 ### Fresh Install / Reset
@@ -336,27 +368,53 @@ See `docs/` for systemd socket activation examples.
 On Apple Silicon Macs, you can build for both architectures:
 
 ```bash
-# Native ARM64 build
-make clean
-make install
+# Using build script (recommended)
+./scripts/build-macos.sh arm64       # Native ARM64
+./scripts/build-macos.sh x86_64      # Intel via Rosetta
 
-# x86_64 build (requires Rosetta: softwareupdate --install-rosetta)
-make archclean
-make ARCH=x86_64 install
+# Manual method
+make clean
+make install                          # Native ARM64
+
+make archclean                        # Clean for arch switch
+make ARCH=x86_64 install              # x86_64 via Rosetta
+```
+
+For x86_64 on Apple Silicon, Rosetta 2 is required:
+```bash
+softwareupdate --install-rosetta
 ```
 
 The `ARCH` variable adds `-arch x86_64` flags to compiler and linker.
 Use `archclean` when switching architectures to remove old libraries.
+
+### Switching Between macOS and Linux
+
+The `./configure` script generates `vars.mk` with platform-specific paths.
+**You must re-run configure when switching between platforms** (e.g., after
+building on Linux via OrbStack and returning to macOS):
+
+```bash
+# On macOS after building on Linux
+./scripts/build-macos.sh
+
+# Or manually
+./configure --prefix=$(pwd)/build
+make clean
+make build
+```
 
 ### Release Packaging
 
 Use the release scripts to create distributable packages:
 
 ```bash
-# Build ARM64 release
-./scripts/make-release.sh arm64
+# Build + package in one step
+./scripts/build-macos.sh release
+./scripts/build-linux.sh release
 
-# Build x86_64 release  
+# Or use release scripts directly
+./scripts/make-release.sh arm64
 ./scripts/make-release.sh x86_64
 
 # Build all available architectures
@@ -373,9 +431,32 @@ but is not currently buildable. Would require:
 - Testing/fixing Windows-specific code paths
 - mingw-w64 cross-compiler: `brew install mingw-w64` (macOS)
 
-### Linux Cross-Compile
+### Linux Build
 
-Use Docker or native Linux VM for best results.
+For Linux builds, use the build script which handles dependencies check:
+
+```bash
+./scripts/build-linux.sh              # Build
+./scripts/build-linux.sh release      # Build + package
+```
+
+**Dependencies (Debian/Ubuntu):**
+```bash
+sudo apt-get install build-essential bison libncurses-dev
+```
+
+**Dependencies (Alpine):**
+```bash
+apk add build-base bison ncurses-dev
+```
+
+**Dependencies (RHEL/Fedora):**
+```bash
+sudo dnf install gcc make bison ncurses-devel
+```
+
+For cross-compiling Linux binaries from macOS, use Docker or a Linux VM
+(e.g., OrbStack on macOS).
 
 ## File Locations
 
