@@ -1,0 +1,880 @@
+
+
+
+
+
+                                                             MAXTEL
+                                                    Telnet Supervisor for
+                                                       Maximus-CBCS
+
+
+                                                                Version 1.0
+
+
+
+
+
+
+
+
+             Copyright (c) 2025 Kevin Morgan (Limping Ninja)
+             https://github.com/LimpingNinja
+
+             This program is free software; you can redistribute it and/or
+             modify it under the terms of the GNU General Public License
+             as published by the Free Software Foundation; either version 2
+             of the License, or (at your option) any later version.
+
+
+
+
+             MAXTEL Operations Manual                                    1
+
+
+                                       Contents
+
+
+             1. Introduction ............................................2
+                1.1. About MAXTEL........................................2
+                1.2. System Requirements.................................2
+                1.3. Features............................................3
+
+             2. Installation ............................................4
+                2.1. Building MAXTEL.....................................4
+                2.2. Directory Structure.................................4
+                2.3. First-Time Setup....................................5
+
+             3. Running MAXTEL ..........................................6
+                3.1. Command Line Options................................6
+                3.2. Interactive Mode....................................7
+                3.3. Headless Mode.......................................8
+                3.4. Daemon Mode.........................................9
+
+             4. The User Interface .....................................10
+                4.1. Screen Layout......................................10
+                4.2. User Stats Panel...................................11
+                4.3. System Panel.......................................11
+                4.4. Nodes Panel........................................12
+                4.5. Callers Panel......................................12
+                4.6. Keyboard Commands..................................13
+
+             5. Responsive Layouts .....................................14
+                5.1. Compact Mode (80x25)...............................14
+                5.2. Medium Mode (100x30)...............................14
+                5.3. Full Mode (132x40+)................................15
+
+             6. Troubleshooting ........................................16
+                6.1. Common Issues......................................16
+                6.2. Log Files..........................................17
+
+
+
+
+             1. Introduction                                             2
+
+
+             1. Introduction
+
+             Welcome to MAXTEL, the multi-node telnet supervisor for
+             Maximus-CBCS on Unix and Linux systems. This manual describes
+             how to install, configure, and operate MAXTEL to manage your
+             BBS's telnet connections.
+
+
+             1.1. About MAXTEL
+
+             MAXTEL is a telnet front-end supervisor that manages incoming
+             telnet connections and routes them to available Maximus BBS
+             nodes. It provides a real-time ncurses-based interface that
+             displays system status, active users, node activity, and
+             recent callers.
+
+             Unlike traditional modem-based BBS setups, MAXTEL handles the
+             complexities of TCP/IP networking while presenting a familiar
+             interface to both the SysOp and connecting users. When a user
+             connects via telnet, MAXTEL automatically assigns them to an
+             available node and bridges their connection to the Maximus
+             instance running on that node.
+
+
+             1.2. System Requirements
+
+             MAXTEL requires the following to operate:
+
+             Operating System
+
+                A Unix-like operating system such as Linux, FreeBSD, or
+                macOS. MAXTEL has been tested on modern Linux distributions
+                and macOS.
+
+             Maximus-CBCS
+
+                A working installation of Maximus-CBCS version 3.x compiled
+                for your Unix platform. MAXTEL spawns Maximus instances to
+                handle each node.
+
+             ncurses Library
+
+                The ncurses library must be installed for the interactive
+                user interface. Most Unix systems include this by default.
+                For headless or daemon operation, ncurses is still required
+                for compilation but is not used at runtime.
+
+             Network Access
+
+                The system must be able to bind to a TCP port (default
+                2323) to accept incoming telnet connections.
+
+
+
+
+             1. Introduction                                             3
+
+
+             1.3. Features
+
+             MAXTEL provides the following features for BBS operators:
+
+             Multi-Node Management
+
+                MAXTEL can manage multiple simultaneous BBS nodes, each
+                running its own instance of Maximus. The number of nodes
+                is configurable from 1 to 32.
+
+             Real-Time Monitoring
+
+                The ncurses interface displays live information about each
+                node, including connection status, current user, activity,
+                and session duration.
+
+             Automatic Node Assignment
+
+                When a caller connects, MAXTEL automatically finds an
+                available node and routes the connection. If all nodes are
+                busy, the caller is informed and disconnected gracefully.
+
+             Telnet Protocol Support
+
+                MAXTEL performs basic telnet negotiation with connecting
+                clients, including terminal type detection and ANSI
+                capability checking.
+
+             Caller History
+
+                Recent callers are displayed in the interface, showing
+                caller name, node number, call count, and connection time.
+
+             System Statistics
+
+                The interface displays system information including BBS
+                name, sysop name, FTN address, uptime, peak usage, and
+                current activity levels.
+
+             Responsive Interface
+
+                The user interface automatically adapts to different
+                terminal sizes, from compact 80x25 displays to full-screen
+                132x60+ terminals.
+
+             Headless Operation
+
+                MAXTEL can run without a user interface for use in scripts,
+                init systems, or as a background daemon.
+
+
+
+
+             2. Installation                                             4
+
+
+             2. Installation
+
+
+             2.1. Building MAXTEL
+
+             MAXTEL is built as part of the Maximus-CBCS package. To build
+             MAXTEL, ensure you have a working Maximus build environment,
+             then run:
+
+                make maxtel
+
+             To build and install MAXTEL to the build/bin directory:
+
+                make maxtel_install
+
+             The resulting binary will be placed in the build/bin
+             directory alongside the other Maximus utilities.
+
+
+             2.2. Directory Structure
+
+             MAXTEL expects the following directory structure relative to
+             the base Maximus installation:
+
+             bin/max
+
+                The Maximus BBS executable. MAXTEL spawns this program for
+                each node. The path can be overridden with the -m option.
+
+             etc/max.prm
+
+                The compiled Maximus configuration file. MAXTEL reads this
+                file to obtain system information such as the BBS name,
+                sysop name, and FTN address. The path can be overridden
+                with the -c option.
+
+             etc/callers.dat
+
+                The caller log file maintained by Maximus. MAXTEL reads
+                this file to display recent caller history.
+
+             etc/stats.dat
+
+                The system statistics file. MAXTEL reads this to display
+                daily caller counts and other statistics.
+
+             m/
+
+                Node-specific directories (m/1, m/2, etc.) where Maximus
+                stores per-node data such as current user information.
+
+
+
+
+             2. Installation                                             5
+
+
+             2.3. First-Time Setup
+
+             Before running MAXTEL for the first time, ensure that:
+
+             1. Maximus is properly installed and configured. You should
+                be able to run Maximus in local mode successfully before
+                attempting to use MAXTEL.
+
+             2. The max.prm file has been compiled using SILT. MAXTEL
+                reads this file to obtain system information.
+
+             3. The user running MAXTEL has permission to bind to the
+                desired TCP port. Ports below 1024 typically require root
+                privileges on Unix systems.
+
+             4. Any firewall rules have been configured to allow incoming
+                connections on the telnet port (default 2323).
+
+             A typical first-time invocation looks like this:
+
+                cd /path/to/maximus
+                ./build/bin/maxtel -p 2323 -n 4
+
+             This starts MAXTEL on port 2323 with 4 nodes available for
+             callers.
+
+
+
+
+             3. Running MAXTEL                                           6
+
+
+             3. Running MAXTEL
+
+
+             3.1. Command Line Options
+
+             MAXTEL accepts the following command line options:
+
+             -p PORT
+
+                Specifies the TCP port to listen on for incoming telnet
+                connections. The default port is 2323. Example:
+
+                   maxtel -p 23
+
+                Note: Using port 23 (the standard telnet port) typically
+                requires root privileges on Unix systems.
+
+             -n NODES
+
+                Specifies the number of BBS nodes to manage. Valid values
+                are 1 to 32. The default is 4 nodes. Example:
+
+                   maxtel -n 8
+
+             -d PATH
+
+                Specifies the base directory for the Maximus installation.
+                MAXTEL changes to this directory before spawning nodes.
+                The default is the current directory. Example:
+
+                   maxtel -d /opt/maximus
+
+             -m PATH
+
+                Specifies the path to the Maximus executable. The default
+                is ./bin/max. Example:
+
+                   maxtel -m /usr/local/bin/max
+
+             -c PATH
+
+                Specifies the path to the Maximus configuration directory
+                (containing max.prm). The default is etc/max. Example:
+
+                   maxtel -c /etc/maximus
+
+
+
+
+             3. Running MAXTEL                                           7
+
+
+             -s SIZE
+
+                Requests a specific terminal size for the user interface,
+                specified as COLSxROWS. This sends an escape sequence to
+                the terminal to request the size change. Example:
+
+                   maxtel -s 132x60
+
+                Note: Not all terminals support resize requests.
+
+             -H
+
+                Runs MAXTEL in headless mode without the ncurses user
+                interface. The program still manages nodes and accepts
+                connections, but produces no visual output except for
+                startup messages and errors. See section 3.3 for details.
+
+             -D
+
+                Runs MAXTEL as a daemon, forking to the background. This
+                implies -H (headless mode). See section 3.4 for details.
+
+             -h
+
+                Displays a brief help message showing all available
+                options and their defaults.
+
+
+             3.2. Interactive Mode
+
+             By default, MAXTEL runs in interactive mode with a full-
+             screen ncurses interface. This mode is ideal for monitoring
+             your BBS from a terminal session or console.
+
+             In interactive mode, you can:
+
+             - Watch node status change in real-time as callers connect
+               and disconnect
+
+             - View current user information for active sessions
+
+             - See recent caller history
+
+             - Monitor system statistics and uptime
+
+             - Use keyboard commands to manage nodes (kick users, restart
+               nodes, etc.)
+
+             To exit interactive mode, press 'Q' at any time. MAXTEL will
+             gracefully shut down all nodes before exiting.
+
+
+
+
+             3. Running MAXTEL                                           8
+
+
+             3.3. Headless Mode
+
+             Headless mode (-H) runs MAXTEL without any user interface.
+             This mode is useful when:
+
+             - Running MAXTEL from a script or cron job
+
+             - Operating on a system without a terminal
+
+             - Running MAXTEL under a process supervisor like systemd
+
+             - Testing or debugging in a non-interactive environment
+
+             To start MAXTEL in headless mode:
+
+                maxtel -H -p 2323 -n 4
+
+             In headless mode, MAXTEL prints a startup message to stderr:
+
+                maxtel running in headless mode on port 2323 with 4 nodes
+
+             MAXTEL continues to:
+
+             - Accept incoming telnet connections
+
+             - Manage and restart nodes automatically
+
+             - Log activity to maxtel.log
+
+             - Respond to signals (SIGTERM, SIGINT) for clean shutdown
+
+             To stop MAXTEL running in headless mode, send it a SIGTERM
+             or SIGINT signal:
+
+                kill $(pgrep maxtel)
+
+             Or if you know the process ID:
+
+                kill 12345
+
+
+
+
+             3. Running MAXTEL                                           9
+
+
+             3.4. Daemon Mode
+
+             Daemon mode (-D) runs MAXTEL as a background process,
+             completely detached from the terminal. This mode implies
+             headless mode and is ideal for:
+
+             - Starting MAXTEL automatically at system boot
+
+             - Running MAXTEL from login scripts
+
+             - Long-term unattended operation
+
+             To start MAXTEL as a daemon:
+
+                maxtel -D -p 2323 -n 4
+
+             When started in daemon mode, MAXTEL:
+
+             1. Forks a child process to run in the background
+
+             2. Prints the child's process ID to the console
+
+             3. Detaches from the terminal session
+
+             4. Redirects standard input and output to /dev/null
+
+             The parent process exits immediately after printing:
+
+                maxtel daemon started (PID 12345), port 2323
+
+             You can add MAXTEL to your system startup scripts or login
+             profile. A typical entry might look like:
+
+                # Start MAXTEL if not already running
+                if ! pgrep -x maxtel > /dev/null; then
+                    /path/to/maxtel -D -p 2323 -n 4 -d /path/to/maximus
+                fi
+
+             Activity is logged to maxtel.log in the Maximus directory.
+             To stop a daemonized MAXTEL, send it a SIGTERM signal:
+
+                kill $(pgrep maxtel)
+
+
+
+
+             4. The User Interface                                      10
+
+
+             4. The User Interface
+
+             The MAXTEL interactive interface is divided into several
+             panels that display different aspects of system status. The
+             layout adapts automatically based on terminal size.
+
+
+             4.1. Screen Layout
+
+             The screen is organized as follows:
+
+             Header Bar
+
+                The top line displays "MAXTEL v1.0", "Maximus Telnet
+                Supervisor", and the current listening port number.
+
+             Top Row
+
+                The top row contains two panels side by side:
+
+                - User Stats (left): Information about the currently
+                  selected user, if any
+
+                - System (right): BBS information and system statistics.
+                  In compact mode, this panel has tabs to switch between
+                  Info and Stats views.
+
+             Bottom Row
+
+                The bottom row contains two panels that expand to fill
+                the remaining space:
+
+                - Nodes (left): Status of all managed nodes
+
+                - Callers (right): Recent caller history
+
+             Status Bar
+
+                The bottom line shows available keyboard commands and
+                the current terminal size and layout mode.
+
+
+
+
+             4. The User Interface                                      11
+
+
+             4.2. User Stats Panel
+
+             The User Stats panel displays information about the user on
+             the currently selected node. When a user is logged in, the
+             following information is shown:
+
+             Name
+
+                The user's name as registered in the BBS user file.
+
+             City
+
+                The user's city and state/province.
+
+             Calls
+
+                The total number of times this user has called the BBS.
+
+             Msgs
+
+                Messages posted and read by this user (posted/read).
+
+             Up/Dn
+
+                Kilobytes uploaded and downloaded by this user.
+
+             Files
+
+                Number of files uploaded and downloaded by this user.
+
+             If no user is currently logged into the selected node, the
+             panel displays "(No user online)".
+
+
+             4.3. System Panel
+
+             The System panel displays information about your BBS and
+             current system status:
+
+             BBS / Sysop / FTN
+
+                The BBS name, sysop name, and FidoNet address as
+                configured in your max.prm file.
+
+             Time / Nodes / Online / Waiting
+
+                Current time, total nodes configured, nodes with active
+                users, and nodes waiting for callers.
+
+             In wider terminals, the panel expands to show additional
+             statistics including uptime, peak online users, total
+             registered users, messages written, and files downloaded.
+
+
+
+
+             4. The User Interface                                      12
+
+
+             4.4. Nodes Panel
+
+             The Nodes panel shows the status of each managed node:
+
+             Node
+
+                The node number (1, 2, 3, etc.).
+
+             Status
+
+                The current state of the node:
+
+                - WFC: Waiting for caller (ready to accept connections)
+                - Starting: Node is initializing
+                - Online: User is connected and logged in
+                - Inactive: Node is not running
+                - Stopping: Node is shutting down
+
+             User
+
+                The name of the logged-in user, or "<waiting>" if the
+                node is in WFC mode, or "Log-on" if a user is connecting
+                but has not yet completed the login process.
+
+             Activity
+
+                The current activity of the user (shown in wider
+                terminals). This might show the current menu, area, or
+                action being performed.
+
+             Time
+
+                Session duration for connected users (MM:SS format).
+
+             The currently selected node is highlighted. Scroll indicators
+             appear if there are more nodes than can fit on screen.
+
+
+             4.5. Callers Panel
+
+             The Callers panel displays recent caller history. The title
+             shows how many recent callers are displayed (e.g., "Callers
+             (Last 8)"). The bottom border shows today's caller count.
+
+             Each caller entry shows:
+
+             - Node number where the call occurred
+             - Total call count for that user
+             - User name (alias)
+             - Date and time of the call (in wider terminals)
+             - City (in very wide terminals)
+
+
+
+
+             4. The User Interface                                      13
+
+
+             4.6. Keyboard Commands
+
+             The following keyboard commands are available in interactive
+             mode:
+
+             1-9
+
+                Select node 1 through 9. The selected node is highlighted
+                in the Nodes panel, and its user's information appears in
+                the User Stats panel.
+
+             Up/Down Arrow
+
+                Move the node selection up or down. If there are more
+                nodes than fit on screen, the display scrolls.
+
+             K
+
+                Kick the user on the currently selected node. This
+                terminates the user's session immediately. Use with
+                caution.
+
+             R
+
+                Restart the currently selected node. This terminates any
+                active session and respawns the Maximus process.
+
+             S
+
+                (Reserved for future snoop functionality)
+
+             Tab / Left / Right Arrow
+
+                In compact mode (80x25), these keys switch between the
+                Info and Stats tabs in the System panel.
+
+             Q
+
+                Quit MAXTEL. All nodes are gracefully shut down before
+                the program exits.
+
+
+
+
+             5. Responsive Layouts                                      14
+
+
+             5. Responsive Layouts
+
+             MAXTEL automatically adapts its display to the available
+             terminal size. Three layout modes are supported:
+
+
+             5.1. Compact Mode (80x25)
+
+             Compact mode is used for terminals 80 columns wide or
+             narrower, or with fewer than 30 rows. This mode is designed
+             to fit on a standard 80x25 terminal.
+
+             In compact mode:
+
+             - The System panel uses tabs (Info/Stats) to show different
+               information in the same space. Press Tab to switch views.
+
+             - Node columns are condensed (no Activity column)
+
+             - Caller names are truncated to 14 characters
+
+             - The status bar indicates "[Cmp]" mode
+
+             This mode preserves all essential functionality while fitting
+             in minimal screen space.
+
+
+             5.2. Medium Mode (100x30)
+
+             Medium mode activates when the terminal is at least 100
+             columns wide. This mode provides more information without
+             requiring a very large terminal.
+
+             In medium mode:
+
+             - The System panel expands to show Info and Stats side by
+               side with a divider
+
+             - Callers show date/time of each call
+
+             - Additional space for longer names and values
+
+             - The status bar indicates "[Med]" mode
+
+
+
+
+             5. Responsive Layouts                                      15
+
+
+             5.3. Full Mode (132x40+)
+
+             Full mode activates when the terminal is at least 132 columns
+             wide and 40 rows tall. This mode displays all available
+             information.
+
+             In full mode:
+
+             - Nodes show the Activity column
+
+             - Callers show city information
+
+             - All names and values display at full length
+
+             - More nodes and callers visible simultaneously
+
+             - The status bar indicates "[Full]" mode
+
+             For the best experience, configure your terminal emulator to
+             use a 132x60 or larger window when monitoring an active BBS.
+
+
+             5.4. Terminal Resizing
+
+             MAXTEL responds to terminal resize events (SIGWINCH). When
+             you resize your terminal window, MAXTEL automatically:
+
+             1. Detects the new terminal dimensions
+
+             2. Selects the appropriate layout mode
+
+             3. Redraws the entire interface
+
+             You can resize the terminal at any time without restarting
+             MAXTEL.
+
+
+
+
+             6. Troubleshooting                                         16
+
+
+             6. Troubleshooting
+
+
+             6.1. Common Issues
+
+             MAXTEL fails to start with "Failed to bind to port"
+
+                This error occurs when MAXTEL cannot listen on the
+                specified port. Common causes:
+
+                - Another program is already using the port
+                - You lack permission to bind to ports below 1024
+                - The port is blocked by a firewall
+
+                Solution: Try a different port (e.g., -p 2323), run as
+                root for low ports, or check for conflicting programs
+                with "netstat -an | grep LISTEN".
+
+             Nodes stay in "Starting" state
+
+                If nodes remain in "Starting" and never reach "WFC", the
+                Maximus executable may be failing to start.
+
+                Solution: Check that the -m path points to a valid max
+                binary. Try running max manually to verify it works.
+                Check maxtel.log for error messages.
+
+             Users connect but see nothing
+
+                If users can connect but receive no output, there may be
+                a problem with the PTY allocation or Maximus configuration.
+
+                Solution: Ensure Maximus is configured for telnet/socket
+                operation. Check that the max binary has execute
+                permissions.
+
+             Interface displays incorrectly
+
+                If the interface appears garbled or misaligned, your
+                terminal may not be reporting its size correctly.
+
+                Solution: Try the -s option to force a specific size.
+                Ensure your terminal supports ncurses and standard ANSI
+                escape sequences.
+
+             Nodes restart continuously
+
+                If nodes keep restarting in a loop, Maximus may be
+                crashing immediately on startup.
+
+                Solution: Check maxtel.log for errors. Try running max
+                manually with the same options to see any error messages.
+
+
+
+
+             6. Troubleshooting                                         17
+
+
+             6.2. Log Files
+
+             MAXTEL creates a log file named maxtel.log in the current
+             working directory (or the directory specified with -d). This
+             log contains:
+
+             - Startup and shutdown messages
+             - Node spawn and termination events
+             - Connection attempts and assignments
+             - Error messages and warnings
+
+             To monitor the log in real-time while MAXTEL is running:
+
+                tail -f maxtel.log
+
+             The log is overwritten each time MAXTEL starts. To preserve
+             logs across restarts, consider redirecting output:
+
+                maxtel -H 2>&1 | tee -a maxtel-$(date +%Y%m%d).log
+
+             Or configure your system's logging infrastructure to capture
+             MAXTEL's output.
+
+
+             6.3. Getting Help
+
+             For additional help with MAXTEL:
+
+             - Check the Maximus-CBCS documentation for BBS configuration
+               issues
+
+             - Visit the project repository at:
+               https://github.com/LimpingNinja/maximus
+
+             - Review the source code in maxtel/maxtel.c for detailed
+               implementation information

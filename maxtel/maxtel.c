@@ -170,6 +170,8 @@ static system_tab_t  current_tab = TAB_SYSTEM_INFO;
 static volatile int  need_resize = 0;    /* Set by SIGWINCH */
 static int           requested_cols = 0; /* User-requested terminal size */
 static int           requested_rows = 0;
+static int           headless_mode = 0;   /* Run without ncurses UI */
+static int           daemonize = 0;       /* Fork to background */
 
 #define DEBUG(fmt, ...) do { if (debug_log) { fprintf(debug_log, fmt "\n", ##__VA_ARGS__); fflush(debug_log); } } while(0)
 
@@ -1608,7 +1610,9 @@ static void cleanup(void)
     int status;
     while (waitpid(-1, &status, WNOHANG) > 0);
     
-    cleanup_display();
+    if (!headless_mode) {
+        cleanup_display();
+    }
     
     /* Close PRM handle */
     if (prm_handle) {
@@ -1633,6 +1637,8 @@ static void usage(const char *prog)
     fprintf(stderr, "  -m PATH    Max binary path (default: ./bin/max)\n");
     fprintf(stderr, "  -c PATH    Config path (default: etc/max)\n");
     fprintf(stderr, "  -s SIZE    Request terminal size (e.g., 80x25, 132x60)\n");
+    fprintf(stderr, "  -H         Headless mode (no UI, for scripts/daemons)\n");
+    fprintf(stderr, "  -D         Daemonize (implies -H, fork to background)\n");
     fprintf(stderr, "  -h         Show this help\n");
     exit(1);
 }
@@ -1645,7 +1651,7 @@ int main(int argc, char *argv[])
     int ch;
     
     /* Parse arguments */
-    while ((opt = getopt(argc, argv, "p:n:d:m:c:s:h")) != -1) {
+    while ((opt = getopt(argc, argv, "p:n:d:m:c:s:HDh")) != -1) {
         switch (opt) {
             case 'p':
                 listen_port = atoi(optarg);
@@ -1670,6 +1676,13 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Invalid size format. Use COLSxROWS (e.g., 80x25)\n");
                     exit(1);
                 }
+                break;
+            case 'H':
+                headless_mode = 1;
+                break;
+            case 'D':
+                daemonize = 1;
+                headless_mode = 1;  /* Daemon implies headless */
                 break;
             case 'h':
             default:
@@ -1697,6 +1710,26 @@ int main(int argc, char *argv[])
     
     setup_signals();
     
+    /* Daemonize if requested */
+    if (daemonize) {
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+            return 1;
+        }
+        if (pid > 0) {
+            /* Parent exits */
+            printf("maxtel daemon started (PID %d), port %d\n", pid, listen_port);
+            return 0;
+        }
+        /* Child continues */
+        setsid();  /* New session */
+        /* Redirect stdio to /dev/null */
+        freopen("/dev/null", "r", stdin);
+        freopen("/dev/null", "w", stdout);
+        /* Keep stderr for errors, or redirect to log */
+    }
+    
     /* Set up TCP listener */
     listen_fd = setup_listener(listen_port);
     if (listen_fd < 0) {
@@ -1704,8 +1737,13 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-    /* Initialize display */
-    init_display();
+    /* Initialize display (skip in headless mode) */
+    if (!headless_mode) {
+        init_display();
+    } else {
+        fprintf(stderr, "maxtel running in headless mode on port %d with %d nodes\n", 
+                listen_port, num_nodes);
+    }
     
     /* Spawn initial nodes */
     for (int i = 0; i < num_nodes; i++) {
@@ -1715,8 +1753,8 @@ int main(int argc, char *argv[])
     
     /* Main loop */
     while (running) {
-        /* Handle terminal resize */
-        if (need_resize) {
+        /* Handle terminal resize (UI mode only) */
+        if (!headless_mode && need_resize) {
             handle_resize();
         }
         
@@ -1739,9 +1777,11 @@ int main(int argc, char *argv[])
             }
         }
         
-        /* Handle keyboard input */
-        while ((ch = getch()) != ERR) {
-            handle_input(ch);
+        /* Handle keyboard input (UI mode only) */
+        if (!headless_mode) {
+            while ((ch = getch()) != ERR) {
+                handle_input(ch);
+            }
         }
         
         /* Update status */
@@ -1769,14 +1809,16 @@ int main(int argc, char *argv[])
             }
         }
         
-        /* Refresh display */
-        if (need_refresh) {
+        /* Refresh display (UI mode only) */
+        if (!headless_mode && need_refresh) {
             update_display();
             need_refresh = 0;
         }
     }
     
     cleanup();
-    printf("maxtel shutdown complete.\n");
+    if (!daemonize) {
+        printf("maxtel shutdown complete.\n");
+    }
     return 0;
 }

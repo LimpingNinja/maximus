@@ -1,6 +1,8 @@
 # Build output
 build/
 release/
+code-docs/
+code-docs/*.md
 
 # Note: install_tree/ is now tracked for MEX fixes and config updates
 # The install_tree.tar.gz can be regenerated with:

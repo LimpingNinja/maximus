@@ -114,6 +114,10 @@ build_for_arch() {
     make ARCH="$arch" build
     make ARCH="$arch" install
     
+    # Build maxtel supervisor
+    log_info "Building maxtel..."
+    make ARCH="$arch" maxtel_install
+    
     # Codesign on macOS
     if [ "$(detect_os)" = "macos" ]; then
         log_info "Codesigning binaries..."
@@ -185,6 +189,7 @@ create_release_package() {
     log_info "Copying documentation..."
     mkdir -p "$release_path/docs"
     cp -f "${PROJECT_ROOT}/docs/"*.md "$release_path/docs/" 2>/dev/null || true
+    cp -f "${PROJECT_ROOT}/docs/"*.txt "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/README"* "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/LICENSE"* "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/COPYING"* "$release_path/docs/" 2>/dev/null || true
@@ -262,16 +267,15 @@ Quick Start (Local Mode):
 ------------------------
   bin/runbbs.sh -c
 
-Quick Start (Telnet):
---------------------
-  # Start Maximus nodes (requires 'screen')
-  bin/start-nodes.sh 4
+Quick Start (Telnet via MAXTEL):
+-------------------------------
+  bin/maxtel -p 2323 -n 4
 
-  # Start telnet listener (requires 'socat')
-  socat TCP-LISTEN:2323,fork,reuseaddr EXEC:"./bin/maxcomm"
+  Then connect: telnet localhost 2323
 
-  # Connect
-  telnet localhost 2323
+  For headless/daemon operation:
+    bin/maxtel -H -p 2323 -n 4     # Headless (no UI)
+    bin/maxtel -D -p 2323 -n 4     # Daemon (background)
 
 The release comes with pre-compiled configuration files. If you need to 
 modify any configuration, edit the source files and run bin/recompile.sh
@@ -301,17 +305,22 @@ Or manually:
   bin/mex script.mex          # Recompile a MEX script (in m/)
   bin/silt etc/max -x         # Recompile main config
 
-Telnet Scripts:
---------------
+MAXTEL (Telnet Supervisor):
+--------------------------
+  bin/maxtel             - Multi-node telnet supervisor with ncurses UI
+    -p PORT              - Listen port (default: 2323)
+    -n NODES             - Number of nodes (default: 4)
+    -H                   - Headless mode (no UI, for scripts)
+    -D                   - Daemon mode (fork to background)
+    -h                   - Show all options
+
+  See docs/maxtel.md for full documentation.
+
+Legacy Telnet Scripts:
+---------------------
   bin/max-node.sh <N>    - Run a single node in a loop (use inside screen/tmux)
   bin/start-nodes.sh [n] - Start n nodes using screen (default: 4)
   bin/maxcomm            - Bridges telnet connections to Maximus sockets
-
-How Telnet Works:
-----------------
-  1. Each max instance creates a UNIX socket (maxipc<N>)
-  2. maxcomm finds an available socket and bridges the connection
-  3. When session ends, max-node.sh restarts for the next caller
 
 Environment Variables:
 ---------------------
