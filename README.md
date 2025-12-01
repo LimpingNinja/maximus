@@ -36,28 +36,27 @@ tar -xzvf maximus-3.04a-r2-macos-arm64.tar.gz
 cd maximus-3.04a-r2-macos-arm64
 ```
 
-### 2. Customize Your BBS
+### 2. Run the Install Script
 
-Edit `etc/max.ctl` to give your BBS a name and identity:
+The interactive install script configures your BBS name, sysop name, and sets up all paths:
 
 ```bash
-# Open in your favorite editor
-nano etc/max.ctl
-# or: vim etc/max.ctl
+bin/install.sh
 ```
 
-Find and change these lines near the top:
-```
-Name            Your Battle Station [EXAMPLE]
-SysOp           Your Name [EXAMPLE]
-```
+Follow the prompts to name your BBS and set your sysop name. The script automatically compiles all configuration files.
 
-After editing, recompile the configuration:
+### 3. Create Your Sysop Account (Required First Time)
+
+Log in locally to create your sysop account and the user database:
+
 ```bash
-bin/silt etc/max -x
+bin/runbbs.sh -c
 ```
 
-### 3. Launch with MAXTEL
+Enter your sysop name (matching what you set during install), create a password, and exit with `G` (Goodbye). Remote connections will fail until this step is complete.
+
+### 4. Launch with MAXTEL
 
 MAXTEL is the telnet supervisor that manages multi-node access to your BBS:
 
@@ -69,13 +68,6 @@ bin/maxtel -p 2323 -n 4
 That's it. Your BBS is now accepting callers. Connect with any telnet client:
 ```bash
 telnet localhost 2323
-```
-
-### 4. Test Locally (Optional)
-
-To test without telnet, run in local console mode:
-```bash
-bin/max etc/max -c
 ```
 
 ### Upgrading Your BBS

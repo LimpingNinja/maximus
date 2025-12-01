@@ -54,7 +54,7 @@
 #undef raw
 
 /* Configuration */
-#define MAX_NODES       16
+#define MAX_NODES       32
 #define DEFAULT_PORT    2323
 #define DEFAULT_NODES   4
 #define SOCKET_PREFIX   "maxipc"
@@ -158,7 +158,11 @@ static HPRM         prm_handle = NULL;
 static char         system_name[64] = "";
 static char         sysop_name[64] = "";
 static char         ftn_address[32] = "";
+static char         callers_path[512] = "";  /* Path to callers.bbs from PRM */
 static int          user_count = 0;
+static int          alias_system = 0;  /* If system uses aliases (FLAG_alias) */
+
+#define FLAG_alias 0x4000  /* Alias system flag from prm.h */
 
 /* Runtime statistics */
 static time_t       start_time = 0;      /* When maxtel started */
@@ -815,6 +819,8 @@ static void update_node_status(void)
         if (node->state == NODE_CONNECTED) {
             char lastus_path[256];
             char username[36];
+            char useralias[21];
+            char display_name[64];
             struct stat st;
             snprintf(lastus_path, sizeof(lastus_path), "%s/%s%02d.bbs", 
                      base_path, LASTUS_PREFIX, i + 1);
@@ -826,8 +832,26 @@ static void update_node_status(void)
                     /* Read first 36 bytes = user name */
                     if (read(fd, username, 36) == 36 && username[0]) {
                         username[35] = '\0';  /* Ensure null termination */
-                        if (strncmp(node->username, username, sizeof(node->username) - 1) != 0) {
-                            strncpy(node->username, username, sizeof(node->username) - 1);
+                        
+                        /* If alias system, try to read alias at offset 72 */
+                        useralias[0] = '\0';
+                        if (alias_system) {
+                            lseek(fd, 72, SEEK_SET);
+                            if (read(fd, useralias, 21) == 21) {
+                                useralias[20] = '\0';
+                            }
+                        }
+                        
+                        /* Prefer alias if alias system is enabled and alias exists */
+                        if (alias_system && useralias[0]) {
+                            strncpy(display_name, useralias, sizeof(display_name) - 1);
+                        } else {
+                            strncpy(display_name, username, sizeof(display_name) - 1);
+                        }
+                        display_name[sizeof(display_name) - 1] = '\0';
+                        
+                        if (strncmp(node->username, display_name, sizeof(node->username) - 1) != 0) {
+                            strncpy(node->username, display_name, sizeof(node->username) - 1);
                             node->username[sizeof(node->username) - 1] = '\0';
                             need_refresh = 1;
                         }
@@ -895,17 +919,40 @@ static void load_current_user(int node_num)
 /* Load recent callers from callers.bbs (read last N entries) */
 static void load_callers(void)
 {
-    char path[256];
+    char path[512];
     struct stat st;
     int fd;
     
-    snprintf(path, sizeof(path), "%s/etc/callers.bbs", base_path);
-    if (stat(path, &st) < 0 || st.st_size < (off_t)sizeof(struct callinfo))
+    /* Use path from PRM (already resolved by SILT), same as BBS does */
+    if (!callers_path[0]) {
+        return;  /* No callers log configured */
+    }
+    
+    /* Prepend base_path if callers_path is relative */
+    if (callers_path[0] == '/') {
+        strncpy(path, callers_path, sizeof(path) - 1);
+    } else {
+        snprintf(path, sizeof(path), "%s/%s", base_path, callers_path);
+    }
+    path[sizeof(path) - 1] = '\0';
+    
+    /* Add .bbs extension if not present in filename (same as ci_filename in BBS) */
+    char *p = strrchr(path, '/');
+    if (p == NULL)
+        p = path;
+    if (strchr(p, '.') == NULL)
+        strncat(path, ".bbs", sizeof(path) - strlen(path) - 1);
+    
+    if (stat(path, &st) < 0 || st.st_size < (off_t)sizeof(struct callinfo)) {
+        callers_count = 0;  /* Clear old data if file is missing/empty */
         return;
+    }
     
     fd = open(path, O_RDONLY);
-    if (fd < 0)
+    if (fd < 0) {
+        callers_count = 0;
         return;
+    }
     
     /* Calculate number of records and how many to read */
     int total_records = st.st_size / sizeof(struct callinfo);
@@ -963,6 +1010,18 @@ static void load_prm_info(void)
             snprintf(ftn_address, sizeof(ftn_address), "%d:%d/%d", 
                      addr->zone, addr->net, addr->node);
     }
+    
+    /* Get callers log path from PRM */
+    const char *clog = PrmFileString(prm_handle, caller_log);
+    if (clog && *clog) {
+        strncpy(callers_path, clog, sizeof(callers_path) - 1);
+        callers_path[sizeof(callers_path) - 1] = '\0';
+        DEBUG("Callers log path from PRM: %s", callers_path);
+    }
+    
+    /* Check if system uses aliases */
+    alias_system = (PrmFileValue(prm_handle, flags) & FLAG_alias) != 0;
+    DEBUG("Alias system: %s", alias_system ? "yes" : "no");
 }
 
 /* Load user count from user.bbs file */

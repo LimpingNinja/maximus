@@ -332,6 +332,10 @@ For more information, see docs/BUILD.md
 
 EOF
     
+    # Run recompile.sh to ensure all config files are freshly compiled
+    log_info "Running recompile.sh in release directory..."
+    (cd "$release_path" && ./bin/recompile.sh)
+    
     # Create tarball
     log_info "Creating tarball..."
     cd "$RELEASE_DIR"

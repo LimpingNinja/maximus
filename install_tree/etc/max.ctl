@@ -44,7 +44,7 @@ System Section
         % areas.  Don't insert your system address at the end of this
         % line, as Maximus will add it for you automatically.
 
-        Name            Terminal Velocity Kingston [EXAMPLE]
+        Name            Battle Station BBS [EXAMPLE]
 
         % The SysOp option tells Maximus about the name of the sysop.
         % However, just setting this to a user's name does not grant
@@ -55,7 +55,7 @@ System Section
         % To grant a user real sysop powers, the user editor must be
         % used to adjust the user's privilege level to SYSOP.
 
-        SysOp           Wes Garland [EXAMPLE]
+        SysOp           Limping Ninja [EXAMPLE]
 
         % 'Snoop' tells Maximus whether or not to have 'Snooping' by
         % enabled default.  When you are snooping, the screen displayed
@@ -1003,7 +1003,7 @@ Session Section
         % If you don't know what you're doing, then you should
         % probably leave these alone.
 
-        Format FileHeader %x16%x01%x0fFile Areas %x16%x01%x0dÄÄÄÄÄÄÄÄÄÄÄÄÄÄ%x0a%x0a
+        Format FileHeader %x16%x01%x0fFile Areas %x16%x01%x0dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%x0a%x0a
         Format FileFormat %x16%x01%x0d%-20#%x16%x01%x07 ... %x16%x01%x03%-n%x0a
 
         % If you want your file-area menu to have a two-column display,
@@ -1256,7 +1256,7 @@ Session Section
         % you don't know what you're doing, then you should
         % probably leave these alone.
 
-        Format MsgHeader  %x16%x01%x0fMessage Areas %x16%x01%x0dÄÄÄÄÄÄÄÄÄÄÄÄÄÄ%x0a%x0a
+        Format MsgHeader  %x16%x01%x0fMessage Areas %x16%x01%x0dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%x0a%x0a
         Format MsgFormat  %x16%x01%x0e%*%x16%x01%x0d%-20#%x16%x01%x07 ... %x16%x01%x03%n%x0a
 
         % If you want your message area menu to have a two-column display,

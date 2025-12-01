@@ -282,10 +282,18 @@ static int near GetName(void)
 #endif
 #endif
 
-    sprintf(quest, what_first_name,
-            (prm.flags & FLAG_alias) ? s_alias : blank_str);
-
-    InputGetsWNH(fname, quest);
+    /* YES/YES mode (Alias System + Ask Alias): ask for alias first using enter_name
+     * Other modes: ask for real name using what_first_name
+     */
+    if ((prm.flags & FLAG_alias) && (prm.flags & FLAG_ask_name))
+    {
+      InputGetsWNH(fname, enter_name);
+    }
+    else
+    {
+      sprintf(quest, what_first_name, blank_str);
+      InputGetsWNH(fname, quest);
+    }
 
     if (! *fname)
     {
@@ -367,13 +375,21 @@ static int near GetName(void)
     if (! *linebuf)
       Putc('\n');
 
-    if (GetYnAnswer(username,0)==NO)
+    /* For remote connections with a found user, skip confirmation and go
+     * straight to password. Keep confirmation for:
+     * - Local console (-c) mode: needed for first-time sysop setup
+     * - New users: need to confirm before creating account
+     */
+    if (local || !found_it)
     {
-      if (!local)
-        logit(brain_lapse,username);
+      if (GetYnAnswer(username,0)==NO)
+      {
+        if (!local)
+          logit(brain_lapse,username);
 
-      Blank_User(&usr);
-      continue;
+        Blank_User(&usr);
+        continue;
+      }
     }
 
     usr.help=save;
@@ -622,10 +638,42 @@ static int near Find_User(char *username)
 static void near NewUser(char *username)
 {
   HUF huf;
+  char temp[PATHLEN];
 
   Blank_User(&usr);
 
-  strcpy(usr.name,username);
+  /* YES/YES mode: username is the alias, need to ask for real name
+   * Other modes: username is the real name
+   */
+  if ((prm.flags & FLAG_alias) && (prm.flags & FLAG_ask_name))
+  {
+    char prompt[PATHLEN];
+    char realname[PATHLEN];
+    
+    /* Store alias from login prompt */
+    strncpy(usr.alias, username, sizeof(usr.alias)-1);
+    usr.alias[sizeof(usr.alias)-1] = '\0';
+    
+    /* Ask for real name (optional - press enter to use alias) */
+    WhiteN();
+    sprintf(prompt, what_first_name, s_alias);  /* s_alias = " (optional)" */
+    InputGetsL(realname, sizeof(usr.name)-1, prompt);
+    
+    if (*realname)
+    {
+      fancier_str(realname);
+      strcpy(usr.name, realname);
+    }
+    else
+    {
+      /* Use alias as real name if not provided */
+      strcpy(usr.name, username);
+    }
+  }
+  else
+  {
+    strcpy(usr.name, username);
+  }
   SetUserName(&usr,usrname);
 
   if (create_userbbs)
@@ -681,12 +729,21 @@ static void near NewUser(char *username)
 
   Chg_City();
 
+  /* For YES/YES mode, we already got the alias at login - just validate it.
+   * For other modes with Ask Alias, prompt for alias now.
+   * For modes without Ask Alias, clear the alias field.
+   */
   if ((prm.flags & FLAG_ask_name)==0)
     *usr.alias='\0';
+  else if ((prm.flags & FLAG_alias) && (prm.flags & FLAG_ask_name))
+  {
+    /* YES/YES: alias already set from login, just validate */
+    Bad_Word_Check(usr.alias);
+  }
   else
   {
+    /* Other modes with Ask Alias: prompt for alias */
     Chg_Alias();
-
     Bad_Word_Check(usr.alias);
   }
 

@@ -167,8 +167,11 @@ void FinishUp2(int hangup)
     else usr.xp_mins -= wasonfor;
   }
 
+  logit("@max_fini: fLoggedOn=%d CFLAGA_HIDDEN=%d", fLoggedOn, acsflag(CFLAGA_HIDDEN));
   if (fLoggedOn && !acsflag(CFLAGA_HIDDEN))
     ci_save();
+  else
+    logit("@max_fini: SKIPPED ci_save()");
 
   if ((fLoggedOn || this_logon_bad) && !nowrite_lastuser && !in_wfc)
   {
@@ -263,9 +266,9 @@ void FinishUp2(int hangup)
 
 
 #ifdef DBG
-  printf("ô\n"
-         "³ Maximus down.\n"
-         "õ\n\n");
+  printf("Ã´\n"
+         "Â³ Maximus down.\n"
+         "Ãµ\n\n");
 #endif
 }
 
@@ -614,12 +617,7 @@ void mdm_hangup(void)  /* Do the raise DTR/drop DTR thingy */
     }
   }
 
-#if (COMMAPI_VER > 1)
-  if (!local /*&& !ComIsAModem(hcModem)*/)
-  {
-    ComClose(hcModem);
-  }
-#endif
+  /* NOTE: ComClose already called by mdm_deinit() above for UNIX/NT */
   
   quit(0);
 }

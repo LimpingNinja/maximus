@@ -27,6 +27,7 @@
 #include <io.h>
 #include <fcntl.h>
 #include <share.h>
+#include <errno.h>
 #include "prog.h"
 #include "mm.h"
 
@@ -40,12 +41,18 @@ void ci_login(void)
 
 void ci_init(void)
 {
+  logit("@ci_init: caller_log='%s'", PRM(caller_log));
   if (*PRM(caller_log))
   {
     memset(&sci, 0, sizeof sci);
     strcpy(sci.name, usrname);
     sci.task=task_num;
     ci_login();
+    logit("@ci_init: initialized sci.name='%s' task=%d", sci.name, sci.task);
+  }
+  else
+  {
+    logit("@ci_init: caller_log is EMPTY - skipping init");
   }
 }
 
@@ -73,7 +80,10 @@ void ci_save(void)
 {
   char temp[PATHLEN];
 
+  logit("@ci_save: called");
   ci_filename(temp);
+  logit("@ci_save: filename='%s' sci.name='%s'", temp, sci.name);
+  
   if (*sci.name && *temp)
   {
     int fd;
@@ -87,12 +97,22 @@ void ci_save(void)
     sci.logoff_priv=usr.priv;
     sci.logoff_xkeys=usr.xkeys;
 
+    logit("@ci_save: opening '%s' for append", temp);
     fd=shopen(temp, O_RDWR|O_CREAT|O_APPEND|O_BINARY);
     if (fd!=-1)
     {
       write(fd, (char *)&sci, sizeof sci);
       close(fd);
+      logit("@ci_save: SUCCESS wrote %d bytes to '%s'", (int)sizeof(sci), temp);
     }
+    else
+    {
+      logit("@ci_save: FAILED to open '%s' errno=%d", temp, errno);
+    }
+  }
+  else
+  {
+    logit("@ci_save: SKIPPED - sci.name='%s' temp='%s'", sci.name, temp);
   }
 }
 
