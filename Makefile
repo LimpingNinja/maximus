@@ -86,7 +86,7 @@ clean:
 	$(foreach DIR, $(DIRS) configuration-tests, cd $(DIR) && $(MAKE) -k $@; cd ..; )
 	-rm depend.mk.bak depend.mk
 	-rm */depend.mk.bak */depend.mk
-	-find $(PREFIX)/etc/m -name "*.vm" -delete 2>/dev/null || true
+	-find $(PREFIX)/m -name "*.vm" -delete 2>/dev/null || true
 
 # archclean: Also clean build/lib for cross-architecture builds
 archclean: clean
@@ -169,7 +169,6 @@ reconfig:
 
 	@echo " - Compiling MEX files"
 	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
-	@cp -f $(PREFIX)/m/*.vm $(PREFIX)/etc/m/ 2>/dev/null || true
 
 	@echo
 	@echo "Pass two"

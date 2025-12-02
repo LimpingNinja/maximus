@@ -372,9 +372,6 @@ static int near GetName(void)
     saveb=usr.bits;
     usr.bits &= ~BITS_HOTKEYS;
 
-    if (! *linebuf)
-      Putc('\n');
-
     /* For remote connections with a found user, skip confirmation and go
      * straight to password. Keep confirmation for:
      * - Local console (-c) mode: needed for first-time sysop setup
@@ -382,6 +379,9 @@ static int near GetName(void)
      */
     if (local || !found_it)
     {
+      if (! *linebuf)
+        Putc('\n');
+
       if (GetYnAnswer(username,0)==NO)
       {
         if (!local)

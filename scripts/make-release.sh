@@ -170,6 +170,22 @@ create_release_package() {
     cp -f "${BUILD_DIR}/lib/"*.so "$release_path/lib/" 2>/dev/null || true
     cp -f "${BUILD_DIR}/lib/"*.dylib "$release_path/lib/" 2>/dev/null || true
     
+    # Codesign and clear quarantine on macOS
+    if [ "$os" = "macos" ]; then
+        log_info "Codesigning release binaries..."
+        xattr -cr "$release_path/bin" "$release_path/lib" 2>/dev/null || true
+        for bin in "$release_path/bin/"*; do
+            if [ -f "$bin" ] && file "$bin" | grep -q "Mach-O"; then
+                codesign --force --sign - "$bin" 2>/dev/null || true
+            fi
+        done
+        for lib in "$release_path/lib/"*.so "$release_path/lib/"*.dylib; do
+            if [ -f "$lib" ]; then
+                codesign --force --sign - "$lib" 2>/dev/null || true
+            fi
+        done
+    fi
+    
     # Copy compiled display files (.bbs) from build
     log_info "Copying compiled display files..."
     cp -f "${BUILD_DIR}/etc/misc/"*.bbs "$release_path/etc/misc/" 2>/dev/null || true
@@ -181,9 +197,7 @@ create_release_package() {
     
     # Copy compiled MEX files (.vm)
     log_info "Copying compiled MEX files..."
-    mkdir -p "$release_path/etc/m"
     cp -f "${BUILD_DIR}/m/"*.vm "$release_path/m/" 2>/dev/null || true
-    cp -f "${BUILD_DIR}/etc/m/"*.vm "$release_path/etc/m/" 2>/dev/null || true
     
     # Copy documentation
     log_info "Copying documentation..."
@@ -229,14 +243,17 @@ echo "Step 1: Compiling language file (english.mad)..."
 (cd etc/lang && ../../bin/maid english -p)
 
 echo "Step 2: Compiling help display files (.mec -> .bbs)..."
-bin/mecca etc/help/*.mec
+for f in etc/help/*.mec; do
+    [ -f "$f" ] && bin/mecca "$f"
+done
 
 echo "Step 3: Compiling misc display files (.mec -> .bbs)..."
-bin/mecca etc/misc/*.mec
+for f in etc/misc/*.mec; do
+    [ -f "$f" ] && bin/mecca "$f"
+done
 
 echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
 (cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
-cp -f m/*.vm etc/m/ 2>/dev/null || true
 
 echo "Step 5: Compiling configuration (max.ctl -> max.prm)..."
 bin/silt etc/max -x

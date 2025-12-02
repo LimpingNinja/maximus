@@ -1,0 +1,320 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: oneliner.mex
+//
+// Desc: Oneliners Door for Maximus BBS
+//
+// Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+// https://github.com/LimpingNinja
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+//////////////////////////////////////////////////////////////////////////////
+
+#include <max.mh>
+#include <input.mh>
+#include <prm.mh>
+
+// Configuration
+#define MAX_LINES    12
+#define NAME_WIDTH   15
+#define MSG_WIDTH    58
+#define DATA_FILE    "oneliners.dat"
+
+// Display area (within borders)
+#define MSG_START_ROW  7
+#define MSG_END_ROW    18
+#define MSG_START_COL  3
+#define MSG_END_COL    77
+#define CONTENT_WIDTH  75
+#define PROMPT_ROW     20
+#define PROMPT_COL     28
+#define PROMPT_WIDTH   26
+#define INPUT_ROW      21
+#define INPUT_COL      3
+
+// ANSI escape codes for arrow keys (ESC [ C/D)
+#define KEY_ESC     27
+#define KEY_BRACKET 91
+#define KEY_LEFT    68
+#define KEY_RIGHT   67
+
+// Color for lightbar selection: cyan background + bright white
+#define COL_LIGHTBAR   "\x16\x01\x3f"
+#define COL_NORMAL     "\x16\x01\x07"
+
+// Prompt lengths (for centering)
+#define ENTER_PROMPT_LEN  25
+
+// Storage for oneliners (array bounds must be literals)
+array [1..12] of string: oneliners;
+array [1..12] of string: authors;
+int: count;
+
+// Load oneliners from file
+void load_oneliners()
+{
+  int: fd;
+  string: line;
+  int: sep;
+
+  count := 0;
+  fd := open(prm_string(PRM_MISCPATH) + DATA_FILE, IOPEN_READ);
+
+  if (fd = -1)
+    return;
+
+  while (count < MAX_LINES and readln(fd, line) <> -1)
+  {
+    sep := stridx(line, 1, '|');
+    if (sep > 0)
+    {
+      count := count + 1;
+      authors[count] := substr(line, 1, sep - 1);
+      oneliners[count] := substr(line, sep + 1, strlen(line) - sep);
+    }
+  }
+
+  close(fd);
+}
+
+// Save oneliners to file
+void save_oneliners()
+{
+  int: fd, i;
+
+  fd := open(prm_string(PRM_MISCPATH) + DATA_FILE, IOPEN_RW | IOPEN_CREATE);
+
+  if (fd = -1)
+  {
+    print(COL_LRED "Error: Could not save oneliners!" COL_WHITE);
+    return;
+  }
+
+  i := 1;
+  while (i <= count)
+  {
+    writeln(fd, authors[i] + "|" + oneliners[i]);
+    i := i + 1;
+  }
+
+  close(fd);
+}
+
+// Position cursor at row, col
+void goto_pos(int: row, int: col)
+{
+  print(AVATAR_GOTO, (char)row, (char)col);
+}
+
+// Clear content area on a single row (between borders)
+void clear_content_row(int: row)
+{
+  goto_pos(row, MSG_START_COL);
+  print(strpad("", CONTENT_WIDTH, ' '));
+}
+
+// Display oneliners on lines 7-18
+void display_oneliners()
+{
+  int: i, row, namepad, msgpad;
+  string: dispname, dispmsg, line;
+
+  i := 1;
+  row := MSG_START_ROW;
+
+  while (row <= MSG_END_ROW)
+  {
+    clear_content_row(row);
+    goto_pos(row, MSG_START_COL);
+
+    if (i <= count)
+    {
+      // Truncate name if needed
+      dispname := authors[i];
+      if (strlen(dispname) > NAME_WIDTH)
+        dispname := substr(dispname, 1, NAME_WIDTH);
+
+      // Right-justify name within NAME_WIDTH
+      namepad := NAME_WIDTH - strlen(dispname);
+
+      // Truncate message if needed
+      dispmsg := oneliners[i];
+      if (strlen(dispmsg) > MSG_WIDTH)
+        dispmsg := substr(dispmsg, 1, MSG_WIDTH);
+
+      // Build line: right-justify name, colon, left-justify msg
+      line := strpad("", namepad, ' ') + COL_LGREEN + dispname + COL_WHITE + ": " + COL_YELLOW + dispmsg + COL_WHITE;
+      print(line);
+
+      i := i + 1;
+    }
+
+    row := row + 1;
+  }
+}
+
+// Draw the lightbar prompt
+void draw_lightbar(int: selected)
+{
+  // selected: 0 = YES, 1 = NO
+  goto_pos(PROMPT_ROW, PROMPT_COL);
+  print(COL_WHITE "Add message ");
+
+  if (selected = 0)
+    print(COL_LIGHTBAR "(y)ES" COL_NORMAL);
+  else
+    print(COL_WHITE "(y)ES");
+
+  print(COL_WHITE " or ");
+
+  if (selected = 1)
+    print(COL_LIGHTBAR "(n)O" COL_NORMAL);
+  else
+    print(COL_WHITE "(n)O");
+
+  print(COL_WHITE " ");
+}
+
+// Get user choice with lightbar
+int get_choice()
+{
+  int: selected, done, ch;
+
+  selected := 0;
+  done := 0;
+
+  while (done = 0)
+  {
+    draw_lightbar(selected);
+
+    ch := getch();
+
+    // Check for ANSI escape sequence (arrow keys)
+    if (ch = KEY_ESC)
+    {
+      ch := getch();
+      if (ch = KEY_BRACKET)
+      {
+        ch := getch();
+        if (ch = KEY_LEFT)
+          selected := 0;
+        else if (ch = KEY_RIGHT)
+          selected := 1;
+      }
+    }
+    else if (ch = 'y' or ch = 'Y')
+    {
+      selected := 0;
+    }
+    else if (ch = 'n' or ch = 'N')
+    {
+      selected := 1;
+    }
+    else if (ch = '\r' or ch = '\n')
+    {
+      done := 1;
+    }
+  }
+
+  return selected;
+}
+
+// Show centered press enter prompt (within lightbar area) and wait
+void wait_for_enter()
+{
+  int: ch, pad;
+
+  pad := (PROMPT_WIDTH - ENTER_PROMPT_LEN) / 2;
+
+  // Clear the input row
+  goto_pos(INPUT_ROW, INPUT_COL);
+  print(strpad("", CONTENT_WIDTH, ' '));
+
+  // Center message within prompt area
+  goto_pos(PROMPT_ROW, PROMPT_COL + pad);
+  print(COL_LCYAN "<<Press Enter When Done>>" COL_WHITE);
+
+  ch := getch();
+  while (ch <> 13 and ch <> 10)
+    ch := getch();
+}
+
+// Add a new oneliner
+void add_oneliner()
+{
+  string: newline, author;
+  int: i;
+  char: nonstop;
+
+  // Get author name
+  if (strlen(usr.alias) > 0)
+    author := usr.alias;
+  else
+    author := usr.name;
+
+  // Truncate if needed
+  if (strlen(author) > NAME_WIDTH)
+    author := substr(author, 1, NAME_WIDTH);
+
+  goto_pos(INPUT_ROW, INPUT_COL);
+  print(strpad("", CONTENT_WIDTH, ' '));
+  goto_pos(INPUT_ROW, INPUT_COL);
+
+  input_str(newline, INPUT_NLB_LINE, 0, MSG_WIDTH, COL_YELLOW "> " COL_LGREEN "Speak yr mind" COL_WHITE ": " COL_LCYAN);
+
+  if (strlen(newline) = 0)
+  {
+    wait_for_enter();
+    return;
+  }
+
+  // If at max, shift down (oldest rolls off)
+  if (count >= MAX_LINES)
+  {
+    i := 1;
+    while (i < MAX_LINES)
+    {
+      authors[i] := authors[i + 1];
+      oneliners[i] := oneliners[i + 1];
+      i := i + 1;
+    }
+    count := MAX_LINES - 1;
+  }
+
+  // Add new oneliner
+  count := count + 1;
+  authors[count] := author;
+  oneliners[count] := newline;
+
+  save_oneliners();
+  log("Oneliner added by " + author + ": " + newline);
+
+  // Redisplay everything with new message
+  print(AVATAR_CLS);
+  display_file(prm_string(PRM_MISCPATH) + "oneliner", nonstop);
+  display_oneliners();
+  wait_for_enter();
+}
+
+// Main function
+void main()
+{
+  int: choice;
+  char: nonstop;
+
+  load_oneliners();
+
+  // Clear screen and show header
+  print(AVATAR_CLS);
+  display_file(prm_string(PRM_MISCPATH) + "oneliner", nonstop);
+
+  display_oneliners();
+  choice := get_choice();
+
+  while (choice = 0)
+  {
+    add_oneliner();
+    return;
+  }
+}

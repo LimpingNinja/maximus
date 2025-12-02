@@ -317,15 +317,12 @@ scripts/copy_install_tree.sh build
 cd build && bin/silt etc/max -x
 ```
 
-Note: The `m/` directory in the source tree contains the canonical MEX scripts
-with bug fixes applied. The `install_tree/m/` is kept in sync with these fixes.
-
 ### Configuration Workflow
 
 1. Edit `.ctl` files in `etc/` to customize your BBS
-2. Run `bin/silt etc/max -x` to recompile
-3. Test with `bin/max etc/max -w -pt1`
-4. Set up telnet access via inetd/xinetd/systemd (see Telnet Server section)
+2. Run `bin/recompile.sh` to recompile all config files
+3. Test with `bin/runbbs.sh -c` (local console mode)
+4. Start telnet server with `bin/maxtel -p 2323 -n 4`
 
 ## Known Issues
 
@@ -341,30 +338,6 @@ with bug fixes applied. The `install_tree/m/` is kept in sync with these fixes.
 ### General
 - Big-endian platforms may have issues with FidoNet packet handling
 - C++ code in btree/ generates warnings with modern compilers
-
-### MEX Compiler Scope Bug
-
-The MEX compiler has a parameter scoping bug that causes "redeclaration of argument"
-errors when multiple functions use the same parameter name. See `docs/MEX_COMPILER_SCOPE_BUG.md`
-for details. Workaround: use unique parameter names across functions.
-
-`card.mex` has been fixed in the `m/` directory (renamed parameter `hnd` → `h`).
-
-## Telnet Server
-
-The system supports telnet via `maxcomm` which acts as a bridge between 
-inetd/xinetd and the running Maximus tasks via UNIX domain sockets.
-
-### Setup with inetd
-
-```
-# /etc/inetd.conf
-telnet stream tcp nowait bbs /path/to/maxcomm maxcomm
-```
-
-### Setup with systemd
-
-See `docs/` for systemd socket activation examples.
 
 ## Cross-Compilation
 

@@ -28,13 +28,12 @@ for f in etc/help/*.mec; do
 done
 
 echo "Step 3: Compiling misc display files (.mec -> .bbs)..."
-for f in etc/misc/*.mec; do
+for f in etc/misc/*.mec; do 
     [ -f "$f" ] && bin/mecca "$f"
 done
 
 echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
 (cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
-cp -f m/*.vm etc/m/ 2>/dev/null || true
 
 echo "Step 5: Compiling configuration (max.ctl -> max.prm)..."
 bin/silt etc/max -x

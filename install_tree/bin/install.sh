@@ -11,8 +11,17 @@
 # - Optionally configuring BBS name and sysop name
 # - Compiling all configuration files
 #
+# Upgrade mode (--upgrade <path>):
+# - Copies bin/ and lib/ files to existing installation
+# - Copies missing m/, etc/ansi/, etc/misc/ files
+# - Does NOT overwrite existing etc/ config files
+#
 
 set -e
+
+# Mode flags
+UPGRADE_MODE=0
+UPGRADE_PATH=""
 
 # Colors (matching WFC style)
 CYAN='\033[0;36m'
@@ -99,6 +108,165 @@ prompt() {
     fi
     
     eval "$var_name=\"$value\""
+}
+
+# Show usage
+usage() {
+    echo "Usage: $SCRIPT_NAME [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --upgrade <path>   Upgrade existing installation at <path>"
+    echo "  --help             Show this help message"
+    echo ""
+    echo "Without options, performs fresh installation in current directory."
+    exit 0
+}
+
+# Upgrade existing installation
+do_upgrade() {
+    local target="$1"
+    local copied_missing=""
+    local bin_count=0
+    local lib_count=0
+    
+    clear
+    display_logo
+    
+    section "Upgrade Mode"
+    
+    echo -e "${CYAN}Source:${NC}      ${WHITE}$BASE_DIR${NC}"
+    echo -e "${CYAN}Target:${NC}      ${WHITE}$target${NC}"
+    echo ""
+    
+    # Verify target is a valid Maximus installation
+    if [ ! -f "$target/etc/max.ctl" ] && [ ! -f "$target/etc/max.prm" ]; then
+        log_error "Target does not appear to be a Maximus installation"
+        log_error "Missing etc/max.ctl or etc/max.prm"
+        exit 1
+    fi
+    
+    log_ok "Valid Maximus installation detected"
+    echo ""
+    
+    # Confirm
+    echo -ne "${YELLOW}Continue with upgrade?${NC} [${WHITE}Y/n${NC}]: "
+    read confirm
+    if [ "$confirm" = "n" ] || [ "$confirm" = "N" ]; then
+        echo ""
+        log_warn "Upgrade cancelled."
+        exit 0
+    fi
+    
+    section "Copying Executables and Libraries"
+    
+    # Copy bin/ files
+    log_info "Copying bin/ files..."
+    for f in bin/*; do
+        if [ -f "$f" ]; then
+            cp -f "$f" "$target/bin/"
+            bin_count=$((bin_count + 1))
+        fi
+    done
+    log_ok "Copied $bin_count files to bin/"
+    
+    # Copy lib/ files
+    log_info "Copying lib/ files..."
+    for f in lib/*; do
+        if [ -f "$f" ]; then
+            cp -f "$f" "$target/lib/"
+            lib_count=$((lib_count + 1))
+        fi
+    done
+    log_ok "Copied $lib_count files to lib/"
+    
+    # On macOS, clear quarantine and codesign copied binaries
+    if [ "$(uname -s)" = "Darwin" ]; then
+        log_info "Clearing quarantine and codesigning (macOS)..."
+        xattr -cr "$target/bin" "$target/lib" 2>/dev/null || true
+        for bin in "$target/bin/"*; do
+            if [ -f "$bin" ] && file "$bin" | grep -q "Mach-O"; then
+                codesign --force --sign - "$bin" 2>/dev/null || true
+            fi
+        done
+        for lib in "$target/lib/"*.so "$target/lib/"*.dylib; do
+            if [ -f "$lib" ]; then
+                codesign --force --sign - "$lib" 2>/dev/null || true
+            fi
+        done
+        log_ok "Binaries signed"
+    fi
+    
+    # Copy man/ files
+    log_info "Copying man/ files..."
+    if [ -d "man" ]; then
+        [ -d "$target/man" ] || mkdir -p "$target/man"
+        for f in man/*; do
+            if [ -f "$f" ]; then
+                cp -f "$f" "$target/man/"
+            fi
+        done
+        log_ok "Copied man pages"
+    fi
+    
+    section "Checking for Missing Files"
+    
+    # Helper function to check directory for missing files
+    check_missing_files() {
+        local src_dir="$1"
+        local dir_name="$2"
+        
+        if [ -d "$src_dir" ]; then
+            log_info "Checking $dir_name/..."
+            [ -d "$target/$src_dir" ] || mkdir -p "$target/$src_dir"
+            for f in "$src_dir"/*; do
+                if [ -f "$f" ]; then
+                    fname="$(basename "$f")"
+                    if [ ! -f "$target/$src_dir/$fname" ]; then
+                        cp -f "$f" "$target/$src_dir/"
+                        copied_missing="$copied_missing\n  ${LGREEN}+${NC} $src_dir/$fname"
+                    fi
+                fi
+            done
+        fi
+    }
+    
+    # Check m/ directory
+    check_missing_files "m" "MEX scripts"
+    
+    # Check all etc/ subdirectories
+    for subdir in etc/*/; do
+        if [ -d "$subdir" ]; then
+            subdir_name="${subdir%/}"  # Remove trailing slash
+            check_missing_files "$subdir_name" "$subdir_name"
+        fi
+    done
+    
+    section "Upgrade Complete"
+    
+    echo ""
+    echo -e "${LGREEN}Upgrade completed successfully!${NC}"
+    echo ""
+    echo -e "${WHITE}Summary:${NC}"
+    echo -e "  ${CYAN}bin/ files:${NC} $bin_count copied"
+    echo -e "  ${CYAN}lib/ files:${NC} $lib_count copied"
+    
+    if [ -n "$copied_missing" ]; then
+        echo ""
+        echo -e "${WHITE}New files added:${NC}"
+        echo -e "$copied_missing"
+    else
+        echo ""
+        echo -e "  ${CYAN}No missing files detected${NC}"
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}Note:${NC} Configuration files in etc/ were NOT modified."
+    echo -e "      Run ${WHITE}bin/recompile.sh${NC} in target if needed."
+    echo ""
+    echo -e "${LBLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}               Upgrade complete. Happy BBS'ing!${NC}"
+    echo -e "${LBLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
 }
 
 # Main installation
@@ -205,5 +373,31 @@ main() {
     echo ""
 }
 
-# Run main
-main "$@"
+# Parse arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --upgrade)
+            UPGRADE_MODE=1
+            if [ -z "$2" ] || [ "${2:0:1}" = "-" ]; then
+                log_error "--upgrade requires a path argument"
+                exit 1
+            fi
+            UPGRADE_PATH="$2"
+            shift 2
+            ;;
+        --help|-h)
+            usage
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            usage
+            ;;
+    esac
+done
+
+# Run appropriate mode
+if [ "$UPGRADE_MODE" = "1" ]; then
+    do_upgrade "$UPGRADE_PATH"
+else
+    main
+fi
