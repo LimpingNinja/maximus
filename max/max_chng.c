@@ -159,7 +159,7 @@ static void near Chg_Password(void)
     if (tries != 0)
     {
       Clear_KBuffer();
-      logit(log_inv_pwd, string);
+      logit(log_inv_pwd);
       Printf(wrong_pwd, tries);
       Putc('\n');
 

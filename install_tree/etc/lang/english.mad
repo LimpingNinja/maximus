@@ -1,45 +1,45 @@
-; $Id: ENGLISH.MAD 1.46 1995/12/26 10:49:58 sjd Exp $
+; $Id: english.mad,v 1.5 2004/01/11 23:36:03 wmcbrine Exp $
 ;
-; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
-; ï¿½                             ENGLISH.MAD                             ï¿½
-; ï¿½            Maximus Language File (English), Version 3.01            ï¿½
-; ï¿½  Copyright 1991, 1995 by Lanius Corporation.  All rights reserved.  ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ This file contains the Maximus language definition for the English  ï¿½
-; ï¿½ language.  To create your own language file for Maximus, use this   ï¿½
-; ï¿½ file as a starting point.  First, copy ENGLISH.MAD to some other    ï¿½
-; ï¿½ filename.  Then, edit the strings inside the language file to       ï¿½
-; ï¿½ suit the language to which you are translating.  Finally, MAID      ï¿½
-; ï¿½ the new language file, add it to LANGUAGE.CTL, and run SILT.        ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ However, if you simply want to modify the English language to suit  ï¿½
-; ï¿½ your own tastes, you can edit this file freely.  However, you will  ï¿½
-; ï¿½ still have to MAID this language file and recompile with SILT.      ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ A few notes on translations:                                        ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ 1) This file is organized into "heaps".  Each heap starts with a    ï¿½
-; ï¿½    colon at the beginning of a line, followed by the name of the    ï¿½
-; ï¿½    heap.  Example heaps are ":global", ":sysop" and ":max_main".    ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½    All heaps are processed identically, with one exception.  The    ï¿½
-; ï¿½    "sysop" heap is only loaded once, and it's loaded from the FIRST ï¿½
-; ï¿½    language file defined in LANGUAGE.CTL.  This heap will always be ï¿½
-; ï¿½    used for SysOp log entries and local screen displays, no matter  ï¿½
-; ï¿½    what language the user selects.  Therefore, it IS okay to        ï¿½
-; ï¿½    translate the strings in the ":sysop" heap.                      ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ 2) Language file strings can be of almost any length, so feel free  ï¿½
-; ï¿½    to add or delete characters.                                     ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ 3) THE ORDER OF STRINGS WITHN THIS FILE IS IMPORTANT!  Do not       ï¿½
-; ï¿½    add or delete any lines in any of the heaps.                     ï¿½
-; ï¿½                                                                     ï¿½
-; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+; ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+; ³                             ENGLISH.MAD                             ³
+; ³            Maximus Language File (English), Version 3.01            ³
+; ³  Copyright 1991, 1995 by Lanius Corporation.  All rights reserved.  ³
+; ³                                                                     ³
+; ³ This file contains the Maximus language definition for the English  ³
+; ³ language.  To create your own language file for Maximus, use this   ³
+; ³ file as a starting point.  First, copy ENGLISH.MAD to some other    ³
+; ³ filename.  Then, edit the strings inside the language file to       ³
+; ³ suit the language to which you are translating.  Finally, MAID      ³
+; ³ the new language file, add it to LANGUAGE.CTL, and run SILT.        ³
+; ³                                                                     ³
+; ³ However, if you simply want to modify the English language to suit  ³
+; ³ your own tastes, you can edit this file freely.  However, you will  ³
+; ³ still have to MAID this language file and recompile with SILT.      ³
+; ³                                                                     ³
+; ³ A few notes on translations:                                        ³
+; ³                                                                     ³
+; ³ 1) This file is organized into "heaps".  Each heap starts with a    ³
+; ³    colon at the beginning of a line, followed by the name of the    ³
+; ³    heap.  Example heaps are ":global", ":sysop" and ":max_main".    ³
+; ³                                                                     ³
+; ³    All heaps are processed identically, with one exception.  The    ³
+; ³    "sysop" heap is only loaded once, and it's loaded from the FIRST ³
+; ³    language file defined in LANGUAGE.CTL.  This heap will always be ³
+; ³    used for SysOp log entries and local screen displays, no matter  ³
+; ³    what language the user selects.  Therefore, it IS okay to        ³
+; ³    translate the strings in the ":sysop" heap.                      ³
+; ³                                                                     ³
+; ³ 2) Language file strings can be of almost any length, so feel free  ³
+; ³    to add or delete characters.                                     ³
+; ³                                                                     ³
+; ³ 3) THE ORDER OF STRINGS WITHN THIS FILE IS IMPORTANT!  Do not       ³
+; ³    add or delete any lines in any of the heaps.                     ³
+; ³                                                                     ³
+; ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
 ; This section starts off with several macro definitions:
 
-#define VER             3.02
+#define VER             3.03
 #define BETA_TEST
 #define YEAR            1989, 2003
 
@@ -167,8 +167,8 @@ time_added_for_ul=      LGREEN "\n%ld:%02ld" YELLOW " minutes added for upload.\
 @RIP enter_city=        RIP RIP_KILL RIP_END "Please enter your city and state/province: ";
 @MEX enter_phone=       "Please enter your phone number " LBRACKET "(xxx) yyy-zzzz" RBRACKET ": ";
 @RIP enter_phone=       RIP RIP_KILL RIP_END "Please enter your phone number " LBRACKET "(xxx) yyy-zzzz" RBRACKET ": ";
-@MEX enter_name=        "What is your username: ";
-@RIP enter_name=        RIP RIP_KILL RIP_END "What is your username: ";
+@MEX enter_name=        "Please enter your alias: ";
+@RIP enter_name=        RIP RIP_KILL RIP_END "Please enter your alias: ";
 @MEX msg_aborted=       CLS WHITE CLEOL "\n" CLEOL "\n" CLEOL "Message aborted.\n" CLEOL "\n" CLEOL;
 node_listing=           " %5d," CYAN " %s, %s\n";
 @MEX pad_zone=          YELLOW "ZONE  ";
@@ -184,7 +184,7 @@ message_name=           LGREEN "%sarea " LMAGENTA "%s" GRAY " ... " CYAN "%s\n";
 @MEX space_over=        "\r" CLEOL "                          \r";
 @MEX s_on=              "ON";
 @MEX s_off=             "OFF";
-four_blanks#=           "ï¿½ï¿½ï¿½ï¿½";
+four_blanks#=           "ÄÄÄÄ";
 moreyn_blank=           "              \r";
 moreynns_blank=         "\r                  \r";
 lzh_type=               "%-15.15s %8lu %8lu %-02.2d.%d%% %02d-%02d-%02.2d %02u:%02u:%02u %s %-8.8s %04X\n";
@@ -350,7 +350,7 @@ pwd_is=                 "Password: %s";
 entering=               "Entering";
 exiting=                "Exiting";
 the_chatmode=           " CHAT mode";
-log_bad_pwd=            "!Bad pwd \"%s\"";
+log_bad_pwd=            "!Bad password";
 external_prog=          "#External program: \"%s\"";
 return_prog=            ":Return from: \"%s\" (%d)";
 so_and_so_calling=      "+%s calling";
@@ -437,7 +437,7 @@ chat_logmsg#=           "****** BEGIN CHAT on %s at %s with %s ******\n\n";
 chat_logend#=           "\n****** END CHAT on %s at %s ******\n\n";
 log_user_yelling=       ":%s is yelling";
 log_ch_pwd=             ":User changing password";
-log_inv_pwd=            "!Invalid current pwd \"%s\"";
+log_inv_pwd=            "!Invalid current pwd";
 log_cb_start =          "#Entered CB channel %d";
 log_pvt_start=          "#Private chat with %s (node %d)";
 log_exit_chat=          "#Exit multi-line chat";
@@ -501,7 +501,7 @@ cantcreate=             "!Can't create \"%s\"";
 log_err_compr=          "!Archiver error (errorlevel %d)";
 type_keys_to_toggle=    YELLOW "\nSysOp: Type letters/numbers of keys to toggle.  <enter> to save changes, or\n<esc> to restore old keys.\n\n" CYAN;
 copen_log=              "\aCan't open log file \"%s\"\n";
-line_noise=             "ï¿½ kï¿½ï¿½[ï¿½\rï¿½ï¿½wï¿½ï¿½UVï¿½Uqï¿½>V&ï¿½\"Fï¿½ï¿½ï¿½ï¿½";
+line_noise=             "û ký¯[Æ\rœÞw“žUV Uq€>V&ó\"Fƒ’Áù";
 yell_toggle=            "Yell noise toggled (now %s)";
 priv_1=                 "Use <up> and <down>";
 priv_2=                 "to adjust priv level.";
@@ -569,9 +569,9 @@ time_up=                CYAN "\n\aTIME LIMIT.\a\n";
 @RIP time_up=           RIP RIP_FILLSTY "0104" RIP_BAR "018AHS8K" RIP_COL "0F" RIP_TEXTXY "088CTIME UP." RIP_END "\a";
 time_file=              "%sTIMEUP";
 grunged_exe=            "!Grunged MAX.EXE";
-what_first_name=        "What is your real name%s: ";
+what_first_name=        "What is your name%s: ";
 what_last_name=         "What is your LAST name%s: ";
-s_alias=                " (optional)";
+s_alias=                ;
 @MEX invalid_punct=     "Invalid punctuation.\n\n";
 uc_warn=                "Warning!  -c parameter specified, but USER.BBS already exists!\n";
 @MEX pvt_system=        "\nThis is a private system.\n";
@@ -633,9 +633,9 @@ pause_msg=              YELLOW "Hit <enter> (or wait %u seconds) to %s, or hit <
 pause_time=             "\r%-2d";
 @MEX fname_mask=        "Filename mask: ";
 @MEX avail_proto=       YELLOW "\nAvailable protocols:\n\n";
-proto_box_top=          LCYAN " ï¿½\x19ï¿½%cï¿½\n";
-proto_box_mid=          " ï¿½ " YELLOW "%c" GRAY ")%-*.*s " LCYAN "ï¿½\n";
-proto_box_bot=          " ï¿½\x19ï¿½%cï¿½\n\n" WHITE;
+proto_box_top=          LCYAN " Ú\x19Ä%c¿\n";
+proto_box_mid=          " ³ " YELLOW "%c" GRAY ")%-*.*s " LCYAN "³\n";
+proto_box_bot=          " À\x19Ä%cÙ\n\n" WHITE;
 @MEX proto_quit=        "Quit";
 @MEX file_ul=           "File to upload? ";
 file_dl=                "File(s) to download (#%u): ";
@@ -671,7 +671,7 @@ hurled_file=            "Hurling %s to %s...\n";
 bad_arc=                WHITE "\nFile \"%s\" is not a ZIP/LZH/ARC/PAK/ARJ, or file damaged.\n";
 sarc=                   "\nSearching archive: %s ";
 ziphdr1=                " Length  Method   Size   Ratio   Date   Time   CRC-32  Attr Name\n";
-ziphdr2=                "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½\n";
+ziphdr2=                "ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ ÄÄÄÄ\n";
 zip_store=              "Stored ";
 zip_shrunk=             "Shrunk ";
 zip_reduce=             "ReduceX";
@@ -680,11 +680,11 @@ unknown=                "Unknown";
 zip_format=             "%8lu %-7s %7lu %-02.2d.%d%% %02d-%02d-%02d %02d:%02d %08lx %s%c %-0.17s\n";
 zip_cmnt=               "Comment: %s\n";
 zip_encrypt=            "Warning!  File \"%s\" is encrypted!\n";
-zip_trail1=             "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½                              ï¿½ï¿½ï¿½ï¿½\n";
+zip_trail1=             "ÄÄÄÄÄÄÄÄ         ÄÄÄÄÄÄÄ ÄÄÄÄÄ                              ÄÄÄÄ\n";
 zip_trail2=             "%8ld        %8ld %-02.2d.%d%%                              %d\n";
 arc_h1=                 "\n\n      Name       Length    Size   Ratio   Date     Time   Attr   Type   CRC\n";
-arc_h2=                 "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½\n";
-arc_t1=                 "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½\n";
+arc_h2=                 "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ\n";
+arc_t1=                 "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ\n";
 arc_t2=                 "%15d %8ld %8ld %-02.2d.%d%%\n";
 @MEX full_ovr_path=     "Enter FULL override path: ";
 file_enter_tag=         "(%u) Filename(s) to tag: ";
@@ -938,7 +938,7 @@ replying_to_area=       "* Replying to a message originally in area %s\r\r";
                         RLI RIP_END;
 @MEX reader_more_blank= "\r" CLEOL;
 @RIP reader_more_blank= RIP RIP_FILLSTY "0100" RIP_BAR "008RHS9Q" RIP_END;
-reader_box_top=         POS_FSR_TOP COL_FSR_BORDER CLEOL "ï¿½ " COL_FSR_MSGINFO "%s: %s " COL_FSR_BORDER "\x19ï¿½%c";
+reader_box_top=         POS_FSR_TOP COL_FSR_BORDER CLEOL "Ä " COL_FSR_MSGINFO "%s: %s " COL_FSR_BORDER "\x19Ä%c";
 @RIP reader_box_top=    RIP RIP_FILLSTY "0100" RIP_BAR "008GHR9P" RIP_TEXTWIN "0007271110" RIP_FONTSTY "00000100" RIP_KILL "\n"
                         RLI RIP_COL "08" RIP_RECT "0101HR0C" RIP_COL "0F" RIP_RECT "0000HQ0B" RIP_FILLSTY "0107" RIP_BAR "0101HQ0B\n"
                         RLI RIP_MOVE "0403" RIP_COL "02" RIP_TEXT "Msg Area " RIP_COL "05" RIP_TEXT "%s" RIP_COL "00" RIP_TEXT ": " RIP_COL "01" RIP_TEXT "%s\n"
@@ -950,7 +950,7 @@ reader_box_from=        POS_FSR_FROM COL_FSR_STATIC CLEOL "From:";
 @RIP reader_box_from=   RIP RIP_FSR_STATIC RIP_TEXTXY "040OFrom:" RIP_END;
 reader_box_to=          POS_FSR_TO COL_FSR_STATIC CLEOL "To:";
 @RIP reader_box_to=     RIP RIP_FSR_STATIC RIP_TEXTXY "040WTo:" RIP_END;
-reader_box_bottom=      POS_FSR_BOTTOM COL_FSR_BORDER CLEOL "\x19ï¿½%c";
+reader_box_bottom=      POS_FSR_BOTTOM COL_FSR_BORDER CLEOL "\x19Ä%c";
 @RIP reader_box_bottom= ;
 rbox_msgn=              POS_FSR_MSGNUM COL_FSR_MSGNUM "%5d";
 @RIP rbox_msgn=         RIP RIP_FSR_MSGNUM RIP_TEXTXY "1C0G%-5d" RIP_END;
@@ -1018,7 +1018,7 @@ no_files_attached=      LRED "There are no unreceived file attaches for you.\n" 
 attach_hdr0=            WHITE "\nList of files attached to " LRED "YOU:\n";
 attach_hdr0_5=          "                                              Compr.\n";
 attach_hdr1=            "Date     Time  From                           Size   Message Area\n";
-attach_hdr2=            "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n";
+attach_hdr2=            "ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n";
 attach_fmt=             LMAGENTA "%-8.8s %02.2d:%02.2d " YELLOW "%-30.30s " LRED "%6s " LGREEN "%-0.26s\n" WHITE;
 attach_fmt2=            LGREEN "\n Date: " LMAGENTA "%-8.8s %02.2d:%02.2d\n" LGREEN " From: " YELLOW   "%s\n" LGREEN " Area: " LCYAN    "%s\n\n";
 ok_to_overwrite=        "File '%s' exists.  Overwrite";
@@ -1160,9 +1160,9 @@ default_tag_save=       "tagged*.lst";
 @MEX mon_width=         "Monitor width (20-132): ";
 @RIP mon_width=         RIP RIP_KILL RIP_END "Monitor width (20-132): ";
 @MEX bad_width=         "Invalid width.  Try again.\n\n";
-draw_line=              CLS "\n\n\n" GRAY "\x19ï¿½%cX\x19ï¿½\x09\n\n\n\n\n" WHITE;
+draw_line=              CLS "\n\n\n" GRAY "\x19Ä%cX\x19Ä\x09\n\n\n\n\n" WHITE;
 @RIP draw_line=         RIP RIP_RESET RIP_KILL RIP_END
-                        CLS "\n\n\n" GRAY "\x19ï¿½%cX\x19ï¿½\x09\n\n\n\n\n" WHITE;
+                        CLS "\n\n\n" GRAY "\x19Ä%cX\x19Ä\x09\n\n\n\n\n" WHITE;
 check_x=                "Is the \"X\" at the far left side of your display";
 @MEX incorrect_width=   "\nThe width that you entered is incorrect.  Try again.\n\n";
 @MEX top_num=           "Please type the number at the TOP of your display: ";
@@ -1302,7 +1302,7 @@ chg_need_fsr=           LRED "The full-screen reader cannot be disabled while RI
 ch_page_msg  =          "\a%s\n" CLEOL;
 ch_hey_dude_msg=        "%s\n" CLEOL;
 hu_is_on_1=             WHITE "\nUsername                             Node         Status\n";
-hu_is_on_2=             "\x19ï¿½\x23  \x19ï¿½\x04  \x19ï¿½\x1d\n";
+hu_is_on_2=             "\x19Ä\x23  \x19Ä\x04  \x19Ä\x1d\n";
 hu_is_on_3=             YELLOW "%-36.36s  %3d  " GRAY "%s%s\n";
 ch_xx_join   =          LRED "%s " LMAGENTA "joins the conversation.\n" CLEOL;
 ch_xx_leave  =          LRED "%s " LMAGENTA "leaves the conversation.\n" CLEOL;
@@ -1318,7 +1318,7 @@ ch_chat_pvt  =          "Private chat with node %d";
 @MEX ch_enter_chat=     WHITE "\nEntering chat mode.  ";
 @MEX ch_help_str  =     "Type \"/q\" to quit, \"/w\" to list users on this channel,\n\"/s\" to list users on system, and \"/?\" for help.\n\n";
 ch_byline    =          LGREEN LBRACKET "%-15.15s" RBRACKET ": \x16\x01%c";
-@MEX ch_ulist_hdr =     YELLOW "\nList of users on this channel:\n\n" WHITE "Name\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n" YELLOW;
+@MEX ch_ulist_hdr =     YELLOW "\nList of users on this channel:\n\n" WHITE "Name\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n" YELLOW;
 @MEX ch_alone     =     "You are alone on this channel.\n";
 @MEX ch_chat_sect =     CLS YELONBLUE CLEOL "The CHAT Section\n";
 ch_us_avail  =          YELLOW "\nYou are currently " LGREEN "%sAVAILABLE" YELLOW " for chat.\n\n";
@@ -1362,34 +1362,34 @@ ued_credit=             "Credit (cents): ";
 ued_time=               "Time: ";
 ued_ulall=              "Total uploads (in K): ";
 ued_getpriv=            CLEOL "New priv level (# or priv key): ";
-ued_ss1$=               CLS YELLOW "U" GRAY "ser " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ " GRAY "Last call                   " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n";
-ued_ss2=                " ï¿½ " YELLOW "N" GRAY "ame                         " YELLOW "A" GRAY "lias                                        " LGREEN "ï¿½\n";
-ued_ss3=                " ï¿½ " YELLOW "C" GRAY "ity                         " YELLOW "V" GRAY "oicePhone                 " YELLOW "S" GRAY "ex               " LGREEN "ï¿½\n";
-ued_ss4=                " ï¿½ " YELLOW "P" GRAY "assword                     " YELLOW "D" GRAY "ataPhone                  " YELLOW "B" GRAY "Day              " LGREEN "ï¿½\n";
-ued_ss5=                YELLOW "A" GRAY "ccess " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿    " YELLOW "S" GRAY "ettings " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n";
-ued_ss6=                " ï¿½ " YELLOW "P" GRAY "riv level             " YELLOW "C" GRAY "redit            " LGREEN "ï¿½     ï¿½ " YELLOW "W" GRAY "idth                    " LGREEN "ï¿½\n";
-ued_ss7=                " ï¿½ " YELLOW "K" GRAY "eys                   " YELLOW "D" GRAY "ebit             " LGREEN "ï¿½     ï¿½ " YELLOW "L" GRAY "ength                   " LGREEN "ï¿½\n";
-ued_ss8=                " ï¿½ " YELLOW "G" GRAY "roup Num              " YELLOW "U" GRAY "sed Pts          " LGREEN "ï¿½     ï¿½ " YELLOW "N" GRAY "ulls                    " LGREEN "ï¿½\n";
-ued_ss9=                " ï¿½ " YELLOW "A" GRAY "lloc Pts              " YELLOW "S" GRAY "howUlist         " LGREEN "ï¿½     ï¿½ " YELLOW "M" GRAY "sgArea                  " LGREEN "ï¿½\n";
-ued_ss10=               " ï¿½ " YELLOW "N" GRAY "erd                                     " LGREEN "ï¿½     ï¿½ " YELLOW "F" GRAY "ileArea                 " LGREEN "ï¿½\n";
-ued_ss11=               YELLOW "I" GRAY "nformation " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ ï¿½ " YELLOW "V" GRAY "ideo Mode               " LGREEN "ï¿½\n";
-ued_ss12=               " ï¿½ " YELLOW "D" GRAY "L (all)                 " YELLOW "C" GRAY "ur. Time           " LGREEN "ï¿½ ï¿½ " YELLOW "H" GRAY "elp                     " LGREEN "ï¿½\n";
-ued_ss13=               " ï¿½ " YELLOW "T" GRAY "oday DL                 " YELLOW "A" GRAY "dded Time          " LGREEN "ï¿½ ï¿½ " YELLOW "!" GRAY "Language                " LGREEN "ï¿½\n";
-ued_ss14=               " ï¿½ " YELLOW "U" GRAY "ploads                  " YELLOW "#" GRAY " calls             " LGREEN "ï¿½ ï¿½ " YELLOW "P" GRAY "rotocol                 " LGREEN "ï¿½\n";
-ued_ss15=               " ï¿½ " YELLOW "P" GRAY "ostMsgs                 " YELLOW "R" GRAY "eadMsgs            " LGREEN "ï¿½ ï¿½ " YELLOW "C" GRAY "ompress                 " LGREEN "ï¿½\n";
-ued_ss16=               " ï¿½ " YELLOW "1" GRAY "stCall                  " YELLOW "!" GRAY "PwdDate            " LGREEN "ï¿½\n";
-ued_ss17=               YELLOW "F" GRAY "lags " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ " YELLOW "E" GRAY "xpiry " LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n";
-ued_ss18=               " ï¿½ " YELLOW "H" GRAY "otkeys      " YELLOW "I" GRAY "BM Chars         " YELLOW "S" GRAY "crnClr       " LGREEN "ï¿½  ï¿½ " YELLOW "E" GRAY "xpire by               " LGREEN "ï¿½\n";
-ued_ss19=               " ï¿½ " YELLOW "M" GRAY "axEd        " YELLOW "P" GRAY "ause (More)      " YELLOW "A" GRAY "vailChat     " LGREEN "ï¿½  ï¿½ " YELLOW "A" GRAY "ction                  " LGREEN "ï¿½\n";
-ued_ss20=               " ï¿½ " YELLOW "T" GRAY "abs         " YELLOW "C" GRAY "alledBefore      " YELLOW "F" GRAY "SR           " LGREEN "ï¿½  ï¿½ " YELLOW "D" GRAY "ate                    " LGREEN "ï¿½\n";
-ued_ss21=               " ï¿½ " YELLOW "R" GRAY "IP                                          " LGREEN "ï¿½\n";
+ued_ss1$=               CLS YELLOW "U" GRAY "ser " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ " GRAY "Last call                   " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄ¿\n";
+ued_ss2=                " ³ " YELLOW "N" GRAY "ame                         " YELLOW "A" GRAY "lias                                        " LGREEN "³\n";
+ued_ss3=                " ³ " YELLOW "C" GRAY "ity                         " YELLOW "V" GRAY "oicePhone                 " YELLOW "S" GRAY "ex               " LGREEN "³\n";
+ued_ss4=                " À " YELLOW "P" GRAY "assword                     " YELLOW "D" GRAY "ataPhone                  " YELLOW "B" GRAY "Day              " LGREEN "Ù\n";
+ued_ss5=                YELLOW "A" GRAY "ccess " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿    " YELLOW "S" GRAY "ettings " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿\n";
+ued_ss6=                " ³ " YELLOW "P" GRAY "riv level             " YELLOW "C" GRAY "redit            " LGREEN "³     ³ " YELLOW "W" GRAY "idth                    " LGREEN "³\n";
+ued_ss7=                " ³ " YELLOW "K" GRAY "eys                   " YELLOW "D" GRAY "ebit             " LGREEN "³     ³ " YELLOW "L" GRAY "ength                   " LGREEN "³\n";
+ued_ss8=                " ³ " YELLOW "G" GRAY "roup Num              " YELLOW "U" GRAY "sed Pts          " LGREEN "³     ³ " YELLOW "N" GRAY "ulls                    " LGREEN "³\n";
+ued_ss9=                " ³ " YELLOW "A" GRAY "lloc Pts              " YELLOW "S" GRAY "howUlist         " LGREEN "³     ³ " YELLOW "M" GRAY "sgArea                  " LGREEN "³\n";
+ued_ss10=               " À " YELLOW "N" GRAY "erd                                     " LGREEN "Ù     ³ " YELLOW "F" GRAY "ileArea                 " LGREEN "³\n";
+ued_ss11=               YELLOW "I" GRAY "nformation " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ ³ " YELLOW "V" GRAY "ideo Mode               " LGREEN "³\n";
+ued_ss12=               " ³ " YELLOW "D" GRAY "L (all)                 " YELLOW "C" GRAY "ur. Time           " LGREEN "³ ³ " YELLOW "H" GRAY "elp                     " LGREEN "³\n";
+ued_ss13=               " ³ " YELLOW "T" GRAY "oday DL                 " YELLOW "A" GRAY "dded Time          " LGREEN "³ ³ " YELLOW "!" GRAY "Language                " LGREEN "³\n";
+ued_ss14=               " ³ " YELLOW "U" GRAY "ploads                  " YELLOW "#" GRAY " calls             " LGREEN "³ ³ " YELLOW "P" GRAY "rotocol                 " LGREEN "³\n";
+ued_ss15=               " ³ " YELLOW "P" GRAY "ostMsgs                 " YELLOW "R" GRAY "eadMsgs            " LGREEN "³ À " YELLOW "C" GRAY "ompress                 " LGREEN "Ù\n";
+ued_ss16=               " À " YELLOW "1" GRAY "stCall                  " YELLOW "!" GRAY "PwdDate            " LGREEN "Ù\n";
+ued_ss17=               YELLOW "F" GRAY "lags " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ " YELLOW "E" GRAY "xpiry " LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿\n";
+ued_ss18=               " ³ " YELLOW "H" GRAY "otkeys      " YELLOW "I" GRAY "BM Chars         " YELLOW "S" GRAY "crnClr       " LGREEN "³  ³ " YELLOW "E" GRAY "xpire by               " LGREEN "³\n";
+ued_ss19=               " ³ " YELLOW "M" GRAY "axEd        " YELLOW "P" GRAY "ause (More)      " YELLOW "A" GRAY "vailChat     " LGREEN "³  ³ " YELLOW "A" GRAY "ction                  " LGREEN "³\n";
+ued_ss20=               " ³ " YELLOW "T" GRAY "abs         " YELLOW "C" GRAY "alledBefore      " YELLOW "F" GRAY "SR           " LGREEN "³  À " YELLOW "D" GRAY "ate                    " LGREEN "Ù\n";
+ued_ss21=               " À " YELLOW "R" GRAY "IP                                          " LGREEN "Ù\n";
 ued_ss22=               ;
 
 ued_spermflag=          GOTO "\x01\x0e%s";
 ued_sstatcur=           LRED   " * Current * " WHITE;
 ued_sstatdel=           LRED   " * Deleted * " WHITE;
 ued_sstatprm=           LRED   " *Permanent* " WHITE;
-ued_sstatblank=         LGREEN "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" WHITE;
+ued_sstatblank=         LGREEN "ÄÄÄÄÄÄÄÄÄÄÄÄÄ" WHITE;
 
 ued_slastcall=          GOTO "\x01\x30%s";
 ued_sname=              GOTO "\x02\x0e%-18.18s";
@@ -1498,10 +1498,12 @@ ued_need_more_lines=    LRED "Your screen must be at least 24 lines long to use 
 
 :m_browse
 
-br_area_verbose=        LGREEN "BROWSE - Message search & retrieval\n\n" YELLOW "Which areas:\n\n" YELLOW "C" GRAY ")urrent area\n" YELLOW "T" GRAY ")agged areas (selected through T)ag command - default)\n" YELLOW "W" GRAY ")ildcard\n" YELLOW "G" GRAY ")roup\n" YELLOW "L" GRAY ")ocal & netmail areas only\n" YELLOW "A" GRAY ")ll areas\n" YELLOW "Q" GRAY ")uit\n\n";
+br_area_verbose=        LGREEN "BROWSE - Message search & retrieval\n\n" YELLOW "Which areas:\n\n" YELLOW "C" GRAY ")urrent area\n" YELLOW "T" GRAY ")agged areas (selected through T)ag command - default)\n" YELLOW "W" GRAY ")ildcard\n" YELLOW "G" GRAY ")r
+oup\n" YELLOW "L" GRAY ")ocal & netmail areas only\n" YELLOW "A" GRAY ")ll areas\n" YELLOW "Q" GRAY ")uit\n\n";
 br_area=                "Area type: " LBRACKET "C)urrent, T)agged (default), W)ildcard, G)roup, L)ocal, A)ll, Q)uit" RBRACKET ": ";
 br_areak=               "CTWGALQ?";
-br_type_verbose=        YELLOW "Type of messages to show:\n\n" YELLOW "A" GRAY ")ll messages\n" YELLOW "N" GRAY ")ew messages (everything since last read - default)\n" YELLOW "Y" GRAY ")our mail (messages addressed to YOU)\n" YELLOW "S" GRAY ")earch (specify to/from/subj/body and keywords)\n" YELLOW "F" GRAY ")rom a specified msg# to the last message\n" YELLOW "Q" GRAY ")uit\n" YELLOW "?" GRAY ")help\n\n";
+br_type_verbose=        YELLOW "Type of messages to show:\n\n" YELLOW "A" GRAY ")ll messages\n" YELLOW "N" GRAY ")ew messages (everything since last read - default)\n" YELLOW "Y" GRAY ")our mail (messages addressed to YOU)\n" YELLOW "S" GRAY ")earch (spec
+ify to/from/subj/body and keywords)\n" YELLOW "F" GRAY ")rom a specified msg# to the last message\n" YELLOW "Q" GRAY ")uit\n" YELLOW "?" GRAY ")help\n\n";
 br_type=                "Type: " LBRACKET "N)ew msgs, A)ll, Y)our mail, S)earch, F)rom msg#, Q)uit, ?)help" RBRACKET ": ";
 br_typek=               "ANYFS?Q";
 br_ty_from=             "\nStart displaying at which msg# (\"=\" for current): ";
@@ -1512,8 +1514,8 @@ br_list_head1=          CLS WHITE "Msg#   From                 To               
 @RIP br_list_head1=     RIP RIP_KILL RIP_FONTSTY "00000100" RIP_FILLSTY "0100" RIP_BAR "000GHR0V\n"
                         RLI RIP_COL "08" RIP_RECT "010HHR0T" RIP_COL "0F" RIP_RECT "000GHQ0S" RIP_FILLSTY "0107" RIP_BAR "010HHQ0S\n"
                         RLI RIP_COL "01" RIP_TEXTXY "020HMsg#   From                 To                   Subject" RIP_END;
-br_list_head2=                    "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n";
-@RIP br_list_head2=     RIP RIP_TEXTXY "020Mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n"
+br_list_head2=                    "ÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n";
+@RIP br_list_head2=     RIP RIP_TEXTXY "020MÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n"
                         RLI RIP_TEXTWIN "0004271600" RIP_END CLS;
 br_this=                LGREEN "Area " LMAGENTA "%s" CYAN ": %s\n";
 br_s_where_verbose=     YELLOW "Search where?  (More than one letter may be entered.)\n\n" YELLOW "T" GRAY ")o field\n" YELLOW "F" GRAY ")rom field\n" YELLOW "S" GRAY ")ubject field\n" YELLOW "B" GRAY ")ody of message\n" YELLOW "?" GRAY ")help\n" WHITE;
@@ -1585,30 +1587,30 @@ br_msg_pvt=             RED "-";
 err_toss_qwk=           LRED "Error tossing from %s!\n";
 wait_doing_compr=       YELLOW "Compressing mail.  Please wait...\n";
 qwk_update_lr=          YELLOW "Please wait.  Updating lastread pointers...";
-door_id_name=           "DOOR = %s\n";
-door_id_ver=            "VERSION = %s\n";
-door_id_sys=            "SYSTEM = %s\n";
-door_id_cname=          "CONTROLNAME = %s\n";
+door_id_name=           "DOOR = %s\r\n";
+door_id_ver=            "VERSION = %s\r\n";
+door_id_sys=            "SYSTEM = %s\r\n";
+door_id_cname=          "CONTROLNAME = %s\r\n";
 cprog_name=             "MAXIMUS";
-door_id_ctype_add=      "CONTROLTYPE = ADD\n";
-door_id_ctype_drop=     "CONTROLTYPE = DROP\n";
-cdat_hello=             "HELLO\n";
-cdat_news=              "NEWS\n";
-cdat_goodbye=           "GOODBYE\n";
+door_id_ctype_add=      "CONTROLTYPE = ADD\r\n";
+door_id_ctype_drop=     "CONTROLTYPE = DROP\r\n";
+cdat_hello=             "HELLO\r\n";
+cdat_news=              "NEWS\r\n";
+cdat_goodbye=           "GOODBYE\r\n";
 qwk_too_many=           LRED "\nWarning!  A maximum of %ld messages can be packed during one download.\n\n" WHITE;
 qwk_nuke_tear=          "\r---";
 qwk_replace_tear=       "___";
 qwk_msg_skipped=        LRED "\nMessage skipped.\n";
-qwk_pack_start=         YELLOW "\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n" WHITE "\x19ï¿½\x09  \x19ï¿½\x1b  \x19ï¿½\x0a  \x19ï¿½\x0b  \x19ï¿½\x0b\n";
+qwk_pack_start=         YELLOW "\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n" WHITE "\x19Ä\x09  \x19Ä\x1b  \x19Ä\x0a  \x19Ä\x0b  \x19Ä\x0b\n";
 qwk_pack_fmt=           LGREEN "%9.9s  " LCYAN "%-27.27s  " LMAGENTA "%7lu\x19 \x05" LRED "%6lu\x19 \x07" LGREEN "%7lu\n";
-qwk_pack_end=           WHITE "\x19ï¿½\x09  \x19ï¿½\x1b  \x19ï¿½\x0a  \x19ï¿½\x0b  \x19ï¿½\x0b\n" LRED "\x19 \x0bTotal\x19 \x18" LMAGENTA "%7lu\x19 \x05" LRED "%6lu\x19 \x07" LGREEN "%7lu\n\n" WHITE;
+qwk_pack_end=           WHITE "\x19Ä\x09  \x19Ä\x1b  \x19Ä\x0a  \x19Ä\x0b  \x19Ä\x0b\n" LRED "\x19 \x0bTotal\x19 \x18" LMAGENTA "%7lu\x19 \x05" LRED "%6lu\x19 \x07" LGREEN "%7lu\n\n" WHITE;
 restr_prompt=           "Enter date of oldest message to pack, or press <enter> for ";
 qwk_busy_msg=           "Error!  QWK packer is currently in use on another node!  (QWK_BUSY.$$$)\n";
 ; Template to use for calling archiver/unarchiver
 @NT  maxpipe_cmd=       "%s";
 @DOS maxpipe_cmd=       "%s";
 @OS2 maxpipe_cmd=       "maxpipe.exe %%P %s";
-@UNIX maxpipe_cmd=	"maxpipe %%P %s";
+@UNIX maxpipe_cmd=	"%s";
 br_which_areas=         "Search which areas (use \"*\" as wildcard): ";
 @RIP br_which_areas=    RIP RIP_KILL RIP_COL "01" RIP_TEXTXY "1C66Which areas (use "*" as wildcard):\n"
                         RLI RIP_COL "08" RIP_RECT "196LEY6Y" RIP_COL "0F" RIP_RECT "186KEX6X\n"
@@ -1641,7 +1643,7 @@ browse_more_prompt=     "More";
                         RLI RIP_END;
 browse_more_blank=      "\r" CLEOL;
 @RIP browse_more_blank= RIP RIP_FILLSTY "0100" RIP_BAR "008KHS90" RIP_END;
-browse_rbox_top=        CLS POS_FSR_TOP COL_FSR_BORDER CLEOL "ï¿½ " COL_FSR_MSGINFO "%s: %s " COL_FSR_BORDER "\x19ï¿½%c";
+browse_rbox_top=        CLS POS_FSR_TOP COL_FSR_BORDER CLEOL "Ä " COL_FSR_MSGINFO "%s: %s " COL_FSR_BORDER "\x19Ä%c";
 @RIP browse_rbox_top=   RIP RIP_KILL RIP_FILLSTY "0100" RIP_BAR "008GHR9P" RIP_TEXTWIN "0007271110" RIP_FONTSTY "00000100\n"
                         RLI RIP_COL "08" RIP_RECT "0101HR0C" RIP_COL "0F" RIP_RECT "0000HQ0B\n"
                         RLI RIP_FILLSTY "0107" RIP_BAR "0101HQ0B" RIP_MOVE "0403" RIP_COL "02" RIP_TEXT "Msg Area \n"
@@ -1673,10 +1675,10 @@ log_wfc_keybjunk=       " Junk character from keyboard";
 
 ; Titles for the various windows on-screen
 
-wfc_status_tit=         "ï¿½ Status ï¿½";
-wfc_modem_tit=          "ï¿½ Modem Responses ï¿½";
-wfc_activ_tit=          "ï¿½ Current Activity ï¿½";
-wfc_keys_tit=           "ï¿½ SysOp Keys ï¿½";
+wfc_status_tit=         "¹ Status Ì";
+wfc_modem_tit=          "¹ Modem Responses Ì";
+wfc_activ_tit=          "¹ Current Activity Ì";
+wfc_keys_tit=           "¹ SysOp Keys Ì";
 
 wfc_keys1=              "<Alt-X>  System down";
 wfc_keys2=              "<Alt-J>  Shell to operating system";
@@ -1791,7 +1793,7 @@ trk_new_owner=          "Name of new owner: ";
 trk_new_alias=          "Enter four-character alias: ";
 trk_set_alias=          "Set alias \"%s\" for %s.\n";
 trk_err_alias=          "Error!  Could not set alias \"%s\"!\n";
-trk_owner_header=       WHITE "\nAlias  Owner\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n" YELLOW;
+trk_owner_header=       WHITE "\nAlias  Owner\nÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n" YELLOW;
 trk_owner_fmt=          "%-6.6s %s\n";
 trk_remalias_which=     "Remove which alias (?=list): ";
 trk_remalias_done=      "Alias \"%s\" removed.\n";
@@ -1804,7 +1806,7 @@ trk_owner_assgn_err=    "Error assigning owner for %s!  (Maybe area already has 
 trk_owner_lnk_rem=      "Remove owner link for which area (?=list): ";
 trk_owner_lnk_done=     "Area/owner link removed for area %s\n";
 trk_owner_lnk_err=      "Could not remove area/owner link for area %s!\n";
-trk_owner_lnk_head=     WHITE "\nOwner  Area\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n" YELLOW;
+trk_owner_lnk_head=     WHITE "\nOwner  Area\nÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n" YELLOW;
 trk_owner_lnk_fmt=      "%-6.6s %s\n";
 trk_area_txt=           "Area: " LBRACKET "A)ssign Owner, D)elete Owner, L)ist Owners" RBRACKET": ";
 trk_area_keys=          "ADLQ";
@@ -1825,7 +1827,7 @@ trk_rep_pri_keys=       "OLNUCA";
 trk_rep_s_owner=        "Search for messages owned by whom (*=all (default), ?=list): ";
 trk_rep_dl_related_qwk= "Download related messages in QWK packet";
 trk_rep_hdr#=            "ID               Date     Owner Priority     Status  Message\n---------------- -------- ----- ------------ ------- -------------------------\n";
-trk_rep_hdr_graph#=      CLS WHITE "ID               Date     Owner Priority     Status  Message\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n" YELLOW;
+trk_rep_hdr_graph#=      CLS WHITE "ID               Date     Owner Priority     Status  Message\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n" YELLOW;
 trk_rep_msgnum=         "%s#%lu";
 trk_rep_fmt=            "%-16.16s %02u.%02u.%02u%c%-5.5s %-12.12s %-7.7s %-0.26s\n";
 trk_rep_qwk_bulletin=   "%sblt-1.99";
@@ -1842,7 +1844,7 @@ trk_bad_cmd=            "Invalid tracking command: %-*.*s\n";
 trk_bad_old_id=         "Error findind old tracking ID \"%s\" in database!\n";
 trk_err_updating_db=    "Error updating tracking database for \"%s\"!\n";
 trk_info_updated=       "Tracking information updated for \"%s\"!\n";
-trk_list_hdr=           WHITE "\nID   Owner\nï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n" YELLOW;
+trk_list_hdr=           WHITE "\nID   Owner\nÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n" YELLOW;
 trk_list_type=          "%-4.4s %s\n";
 trk_err_removing=       "Error removing message %s from tracking database!\n";
 trk_owner_not_accept=   "Error!  '%s' is not an acceptable message owner.\n";

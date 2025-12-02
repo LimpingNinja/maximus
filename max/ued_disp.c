@@ -181,7 +181,6 @@ void DisplayUser(void)
 {
   struct _arcinfo *ar;
   char temp[125];
-  char pwd[17];
   char ptmp[12];
 
   Puts(WHITE);
@@ -199,11 +198,8 @@ void DisplayUser(void)
   if (MKD()) goto Dump;
   Printf(ued_scity,        user.city);
   if (MKD()) goto Dump;
-#ifdef CANENCRYPT
-  Printf(ued_spwd,         Show_Pwd((user.bits & BITS_ENCRYPT) ? brackets_encrypted : (char *)user.pwd, pwd, (char)(disp_pwd ? 0 : '.')));
-#else
-  Printf(ued_spwd,         Show_Pwd(user.pwd, pwd, (char)(disp_pwd ? 0 : '.')));
-#endif
+  /* Always show [Encrypted] - never expose passwords to sysop */
+  Printf(ued_spwd,         brackets_encrypted);
   if (MKD()) goto Dump;
   Printf(ued_salias,       user.alias);
   if (MKD()) goto Dump;

@@ -30,6 +30,7 @@
 #include <sys/wait.h>
 #include <sys/un.h>
 #include <sys/select.h>
+#include <termios.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #ifdef DARWIN
@@ -535,6 +536,122 @@ static void restart_node(int node_num)
     
     /* Otherwise kill and let SIGCHLD handler clean up */
     kill_node(node_num);
+}
+
+/* Enter snoop mode - view and interact with a node's session */
+static void enter_snoop_mode(int node_num)
+{
+    if (node_num < 0 || node_num >= num_nodes)
+        return;
+    
+    node_info_t *node = &nodes[node_num];
+    
+    /* Only snoop on nodes with active PTY */
+    if (node->pty_master < 0) {
+        return;
+    }
+    
+    DEBUG("Entering snoop mode for node %d", node_num + 1);
+    
+    /* Exit ncurses temporarily */
+    endwin();
+    
+    /* Clear screen and show snoop header */
+    printf("\033[2J\033[H");  /* Clear screen, home cursor */
+    printf("\033[7m[SNOOP: Node %d", node_num + 1);
+    if (node->username[0]) {
+        printf(" - %s", node->username);
+    }
+    printf(" - F1=Exit F2=Alt-C]\033[0m\n");
+    
+    /* Set terminal to raw mode */
+    struct termios raw, saved;
+    tcgetattr(STDIN_FILENO, &saved);
+    raw = saved;
+    raw.c_lflag &= ~(ICANON | ECHO | ISIG);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
+    tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+    
+    /* Set PTY master to non-blocking */
+    int pty_flags = fcntl(node->pty_master, F_GETFL);
+    fcntl(node->pty_master, F_SETFL, pty_flags | O_NONBLOCK);
+    
+    int snoop_active = 1;
+    
+    while (snoop_active && running) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(STDIN_FILENO, &rfds);
+        FD_SET(node->pty_master, &rfds);
+        
+        int maxfd = (node->pty_master > STDIN_FILENO) ? node->pty_master : STDIN_FILENO;
+        struct timeval tv = {0, 50000};  /* 50ms timeout */
+        
+        if (select(maxfd + 1, &rfds, NULL, NULL, &tv) > 0) {
+            char buf[4096];
+            ssize_t n;
+            
+            /* PTY output -> sysop display */
+            if (FD_ISSET(node->pty_master, &rfds)) {
+                n = read(node->pty_master, buf, sizeof(buf));
+                if (n > 0) {
+                    write(STDOUT_FILENO, buf, n);
+                }
+            }
+            
+            /* Sysop keyboard -> PTY (injection) */
+            if (FD_ISSET(STDIN_FILENO, &rfds)) {
+                n = read(STDIN_FILENO, buf, sizeof(buf));
+                if (n > 0) {
+                    /* If ESC alone, wait for possible additional chars */
+                    if (buf[0] == 27 && n == 1) {
+                        struct timeval esc_tv = {0, 50000};  /* 50ms */
+                        fd_set esc_fds;
+                        FD_ZERO(&esc_fds);
+                        FD_SET(STDIN_FILENO, &esc_fds);
+                        if (select(STDIN_FILENO + 1, &esc_fds, NULL, NULL, &esc_tv) > 0) {
+                            ssize_t n2 = read(STDIN_FILENO, buf + 1, sizeof(buf) - 1);
+                            if (n2 > 0) n += n2;
+                        }
+                    }
+                    
+                    /* Now check for our special keys */
+                    /* F1 = ESC O P or ESC [ 1 1 ~ - exit snoop */
+                    if (buf[0] == 27 && n >= 3 && buf[1] == 'O' && buf[2] == 'P') {
+                        snoop_active = 0;
+                    }
+                    else if (buf[0] == 27 && n >= 5 && buf[1] == '[' && buf[2] == '1' && buf[3] == '1' && buf[4] == '~') {
+                        snoop_active = 0;
+                    }
+                    /* F2 = ESC O Q or ESC [ 1 2 ~ - send Alt-C (ESC + c) */
+                    else if ((buf[0] == 27 && n >= 3 && buf[1] == 'O' && buf[2] == 'Q') ||
+                             (buf[0] == 27 && n >= 5 && buf[1] == '[' && buf[2] == '1' && buf[3] == '2' && buf[4] == '~')) {
+                        char altc[2] = {27, 'c'};
+                        write(node->pty_master, altc, 2);
+                    }
+                    else {
+                        /* Pass through everything else */
+                        write(node->pty_master, buf, n);
+                    }
+                }
+            }
+        }
+    }
+    
+    /* Restore PTY flags */
+    fcntl(node->pty_master, F_SETFL, pty_flags);
+    
+    /* Restore terminal */
+    tcsetattr(STDIN_FILENO, TCSANOW, &saved);
+    
+    /* Clear and restore ncurses */
+    printf("\033[2J\033[H");
+    refresh();
+    clear();
+    need_refresh = 1;
+    
+    DEBUG("Exited snoop mode for node %d", node_num + 1);
 }
 
 /* Find a free node for incoming connection */
@@ -1608,7 +1725,9 @@ static void handle_input(int ch)
             
         case 's':
         case 'S':
-            /* TODO: Snoop mode */
+            if (selected_node >= 0 && selected_node < num_nodes) {
+                enter_snoop_mode(selected_node);
+            }
             break;
             
         case KEY_UP:

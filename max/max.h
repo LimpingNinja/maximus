@@ -154,7 +154,7 @@
 #define Yes_or_No(expr)     ((expr) ? yes : no)
 #define Sysop_Yes_or_No(expr) ((expr) ? sysop_yes : sysop_no)
 #define loc_kbhit()         (loc_peek() != -1)
-#define Input(d,t,c,m,p)    Inputf(d,t,c,m,"%s",p)
+#define Input(d,t,c,m,p)    Inputf(d,t,c,m,(p)?"%s":NULL,(p))
 #define Input_Char(t,x)     Input_Charf(t,"%s",x)
 #define InputGetsWNH InputGets
 #define InputGetseNH InputGetse

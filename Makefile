@@ -44,7 +44,8 @@ include vars.mk
 MAXIMUS=$(PREFIX)/etc/max.prm
 
 .PHONY: all depend clean install mkdirs squish max install_libs install_binaries \
-	usage topmost build config_install configure reconfig sqafix maxtel maxtel_install
+	usage topmost build config_install configure reconfig sqafix maxtel maxtel_install \
+	update-install-tree
 
 header::
 	@echo "Maximus-CBCS Master Makefile"
@@ -74,6 +75,7 @@ usage::
 	@echo "         max_install    build and install maximus"
 	@echo "         maxtel         build maxtel supervisor"
 	@echo "         maxtel_install build and install maxtel"
+	@echo "         update-install-tree  sync source files to install_tree"
 	@echo
 
 mkdirs:
@@ -82,18 +84,27 @@ mkdirs:
 
 all:	mkdirs clean squish_install max_install sqafix_install
 
-clean:  
+clean: buildclean
 	$(foreach DIR, $(DIRS) configuration-tests, cd $(DIR) && $(MAKE) -k $@; cd ..; )
 	-rm depend.mk.bak depend.mk
 	-rm */depend.mk.bak */depend.mk
-	-find $(PREFIX)/m -name "*.vm" -delete 2>/dev/null || true
+
+# buildclean: Clean the build folder for fresh install
+buildclean:
+	@echo "Cleaning build folder $(PREFIX)..."
+	-rm -rf $(PREFIX)/bin $(PREFIX)/lib $(PREFIX)/libexec
+	-rm -rf $(PREFIX)/etc $(PREFIX)/m $(PREFIX)/docs
+	@echo "Build folder cleaned. Next 'make build' will be fresh."
 
 # archclean: Also clean build/lib for cross-architecture builds
-archclean: clean
-	-rm -f $(LIB)/*.so $(LIB)/*.dylib $(LIB)/*.a
+archclean: clean buildclean
 	@echo "Architecture-clean complete. Ready for cross-arch build."
 
-dist-clean distclean: clean
+# fullclean: Clean everything including build folder
+fullclean: clean buildclean
+	@echo "Full clean complete."
+
+dist-clean distclean: clean buildclean
 	-rm slib/compiler_details.h
 	-rm vars.mk vars_local.mk
 
@@ -141,6 +152,9 @@ maxtel_install: mkdirs maxtel
 configure:
 	./configure "--prefix=$(PREFIX)"
 
+update-install-tree:
+	@scripts/update-install-tree.sh
+
 config_install:
 	@export PREFIX
 	@scripts/copy_install_tree.sh "$(PREFIX)"
@@ -159,10 +173,10 @@ reconfig:
 	@cd $(PREFIX)/etc/lang && $(PREFIX)/bin/maid english -p
 
 	@echo " - Compiling MECCA help files"
-	@cd $(PREFIX) && bin/mecca etc/help/\*.mec
+	@(cd $(PREFIX)/etc/help && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
 	@echo " - Compiling misc MECCA files"
-	@cd $(PREFIX) && bin/mecca etc/misc/\*.mec
+	@(cd $(PREFIX)/etc/misc && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
 	@echo " - Compiling max.ctl"
 	@cd $(PREFIX) && bin/silt etc/max -x

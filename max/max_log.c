@@ -451,7 +451,7 @@ static int near GetName(void)
 
           this_logon_bad=TRUE;
 
-          logit(log_bad_pwd, pwd);
+          logit(log_bad_pwd);
 
           Printf(wrong_pwd, tries-1);
 
