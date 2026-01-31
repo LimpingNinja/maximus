@@ -9,9 +9,6 @@
 # On macOS (Apple Silicon), can build:
 #   - arm64 (native)
 #   - x86_64 (via Rosetta)
-#
-# With mingw-w64 installed, can cross-compile for Windows
-#
 
 set -e
 
@@ -30,17 +27,14 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Parse arguments
 BUILD_MACOS=true
-BUILD_WINDOWS=false
 BUILD_X86_64=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --windows) BUILD_WINDOWS=true; shift ;;
         --x86_64) BUILD_X86_64=true; shift ;;
-        --all) BUILD_WINDOWS=true; BUILD_X86_64=true; shift ;;
+        --all) BUILD_X86_64=true; shift ;;
         --help)
             echo "Usage: $0 [options]"
-            echo "  --windows   Also attempt Windows cross-compile (requires mingw-w64)"
             echo "  --x86_64    Also build macOS x86_64 (requires Rosetta)"
             echo "  --all       Build all available platforms"
             exit 0
@@ -95,25 +89,6 @@ if [ "$BUILD_MACOS" = true ]; then
             "$SCRIPT_DIR/make-release.sh" auto
             ;;
     esac
-fi
-
-# Windows cross-compile
-if [ "$BUILD_WINDOWS" = true ]; then
-    echo ""
-    log_info "Attempting Windows cross-compilation..."
-    
-    if command -v x86_64-w64-mingw32-gcc &>/dev/null; then
-        log_info "mingw-w64 found, testing cross-compile..."
-        
-        # Test compile
-        cd "$PROJECT_ROOT"
-        make -f Makefile.mingw ARCH=x86_64 build 2>&1 || {
-            log_warn "Windows cross-compilation not fully supported yet"
-            log_warn "The codebase needs Unix->Windows porting work"
-        }
-    else
-        log_warn "mingw-w64 not found. Install with: brew install mingw-w64"
-    fi
 fi
 
 echo ""

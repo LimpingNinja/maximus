@@ -26,8 +26,8 @@ LIBEXEC		= $(PREFIX)/libexec
 LIB		= $(PREFIX)/lib
 STATIC_LIB	= $(SRC)/lib
 
-H_DIRS		:= unix/include slib msgapi btree max prot mex
-SO_DIRS		:= unix slib msgapi btree prot mex comdll
+H_DIRS		:= src/libs/unix/include src/libs/slib src/libs/msgapi src/libs/btree src/max src/libs/prot src/libs/mexvm src/libs/libmaxcfg/include
+SO_DIRS		:= src/libs/unix src/libs/slib src/libs/msgapi src/libs/btree src/libs/prot src/libs/mexvm src/libs/legacy/comdll src/libs/libmaxcfg
 LDFLAGS		+= $(foreach DIR, $(SO_DIRS), -L$(SRC)/$(DIR))
 INCLUDES	:= -I. $(foreach DIR, $(H_DIRS), -I$(SRC)/$(DIR))
 CXXFLAGS	:= $(CFLAGS) -fpermissive

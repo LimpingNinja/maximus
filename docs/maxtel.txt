@@ -1,5 +1,8 @@
 
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOTE: This is an older text version. For current MAXTEL documentation, see
+docs/maxtel.md in the distribution or updates.md for general information.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
 
@@ -216,11 +219,10 @@
                 The Maximus BBS executable. MAXTEL spawns this program for
                 each node. The path can be overridden with the -m option.
 
-             etc/max.prm
+             config/maximus
 
-                The compiled Maximus configuration file. MAXTEL reads this
-                file to obtain system information such as the BBS name,
-                sysop name, and FTN address. The path can be overridden
+                The TOML configuration base. MAXTEL and Maximus use this
+                to load configuration at runtime. The path can be overridden
                 with the -c option.
 
              etc/callers.dat
@@ -252,8 +254,7 @@
                 be able to run Maximus in local mode successfully before
                 attempting to use MAXTEL.
 
-             2. The max.prm file has been compiled using SILT. MAXTEL
-                reads this file to obtain system information.
+             2. The TOML configuration files are present under config/.
 
              3. The user running MAXTEL has permission to bind to the
                 desired TCP port. Ports below 1024 typically require root
@@ -317,8 +318,8 @@
 
              -c PATH
 
-                Specifies the path to the Maximus configuration directory
-                (containing max.prm). The default is etc/max. Example:
+                Specifies the path to the Maximus configuration base.
+                The default is config/maximus. Example:
 
                    maxtel -c /etc/maximus
 
@@ -569,11 +570,12 @@
              BBS / Sysop / FTN
 
                 The BBS name, sysop name, and FidoNet address as
-                configured in your max.prm file.
+                configured in your TOML configuration.
 
              Time / Nodes / Online / Waiting
 
-                Current time, total nodes configured, nodes with active
+                The current system time, number of nodes configured,
+             nodes with active
                 users, and nodes waiting for callers.
 
              In wider terminals, the panel expands to show additional

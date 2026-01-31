@@ -136,7 +136,7 @@ MAXTEL expects the following directory structure relative to the base Maximus in
 | Path | Description |
 |------|-------------|
 | `bin/max` | The Maximus executable. Override with `-m`. |
-| `etc/max.prm` | Compiled Maximus configuration. Override with `-c`. |
+| `config/` | TOML configuration directory. |
 | `etc/callers.dat` | Caller log file for recent caller history. |
 | `etc/stats.dat` | System statistics file. |
 | `m/1`, `m/2`, etc. | Per-node directories for node-specific data. |
@@ -147,7 +147,7 @@ Before running MAXTEL for the first time:
 
 1. **Verify Maximus works** — Run Maximus in local mode to confirm it operates correctly.
 
-2. **Compile configuration** — Run SILT to compile your `max.prm` file. MAXTEL reads this for system information.
+2. **Verify configuration** — Ensure your TOML configuration files are present in `config/`.
 
 3. **Check permissions** — Ports below 1024 require root privileges on most Unix systems.
 
@@ -174,7 +174,7 @@ This starts MAXTEL on port 2323 with 4 nodes available.
 | `-n NODES` | Number of nodes to manage, 1-32 (default: 4) |
 | `-d PATH` | Base directory for Maximus (default: current directory) |
 | `-m PATH` | Path to max executable (default: `./bin/max`) |
-| `-c PATH` | Path to config directory (default: `etc/max`) |
+| `-c PATH` | Path to config base (default: `config/maximus`) |
 | `-s SIZE` | Request terminal size, e.g., `132x60` |
 | `-H` | Headless mode—no UI |
 | `-D` | Daemon mode—fork to background (implies `-H`) |
@@ -292,7 +292,7 @@ Displays BBS information and status:
 
 | Field | Description |
 |-------|-------------|
-| BBS / Sysop / FTN | System info from max.prm |
+| BBS / Sysop / FTN | System info from config/maximus.toml |
 | Time | Current system time |
 | Nodes | Total nodes configured |
 | Online | Nodes with active users |
@@ -446,7 +446,7 @@ For additional assistance:
 
 - Maximus-CBCS documentation for BBS configuration issues
 - Project repository: https://github.com/LimpingNinja/maximus
-- Source code: `maxtel/maxtel.c`
+- Source code: `src/apps/maxtel/maxtel.c`
 
 ---
 

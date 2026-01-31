@@ -10,7 +10,7 @@ MAX_DIR="${MAX_INSTALL_PATH:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$MAX_DIR" || exit 1
 
 while true; do
-    ./bin/max -w -pt$TASK -n$TASK -b38400 etc/max.prm
+    ./bin/max -w -pt$TASK -n$TASK -b38400 etc/max
     ERR=$?
     echo "Max node $TASK exited with code $ERR"
     

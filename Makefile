@@ -29,23 +29,23 @@
 #
 #
 
-SQUISH_LIB_DIRS = btree unix slib msgapi squish
-SQAFIX_LIB_DIRS = msgapi sqafix
-MAX_LIB_DIRS    = unix slib msgapi mex prot comdll 
+SQUISH_LIB_DIRS = src/libs/btree src/libs/unix src/libs/slib src/libs/msgapi src/utils/squish
+SQAFIX_LIB_DIRS = src/libs/msgapi src/utils/sqafix
+MAX_LIB_DIRS    = src/libs/unix src/libs/slib src/libs/msgapi src/libs/mexvm src/libs/prot src/libs/legacy/comdll src/libs/libmaxcfg src/libs/sqlite src/libs/libmaxdb 
 LIB_DIRS	= $(SQUISH_LIB_DIRS) $(SQAFIX_LIB_DIRS) $(MAX_LIB_DIRS)
-PROG_DIRS	= squish max mex util 
-MAXTEL_DIR	= maxtel
-DIRS		= $(LIB_DIRS) $(PROG_DIRS) sqafix $(MAXTEL_DIR)
+PROG_DIRS	= src/utils/squish src/max src/apps/mex src/utils/util src/apps/maxcfg
+MAXTEL_DIR	= src/apps/maxtel
+DIRS		= $(LIB_DIRS) $(PROG_DIRS) src/utils/sqafix $(MAXTEL_DIR)
 NO_DEPEND_RULE	:= TRUE
 
 topmost:: header usage
 
 include vars.mk
-MAXIMUS=$(PREFIX)/etc/max.prm
+MAXIMUS=$(PREFIX)
 
 .PHONY: all depend clean install mkdirs squish max install_libs install_binaries \
 	usage topmost build config_install configure reconfig sqafix maxtel maxtel_install \
-	update-install-tree
+
 
 header::
 	@echo "Maximus-CBCS Master Makefile"
@@ -75,7 +75,6 @@ usage::
 	@echo "         max_install    build and install maximus"
 	@echo "         maxtel         build maxtel supervisor"
 	@echo "         maxtel_install build and install maxtel"
-	@echo "         update-install-tree  sync source files to install_tree"
 	@echo
 
 mkdirs:
@@ -85,7 +84,7 @@ mkdirs:
 all:	mkdirs clean squish_install max_install sqafix_install
 
 clean: buildclean
-	$(foreach DIR, $(DIRS) configuration-tests, cd $(DIR) && $(MAKE) -k $@; cd ..; )
+	$(foreach DIR, $(DIRS) configuration-tests, $(MAKE) SRC=$(SRC) -C $(DIR) -k $@; )
 	-rm depend.mk.bak depend.mk
 	-rm */depend.mk.bak */depend.mk
 
@@ -104,25 +103,32 @@ archclean: clean buildclean
 fullclean: clean buildclean
 	@echo "Full clean complete."
 
+
 dist-clean distclean: clean buildclean
-	-rm slib/compiler_details.h
+	-rm src/libs/slib/compiler_details.h
 	-rm vars.mk vars_local.mk
 
-depend install_binaries install_libs:
-	$(foreach DIR, $(DIRS), cd $(DIR) && $(MAKE) -k $@; cd ..; )
+depend:
+	@true
+
+install_libs:
+	$(foreach DIR, $(LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR) -k $@; )
+
+install_binaries:
+	$(foreach DIR, $(PROG_DIRS) src/utils/sqafix $(MAXTEL_DIR), $(MAKE) SRC=$(SRC) -C $(DIR) -k install; )
 
 squish_install: mkdirs
-	$(foreach DIR, $(SQUISH_LIB_DIRS), cd $(DIR) && $(MAKE) install_libs; cd ..; )
-	cd squish && $(MAKE) install
+	$(foreach DIR, $(SQUISH_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR) install_libs; )
+	$(MAKE) SRC=$(SRC) -C src/utils/squish install
 
 sqafix_install: mkdirs
-	$(foreach DIR, $(SQAFIX_LIB_DIRS), cd $(DIR) && $(MAKE) install_libs; cd ..; )
-	cd sqafix && $(MAKE) install
+	$(foreach DIR, $(SQAFIX_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR) install_libs; )
+	$(MAKE) SRC=$(SRC) -C src/utils/sqafix install
 
 max_install: mkdirs
-	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE) install_libs; cd ..; )
-	cd util && $(MAKE)
-	$(foreach DIR, $(PROG_DIRS), cd $(DIR) && $(MAKE) install; cd ..; )
+	$(foreach DIR, $(MAX_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR) install_libs; )
+	$(MAKE) SRC=$(SRC) -C src/utils/util
+	$(foreach DIR, $(PROG_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR) install; )
 ifeq ($(PLATFORM),darwin)
 	@echo "Codesigning binaries for macOS..."
 	@for f in $(BIN)/*; do codesign -f -s - "$$f" 2>/dev/null || true; done
@@ -130,40 +136,42 @@ ifeq ($(PLATFORM),darwin)
 endif
 
 squish:
-	$(foreach DIR, $(SQUISH_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
-	cd squish && $(MAKE)
+	$(foreach DIR, $(SQUISH_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR); )
+	$(MAKE) SRC=$(SRC) -C src/utils/squish
 
 sqafix:
-	$(foreach DIR, $(SQAFIX_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
-	cd sqafix && $(MAKE)
+	$(foreach DIR, $(SQAFIX_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR); )
+	$(MAKE) SRC=$(SRC) -C src/utils/sqafix
 
 max:
-	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
-	cd util && $(MAKE)
-	$(foreach DIR, $(PROG_DIRS), cd $(DIR) && $(MAKE); cd ..; )
+	$(foreach DIR, $(MAX_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR); )
+	$(MAKE) SRC=$(SRC) -C src/utils/util
+	$(foreach DIR, $(PROG_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR); )
 
 maxtel:
-	$(foreach DIR, $(MAX_LIB_DIRS), cd $(DIR) && $(MAKE); cd ..; )
-	cd maxtel && $(MAKE)
+	$(foreach DIR, $(MAX_LIB_DIRS), $(MAKE) SRC=$(SRC) -C $(DIR); )
+	$(MAKE) SRC=$(SRC) -C $(MAXTEL_DIR)
 
 maxtel_install: mkdirs maxtel
-	cd maxtel && $(MAKE) install
+	$(MAKE) SRC=$(SRC) -C $(MAXTEL_DIR) install
 
 configure:
 	./configure "--prefix=$(PREFIX)"
 
-update-install-tree:
-	@scripts/update-install-tree.sh
-
 config_install:
 	@export PREFIX
 	@scripts/copy_install_tree.sh "$(PREFIX)"
-
+ 
 	@$(MAKE) reconfig
+ 
+	@[ -d ${PREFIX}/etc/db ] || mkdir -p ${PREFIX}/etc/db
+	@cp -f scripts/db/userdb_schema.sql ${PREFIX}/etc/db/userdb_schema.sql
+	@cp -f scripts/db/init-userdb.sh ${PREFIX}/bin/init-userdb.sh
+	@chmod +x ${PREFIX}/bin/init-userdb.sh
 
-	@[ ! -f ${PREFIX}/etc/user.bbs ] || echo "This is not a fresh install -- not creating new user.bbs"
-	@[ -f ${PREFIX}/etc/user.bbs ] || echo "Creating user.bbs"
-	@[ -f ${PREFIX}/etc/user.bbs ] || (cd ${PREFIX} && bin/max etc/max -c || true)
+	@[ ! -f ${PREFIX}/etc/user.db ] || echo "This is not a fresh install -- not creating new user.db"
+	@[ -f ${PREFIX}/etc/user.db ] || echo "Creating user.db"
+	@[ -f ${PREFIX}/etc/user.db ] || (cd ${PREFIX} && bin/init-userdb.sh ${PREFIX} || true)
 	@echo
 	@echo "Configuration complete."
 
@@ -178,9 +186,6 @@ reconfig:
 	@echo " - Compiling misc MECCA files"
 	@(cd $(PREFIX)/etc/misc && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
-	@echo " - Compiling max.ctl"
-	@cd $(PREFIX) && bin/silt etc/max -x
-
 	@echo " - Compiling MEX files"
 	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
 
@@ -188,13 +193,10 @@ reconfig:
 	@echo "Pass two"
 	@echo " - Re-Compiling english.mad "
 	@cd $(PREFIX)/etc/lang && $(PREFIX)/bin/maid english -d -s -p$(PREFIX)/etc/max
-	@echo " - Re-Compiling max.ctl"
-	@sleep 2 # Quell Warnings in max
-	@cd $(PREFIX) && bin/silt etc/max -p
 
 install: mkdirs squish_install sqafix_install max_install maxtel_install config_install
 
-build:	mkdirs install_libs squish sqafix max maxtel
+build:	mkdirs install_libs squish sqafix max maxtel install_binaries
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::

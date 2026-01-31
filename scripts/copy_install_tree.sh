@@ -43,7 +43,7 @@ else
   fi
 
   echo "Copying install tree to ${PREFIX}.."
-  cp -rp install_tree/* "${PREFIX}"
+  cp -rp resources/install_tree/* "${PREFIX}"
 
   if [ "${PREFIX}" != "/var/max" ]; then
     echo "Modifying configuration files to reflect PREFIX=${PREFIX}.."
@@ -59,7 +59,7 @@ fi
 if [ -f "${PREFIX}/bin/runbbs.sh" ] && [ "$FORCE" = "0" ]; then
   echo "This is not a fresh install -- not copying runbbs.sh.."
 else
-  cp scripts/runbbs.sh "${PREFIX}/bin/runbbs.sh"
+  cp resources/scripts/runbbs.sh "${PREFIX}/bin/runbbs.sh"
 fi
 
 cp docs/max_mast.txt "${PREFIX}/docs"

@@ -1,7 +1,7 @@
 # Maximus BBS Directory Structure
 
 This document describes the directory layout for a Maximus BBS installation.
-Cross-referenced against source code (`max/prm.h`, `m/prm.mh`) and `max.ctl`.
+Cross-referenced against source code (`src/max/prm.h`, `resources/m/prm.mh`) and `max.ctl`.
 
 ## Directory Tree
 
@@ -13,7 +13,6 @@ $PREFIX/                    # Base install directory (Path System)
 │   ├── mex                 # MEX compiler
 │   ├── mecca               # MECCA compiler
 │   ├── maid                # Language file compiler
-│   ├── silt                # Control file compiler
 │   ├── squish              # Message tosser/scanner
 │   ├── sqafix              # Echomail processor
 │   ├── install.sh          # Installation script
@@ -24,8 +23,7 @@ $PREFIX/                    # Base install directory (Path System)
 │   └── *.so / *.dylib
 │
 ├── etc/                    # Configuration files
-│   ├── max.ctl             # Main configuration (compiled → max.prm)
-│   ├── max.prm             # Compiled configuration (binary)
+│   ├── max.ctl             # Main configuration
 │   ├── menus.ctl           # Menu definitions (compiled → *.mnu)
 │   ├── msgarea.ctl         # Message area definitions
 │   ├── filearea.ctl        # File area definitions
@@ -138,8 +136,7 @@ fd := open(prm_string(PRM_SYSPATH) + "data/myfile.dat", IOPEN_RW | IOPEN_CREATE)
 
 ```
 Source              Compiler    Output              Location
-───────────────────────────────────────────────────────────────
-*.ctl               silt        *.prm, *.mnu        etc/
+────────────────────────────────────────────────────────────────
 *.mec               mecca       *.bbs               etc/misc/, etc/help/
 *.mad               maid        *.ltf               etc/lang/
 *.mex               mex         *.vm                m/

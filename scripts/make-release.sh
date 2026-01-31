@@ -15,14 +15,14 @@ set -e
 # Configuration
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Extract version from max/max_vr.h
-VER_MAJ=$(grep '#define VER_MAJ' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_MAJ[[:space:]]*"\([^"]*\)".*/\1/')
-VER_MIN=$(grep '#define VER_MIN' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_MIN[[:space:]]*"\([^"]*\)".*/\1/')
-VER_SUFFIX=$(grep '#define VER_SUFFIX' "$PROJECT_ROOT/max/max_vr.h" | sed 's/.*VER_SUFFIX[[:space:]]*"\([^"]*\)".*/\1/')
+# Extract version from src/max/core/max_vr.h
+VER_MAJ=$(grep '#define VER_MAJ' "$PROJECT_ROOT/src/max/core/max_vr.h" | sed 's/.*VER_MAJ[[:space:]]*"\([^"]*\)".*/\1/')
+VER_MIN=$(grep '#define VER_MIN' "$PROJECT_ROOT/src/max/core/max_vr.h" | sed 's/.*VER_MIN[[:space:]]*"\([^"]*\)".*/\1/')
+VER_SUFFIX=$(grep '#define VER_SUFFIX' "$PROJECT_ROOT/src/max/core/max_vr.h" | sed 's/.*VER_SUFFIX[[:space:]]*"\([^"]*\)".*/\1/')
 VERSION="${VER_MAJ}.${VER_MIN}${VER_SUFFIX}"
 
 if [ -z "$VERSION" ] || [ "$VERSION" = "." ]; then
-    echo "Error: Could not extract version from max/max_vr.h"
+    echo "Error: Could not extract version from src/max/core/max_vr.h"
     exit 1
 fi
 BUILD_DIR="${PROJECT_ROOT}/build"
@@ -59,7 +59,6 @@ detect_os() {
     case "$os" in
         Darwin) echo "macos" ;;
         Linux) echo "linux" ;;
-        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
         *) echo "unknown" ;;
     esac
 }
@@ -149,7 +148,7 @@ create_release_package() {
     
     # Copy fresh install_tree as base (clean config, no user data)
     log_info "Copying fresh install_tree..."
-    cp -rp "${PROJECT_ROOT}/install_tree/"* "$release_path/"
+    cp -rp "${PROJECT_ROOT}/resources/install_tree/"* "$release_path/"
     
     # Replace /var/max paths with relative paths for portable release
     log_info "Updating config paths..."
@@ -164,6 +163,12 @@ create_release_package() {
     # Copy binaries (overwrites empty bin/ from install_tree)
     log_info "Copying binaries..."
     cp -f "${BUILD_DIR}/bin/"* "$release_path/bin/" 2>/dev/null || true
+
+    # Copy SQLite userdb init resources (schema + wrapper)
+    mkdir -p "$release_path/etc/db"
+    cp -f "${PROJECT_ROOT}/scripts/db/userdb_schema.sql" "$release_path/etc/db/userdb_schema.sql" 2>/dev/null || true
+    cp -f "${PROJECT_ROOT}/scripts/db/init-userdb.sh" "$release_path/bin/init-userdb.sh" 2>/dev/null || true
+    chmod +x "$release_path/bin/init-userdb.sh" 2>/dev/null || true
     
     # Copy libraries (overwrites empty lib/ from install_tree)
     log_info "Copying libraries..."
@@ -255,10 +260,7 @@ done
 echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
 (cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
 
-echo "Step 5: Compiling configuration (max.ctl -> max.prm)..."
-bin/silt etc/max -x
-
-echo "Step 6: Re-linking language file..."
+echo "Step 5: Re-linking language file..."
 (cd etc/lang && ../../bin/maid english -d -s -p../max)
 
 echo
@@ -298,8 +300,8 @@ The release comes with pre-compiled configuration files. If you need to
 modify any configuration, edit the source files and run bin/recompile.sh
 
 Directory Structure:
--------------------
-  bin/      - Executables (max, mex, silt, maid, squish, etc.)
+--------------------
+  bin/      - Executables (max, mex, maid, squish, etc.)
   lib/      - Shared libraries
   etc/      - Configuration files
     *.ctl   - Source config files (edit these)
@@ -320,7 +322,6 @@ Or manually:
   bin/mecca etc/misc/*.mec    # Recompile display files
   bin/maid english -p         # Recompile language (in etc/lang/)
   bin/mex script.mex          # Recompile a MEX script (in m/)
-  bin/silt etc/max -x         # Recompile main config
 
 MAXTEL (Telnet Supervisor):
 --------------------------

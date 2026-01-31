@@ -20,7 +20,7 @@ This fork focuses on getting Maximus compiling and running on modern systems so 
 | Linux arm64 | Should work |
 | FreeBSD | Supported |
 
-**What works:** Full BBS operation via telnet access (MAXTEL), MEX scripting, all utilities (maid, silt, mecca, mex compiler). Most features should continue to work as expected and are assumed to work unless otherwise noted (e.g. FidoNet messaging, file transfers).
+**What works:** Full BBS operation via telnet access (MAXTEL), MEX scripting, all utilities (maid, mecca, mex compiler). Most features should continue to work as expected and are assumed to work unless otherwise noted (e.g. FidoNet messaging, file transfers).
 
 ## Quick Start: Running Your Own BBS
 
@@ -44,7 +44,7 @@ The interactive install script configures your BBS name, sysop name, and sets up
 bin/install.sh
 ```
 
-Follow the prompts to name your BBS and set your sysop name. The script automatically compiles all configuration files.
+Follow the prompts to name your BBS and set your sysop name. The script sets up the TOML configuration under `config/`.
 
 ### 3. Create Your Sysop Account (Required First Time)
 
@@ -90,7 +90,8 @@ cp -r maximus-NEW-VERSION/docs/* /path/to/your/bbs/docs/
 - `bin/` and `lib/` - Always safe, contains executables and libraries
 
 **What to keep:**
-- `etc/*.ctl` - Your BBS configuration
+- `config/` - Your BBS configuration (TOML)
+- `etc/*.ctl` - Legacy CTL inputs (optional; only needed if you re-export to TOML)
 - `spool/` - Message bases and file areas
 - User database files
 
