@@ -28,7 +28,7 @@ MAXOBJ := max.o
 
 MOBJS :=        uedit.obj       ued_cmds.obj    ued_disp.obj    \
 display.obj     disp_dat.obj    disp_qu.obj     max_rip.obj     \
-disp_max.obj    disp_mis.obj    med_add.obj     maxed.obj       \
+disp_max.obj    disp_mis.obj    ui_field.obj    ui_lightbar.obj ui_form.obj     med_add.obj     maxed.obj       \
 med_scrn.obj    med_move.obj    med_del.obj     med_quot.obj    \
 med_read.obj    med_misc.obj    f_area.obj      f_con.obj       \
 f_intrin.obj    f_isval.obj     f_kill.obj      f_locate.obj    \
@@ -68,6 +68,7 @@ max2priv.obj    mexintu.obj     mexstat.obj     mexfarea.obj    \
 mexcall.obj     mexoutp.obj     mextime.obj     mexlang.obj     \
 mexrip.obj      mexstr.obj      mexmarea.obj    mexfile.obj     \
 mexclass.obj    mexuser.obj     mexinp.obj      mextag.obj      \
+mexui.obj       \
 mexffind.obj    mexxtrn.obj     mexrtl.obj      max_accs.obj    \
 m_input.obj     m_lines.obj     f_okay.obj      atexit.obj	\
 xspawn.obj

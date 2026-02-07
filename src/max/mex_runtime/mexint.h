@@ -181,6 +181,25 @@
   word EXPENTRY intrin_userremove(void);
   word EXPENTRY intrin_userfindseek(void);
 
+  word EXPENTRY intrin_ui_goto(void);
+  word EXPENTRY intrin_ui_make_attr(void);
+  word EXPENTRY intrin_ui_set_attr(void);
+  word EXPENTRY intrin_ui_fill_rect(void);
+  word EXPENTRY intrin_ui_write_padded(void);
+  word EXPENTRY intrin_ui_prompt_field(void);
+  word EXPENTRY intrin_ui_edit_field(void);
+  word EXPENTRY intrin_ui_edit_field_style_default(void);
+  word EXPENTRY intrin_ui_prompt_field_style_default(void);
+  word EXPENTRY intrin_ui_lightbar(void);
+  word EXPENTRY intrin_ui_lightbar_pos(void);
+  word EXPENTRY intrin_ui_lightbar_hotkey(void);
+  word EXPENTRY intrin_ui_select_prompt(void);
+  word EXPENTRY intrin_ui_select_prompt_hotkey(void);
+  word EXPENTRY intrin_ui_lightbar_style_default(void);
+  word EXPENTRY intrin_ui_select_prompt_style_default(void);
+  word EXPENTRY intrin_ui_form_style_default(void);
+  word EXPENTRY intrin_ui_form_run(void);
+
   void _MexKillStructString(void *pstr, int increment);
   void MexReturnStringBytes(char *s, int len);
   void MexReturnString(char *s);

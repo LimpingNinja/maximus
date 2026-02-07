@@ -4,6 +4,14 @@
 
 This fork of Maximus has been modernized for current operating systems (macOS, Linux, FreeBSD) and includes significant architectural changes from the original DOS/OS2 versions.
 
+### MaxUI (Display/UI Intrinsics)
+
+- Struct-based field editing and prompt intrinsics (`ui_edit_field`, `ui_prompt_field`) are the preferred interface.
+- New form runner (`ui_form_run`) provides multi-field forms with 2D navigation and required-field validation.
+- UI key handling is centralized so common ANSI escape sequences behave consistently across widgets.
+- Forward-delete is supported in the bounded field editor (Delete key / `ESC[3~`) including `format_mask` fields.
+- MaxUI docs were updated to document behavior and to call out deferred/unsupported advanced ESC parsing.
+
 ## Key Changes from Legacy Maximus 3.0
 
 ### Configuration System

@@ -910,7 +910,7 @@ char * Strip_Underscore(char *s)
 /* Read terminal capabilities from maxtel detection file
  * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
  */
-static void Read_Term_Caps(struct _usr *user)
+void Apply_Term_Caps(struct _usr *user)
 {
   char path[PATHLEN];
   FILE *fp;
@@ -952,9 +952,6 @@ static void Read_Term_Caps(struct _usr *user)
       user->width = width;
     if (height > 0 && height <= 255)
       user->len = height;
-    
-    /* Clean up the file after reading */
-    unlink(path);
   }
 }
 
@@ -998,7 +995,7 @@ void Blank_User(struct _usr *user)
   
   /* Read terminal capabilities from maxtel if available */
   if (!local && task_num > 0)
-    Read_Term_Caps(user);
+    Apply_Term_Caps(user);
 }
 
 

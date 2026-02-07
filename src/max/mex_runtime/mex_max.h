@@ -263,6 +263,91 @@ struct mex_callinfo
   word    added;
 } __attribute__((packed));
 
+struct mex_ui_lightbar_style
+{
+  word justify;
+  word wrap;
+  word enable_hotkeys;
+  word show_brackets;
+  word normal_attr;
+  word selected_attr;
+  word hotkey_attr;
+  word hotkey_highlight_attr;
+  word margin;
+  word out_hotkey;
+} __attribute__((packed));
+
+struct mex_ui_select_prompt_style
+{
+  word prompt_attr;
+  word normal_attr;
+  word selected_attr;
+  word hotkey_attr;
+  word show_brackets;
+  word margin;
+  IADDR separator;  /* string pointer */
+  word out_hotkey;
+} __attribute__((packed));
+
+struct mex_ui_edit_field_style
+{
+  word normal_attr;
+  word focus_attr;
+  byte fill_ch;
+  word flags;
+  IADDR format_mask;  /* string pointer */
+} __attribute__((packed));
+
+struct mex_ui_prompt_field_style
+{
+  word prompt_attr;
+  word field_attr;
+  byte fill_ch;
+  word flags;
+  word start_mode;
+  IADDR format_mask;  /* string pointer */
+} __attribute__((packed));
+
+struct mex_ui_form_field
+{
+  IADDR name;           /* string pointer */
+  IADDR label;          /* string pointer */
+  word x;
+  word y;
+  word width;
+  word max_len;
+  word field_type;
+  byte hotkey;
+  word required;
+  word label_attr;
+  word normal_attr;
+  word focus_attr;
+  IADDR format_mask;    /* string pointer */
+  IADDR value;          /* string pointer */
+} __attribute__((packed));
+
+struct mex_ui_form_style
+{
+  word label_attr;
+  word normal_attr;
+  word focus_attr;
+  word save_mode;
+  word wrap;
+  IADDR required_msg;   /* string pointer */
+  word required_x;
+  word required_y;
+  word required_attr;
+} __attribute__((packed));
+
+struct mex_ui_lightbar_item
+{
+  IADDR text;
+  word x;
+  word y;
+  word width;
+  word justify;
+} __attribute__((packed));
+
 
 #endif /* __MEX_MAX_H_DEFINED */
 

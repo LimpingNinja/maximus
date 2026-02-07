@@ -38,6 +38,54 @@ static char rcs_id[]="$Id: ansi2bbs.c,v 1.5 2004/01/27 23:02:54 paltas Exp $";
 
 #define ANSIBUFLEN 80
 
+ static long bbs_out_off;
+
+ static void BbsOutByte(FILE *bbsfile, FILE *ansifile, int b, const char *why)
+ {
+   long in_off = ansifile ? ftell(ansifile) : -1L;
+ 
+   if (b == 0x0a || b == 0x0d)
+     fprintf(stderr,
+             "ansi2bbs: emit 0x%02x (%s) out=%ld in=%ld via=%s\n",
+             (unsigned)b,
+             (b == 0x0a) ? "DCLF/LF" : "DCCR/CR",
+             bbs_out_off,
+             in_off,
+             why ? why : "?");
+ 
+   putc(b, bbsfile);
+   bbs_out_off++;
+ }
+
+ static void BbsOutRepeat(FILE *bbsfile, FILE *ansifile, int ch, int count, const char *why)
+ {
+   int cnt = (unsigned char)(count + 1);
+   long in_off = ansifile ? ftell(ansifile) : -1L;
+ 
+   if (cnt == 0x0a || cnt == 0x0d)
+     fprintf(stderr,
+             "ansi2bbs: repeat count byte is 0x%02x (%s) out=%ld in=%ld ch=0x%02x count=%d via=%s\n",
+             (unsigned)cnt,
+             (cnt == 0x0a) ? "DCLF/LF" : "DCCR/CR",
+             bbs_out_off + 2,
+             in_off,
+             (unsigned)((unsigned char)ch),
+             cnt,
+             why ? why : "?");
+ 
+   BbsOutByte(bbsfile, ansifile, 0x19, why);
+   BbsOutByte(bbsfile, ansifile, (unsigned char)ch, why);
+   BbsOutByte(bbsfile, ansifile, cnt, why);
+ }
+
+ static void BbsOutRepeatSpecial(FILE *bbsfile, FILE *ansifile, int ch, int count, const char *why)
+ {
+   BbsOutByte(bbsfile, ansifile, (unsigned char)ch, why);
+   BbsOutByte(bbsfile, ansifile, 0x19, why);
+   BbsOutByte(bbsfile, ansifile, (unsigned char)ch, why);
+   BbsOutByte(bbsfile, ansifile, (unsigned char)count, why);
+ }
+
 void WriteColour(int colour,FILE *bbsfile);
 char blink;
 
@@ -67,8 +115,8 @@ char blink;
 
     #define PutRepChr(ch,count) \
               ((ch==25 || ch==13 || ch==10) ? \
-              fprintf(bbsfile,"%c\x19%c%c",ch,ch,count) : \
-              fprintf(bbsfile,"\x19%c%c",ch,count+1));
+              BbsOutRepeatSpecial(bbsfile, ansifile, (ch), (count), "PutRepChr special") : \
+              BbsOutRepeat(bbsfile, ansifile, (ch), (count), "PutRepChr"));
 #endif
 
 #define Compress_Sequence()                                       \
@@ -78,7 +126,7 @@ char blink;
           if (lastcount <= 2)                                     \
           {                                                       \
             for (x=0;x <= lastcount;x++)                          \
-              putc(lastch,bbsfile);                               \
+              BbsOutByte(bbsfile, ansifile, lastch, "Compress_Sequence literal") ; \
           }                                                       \
           else PutRepChr(lastch,lastcount);                       \
                                                                   \
@@ -91,7 +139,7 @@ char blink;
         if (lastch != -1)                                         \
         {                                                         \
           linelen++;                                              \
-          putc(lastch,bbsfile);                                   \
+          BbsOutByte(bbsfile, ansifile, lastch, "Compress_Sequence tail") ; \
         }                                                         \
                                                                   \
         lastch=ch;                                                \
@@ -185,6 +233,7 @@ int _stdc main(int argc,char *argv[])
     exit(1);
   }
 
+  bbs_out_off=0;
   linelen=0;
 
   for (;;)
@@ -213,8 +262,8 @@ int _stdc main(int argc,char *argv[])
     {
       lastch=-1;
       lastcount=0;
-      putc('\r',bbsfile);
-      putc('\n',bbsfile);
+      BbsOutByte(bbsfile, ansifile, '\r', "input newline");
+      BbsOutByte(bbsfile, ansifile, '\n', "input newline");
       linelen=0;
     }
     else if (ch != '\x1b')
@@ -232,12 +281,18 @@ int _stdc main(int argc,char *argv[])
         {
 #endif
           for (x=0;x <= lastcount;x++)
-            putc(lastch,bbsfile);
+            BbsOutByte(bbsfile, ansifile, lastch, "pre-ESC flush literal");
 #ifndef ANSI2MEC
         }
         else if (lastcount==25)
-          fprintf(bbsfile,"\x19%c\x19%c",lastch,lastch);
-        else fprintf(bbsfile,"\x19%c%c",lastch,lastcount+1);
+        {
+          BbsOutByte(bbsfile, ansifile, 0x19, "pre-ESC flush repeat count==25");
+          BbsOutByte(bbsfile, ansifile, (unsigned char)lastch, "pre-ESC flush repeat count==25");
+          BbsOutByte(bbsfile, ansifile, 0x19, "pre-ESC flush repeat count==25");
+          BbsOutByte(bbsfile, ansifile, (unsigned char)lastch, "pre-ESC flush repeat count==25");
+        }
+        else
+          BbsOutRepeat(bbsfile, ansifile, lastch, lastcount, "pre-ESC flush repeat");
 #endif
 
         linelen += lastcount;

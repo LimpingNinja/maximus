@@ -1,0 +1,211 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: maxui.mh
+//
+// Desc: UI-related constants, structures, and function prototypes for MEX
+//
+// Copyright 2025 by Kevin Morgan (Limping Ninja). All rights reserved.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+#ifndef __MAXUI_MH_DEFINED
+#define __MAXUI_MH_DEFINED
+
+// Integer attribute values for UI functions (ui_fill_rect, ui_edit_field, etc.)
+#define UI_BLACK                0x00
+#define UI_BLUE                 0x01
+#define UI_GREEN                0x02
+#define UI_CYAN                 0x03
+#define UI_RED                  0x04
+#define UI_MAGENTA              0x05
+#define UI_BROWN                0x06
+#define UI_GRAY                 0x07
+#define UI_DKGRAY               0x08
+#define UI_LBLUE                0x09
+#define UI_LGREEN               0x0a
+#define UI_LCYAN                0x0b
+#define UI_LRED                 0x0c
+#define UI_LMAGENTA             0x0d
+#define UI_YELLOW               0x0e
+#define UI_WHITE                0x0f
+
+#define UI_WHITEONBLUE           0x1f
+#define UI_YELLOWONBLUE          0x1e
+#define UI_BLACKONGREEN          0x20
+#define UI_REDONGREEN            0x2c
+#define UI_WHITEONGREEN          0x2f
+
+// ui_edit_field return codes
+#define UI_EDIT_ERROR             0
+#define UI_EDIT_CANCEL            1
+#define UI_EDIT_ACCEPT            2
+#define UI_EDIT_PREVIOUS          3
+#define UI_EDIT_NEXT              4
+#define UI_EDIT_NOROOM            5
+
+// ui_edit_field flags
+#define UI_EDIT_FLAG_ALLOW_CANCEL 0x0020
+#define UI_EDIT_FLAG_FIELD_MODE   0x0002
+#define UI_EDIT_FLAG_MASK         0x0004
+
+// ui_prompt_field start modes
+#define UI_PROMPT_START_HERE      0
+#define UI_PROMPT_START_CR        1
+#define UI_PROMPT_START_CLBOL     2
+
+// ui_lightbar justification modes
+#define UI_JUSTIFY_LEFT    0
+#define UI_JUSTIFY_CENTER  1
+#define UI_JUSTIFY_RIGHT   2
+
+// ui_lightbar bracket display styles
+#define UI_BRACKET_NONE      0
+#define UI_BRACKET_SQUARE    1
+#define UI_BRACKET_ROUNDED   2
+#define UI_BRACKET_CURLY     3
+
+// UI function prototypes
+void ui_goto(int: row, int: col);
+int ui_make_attr(int: fg, int: bg);
+void ui_set_attr(int: attr);
+void ui_fill_rect(int: row, int: col, int: width, int: height, char: ch, int: attr);
+void ui_write_padded(int: row, int: col, int: width, string: s, int: attr);
+
+// Style struct for ui_edit_field
+struct ui_edit_field_style
+{
+  int: normal_attr;       // unfocused color
+  int: focus_attr;        // focused/editing color
+  char: fill_ch;          // fill/mask character (default ' ')
+  int: flags;             // UI_EDIT_FLAG_* flags
+  string: format_mask;    // optional mask like "(000) 000-0000"
+};
+
+// Style struct for ui_prompt_field
+struct ui_prompt_field_style
+{
+  int: prompt_attr;       // prompt text color
+  int: field_attr;        // field color
+  char: fill_ch;          // fill/mask character (default ' ')
+  int: flags;             // UI_EDIT_FLAG_* flags
+  int: start_mode;        // UI_PROMPT_START_* mode
+  string: format_mask;    // optional mask
+};
+
+// Initialize field style structs with defaults
+void ui_edit_field_style_default(ref struct ui_edit_field_style: s);
+void ui_prompt_field_style_default(ref struct ui_prompt_field_style: s);
+
+// Bounded field editor with style struct
+string ui_edit_field(int: row, int: col, int: width, int: max_len, string: buf, ref struct ui_edit_field_style: style);
+
+// Inline prompt editor with style struct
+string ui_prompt_field(string: prompt, int: width, int: max_len, string: buf, ref struct ui_prompt_field_style: style);
+
+// Style struct for ui_lightbar
+struct ui_lightbar_style
+{
+  int: justify;           // UI_JUSTIFY_LEFT, UI_JUSTIFY_CENTER, or UI_JUSTIFY_RIGHT
+  int: wrap;              // 1 = wrap around at top/bottom, 0 = stop at edges
+  int: enable_hotkeys;    // 1 = enable hotkey selection, 0 = arrow keys only
+  int: show_brackets;     // UI_BRACKET_NONE, UI_BRACKET_SQUARE, UI_BRACKET_ROUNDED, or UI_BRACKET_CURLY
+  int: normal_attr;       // Color attribute for unselected items
+  int: selected_attr;     // Color attribute for selected item
+  int: hotkey_attr;       // Color attribute for hotkey character (0 = use selected_attr)
+  int: hotkey_highlight_attr; // Color attribute for hotkey character when selected (0 = use selected_attr)
+  int: margin;            // Extra columns appended to the effective width
+  int: out_hotkey;        // Output: selected hotkey character (0 if cancelled)
+};
+
+// Initialize ui_lightbar_style with default values
+void ui_lightbar_style_default(ref struct ui_lightbar_style: s);
+
+// Lightbar menu with style struct
+int ui_lightbar(ref array [1..] of string: items, int: count, int: x, int: y, int: width, ref struct ui_lightbar_style: style);
+
+// Item struct for positioned/multi-column lightbar
+struct ui_lightbar_item
+{
+  string: text;
+  int: x;
+  int: y;
+  int: width;
+  int: justify;
+};
+
+// Positioned/multi-column lightbar menu
+int ui_lightbar_pos(ref array [1..] of struct ui_lightbar_item: items, int: count, ref struct ui_lightbar_style: style);
+
+// Style struct for ui_select_prompt
+struct ui_select_prompt_style
+{
+  int: prompt_attr;       // Color attribute for prompt text
+  int: normal_attr;       // Color attribute for unselected options
+  int: selected_attr;     // Color attribute for selected option
+  int: hotkey_attr;       // Color attribute for hotkey character (0 = use selected_attr)
+  int: show_brackets;     // UI_BRACKET_NONE, UI_BRACKET_SQUARE, UI_BRACKET_ROUNDED, or UI_BRACKET_CURLY
+  int: margin;            // Extra spaces appended after each option
+  string: separator;      // Printed between options (default "")
+  int: out_hotkey;        // Output: selected hotkey character (0 if cancelled)
+};
+
+// Initialize ui_select_prompt_style with default values
+void ui_select_prompt_style_default(ref struct ui_select_prompt_style: s);
+
+// Inline selection prompt with style struct
+int ui_select_prompt(string: prompt, ref array [1..] of string: options, int: count, ref struct ui_select_prompt_style: style);
+
+// ============================================================================
+// Form System
+// ============================================================================
+
+// Field types
+#define UI_FIELD_TEXT     0
+#define UI_FIELD_MASKED   1
+#define UI_FIELD_FORMAT   2
+#define UI_FIELD_OPTION   3
+
+// Form save modes
+#define UI_FORM_SAVE_CTRL_S      0
+#define UI_FORM_SAVE_ESC_PROMPT  1
+
+// Form field definition
+struct ui_form_field
+{
+  string: name;
+  string: label;
+  int: x;
+  int: y;
+  int: width;
+  int: max_len;
+  int: field_type;
+  char: hotkey;
+  int: required;
+  int: label_attr;
+  int: normal_attr;
+  int: focus_attr;
+  string: format_mask;
+  string: value;
+};
+
+// Form style
+struct ui_form_style
+{
+  int: label_attr;
+  int: normal_attr;
+  int: focus_attr;
+  int: save_mode;
+  int: wrap;
+  string: required_msg;
+  int: required_x;
+  int: required_y;
+  int: required_attr;
+};
+
+// Initialize ui_form_style with default values
+void ui_form_style_default(ref struct ui_form_style: s);
+
+// Run form (returns 1=saved, 0=cancelled, -1=error)
+int ui_form_run(ref array [1..] of struct ui_form_field: fields, int: count, ref struct ui_form_style: style);
+
+#endif // __MAXUI_MH_DEFINED

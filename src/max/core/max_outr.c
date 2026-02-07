@@ -355,8 +355,13 @@ void Mdm_putc(int ch)
           current_line++;
           display_line++;
 
-          if (current_line > TermLength())
-            current_line=TermLength();       /* Scroll! */
+          {
+            int tl = TermLength();
+            if (current_line > tl)
+            {
+              current_line = (unsigned char)tl;
+            }
+          }
 
           current_col=1;
           display_col=1;
@@ -373,8 +378,13 @@ void Mdm_putc(int ch)
         current_col=display_col=1;
         wrap=FALSE;
 
-        if (current_line > TermLength())
-          current_line=TermLength();       /* Scroll! */
+        {
+          int tl = TermLength();
+          if (current_line > tl)
+          {
+            current_line = (unsigned char)tl;
+          }
+        }
 
         CMDM_PPUTs("\r\n");
 
@@ -458,8 +468,13 @@ void Mdm_putc(int ch)
               current_line++;
               display_line++;
 
-              if (current_line > TermLength())
-                current_line=TermLength();       /* Scroll! */
+              {
+                int tl = TermLength();
+                if (current_line > tl)
+                {
+                  current_line = (unsigned char)tl;
+                }
+              }
 
               current_col=1;
               display_col=1;

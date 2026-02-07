@@ -47,6 +47,7 @@ static char rcs_id[]="$Id: max_log.c,v 1.9 2004/01/28 06:38:10 paltas Exp $";
 #include "alc.h"
 #include "max_msg.h"
 #include "display.h"
+#include "ui_field.h"
 #include "userapi.h"
 #include "trackm.h"
 #include "ued.h"
@@ -81,6 +82,15 @@ void Login(char *key_info)
   int newuser;
   
   Calc_Timeoff();
+
+  if (!local && task_num > 0)
+    Apply_Term_Caps(&usr);
+
+  if (usr.video == GRAPH_ANSI)
+  {
+    Puts(CLS);
+    Goto(1, 1);
+  }
   
   if (! local && !waitforcaller)
     logit(log_caller_bps, baud);
@@ -226,7 +236,9 @@ static void near Banner(void)
   if ((! *linebuf && !local) || eqstri(linebuf,"-"))
   {
     *linebuf='\0';
+    logit("+BANNER: before logo current=%d,%d display=%d,%d usr=%dx%d term=%dx%d", (int)current_line, (int)current_col, (int)display_line, (int)display_col, (int)usr.width, (int)usr.len, TermWidth(), TermLength());
     Display_File(0,NULL,ngcfg_get_path("general.display_files.logo"));
+    logit("+BANNER: after  logo current=%d,%d display=%d,%d usr=%dx%d term=%dx%d", (int)current_line, (int)current_col, (int)display_line, (int)display_col, (int)usr.width, (int)usr.len, TermWidth(), TermLength());
   }
   else if (! *linebuf)
     strcpy(linebuf, ngcfg_get_string("maximus.sysop"));
@@ -285,15 +297,23 @@ static int near GetName(void)
     /* YES/YES mode (Alias System + Ask Alias): ask for alias first using enter_name
      * Other modes: ask for real name using what_first_name
      */
-    if (ngcfg_get_bool("general.session.alias_system") &&
-        ngcfg_get_bool("general.session.ask_alias"))
     {
-      InputGetsWNH(fname, enter_name);
-    }
-    else
-    {
-      sprintf(quest, what_first_name, blank_str);
-      InputGetsWNH(fname, quest);
+      ui_prompt_field_style_t pf_style;
+      ui_prompt_field_style_default(&pf_style);
+      pf_style.prompt_attr = (byte)-1;
+      pf_style.field_attr = (byte)0x1f;
+      pf_style.start_mode = UI_PROMPT_START_HERE;
+      
+      if (ngcfg_get_bool("general.session.alias_system") &&
+          ngcfg_get_bool("general.session.ask_alias"))
+      {
+        ui_prompt_field(enter_name, 35, 35, fname, BUFLEN, &pf_style);
+      }
+      else
+      {
+        sprintf(quest, what_first_name, blank_str);
+        ui_prompt_field(quest, 35, 35, fname, BUFLEN, &pf_style);
+      }
     }
 
     if (! *fname)
@@ -325,7 +345,14 @@ static int near GetName(void)
         sprintf(quest, what_last_name,
                 ngcfg_get_bool("general.session.alias_system") ? s_alias : blank_str);
 
-        InputGetsWNH(lname, quest);
+        {
+          ui_prompt_field_style_t pf_style;
+          ui_prompt_field_style_default(&pf_style);
+          pf_style.prompt_attr = (byte)-1;
+          pf_style.field_attr = (byte)0x1f;
+          pf_style.start_mode = UI_PROMPT_START_HERE;
+          ui_prompt_field(quest, 35, 35, lname, BUFLEN, &pf_style);
+        }
 
         /* If a last name was entered, we need to search again
            with the full name */
@@ -480,11 +507,18 @@ static int near GetName(void)
           if (! *linebuf)
             Putc('\n');
 
-          InputGetseNH(pwd, '.', usr_pwd);
+          {
+            ui_prompt_field_style_t pf_style;
+            ui_prompt_field_style_default(&pf_style);
+            pf_style.prompt_attr = (byte)-1;
+            pf_style.field_attr = (byte)0x1f;
+            pf_style.fill_ch = '.';
+            pf_style.flags = UI_EDIT_FLAG_MASK;
+            pf_style.start_mode = UI_PROMPT_START_HERE;
+            ui_prompt_field(usr_pwd, 15, 15, pwd, BUFLEN, &pf_style);
+          }
         }
 
-        
-        
         /* For "guest" accounts, reconfig at every logon */
 
 #ifdef CANENCRYPT
@@ -493,6 +527,9 @@ static int near GetName(void)
         if (*usr.pwd==0)
 #endif
         {
+          byte w = usr.width;
+          byte l = usr.len;
+
           usr.bits &= ~BITS_RIP;
           usr.bits2 |= BITS2_MORE | BITS2_CLS;
           usr.bits2 &= ~BITS2_CONFIGURED;
@@ -502,10 +539,9 @@ static int near GetName(void)
           usr.downtoday=0L;
           usr.up=ultoday=0L;
           usr.nup=usr.ndown=usr.ndowntoday=0L;
-          usr.width=80;
-          usr.len=24;
+          usr.width=w;
+          usr.len=l;
         }
-      
 
 #ifdef CANENCRYPT
         if (usr.bits & BITS_ENCRYPT)
@@ -624,6 +660,10 @@ static int near Find_User(char *username)
       /* Found the user successfully */
 
       origusr=usr;
+
+      if (!local && task_num > 0)
+        Apply_Term_Caps(&usr);
+
       SetUserName(&usr, usrname);
       ret=TRUE;
     }

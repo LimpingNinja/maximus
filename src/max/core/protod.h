@@ -46,6 +46,7 @@ char * Strip_Ansi(char *s,char *area,long msgnum);
 void Mdm_Flow(int state);
 char * Timestamp_Format(char *format,union stamp_combo *sstamp,char *out);
 char * Strip_Underscore(char *s);
+void Apply_Term_Caps(struct _usr *user);
 void Blank_User(struct _usr *user);
 void Find_Class_Number(void);
 void You_Cant_Get_There(void);

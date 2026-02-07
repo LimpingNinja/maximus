@@ -18,4 +18,3 @@ void main()
 {
   print(COL_WHITE "\nYour lastread pointer is ", msg.current, ".\n");
 }
-

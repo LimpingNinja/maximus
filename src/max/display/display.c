@@ -919,15 +919,25 @@ word near DCMaximus(DSTK *d)
 
 word near DCRLE(DSTK *d)
 {
+  word rep_ch;
+  word rep_cnt;
+
   if (d->ck_abort && halt())
   {
     d->ret=DRET_BREAK;
     return TRUE;
   }
 
-  Putc('\x19');
+  rep_ch=DispSlowGetChar(d);
+  rep_cnt=DispSlowGetChar(d);
 
-  PF(d, 2);
+  if (rep_ch==DISP_EOF || rep_cnt==DISP_EOF)
+    return TRUE;
+
+  while (rep_cnt--)
+    Putc(rep_ch);
+
+  d->recd_chars=TRUE;
   return FALSE;
 }
 

@@ -2,6 +2,31 @@
 
 ---
 
+## Sat Feb 7 2026 - Maximus/UNIX 3.04a-r2 [alpha]
+
+**MaxUI Field/Input + Forms Improvements**  
+Maintainer: Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+
+### New: MaxUI Form Runner
+
+- New struct-based form system with spatial (2D) navigation and field editing
+- Cursor behavior aligned with other UI widgets:
+  - Cursor hidden during form navigation
+  - Cursor shown while actively editing a field
+- Required-field validation with a simple splash message on save
+
+### Improved: Field Editing + Key Handling
+
+- Centralized UI key decoding via shared helper (`ui_read_key`) so ESC-sequences behave consistently across UI widgets
+- Forward-delete support (Delete key / `ESC[3~`) in `ui_edit_field`:
+  - Works for both plain fields and `format_mask` fields
+- Documentation updated for these behaviors, including deferred “missing functionality” notes for more advanced ESC parsing
+
+### MEX + Documentation
+
+- All new/updated UI features are exposed to MEX (including `ui_form_run`)
+- `uitest.mex` expanded with interactive coverage for prompt start modes and format-mask cancel/edit flows
+
 ## Sat Nov 30 2025 - Maximus/UNIX 3.04a-r2 [alpha]
 
 **MAXTEL + Linux Support Release**  

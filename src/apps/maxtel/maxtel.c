@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <time.h>
@@ -285,7 +286,7 @@ static void load_callers(void);
 static void load_prm_info(void);
 static void load_user_count(void);
 static void cleanup(void);
-static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode);
+static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode, int *term_cols, int *term_rows);
 static void sigwinch_handler(int sig);
 static void detect_layout(void);
 static void handle_resize(void);
@@ -780,8 +781,315 @@ static int find_free_node(void)
     return -1;
 }
 
+static int drain_select_bytes(int fd, unsigned char *buf, size_t buf_sz, int initial_timeout_us)
+{
+    int flags;
+    int timeout_us = initial_timeout_us;
+    int buflen = 0;
+
+    if (!buf || buf_sz == 0)
+        return 0;
+
+    flags = fcntl(fd, F_GETFL, 0);
+    if (flags >= 0)
+        (void)fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    while (buflen < (int)buf_sz) {
+        fd_set rfds;
+        struct timeval tv;
+
+        FD_ZERO(&rfds);
+        FD_SET(fd, &rfds);
+
+        tv.tv_sec = timeout_us / 1000000;
+        tv.tv_usec = timeout_us % 1000000;
+
+        if (select(fd + 1, &rfds, NULL, NULL, &tv) <= 0)
+            break;
+
+        if (FD_ISSET(fd, &rfds)) {
+            ssize_t n = read(fd, buf + buflen, buf_sz - (size_t)buflen);
+            if (n > 0) {
+                buflen += (int)n;
+                timeout_us = 50000;
+                continue;
+            }
+            if (n == 0)
+                break;
+            if (errno == EINTR)
+                continue;
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+            break;
+        }
+    }
+
+    if (flags >= 0)
+        (void)fcntl(fd, F_SETFL, flags);
+
+    return buflen;
+}
+
+typedef struct {
+    int will_ttype;
+    int will_naws;
+    int has_term;
+    char term[64];
+    int has_cols;
+    int has_rows;
+    uint16_t cols;
+    uint16_t rows;
+} telnet_neg_state_t;
+
+static void trim_ascii(char *s)
+{
+    char *p;
+    size_t n;
+
+    if (!s)
+        return;
+
+    while (*s && isspace((unsigned char)*s))
+        memmove(s, s + 1, strlen(s));
+
+    n = strlen(s);
+    while (n > 0 && isspace((unsigned char)s[n - 1])) {
+        s[n - 1] = '\0';
+        n--;
+    }
+
+    p = s;
+    while (*p) {
+        if ((unsigned char)*p < 0x20)
+            *p = ' ';
+        p++;
+    }
+}
+
+static void parse_telnet_negotiation_bytes(telnet_neg_state_t *state, const unsigned char *data, int len)
+{
+    const unsigned char TELNET_OPT_TTYPE = 24;
+    int i = 0;
+
+    if (!state || !data || len <= 0)
+        return;
+
+    while (i < len) {
+        if (data[i] != cmd_IAC) {
+            i++;
+            continue;
+        }
+
+        if (i + 1 >= len)
+            break;
+
+        switch (data[i + 1]) {
+            case cmd_WILL:
+            case cmd_WONT:
+            case cmd_DO:
+            case cmd_DONT: {
+                if (i + 2 >= len)
+                    return;
+                if (data[i + 1] == cmd_WILL) {
+                    if (data[i + 2] == TELNET_OPT_TTYPE)
+                        state->will_ttype = 1;
+                    else if (data[i + 2] == opt_NAWS)
+                        state->will_naws = 1;
+                }
+                i += 3;
+                break;
+            }
+            case cmd_SB: {
+                int opt;
+                int j;
+                const unsigned char *payload;
+                int payload_len;
+
+                if (i + 2 >= len)
+                    return;
+
+                opt = data[i + 2];
+                j = i + 3;
+                while (j + 1 < len) {
+                    if (data[j] == cmd_IAC && data[j + 1] == cmd_SE)
+                        break;
+                    j++;
+                }
+                if (j + 1 >= len)
+                    return;
+
+                payload = data + (i + 3);
+                payload_len = j - (i + 3);
+
+                if (opt == opt_NAWS) {
+                    if (payload_len >= 4) {
+                        uint16_t w = (uint16_t)((payload[0] << 8) | payload[1]);
+                        uint16_t h = (uint16_t)((payload[2] << 8) | payload[3]);
+                        if (w > 0) {
+                            state->cols = w;
+                            state->has_cols = 1;
+                        }
+                        if (h > 0) {
+                            state->rows = h;
+                            state->has_rows = 1;
+                        }
+                    }
+                } else if (opt == TELNET_OPT_TTYPE) {
+                    if (payload_len >= 1 && payload[0] == 0) {
+                        unsigned char t[64];
+                        int out = 0;
+                        int k = 1;
+                        while (k < payload_len && out < (int)sizeof(t) - 1) {
+                            if (payload[k] == cmd_IAC && k + 1 < payload_len && payload[k + 1] == cmd_IAC) {
+                                t[out++] = cmd_IAC;
+                                k += 2;
+                            } else {
+                                t[out++] = payload[k++];
+                            }
+                        }
+                        t[out] = '\0';
+                        memcpy(state->term, t, sizeof(state->term));
+                        state->term[sizeof(state->term) - 1] = '\0';
+                        trim_ascii(state->term);
+                        if (state->term[0])
+                            state->has_term = 1;
+                    }
+                }
+
+                i = j + 2;
+                break;
+            }
+            default:
+                i += 2;
+                break;
+        }
+    }
+}
+
+static int parse_ansi_dsr_18t(const unsigned char *buf, int len, int *out_cols, int *out_rows)
+{
+    int i = 0;
+
+    if (!buf || len <= 0)
+        return 0;
+
+    while (i + 1 < len) {
+        if (buf[i] == 0x1B && buf[i + 1] == '[') {
+            int j = i + 2;
+            int rows, cols;
+
+            if (j + 1 >= len || buf[j] != '8' || buf[j + 1] != ';') {
+                i++;
+                continue;
+            }
+            j += 2;
+
+            rows = 0;
+            while (j < len && isdigit((unsigned char)buf[j])) {
+                rows = rows * 10 + (buf[j] - '0');
+                j++;
+            }
+            if (j >= len || buf[j] != ';') {
+                i++;
+                continue;
+            }
+            j++;
+
+            cols = 0;
+            while (j < len && isdigit((unsigned char)buf[j])) {
+                cols = cols * 10 + (buf[j] - '0');
+                j++;
+            }
+            if (j >= len || buf[j] != 't') {
+                i++;
+                continue;
+            }
+
+            if (rows > 0 && cols > 0) {
+                if (out_cols) *out_cols = cols;
+                if (out_rows) *out_rows = rows;
+                return 1;
+            }
+        }
+        i++;
+    }
+
+    return 0;
+}
+
+static int parse_ansi_csi_response(const unsigned char *buf, int len, int *out_cols, int *out_rows)
+{
+    int i = 0;
+
+    if (!buf || len <= 0)
+        return 0;
+
+    while (i + 1 < len) {
+        if (buf[i] == 0x1B && buf[i + 1] == '[') {
+            int j = i + 2;
+            int row = 0;
+            int col = 0;
+
+            while (j < len && isdigit((unsigned char)buf[j])) {
+                row = row * 10 + (buf[j] - '0');
+                j++;
+            }
+            if (j >= len || buf[j] != ';') {
+                i++;
+                continue;
+            }
+            j++;
+
+            while (j < len && isdigit((unsigned char)buf[j])) {
+                col = col * 10 + (buf[j] - '0');
+                j++;
+            }
+            if (j >= len || buf[j] != 'R') {
+                i++;
+                continue;
+            }
+
+            if (row > 0 && col > 0) {
+                if (out_cols) *out_cols = col;
+                if (out_rows) *out_rows = row;
+                return 1;
+            }
+        }
+        i++;
+    }
+
+    return 0;
+}
+
+static void detect_ansi_dimensions(int fd, int *out_cols, int *out_rows)
+{
+    unsigned char buf[512];
+    int buflen;
+    int cols = 80;
+    int rows = 24;
+
+    write(fd, "\x1b[18t", 5);
+    buflen = drain_select_bytes(fd, buf, sizeof(buf), 300000);
+    if (buflen > 0 && parse_ansi_dsr_18t(buf, buflen, &cols, &rows)) {
+        if (out_cols) *out_cols = cols;
+        if (out_rows) *out_rows = rows;
+        return;
+    }
+
+    write(fd, "\x1b[s\x1b[999;999H\x1b[6n\x1b[u", 20);
+    buflen = drain_select_bytes(fd, buf, sizeof(buf), 300000);
+    if (buflen > 0 && parse_ansi_csi_response(buf, buflen, &cols, &rows)) {
+        if (out_cols) *out_cols = cols;
+        if (out_rows) *out_rows = rows;
+        return;
+    }
+
+    if (out_cols) *out_cols = 80;
+    if (out_rows) *out_rows = 24;
+}
+
 /* Telnet detection and negotiation (from maxcomm) */
-static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode)
+static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode, int *term_cols, int *term_rows)
 {
     unsigned char probe[8];
     unsigned char buf[256];
@@ -791,6 +1099,8 @@ static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode)
     int n, i;
     int got_iac = 0;
     int got_ansi = 0;
+    int cols = 80;
+    int rows = 24;
     
     /* Print detection message */
     write(fd, "\r\nDetecting terminal... ", 24);
@@ -864,6 +1174,9 @@ static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode)
     
     *telnet_mode = got_iac;
     *ansi_mode = got_ansi;
+
+    if (term_cols) *term_cols = cols;
+    if (term_rows) *term_rows = rows;
     
     /* Clear line and report */
     write(fd, "\x1B[2K\rDetecting terminal...", 26);
@@ -876,33 +1189,58 @@ static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode)
         write(fd, " ANSI\r\n", 7);
     else
         write(fd, " Raw\r\n", 6);
-    
-    /* Send telnet negotiation if needed */
+        /* Send telnet negotiation if needed */
     if (got_iac) {
-        unsigned char cmd[4];
-        cmd[0] = 255; cmd[1] = 254; cmd[2] = 36;  /* DONT ENVIRON */
+        const unsigned char TELNET_OPT_TTYPE = 24;
+        unsigned char cmd[6];
+        unsigned char nb[512];
+        telnet_neg_state_t st;
+
+        memset(&st, 0, sizeof(st));
+
+        cmd[0] = cmd_IAC; cmd[1] = cmd_DONT; cmd[2] = opt_ENVIRON;
         write(fd, cmd, 3);
-        cmd[0] = 255; cmd[1] = 251; cmd[2] = 1;   /* WILL ECHO */
+        cmd[0] = cmd_IAC; cmd[1] = cmd_WILL; cmd[2] = opt_ECHO;
         write(fd, cmd, 3);
-        cmd[0] = 255; cmd[1] = 251; cmd[2] = 3;   /* WILL SGA */
+        cmd[0] = cmd_IAC; cmd[1] = cmd_WILL; cmd[2] = opt_SGA;
         write(fd, cmd, 3);
-        cmd[0] = 255; cmd[1] = 254; cmd[2] = 31;  /* DONT NAWS */
+
+        cmd[0] = cmd_IAC; cmd[1] = cmd_DO; cmd[2] = TELNET_OPT_TTYPE;
         write(fd, cmd, 3);
-        
-        /* Drain responses to negotiation commands */
-        tv.tv_sec = 0;
-        tv.tv_usec = 100000;  /* 100ms */
-        FD_ZERO(&rfds);
-        FD_SET(fd, &rfds);
-        while (select(fd + 1, &rfds, NULL, NULL, &tv) > 0) {
-            n = read(fd, buf, sizeof(buf));
-            if (n <= 0) break;
-            FD_ZERO(&rfds);
-            FD_SET(fd, &rfds);
-            tv.tv_sec = 0;
-            tv.tv_usec = 50000;
+        cmd[0] = cmd_IAC; cmd[1] = cmd_DO; cmd[2] = opt_NAWS;
+        write(fd, cmd, 3);
+
+        n = drain_select_bytes(fd, nb, sizeof(nb), 200000);
+        if (n > 0)
+            parse_telnet_negotiation_bytes(&st, nb, n);
+
+        if (st.will_ttype && !st.has_term) {
+            cmd[0] = cmd_IAC;
+            cmd[1] = cmd_SB;
+            cmd[2] = TELNET_OPT_TTYPE;
+            cmd[3] = 1;
+            cmd[4] = cmd_IAC;
+            cmd[5] = cmd_SE;
+            write(fd, cmd, 6);
+            n = drain_select_bytes(fd, nb, sizeof(nb), 200000);
+            if (n > 0)
+                parse_telnet_negotiation_bytes(&st, nb, n);
         }
+
+        if (st.has_cols)
+            cols = (int)st.cols;
+        if (st.has_rows)
+            rows = (int)st.rows;
+
+        if (!st.has_cols || !st.has_rows)
+            detect_ansi_dimensions(fd, &cols, &rows);
     }
+
+    if (!got_iac && got_ansi)
+        detect_ansi_dimensions(fd, &cols, &rows);
+
+    if (term_cols) *term_cols = cols;
+    if (term_rows) *term_rows = rows;
 }
 
 /* Handle incoming telnet connection */
@@ -946,7 +1284,7 @@ static void handle_connection(int client_fd, struct sockaddr_in *addr)
 }
 
 /* Write terminal capability file for max to read */
-static void write_term_caps(int node_num, int telnet_mode, int ansi_mode)
+static void write_term_caps(int node_num, int telnet_mode, int ansi_mode, int width, int height)
 {
     char path[256];
     FILE *fp;
@@ -958,8 +1296,8 @@ static void write_term_caps(int node_num, int telnet_mode, int ansi_mode)
         fprintf(fp, "Telnet: %d\n", telnet_mode ? 1 : 0);
         fprintf(fp, "Ansi: %d\n", ansi_mode ? 1 : 0);
         fprintf(fp, "Rip: 0\n");
-        fprintf(fp, "Width: 80\n");
-        fprintf(fp, "Height: 24\n");
+        fprintf(fp, "Width: %d\n", width);
+        fprintf(fp, "Height: %d\n", height);
         fclose(fp);
         DEBUG("Wrote terminal caps for node %d: telnet=%d ansi=%d", 
               node_num + 1, telnet_mode, ansi_mode);
@@ -976,12 +1314,13 @@ static void bridge_connection(int client_fd, int node_num)
     char buf[4096];
     int n;
     int telnet_mode = 0, ansi_mode = 0;
+    int term_width = 80, term_height = 24;
     
     /* Detect terminal type */
-    detect_and_negotiate(client_fd, &telnet_mode, &ansi_mode);
+    detect_and_negotiate(client_fd, &telnet_mode, &ansi_mode, &term_width, &term_height);
     
     /* Write terminal capabilities for max to read */
-    write_term_caps(node_num, telnet_mode, ansi_mode);
+    write_term_caps(node_num, telnet_mode, ansi_mode, term_width, term_height);
     
     /* Connect to max's socket */
     sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
