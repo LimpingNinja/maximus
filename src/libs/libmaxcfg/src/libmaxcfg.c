@@ -150,6 +150,10 @@ struct TomlNode {
             char **items;
             size_t count;
         } strv;
+        struct {
+            int *items;
+            size_t count;
+        } intv;
         TomlTable *table;
         TomlArray *array;
     } v;
@@ -170,6 +174,7 @@ static void toml_kv_int(FILE *fp, const char *key, int value);
 static void toml_kv_bool(FILE *fp, const char *key, bool value);
 static void toml_kv_uint(FILE *fp, const char *key, unsigned int value);
 static void toml_kv_string_array(FILE *fp, const char *key, char **items, size_t count);
+static void toml_kv_int_array(FILE *fp, const char *key, int *items, size_t count);
 
 static void maxcfg_free_and_null(char **p)
 {
@@ -1504,6 +1509,11 @@ static void toml_node_free(TomlNode *n)
             free(n->v.strv.items);
         }
         break;
+    case MAXCFG_VAR_INT_ARRAY:
+        free(n->v.intv.items);
+        n->v.intv.items = NULL;
+        n->v.intv.count = 0;
+        break;
     case MAXCFG_VAR_TABLE:
         toml_table_free(n->v.table);
         break;
@@ -1923,6 +1933,73 @@ static MaxCfgStatus parse_string(const char **p_io, char **out)
     return MAXCFG_OK;
 }
 
+static MaxCfgStatus parse_int_array(const char **p_io, TomlNode **out)
+{
+    /* Parse a TOML array of integers: [1, 2, 3]
+     *
+     * This is used for fields like custom_menu.top_boundary = [x, y].
+     */
+    const char *p = p_io ? *p_io : NULL;
+    if (p == NULL || out == NULL || *p != '[') {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+
+    p++;
+    int *items = NULL;
+    size_t count = 0u;
+    size_t cap = 0u;
+
+    while (*p) {
+        p = skip_ws(p);
+        if (*p == ']') {
+            p++;
+            break;
+        }
+
+        char *endp = NULL;
+        long v = strtol(p, &endp, 10);
+        if (endp == p) {
+            free(items);
+            return MAXCFG_ERR_IO;
+        }
+
+        if (count + 1u > cap) {
+            size_t ncap = cap ? cap * 2u : 8u;
+            int *ni = (int *)realloc(items, ncap * sizeof(*ni));
+            if (ni == NULL) {
+                free(items);
+                return MAXCFG_ERR_OOM;
+            }
+            items = ni;
+            cap = ncap;
+        }
+        items[count++] = (int)v;
+        p = endp;
+
+        p = skip_ws(p);
+        if (*p == ',') {
+            p++;
+            continue;
+        }
+        if (*p == ']') {
+            p++;
+            break;
+        }
+    }
+
+    TomlNode *n = toml_node_new(MAXCFG_VAR_INT_ARRAY);
+    if (n == NULL) {
+        free(items);
+        return MAXCFG_ERR_OOM;
+    }
+
+    n->v.intv.items = items;
+    n->v.intv.count = count;
+    *out = n;
+    *p_io = p;
+    return MAXCFG_OK;
+}
+
 static MaxCfgStatus parse_value(const char **p_io, TomlNode **out);
 
 static MaxCfgStatus parse_inline_table(const char **p_io, TomlNode **out)
@@ -2114,12 +2191,41 @@ static MaxCfgStatus parse_value(const char **p_io, TomlNode **out)
     }
 
     if (*p == '[') {
-        MaxCfgStatus st = parse_string_array(&p, out);
-        if (st != MAXCFG_OK) {
-            return st;
+        const char *p2 = p + 1;
+        p2 = skip_ws(p2);
+
+        /* Arrays are type-detected from the first non-ws element:
+         * - [] and ["..."] => string array
+         * - [1,2] or [-1,2] => int array
+         */
+        if (*p2 == ']') {
+            MaxCfgStatus st = parse_string_array(&p, out);
+            if (st != MAXCFG_OK) {
+                return st;
+            }
+            *p_io = p;
+            return MAXCFG_OK;
         }
-        *p_io = p;
-        return MAXCFG_OK;
+
+        if (*p2 == '"') {
+            MaxCfgStatus st = parse_string_array(&p, out);
+            if (st != MAXCFG_OK) {
+                return st;
+            }
+            *p_io = p;
+            return MAXCFG_OK;
+        }
+
+        if (*p2 == '-' || (*p2 >= '0' && *p2 <= '9')) {
+            MaxCfgStatus st = parse_int_array(&p, out);
+            if (st != MAXCFG_OK) {
+                return st;
+            }
+            *p_io = p;
+            return MAXCFG_OK;
+        }
+
+        return MAXCFG_ERR_IO;
     }
 
     if (*p == '{') {
@@ -2644,6 +2750,17 @@ static TomlNode *toml_node_clone(const TomlNode *src)
             }
         }
         break;
+    case MAXCFG_VAR_INT_ARRAY:
+        if (src->v.intv.count > 0) {
+            dst->v.intv.items = (int *)calloc(src->v.intv.count, sizeof(dst->v.intv.items[0]));
+            if (dst->v.intv.items == NULL) {
+                toml_node_free(dst);
+                return NULL;
+            }
+            dst->v.intv.count = src->v.intv.count;
+            memcpy(dst->v.intv.items, src->v.intv.items, src->v.intv.count * sizeof(dst->v.intv.items[0]));
+        }
+        break;
     case MAXCFG_VAR_TABLE:
         dst->v.table = toml_table_new();
         if (dst->v.table == NULL) {
@@ -2849,6 +2966,9 @@ static void toml_emit_key(FILE *fp, const char *key, const TomlNode *n)
         break;
     case MAXCFG_VAR_STRING_ARRAY:
         toml_kv_string_array(fp, key, n->v.strv.items, n->v.strv.count);
+        break;
+    case MAXCFG_VAR_INT_ARRAY:
+        toml_kv_int_array(fp, key, n->v.intv.items, n->v.intv.count);
         break;
     default:
         break;
@@ -3193,6 +3313,10 @@ static MaxCfgStatus var_from_node(const TomlNode *n, MaxCfgVar *out)
         out->v.strv.items = (const char **)n->v.strv.items;
         out->v.strv.count = n->v.strv.count;
         break;
+    case MAXCFG_VAR_INT_ARRAY:
+        out->v.intv.items = (const int *)n->v.intv.items;
+        out->v.intv.count = n->v.intv.count;
+        break;
     case MAXCFG_VAR_TABLE:
         out->v.opaque = (void *)n->v.table;
         break;
@@ -3302,6 +3426,14 @@ MaxCfgStatus maxcfg_toml_get(const MaxCfgToml *toml, const char *path, MaxCfgVar
                 }
                 out->type = MAXCFG_VAR_STRING;
                 out->v.s = cur->v.strv.items[idx] ? cur->v.strv.items[idx] : "";
+                return MAXCFG_OK;
+            } else if (cur->type == MAXCFG_VAR_INT_ARRAY) {
+                /* Allow direct indexed reads like: custom_menu.top_boundary[0] */
+                if (idx >= cur->v.intv.count) {
+                    return MAXCFG_ERR_NOT_FOUND;
+                }
+                out->type = MAXCFG_VAR_INT;
+                out->v.i = cur->v.intv.items[idx];
                 return MAXCFG_OK;
             } else {
                 return MAXCFG_ERR_NOT_FOUND;
@@ -3512,6 +3644,15 @@ MaxCfgStatus maxcfg_toml_array_get(const MaxCfgVar *array, size_t index, MaxCfgV
         return MAXCFG_OK;
     }
 
+    if (array->type == MAXCFG_VAR_INT_ARRAY) {
+        if (index >= array->v.intv.count) {
+            return MAXCFG_ERR_NOT_FOUND;
+        }
+        out->type = MAXCFG_VAR_INT;
+        out->v.i = array->v.intv.items[index];
+        return MAXCFG_OK;
+    }
+
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
@@ -3528,6 +3669,9 @@ MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count)
     switch (var->type) {
     case MAXCFG_VAR_STRING_ARRAY:
         *out_count = var->v.strv.count;
+        return MAXCFG_OK;
+    case MAXCFG_VAR_INT_ARRAY:
+        *out_count = var->v.intv.count;
         return MAXCFG_OK;
     case MAXCFG_VAR_TABLE_ARRAY: {
         TomlArray *a = (TomlArray *)var->v.opaque;
@@ -3613,6 +3757,18 @@ static void toml_kv_string_array(FILE *fp, const char *key, char **items, size_t
         toml_write_escaped(fp, items[i] ? items[i] : "");
     }
     fputs("]\n", fp);
+}
+
+static void toml_kv_int_array(FILE *fp, const char *key, int *items, size_t count)
+{
+    fprintf(fp, "%s = [", key);
+    for (size_t i = 0; i < count; i++) {
+        if (i > 0) {
+            fputs(", ", fp);
+        }
+        fprintf(fp, "%d", (items != NULL) ? items[i] : 0);
+    }
+    fprintf(fp, "]\n");
 }
 
 static void maxcfg_free_strv(char ***items_io, size_t *count_io)

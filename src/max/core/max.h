@@ -762,6 +762,28 @@ typedef struct _amenu
   struct _menu m;
   struct _opt *opt;
   char *menuheap;
+
+  byte cm_enabled;
+  byte cm_skip_canned_menu;
+  byte cm_show_title;
+  byte cm_lightbar_menu;
+
+  byte cm_option_spacing;
+  byte cm_option_justify;
+  byte cm_boundary_justify;
+  byte cm_boundary_vjustify;
+  byte cm_boundary_layout;
+
+  word cm_x1;
+  word cm_y1;
+  word cm_x2;
+  word cm_y2;
+
+  word cm_title_x;
+  word cm_title_y;
+
+  word cm_prompt_x;
+  word cm_prompt_y;
 } AMENU, *PAMENU;
 
 

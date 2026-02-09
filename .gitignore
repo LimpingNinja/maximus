@@ -102,3 +102,6 @@ src/utils/util/cvtusr
 src/utils/util/editcall
 src/utils/util/fb
 src/utils/util/fixlr
+src/utils/util/mecca
+src/utils/util/maxcomm
+src/apps/mex/mex

@@ -57,7 +57,15 @@ static void near CountMenuLines(PAMENU pam, char *mname)
   /* If we have a canned menu to display, use its length */
 
   if (*MNU(*pam, m.dspfile) && DoDspFile(menuhelp, pam->m.flag))
-    menu_lines=pam->m.menu_length;
+  {
+    if (pam->cm_enabled && pam->cm_skip_canned_menu)
+      menu_lines=pam->m.menu_length;
+    else if (pam->cm_enabled && pam->cm_x1 > 0 && pam->cm_y1 > 0 && 
+             pam->cm_x2 >= pam->cm_x1 && pam->cm_y2 >= pam->cm_y1)
+      menu_lines = (int)(pam->cm_y2 - pam->cm_y1 + 1);
+    else
+      menu_lines=pam->m.menu_length;
+  }
   else
   {
     /* Else count the number of valid menu options accordingly */
@@ -463,6 +471,7 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 {
   MaxCfgVar mt;
   MaxCfgVar v;
+  MaxCfgVar cm;
   MaxCfgVar opts;
   size_t opt_count;
   size_t i;
@@ -481,6 +490,27 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
   char *hp;
   word mf_flag;
   word hf_flag;
+
+  menu->cm_enabled = 0;
+  menu->cm_skip_canned_menu = 0;
+  menu->cm_show_title = 1;
+  menu->cm_lightbar_menu = 0;
+
+  menu->cm_option_spacing = 0;
+  menu->cm_option_justify = 0;
+  menu->cm_boundary_justify = 0;
+  menu->cm_boundary_vjustify = 0;
+  menu->cm_boundary_layout = 0;
+
+  menu->cm_x1 = 0;
+  menu->cm_y1 = 0;
+  menu->cm_x2 = 0;
+  menu->cm_y2 = 0;
+  menu->cm_title_x = 0;
+  menu->cm_title_y = 0;
+
+  menu->cm_prompt_x = 0;
+  menu->cm_prompt_y = 0;
 
   if (menu == NULL || mname == NULL || *mname == '\0')
     return -2;
@@ -524,6 +554,165 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
     header_types = v.v.strv;
   if (maxcfg_toml_table_get(&mt, "menu_types", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING_ARRAY)
     menu_types = v.v.strv;
+
+  if (maxcfg_toml_table_get(&mt, "custom_menu", &cm) == MAXCFG_OK && cm.type == MAXCFG_VAR_TABLE)
+  {
+    menu->cm_enabled = 1;
+
+    if (maxcfg_toml_table_get(&cm, "skip_canned_menu", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
+      menu->cm_skip_canned_menu = v.v.b ? 1 : 0;
+
+    if (maxcfg_toml_table_get(&cm, "show_title", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
+      menu->cm_show_title = v.v.b ? 1 : 0;
+
+    if (maxcfg_toml_table_get(&cm, "lightbar_menu", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
+      menu->cm_lightbar_menu = v.v.b ? 1 : 0;
+
+    if (maxcfg_toml_table_get(&cm, "option_spacing", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
+      menu->cm_option_spacing = v.v.b ? 1 : 0;
+
+    if (maxcfg_toml_table_get(&cm, "option_justify", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
+    {
+      if (stricmp(v.v.s, "left") == 0)
+        menu->cm_option_justify = 0;
+      else if (stricmp(v.v.s, "center") == 0)
+        menu->cm_option_justify = 1;
+      else if (stricmp(v.v.s, "right") == 0)
+        menu->cm_option_justify = 2;
+    }
+
+    if (maxcfg_toml_table_get(&cm, "boundary_justify", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
+    {
+      char buf[64];
+      char *h;
+      char *vert;
+
+      /* Parse "<horizontal> <vertical>". Defaults:
+       * - "center" => "center center"
+       * - "left"/"right" => "left top"/"right top"
+       */
+      strncpy(buf, v.v.s, sizeof(buf) - 1);
+      buf[sizeof(buf) - 1] = '\0';
+
+      h = buf;
+      while (*h == ' ' || *h == '\t')
+        h++;
+
+      vert = h;
+      while (*vert && *vert != ' ' && *vert != '\t')
+        vert++;
+      if (*vert)
+      {
+        *vert++ = '\0';
+        while (*vert == ' ' || *vert == '\t')
+          vert++;
+        if (*vert == '\0')
+          vert = NULL;
+      }
+      else
+        vert = NULL;
+
+      if (stricmp(h, "left") == 0)
+      {
+        menu->cm_boundary_justify = 0;
+        menu->cm_boundary_vjustify = 0;
+      }
+      else if (stricmp(h, "center") == 0)
+      {
+        menu->cm_boundary_justify = 1;
+        menu->cm_boundary_vjustify = 1;
+      }
+      else if (stricmp(h, "right") == 0)
+      {
+        menu->cm_boundary_justify = 2;
+        menu->cm_boundary_vjustify = 0;
+      }
+
+      if (vert)
+      {
+        if (stricmp(vert, "top") == 0)
+          menu->cm_boundary_vjustify = 0;
+        else if (stricmp(vert, "center") == 0)
+          menu->cm_boundary_vjustify = 1;
+        else if (stricmp(vert, "bottom") == 0)
+          menu->cm_boundary_vjustify = 2;
+      }
+    }
+
+    if (maxcfg_toml_table_get(&cm, "boundary_layout", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
+    {
+      if (stricmp(v.v.s, "grid") == 0)
+        menu->cm_boundary_layout = 0;
+      else if (stricmp(v.v.s, "tight") == 0)
+        menu->cm_boundary_layout = 1;
+      else if (stricmp(v.v.s, "spread") == 0)
+        menu->cm_boundary_layout = 2;
+      else if (stricmp(v.v.s, "spread_width") == 0)
+        menu->cm_boundary_layout = 3;
+      else if (stricmp(v.v.s, "spread_height") == 0)
+        menu->cm_boundary_layout = 4;
+    }
+
+    if (maxcfg_toml_table_get(&cm, "top_boundary", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
+    {
+      int row = v.v.intv.items[0];
+      int col = v.v.intv.items[1];
+      if (row > 0 && col > 0)
+      {
+        menu->cm_y1 = (word)row;
+        menu->cm_x1 = (word)col;
+      }
+    }
+
+    if (maxcfg_toml_table_get(&cm, "bottom_boundary", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
+    {
+      int row = v.v.intv.items[0];
+      int col = v.v.intv.items[1];
+      if (row > 0 && col > 0)
+      {
+        menu->cm_y2 = (word)row;
+        menu->cm_x2 = (word)col;
+      }
+    }
+
+    if (maxcfg_toml_table_get(&cm, "title_location", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
+    {
+      int row = v.v.intv.items[0];
+      int col = v.v.intv.items[1];
+      if (row > 0 && col > 0)
+      {
+        menu->cm_title_y = (word)row;
+        menu->cm_title_x = (word)col;
+      }
+    }
+
+    if (maxcfg_toml_table_get(&cm, "prompt_location", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
+    {
+      int row = v.v.intv.items[0];
+      int col = v.v.intv.items[1];
+      if (row > 0 && col > 0)
+      {
+        menu->cm_prompt_y = (word)row;
+        menu->cm_prompt_x = (word)col;
+      }
+    }
+
+    if (menu->cm_x1 > 0 && menu->cm_y1 > 0 && menu->cm_x2 > 0 && menu->cm_y2 > 0)
+    {
+      if (menu->cm_x2 < menu->cm_x1)
+      {
+        word t = menu->cm_x1;
+        menu->cm_x1 = menu->cm_x2;
+        menu->cm_x2 = t;
+      }
+      if (menu->cm_y2 < menu->cm_y1)
+      {
+        word t = menu->cm_y1;
+        menu->cm_y1 = menu->cm_y2;
+        menu->cm_y2 = t;
+      }
+    }
+  }
 
   if (maxcfg_toml_table_get(&mt, "option", &opts) != MAXCFG_OK || opts.type != MAXCFG_VAR_TABLE_ARRAY)
     return -2;

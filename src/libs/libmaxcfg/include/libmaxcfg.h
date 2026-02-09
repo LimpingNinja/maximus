@@ -23,13 +23,19 @@ typedef enum {
     MAXCFG_VAR_STRING,
     MAXCFG_VAR_STRING_ARRAY,
     MAXCFG_VAR_TABLE,
-    MAXCFG_VAR_TABLE_ARRAY
+    MAXCFG_VAR_TABLE_ARRAY,
+    MAXCFG_VAR_INT_ARRAY
 } MaxCfgVarType;
 
 typedef struct {
     const char **items;
     size_t count;
 } MaxCfgStrView;
+
+typedef struct {
+    const int *items;
+    size_t count;
+} MaxCfgIntView;
 
 typedef struct {
     MaxCfgVarType type;
@@ -39,6 +45,7 @@ typedef struct {
         bool b;
         const char *s;
         MaxCfgStrView strv;
+        MaxCfgIntView intv;
         void *opaque;
     } v;
 } MaxCfgVar;
