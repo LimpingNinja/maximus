@@ -105,3 +105,6 @@ src/utils/util/fixlr
 src/utils/util/mecca
 src/utils/util/maxcomm
 src/apps/mex/mex
+src/libs/btree/bttest
+src/libs/btree/trackimp
+src/libs/btree/trackexp
