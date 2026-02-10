@@ -177,10 +177,24 @@ int ui_read_key(void)
 
   ch = Mdm_getcw();
 
-  if (ch == 0 || ch == K_ESC)
+  /* Local extended keys are commonly delivered as: 0 <scan_code>.
+   * Do not attempt to parse the scan code as an ANSI escape sequence.
+   */
+  if (ch == 0)
   {
     while (!Mdm_keyp())
       Giveaway_Slice();
+    return Mdm_getcw();
+  }
+
+  if (ch == K_ESC)
+  {
+    /* ESC alone should be returned as ESC. If additional bytes are ready,
+     * treat as a terminal escape sequence.
+     */
+    if (!Mdm_keyp())
+      return K_ESC;
+
     ch = Mdm_getcw();
 
     if (ch == '[' || ch == 'O')
@@ -188,6 +202,14 @@ int ui_read_key(void)
       while (!Mdm_keyp())
         Giveaway_Slice();
       ch = Mdm_getcw();
+
+      switch (ch)
+      {
+        case 'A': return K_UP;
+        case 'B': return K_DOWN;
+        case 'C': return K_RIGHT;
+        case 'D': return K_LEFT;
+      }
 
       if (ch == '3')
       {

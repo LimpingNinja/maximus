@@ -767,6 +767,13 @@ typedef struct _amenu
   byte cm_skip_canned_menu;
   byte cm_show_title;
   byte cm_lightbar_menu;
+  byte cm_lightbar_margin;
+
+  byte cm_lightbar_normal_attr;
+  byte cm_lightbar_selected_attr;
+
+  byte cm_lightbar_high_attr;
+  byte cm_lightbar_high_selected_attr;
 
   byte cm_option_spacing;
   byte cm_option_justify;

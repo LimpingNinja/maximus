@@ -664,7 +664,7 @@ void main()
     print(AVATAR_CLS);
     ui_set_attr(UI_YELLOW);
     print("UI intrinsic test suite\n");
-    print("=======================\n\n");
+    print("========================\n\n");
 
     menu_items[1] := "Form Test";
     menu_items[2] := "Advanced Form Test";
@@ -682,7 +682,7 @@ void main()
     lb_style.wrap := 1;
     lb_style.enable_hotkeys := 1;
 
-    menu_choice := ui_lightbar(menu_items, 6, 2, 3, 21, lb_style);
+    menu_choice := ui_lightbar(menu_items, 6, 2, 3, 22, lb_style);
     menu_hotkey_ch := lb_style.out_hotkey;
 
     if (menu_choice < 1)

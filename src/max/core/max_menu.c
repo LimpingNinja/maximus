@@ -42,6 +42,7 @@ static char rcs_id[]="$Id: max_menu.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include "max_file.h"
 #include "max_menu.h"
 #include "display.h"
+#include "ui_lightbar.h"
 
 
 static char *pszMenuName=NULL;
@@ -286,6 +287,7 @@ static void near ShowMenuCannedBounded(PAMENU pam, byte help, char *title, char 
   struct _opt *popt, *eopt;
   int width, height, opts_per_row;
   int num_shown, first_opt;
+  int cell_w;
   int row_spacing;
   int row_step;
   int max_rows;
@@ -308,6 +310,9 @@ static void near ShowMenuCannedBounded(PAMENU pam, byte help, char *title, char 
 
   if (!pam->m.opt_width)
     pam->m.opt_width=DEFAULT_OPT_WIDTH;
+
+  /* Canned bounded renderer uses the legacy menu cell width (opt_width). */
+  cell_w = (int)pam->m.opt_width;
 
   width = (int)(pam->cm_x2 - pam->cm_x1 + 1);
   height = (int)(pam->cm_y2 - pam->cm_y1 + 1);
@@ -485,15 +490,15 @@ static void near ShowMenuCannedBounded(PAMENU pam, byte help, char *title, char 
 
       eol = (col == cols_in_row - 1);
 
-      grid_w = cols_in_row * pam->m.opt_width;
+      grid_w = cols_in_row * cell_w;
 
       if (pam->cm_enabled && spread_w)
       {
-        int span = boundary_width - (cols_in_row * pam->m.opt_width);
+        int span = boundary_width - (cols_in_row * cell_w);
 
         if (span <= 0)
         {
-          x = (int)pam->cm_x1 + (col * pam->m.opt_width);
+          x = (int)pam->cm_x1 + (col * cell_w);
         }
         else if (cols_in_row <= 1)
         {
@@ -518,7 +523,7 @@ static void near ShowMenuCannedBounded(PAMENU pam, byte help, char *title, char 
           else if (pam->cm_boundary_justify == 2)
             offset = leftover;
 
-          x = (int)pam->cm_x1 + offset + (col * (pam->m.opt_width + gap));
+          x = (int)pam->cm_x1 + offset + (col * (cell_w + gap));
         }
       }
       else
@@ -541,7 +546,7 @@ static void near ShowMenuCannedBounded(PAMENU pam, byte help, char *title, char 
           base_x_inited = 1;
         }
 
-        x = base_x + (col * pam->m.opt_width);
+        x = base_x + (col * cell_w);
       }
 
       if (row < max_rows)
@@ -590,6 +595,42 @@ static void near ShowMenuBody(PAMENU pam, byte help, char *title, char *menuname
 {
   char *filename=MNU(*pam, m.dspfile);
 
+  /* Bounded NOVICE lightbar frame: let ui_lightbar paint the items. */
+  if (help == NOVICE && pam->cm_enabled && pam->cm_lightbar_menu &&
+      pam->cm_x1 > 0 && pam->cm_y1 > 0 && pam->cm_x2 >= pam->cm_x1 && pam->cm_y2 >= pam->cm_y1)
+  {
+    /* If there is a custom menu file to be displayed */
+    if (*filename && DoDspFile(help, pam->m.flag))
+    {
+      ShowMenuFile(pam, filename);
+
+      /* If configured, skip canned output */
+      if (pam->cm_enabled && pam->cm_skip_canned_menu)
+        return;
+    }
+
+    /* Exit if we have stacked input */
+    if (*linebuf || ((usr.bits & BITS_HOTKEYS) && GotMenuStroke()))
+      return;
+
+    /* Title at configured location */
+    if (pam->cm_show_title)
+    {
+      if (pam->cm_title_x > 0 && pam->cm_title_y > 0)
+        Goto(pam->cm_title_y, pam->cm_title_x);
+
+      Printf("%s%s%c", menu_name_col, title,
+             help==NOVICE ? '\n' : ' ');
+
+      if (help==REGULAR)
+        Printf(menu_start);
+    }
+
+    /* Suppress the legacy select prompt; lightbar is the prompt. */
+    Puts(GRAY);
+    return;
+  }
+
   /* If there is a custom menu file to be displayed */
   if (*filename && DoDspFile(help, pam->m.flag))
   {
@@ -606,6 +647,389 @@ static void near ShowMenuBody(PAMENU pam, byte help, char *title, char *menuname
     ShowMenuCannedBounded(pam, help, title, menuname);
   else
     ShowMenuCanned(pam, help, title, menuname);
+}
+
+
+static int near GetMenuResponseLightbarBounded(PAMENU pam, byte help, char *menuname)
+{
+  struct _opt *popt, *eopt;
+  ui_lightbar_item_t *items = NULL;
+  char **texts = NULL;
+  int count = 0;
+  int cap = 0;
+  int out_key = 0;
+
+  int lb_margin;
+  int cell_w;
+
+  int nontty;
+
+  int width, height, opts_per_row;
+  int row_spacing;
+  int row_step;
+  int max_rows;
+  int boundary_width;
+  int boundary_height;
+  int base_x = 0;
+  int base_x_inited = 0;
+  int total_valid = -1;
+  int total_rows = 0;
+  int last_row_cols = 0;
+  int spread_w = 0;
+  int spread_h = 0;
+  int spread_gap_y = 0;
+  int spread_off_y = 0;
+  int vjust_off_y = 0;
+
+  if (pam == NULL)
+    return -1;
+
+  if (usr.video == GRAPH_TTY)
+    return -1;
+
+  nontty = usr.video != GRAPH_TTY;
+
+  if (!pam->m.opt_width)
+    pam->m.opt_width = DEFAULT_OPT_WIDTH;
+
+  lb_margin = (pam->cm_enabled) ? (int)pam->cm_lightbar_margin : 1;
+  if (lb_margin < 0)
+    lb_margin = 0;
+  cell_w = (int)pam->m.opt_width + (lb_margin * 2);
+  if (cell_w < 1)
+    cell_w = 1;
+
+  width = (int)(pam->cm_x2 - pam->cm_x1 + 1);
+  height = (int)(pam->cm_y2 - pam->cm_y1 + 1);
+  opts_per_row = width / cell_w;
+  if (opts_per_row <= 0)
+    opts_per_row = 1;
+
+  row_spacing = (pam->cm_enabled && pam->cm_option_spacing) ? 1 : 0;
+  row_step = 1 + row_spacing;
+  max_rows = (height + row_step - 1) / row_step;
+  boundary_width = (int)(pam->cm_x2 - pam->cm_x1 + 1);
+  boundary_height = (int)(pam->cm_y2 - pam->cm_y1 + 1);
+
+  if (pam->cm_enabled)
+  {
+    if (pam->cm_boundary_layout == 2)
+    {
+      spread_w = 1;
+      spread_h = 1;
+    }
+    else if (pam->cm_boundary_layout == 3)
+      spread_w = 1;
+    else if (pam->cm_boundary_layout == 4)
+      spread_h = 1;
+  }
+
+  if (pam->cm_enabled && (pam->cm_boundary_layout == 1 || spread_w || spread_h || pam->cm_boundary_vjustify != 0))
+  {
+    total_valid = 0;
+    for (popt=pam->opt, eopt=popt + pam->m.num_options;
+         popt < eopt && !brk_trapped && !mdm_halt() &&
+         ((usr.bits & BITS_HOTKEYS)==0 || !GotMenuStroke());
+         popt++)
+    {
+      if (popt->type && OptionOkay(pam, popt, TRUE, NULL, &mah, &fah, menuname))
+      {
+        char *optname = pam->menuheap + popt->name;
+        if (optname && *optname && *optname != '`')
+          total_valid++;
+      }
+    }
+
+    total_rows = (total_valid + opts_per_row - 1) / opts_per_row;
+    last_row_cols = (total_valid % opts_per_row);
+    if (last_row_cols == 0)
+      last_row_cols = opts_per_row;
+  }
+
+  if (pam->cm_enabled && !spread_h && pam->cm_boundary_vjustify != 0 && total_valid >= 0)
+  {
+    int R = total_rows;
+    int Rdisp = R;
+    int content_h;
+    int span_y;
+
+    if (Rdisp > max_rows)
+      Rdisp = max_rows;
+
+    if (Rdisp > 1)
+      content_h = Rdisp + (Rdisp - 1) * row_spacing;
+    else if (Rdisp == 1)
+      content_h = 1;
+    else
+      content_h = 0;
+
+    span_y = boundary_height - content_h;
+    if (span_y < 0)
+      span_y = 0;
+
+    if (pam->cm_boundary_vjustify == 1)
+      vjust_off_y = span_y / 2;
+    else if (pam->cm_boundary_vjustify == 2)
+      vjust_off_y = span_y;
+    else
+      vjust_off_y = 0;
+  }
+
+  if (pam->cm_enabled && spread_h && total_valid >= 0)
+  {
+    int R = total_rows;
+
+    if (R <= 0)
+      R = 0;
+
+    if (R <= 1)
+    {
+      int span_y = boundary_height - 1;
+      if (span_y < 0)
+        span_y = 0;
+
+      if (pam->cm_boundary_vjustify == 1)
+        spread_off_y = span_y / 2;
+      else if (pam->cm_boundary_vjustify == 2)
+        spread_off_y = span_y;
+      else
+        spread_off_y = 0;
+      spread_gap_y = 0;
+    }
+    else
+    {
+      int base_row_gap = row_spacing;
+      int content_h = R + (R - 1) * base_row_gap;
+      int span_y = boundary_height - content_h;
+      int gaps = R - 1;
+      int leftover_y;
+      int offset_y;
+
+      if (span_y < 0)
+        span_y = 0;
+
+      if (row_spacing)
+        spread_gap_y = span_y / gaps;
+      else
+        spread_gap_y = (span_y >= gaps) ? 1 : 0;
+
+      leftover_y = span_y - (spread_gap_y * gaps);
+      if (leftover_y < 0)
+        leftover_y = 0;
+
+      if (pam->cm_boundary_vjustify == 1)
+        offset_y = leftover_y / 2;
+      else if (pam->cm_boundary_vjustify == 2)
+        offset_y = leftover_y;
+      else
+        offset_y = 0;
+
+      spread_off_y = offset_y;
+    }
+  }
+
+  cap = (total_valid >= 0) ? total_valid : (int)pam->m.num_options;
+  if (cap < 1)
+    cap = 1;
+
+  items = (ui_lightbar_item_t *)calloc((size_t)cap, sizeof(ui_lightbar_item_t));
+  texts = (char **)calloc((size_t)cap, sizeof(char *));
+  if (items == NULL || texts == NULL)
+    goto done;
+
+  for (popt=pam->opt, eopt=popt + pam->m.num_options;
+       popt < eopt && !brk_trapped && !mdm_halt() &&
+       ((usr.bits & BITS_HOTKEYS)==0 || !GotMenuStroke());
+       popt++)
+  {
+    if (popt->type && OptionOkay(pam, popt, TRUE, NULL, &mah, &fah, menuname))
+    {
+      char *optname = pam->menuheap + popt->name;
+      int hk;
+      const char *txt;
+      int field_w;
+      int txt_len;
+      int pad_l;
+      int pad_r;
+      int row;
+      int col;
+      int cols_in_row;
+      int grid_w;
+      int x;
+      int y;
+      int justify;
+
+      if (optname == NULL || *optname == '\0')
+        continue;
+
+      if (*optname == '`')
+        continue;
+
+      hk = (int)toupper((unsigned char)*optname);
+      if (hk == '[' || hk == ']')
+        continue;
+      if (!isprint((unsigned char)hk) || hk == ' ')
+        continue;
+
+      txt = optname + 1;
+      field_w = (int)pam->m.opt_width + nontty - 3;
+      if (field_w < 0)
+        field_w = 0;
+      txt_len = 0;
+      while (txt_len < field_w && txt[txt_len])
+        txt_len++;
+
+      pad_l = 0;
+      if (pam->cm_enabled)
+      {
+        if (pam->cm_option_justify == 1)
+          pad_l = (field_w - txt_len) / 2;
+        else if (pam->cm_option_justify == 2)
+          pad_l = (field_w - txt_len);
+      }
+      if (pad_l < 0)
+        pad_l = 0;
+      pad_r = field_w - pad_l - txt_len;
+      if (pad_r < 0)
+        pad_r = 0;
+
+      row = count / opts_per_row;
+      col = count % opts_per_row;
+      cols_in_row = opts_per_row;
+
+      if (pam->cm_enabled && (pam->cm_boundary_layout == 1 || spread_w || spread_h) && total_valid >= 0)
+      {
+        if (row == total_rows - 1)
+          cols_in_row = last_row_cols;
+      }
+
+      grid_w = cols_in_row * cell_w;
+
+      if (pam->cm_enabled && spread_w)
+      {
+        int span = boundary_width - (cols_in_row * cell_w);
+
+        if (span <= 0)
+        {
+          x = (int)pam->cm_x1 + (col * cell_w);
+        }
+        else if (cols_in_row <= 1)
+        {
+          int offset = 0;
+
+          if (pam->cm_boundary_justify == 1)
+            offset = span / 2;
+          else if (pam->cm_boundary_justify == 2)
+            offset = span;
+
+          x = (int)pam->cm_x1 + offset;
+        }
+        else
+        {
+          int gaps = cols_in_row - 1;
+          int gap = span / gaps;
+          int leftover = span - (gap * gaps);
+          int offset = 0;
+
+          if (pam->cm_boundary_justify == 1)
+            offset = leftover / 2;
+          else if (pam->cm_boundary_justify == 2)
+            offset = leftover;
+
+          x = (int)pam->cm_x1 + offset + (col * (cell_w + gap));
+        }
+      }
+      else
+      {
+        if (!base_x_inited || (pam->cm_enabled && pam->cm_boundary_layout == 1))
+        {
+          if (pam->cm_enabled && pam->cm_boundary_layout != 1)
+            grid_w = opts_per_row * cell_w;
+
+          if (grid_w >= boundary_width)
+            base_x = (int)pam->cm_x1;
+          else if (pam->cm_enabled && pam->cm_boundary_justify == 1)
+            base_x = (int)pam->cm_x1 + (boundary_width - grid_w) / 2;
+          else if (pam->cm_enabled && pam->cm_boundary_justify == 2)
+            base_x = (int)pam->cm_x2 - grid_w + 1;
+          else
+            base_x = (int)pam->cm_x1;
+
+          base_x_inited = 1;
+        }
+
+        x = base_x + (col * cell_w);
+      }
+
+      if (row >= max_rows)
+        break;
+
+      if (pam->cm_enabled && spread_h && total_valid >= 0)
+        y = (int)pam->cm_y1 + spread_off_y + (row * (1 + row_spacing + spread_gap_y));
+      else
+        y = (int)pam->cm_y1 + vjust_off_y + row + (row * row_spacing);
+
+      justify = UI_JUSTIFY_LEFT;
+      /* Padding is baked into the string to match ShowMenuCommand() output. */
+
+      {
+        size_t need = (size_t)pad_l + 3 + (size_t)txt_len + (size_t)pad_r + 1;
+        char *s = (char *)malloc(need);
+        if (s == NULL)
+          goto done;
+
+        if (pad_l > 0)
+          memset(s, ' ', (size_t)pad_l);
+        snprintf(s + pad_l, need - (size_t)pad_l, "[%c]%.*s", (char)hk, txt_len, txt);
+        if (pad_r > 0)
+          memset(s + pad_l + 3 + (size_t)txt_len, ' ', (size_t)pad_r);
+        s[need - 1] = '\0';
+
+        texts[count] = s;
+        items[count].text = s;
+        items[count].x = x;
+        items[count].y = y;
+        items[count].width = pam->m.opt_width;
+        items[count].justify = justify;
+      }
+
+      count++;
+      if (count >= cap)
+        break;
+    }
+  }
+
+  if (count > 0)
+  {
+    ui_lightbar_pos_menu_t m;
+    memset(&m, 0, sizeof(m));
+    m.items = items;
+    m.count = count;
+    m.normal_attr = pam->cm_lightbar_normal_attr;
+    m.selected_attr = pam->cm_lightbar_selected_attr;
+    m.hotkey_attr = pam->cm_lightbar_high_attr;
+    m.hotkey_highlight_attr = pam->cm_lightbar_high_selected_attr;
+    m.margin = lb_margin;
+    m.wrap = 1;
+    m.enable_hotkeys = 1;
+    m.show_brackets = 0;
+    (void)ui_lightbar_run_pos_hotkey(&m, &out_key);
+  }
+
+done:
+  if (texts)
+  {
+    int i;
+    for (i = 0; i < count; i++)
+      free(texts[i]);
+  }
+  free(texts);
+  free(items);
+
+  if (out_key > 0)
+    return (int)toupper((unsigned char)out_key);
+
+  return -1;
 }
 
 
@@ -1043,7 +1467,19 @@ int Display_Options(char *first_name, XMSG *msg)
         /* Get a keystroke from the user */
 
         if (next_menu_char == -1)
-          ch=GetMenuResponse(title);
+        {
+          if (help == NOVICE && menu.cm_enabled && menu.cm_lightbar_menu && !menu.cm_skip_canned_menu &&
+              menu.cm_x1 > 0 && menu.cm_y1 > 0 && menu.cm_x2 >= menu.cm_x1 && menu.cm_y2 >= menu.cm_y1)
+          {
+            int lbch = GetMenuResponseLightbarBounded(&menu, help, menu_name);
+            if (lbch < 0)
+              ch = GetMenuResponse(title);
+            else
+              ch = (unsigned)lbch;
+          }
+          else
+            ch=GetMenuResponse(title);
+        }
         else
         {
           ch=next_menu_char;

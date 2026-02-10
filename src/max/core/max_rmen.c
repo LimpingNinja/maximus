@@ -29,6 +29,7 @@ static char rcs_id[]="$Id: max_rmen.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+#include <ctype.h>
 #include <io.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -46,6 +47,50 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out);
 static int near mnu_heap_add(char **pp, char *base, size_t cap, const char *s, zstr *out);
 static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pareatype);
 static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header);
+
+static int near mnu_dos_color_from_name(const char *s)
+{
+  char buf[64];
+  size_t i;
+  size_t j;
+
+  if (s == NULL)
+    return -1;
+
+  j = 0;
+  for (i = 0; s[i] && j + 1 < sizeof(buf); i++)
+  {
+    unsigned char c = (unsigned char)s[i];
+    if (c == ' ' || c == '\t' || c == '_' || c == '-')
+      continue;
+    buf[j++] = (char)tolower(c);
+  }
+  buf[j] = '\0';
+
+  if (strcmp(buf, "black") == 0) return 0;
+  if (strcmp(buf, "blue") == 0) return 1;
+  if (strcmp(buf, "green") == 0) return 2;
+  if (strcmp(buf, "cyan") == 0) return 3;
+  if (strcmp(buf, "red") == 0) return 4;
+  if (strcmp(buf, "magenta") == 0) return 5;
+  if (strcmp(buf, "brown") == 0) return 6;
+  if (strcmp(buf, "lightgray") == 0 || strcmp(buf, "lightgrey") == 0) return 7;
+  if (strcmp(buf, "darkgray") == 0 || strcmp(buf, "darkgrey") == 0) return 8;
+  if (strcmp(buf, "lightblue") == 0) return 9;
+  if (strcmp(buf, "lightgreen") == 0) return 10;
+  if (strcmp(buf, "lightcyan") == 0) return 11;
+  if (strcmp(buf, "lightred") == 0) return 12;
+  if (strcmp(buf, "lightmagenta") == 0) return 13;
+  if (strcmp(buf, "yellow") == 0) return 14;
+  if (strcmp(buf, "white") == 0) return 15;
+
+  return -1;
+}
+
+static byte near mnu_make_attr(int fg, int bg)
+{
+  return (byte)((fg & 0x0f) | ((bg & 0x0f) << 4));
+}
 
 /* Count the number of menu options */
 
@@ -495,6 +540,11 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
   menu->cm_skip_canned_menu = 0;
   menu->cm_show_title = 1;
   menu->cm_lightbar_menu = 0;
+  menu->cm_lightbar_margin = 1;
+  menu->cm_lightbar_normal_attr = 0x07;
+  menu->cm_lightbar_selected_attr = 0x1e;
+  menu->cm_lightbar_high_attr = 0;
+  menu->cm_lightbar_high_selected_attr = 0;
 
   menu->cm_option_spacing = 0;
   menu->cm_option_justify = 0;
@@ -567,6 +617,62 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
     if (maxcfg_toml_table_get(&cm, "lightbar_menu", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
       menu->cm_lightbar_menu = v.v.b ? 1 : 0;
+
+    if (maxcfg_toml_table_get(&cm, "lightbar_margin", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT)
+    {
+      int m = v.v.i;
+      if (m < 0)
+        m = 0;
+      if (m > 255)
+        m = 255;
+      menu->cm_lightbar_margin = (byte)m;
+    }
+
+    if (maxcfg_toml_table_get(&cm, "lightbar_color", &v) == MAXCFG_OK)
+    {
+      if (v.type == MAXCFG_VAR_TABLE)
+      {
+        MaxCfgVar vv;
+        if (maxcfg_toml_table_get(&v, "normal", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
+        {
+          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
+          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
+          if (fg >= 0 && bg >= 0)
+            menu->cm_lightbar_normal_attr = mnu_make_attr(fg, bg);
+        }
+
+        if (maxcfg_toml_table_get(&v, "selected", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
+        {
+          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
+          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
+          if (fg >= 0 && bg >= 0)
+            menu->cm_lightbar_selected_attr = mnu_make_attr(fg, bg);
+        }
+
+        if (maxcfg_toml_table_get(&v, "high", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
+        {
+          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
+          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
+          if (fg >= 0 && bg >= 0)
+            menu->cm_lightbar_high_attr = mnu_make_attr(fg, bg);
+        }
+
+        if (maxcfg_toml_table_get(&v, "high_selected", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
+        {
+          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
+          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
+          if (fg >= 0 && bg >= 0)
+            menu->cm_lightbar_high_selected_attr = mnu_make_attr(fg, bg);
+        }
+      }
+      else if (v.type == MAXCFG_VAR_STRING_ARRAY && v.v.strv.count >= 2)
+      {
+        int fg = mnu_dos_color_from_name(v.v.strv.items[0]);
+        int bg = mnu_dos_color_from_name(v.v.strv.items[1]);
+        if (fg >= 0 && bg >= 0)
+          menu->cm_lightbar_selected_attr = mnu_make_attr(fg, bg);
+      }
+    }
 
     if (maxcfg_toml_table_get(&cm, "option_spacing", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
       menu->cm_option_spacing = v.v.b ? 1 : 0;

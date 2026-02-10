@@ -189,7 +189,7 @@ static void near ui_lb_pos_compute_geometry(ui_lightbar_pos_menu_t *m, ui_lb_pos
 
   margin = (m && m->margin > 0) ? m->margin : 0;
   items[idx].width_used = (items[idx].width > 0) ? items[idx].width : len;
-  items[idx].width_used += margin;
+  items[idx].width_used += (margin * 2);
   if (items[idx].width_used < 1)
     items[idx].width_used = 1;
 
@@ -201,6 +201,8 @@ static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t
   const char *s;
   int len;
   int width;
+  int margin;
+  int inner_width;
   int pad;
   int left_pad;
   int right_pad;
@@ -222,10 +224,15 @@ static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t
   if (width < 1)
     width = 1;
 
-  if (len > width)
-    len = width;
+  margin = (m && m->margin > 0) ? m->margin : 0;
+  inner_width = width - (margin * 2);
+  if (inner_width < 0)
+    inner_width = 0;
 
-  pad = width - len;
+  if (len > inner_width)
+    len = inner_width;
+
+  pad = inner_width - len;
   if (pad < 0)
     pad = 0;
 
@@ -254,6 +261,9 @@ static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t
 
   ui_set_attr(attr);
   ui_goto(items[idx].y, items[idx].x);
+
+  for (i = 0; i < margin; i++)
+    Putc(' ');
 
   for (i = 0; i < left_pad; i++)
     Putc(' ');
@@ -304,6 +314,9 @@ static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t
   }
 
   for (i = 0; i < right_pad; i++)
+    Putc(' ');
+
+  for (i = 0; i < margin; i++)
     Putc(' ');
 }
 
@@ -378,14 +391,14 @@ static int near ui_lb_find_neighbor_pos(ui_lb_pos_item_t *items, int count, int 
       case K_RIGHT:
         if (dx2 <= 0)
           continue;
-        p = dx2;
-        s = ady;
+        p = ady;
+        s = dx2;
         break;
       case K_LEFT:
         if (dx2 >= 0)
           continue;
-        p = -dx2;
-        s = ady;
+        p = ady;
+        s = -dx2;
         break;
       default:
         continue;
@@ -625,6 +638,8 @@ static void near ui_lb_draw_item(
 {
   const char *s;
   int len;
+  int margin;
+  int inner_width;
   int left_pad = 0;
   int right_pad = 0;
   int pad;
@@ -639,10 +654,16 @@ static void near ui_lb_draw_item(
   s = m->show_brackets ? (items[idx].orig ? items[idx].orig : "") : (items[idx].disp ? items[idx].disp : "");
   hotkey = items[idx].hotkey;
   len = (int)strlen(s);
-  if (len > width)
-    len = width;
 
-  pad = width - len;
+  margin = (m && m->margin > 0) ? m->margin : 0;
+  inner_width = width - (margin * 2);
+  if (inner_width < 0)
+    inner_width = 0;
+
+  if (len > inner_width)
+    len = inner_width;
+
+  pad = inner_width - len;
   if (pad < 0)
     pad = 0;
 
@@ -668,6 +689,9 @@ static void near ui_lb_draw_item(
     : (m->hotkey_attr ? m->hotkey_attr : attr);
   ui_set_attr(attr);
   ui_goto(m->y + idx, m->x);
+
+  for (i = 0; i < margin; i++)
+    Putc(' ');
 
   for (i = 0; i < left_pad; i++)
     Putc(' ');
@@ -718,6 +742,9 @@ static void near ui_lb_draw_item(
   }
 
   for (i = 0; i < right_pad; i++)
+    Putc(' ');
+
+  for (i = 0; i < margin; i++)
     Putc(' ');
 }
 
@@ -772,7 +799,7 @@ int ui_lightbar_run(ui_lightbar_menu_t *m)
         width = len;
     }
   }
-  width += margin;
+  width += (margin * 2);
   if (width < 1)
     width = 1;
 
@@ -877,6 +904,7 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
   byte used[256];
   int i;
   int width;
+  int margin;
   int selected = 0;
   int ch;
   int did_hide_cursor = 0;
@@ -911,6 +939,7 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
   ui_lb_hide_cursor(&did_hide_cursor);
 
   /* Determine width */
+  margin = (m && m->margin > 0) ? m->margin : 0;
   width = m->width;
   if (width <= 0)
   {
@@ -923,6 +952,9 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
         width = len;
     }
   }
+  width += (margin * 2);
+  if (width < 1)
+    width = 1;
 
   /* Initial paint */
   for (i = 0; i < m->count; i++)
