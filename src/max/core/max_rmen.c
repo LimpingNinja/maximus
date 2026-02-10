@@ -48,50 +48,6 @@ static int near mnu_heap_add(char **pp, char *base, size_t cap, const char *s, z
 static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pareatype);
 static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header);
 
-static int near mnu_dos_color_from_name(const char *s)
-{
-  char buf[64];
-  size_t i;
-  size_t j;
-
-  if (s == NULL)
-    return -1;
-
-  j = 0;
-  for (i = 0; s[i] && j + 1 < sizeof(buf); i++)
-  {
-    unsigned char c = (unsigned char)s[i];
-    if (c == ' ' || c == '\t' || c == '_' || c == '-')
-      continue;
-    buf[j++] = (char)tolower(c);
-  }
-  buf[j] = '\0';
-
-  if (strcmp(buf, "black") == 0) return 0;
-  if (strcmp(buf, "blue") == 0) return 1;
-  if (strcmp(buf, "green") == 0) return 2;
-  if (strcmp(buf, "cyan") == 0) return 3;
-  if (strcmp(buf, "red") == 0) return 4;
-  if (strcmp(buf, "magenta") == 0) return 5;
-  if (strcmp(buf, "brown") == 0) return 6;
-  if (strcmp(buf, "lightgray") == 0 || strcmp(buf, "lightgrey") == 0) return 7;
-  if (strcmp(buf, "darkgray") == 0 || strcmp(buf, "darkgrey") == 0) return 8;
-  if (strcmp(buf, "lightblue") == 0) return 9;
-  if (strcmp(buf, "lightgreen") == 0) return 10;
-  if (strcmp(buf, "lightcyan") == 0) return 11;
-  if (strcmp(buf, "lightred") == 0) return 12;
-  if (strcmp(buf, "lightmagenta") == 0) return 13;
-  if (strcmp(buf, "yellow") == 0) return 14;
-  if (strcmp(buf, "white") == 0) return 15;
-
-  return -1;
-}
-
-static byte near mnu_make_attr(int fg, int bg)
-{
-  return (byte)((fg & 0x0f) | ((bg & 0x0f) << 4));
-}
-
 /* Count the number of menu options */
 
 static void near CountMenuLines(PAMENU pam, char *mname)
@@ -514,10 +470,7 @@ static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header)
 
 static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 {
-  MaxCfgVar mt;
-  MaxCfgVar v;
-  MaxCfgVar cm;
-  MaxCfgVar opts;
+  MaxCfgNgMenu ng;
   size_t opt_count;
   size_t i;
   char path[128];
@@ -584,223 +537,66 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
   if (snprintf(path, sizeof(path), "menus.%s", lower) >= (int)sizeof(path))
     return -2;
 
-  if (maxcfg_toml_get(ng_cfg, path, &mt) != MAXCFG_OK || mt.type != MAXCFG_VAR_TABLE)
+  if (maxcfg_ng_menu_init(&ng) != MAXCFG_OK)
     return -2;
-
-  if (maxcfg_toml_table_get(&mt, "title", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-    title = v.v.s;
-  if (maxcfg_toml_table_get(&mt, "header_file", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-    header_file = v.v.s;
-  if (maxcfg_toml_table_get(&mt, "menu_file", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-    menu_file = v.v.s;
-  if (maxcfg_toml_table_get(&mt, "menu_length", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT)
-    menu_length = v.v.i;
-  if (maxcfg_toml_table_get(&mt, "menu_color", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT)
-    menu_color = v.v.i;
-  if (maxcfg_toml_table_get(&mt, "option_width", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT)
-    option_width = v.v.i;
-
-  if (maxcfg_toml_table_get(&mt, "header_types", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING_ARRAY)
-    header_types = v.v.strv;
-  if (maxcfg_toml_table_get(&mt, "menu_types", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING_ARRAY)
-    menu_types = v.v.strv;
-
-  if (maxcfg_toml_table_get(&mt, "custom_menu", &cm) == MAXCFG_OK && cm.type == MAXCFG_VAR_TABLE)
+  if (maxcfg_ng_get_menu(ng_cfg, path, &ng) != MAXCFG_OK)
   {
+    maxcfg_ng_menu_free(&ng);
+    return -2;
+  }
+
+  title = ng.title ? ng.title : "";
+  header_file = ng.header_file ? ng.header_file : "";
+  menu_file = ng.menu_file ? ng.menu_file : "";
+  menu_length = ng.menu_length;
+  menu_color = ng.menu_color;
+  option_width = ng.option_width;
+  opt_count = ng.option_count;
+
+  header_types.items = (const char **)ng.header_types;
+  header_types.count = ng.header_type_count;
+  menu_types.items = (const char **)ng.menu_types;
+  menu_types.count = ng.menu_type_count;
+
+  if (ng.custom_menu != NULL && ng.custom_menu->enabled)
+  {
+    const MaxCfgNgCustomMenu *cm = ng.custom_menu;
     menu->cm_enabled = 1;
+    menu->cm_skip_canned_menu = cm->skip_canned_menu ? 1 : 0;
+    menu->cm_show_title = cm->show_title ? 1 : 0;
+    menu->cm_lightbar_menu = cm->lightbar_menu ? 1 : 0;
+    menu->cm_lightbar_margin = (byte)((cm->lightbar_margin < 0) ? 0 : (cm->lightbar_margin > 255) ? 255 : cm->lightbar_margin);
 
-    if (maxcfg_toml_table_get(&cm, "skip_canned_menu", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
-      menu->cm_skip_canned_menu = v.v.b ? 1 : 0;
+    menu->cm_lightbar_normal_attr = cm->lightbar_normal_attr;
+    menu->cm_lightbar_selected_attr = cm->lightbar_selected_attr;
+    menu->cm_lightbar_high_attr = cm->lightbar_high_attr;
+    menu->cm_lightbar_high_selected_attr = cm->lightbar_high_selected_attr;
 
-    if (maxcfg_toml_table_get(&cm, "show_title", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
-      menu->cm_show_title = v.v.b ? 1 : 0;
+    menu->cm_option_spacing = cm->option_spacing ? 1 : 0;
+    menu->cm_option_justify = (byte)cm->option_justify;
+    menu->cm_boundary_justify = (byte)cm->boundary_justify;
+    menu->cm_boundary_vjustify = (byte)cm->boundary_vjustify;
+    menu->cm_boundary_layout = (byte)cm->boundary_layout;
 
-    if (maxcfg_toml_table_get(&cm, "lightbar_menu", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
-      menu->cm_lightbar_menu = v.v.b ? 1 : 0;
-
-    if (maxcfg_toml_table_get(&cm, "lightbar_margin", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT)
+    if (cm->top_boundary_row > 0 && cm->top_boundary_col > 0)
     {
-      int m = v.v.i;
-      if (m < 0)
-        m = 0;
-      if (m > 255)
-        m = 255;
-      menu->cm_lightbar_margin = (byte)m;
+      menu->cm_y1 = (word)cm->top_boundary_row;
+      menu->cm_x1 = (word)cm->top_boundary_col;
     }
-
-    if (maxcfg_toml_table_get(&cm, "lightbar_color", &v) == MAXCFG_OK)
+    if (cm->bottom_boundary_row > 0 && cm->bottom_boundary_col > 0)
     {
-      if (v.type == MAXCFG_VAR_TABLE)
-      {
-        MaxCfgVar vv;
-        if (maxcfg_toml_table_get(&v, "normal", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
-        {
-          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
-          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
-          if (fg >= 0 && bg >= 0)
-            menu->cm_lightbar_normal_attr = mnu_make_attr(fg, bg);
-        }
-
-        if (maxcfg_toml_table_get(&v, "selected", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
-        {
-          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
-          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
-          if (fg >= 0 && bg >= 0)
-            menu->cm_lightbar_selected_attr = mnu_make_attr(fg, bg);
-        }
-
-        if (maxcfg_toml_table_get(&v, "high", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
-        {
-          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
-          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
-          if (fg >= 0 && bg >= 0)
-            menu->cm_lightbar_high_attr = mnu_make_attr(fg, bg);
-        }
-
-        if (maxcfg_toml_table_get(&v, "high_selected", &vv) == MAXCFG_OK && vv.type == MAXCFG_VAR_STRING_ARRAY && vv.v.strv.count >= 2)
-        {
-          int fg = mnu_dos_color_from_name(vv.v.strv.items[0]);
-          int bg = mnu_dos_color_from_name(vv.v.strv.items[1]);
-          if (fg >= 0 && bg >= 0)
-            menu->cm_lightbar_high_selected_attr = mnu_make_attr(fg, bg);
-        }
-      }
-      else if (v.type == MAXCFG_VAR_STRING_ARRAY && v.v.strv.count >= 2)
-      {
-        int fg = mnu_dos_color_from_name(v.v.strv.items[0]);
-        int bg = mnu_dos_color_from_name(v.v.strv.items[1]);
-        if (fg >= 0 && bg >= 0)
-          menu->cm_lightbar_selected_attr = mnu_make_attr(fg, bg);
-      }
+      menu->cm_y2 = (word)cm->bottom_boundary_row;
+      menu->cm_x2 = (word)cm->bottom_boundary_col;
     }
-
-    if (maxcfg_toml_table_get(&cm, "option_spacing", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_BOOL)
-      menu->cm_option_spacing = v.v.b ? 1 : 0;
-
-    if (maxcfg_toml_table_get(&cm, "option_justify", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
+    if (cm->title_location_row > 0 && cm->title_location_col > 0)
     {
-      if (stricmp(v.v.s, "left") == 0)
-        menu->cm_option_justify = 0;
-      else if (stricmp(v.v.s, "center") == 0)
-        menu->cm_option_justify = 1;
-      else if (stricmp(v.v.s, "right") == 0)
-        menu->cm_option_justify = 2;
+      menu->cm_title_y = (word)cm->title_location_row;
+      menu->cm_title_x = (word)cm->title_location_col;
     }
-
-    if (maxcfg_toml_table_get(&cm, "boundary_justify", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
+    if (cm->prompt_location_row > 0 && cm->prompt_location_col > 0)
     {
-      char buf[64];
-      char *h;
-      char *vert;
-
-      /* Parse "<horizontal> <vertical>". Defaults:
-       * - "center" => "center center"
-       * - "left"/"right" => "left top"/"right top"
-       */
-      strncpy(buf, v.v.s, sizeof(buf) - 1);
-      buf[sizeof(buf) - 1] = '\0';
-
-      h = buf;
-      while (*h == ' ' || *h == '\t')
-        h++;
-
-      vert = h;
-      while (*vert && *vert != ' ' && *vert != '\t')
-        vert++;
-      if (*vert)
-      {
-        *vert++ = '\0';
-        while (*vert == ' ' || *vert == '\t')
-          vert++;
-        if (*vert == '\0')
-          vert = NULL;
-      }
-      else
-        vert = NULL;
-
-      if (stricmp(h, "left") == 0)
-      {
-        menu->cm_boundary_justify = 0;
-        menu->cm_boundary_vjustify = 0;
-      }
-      else if (stricmp(h, "center") == 0)
-      {
-        menu->cm_boundary_justify = 1;
-        menu->cm_boundary_vjustify = 1;
-      }
-      else if (stricmp(h, "right") == 0)
-      {
-        menu->cm_boundary_justify = 2;
-        menu->cm_boundary_vjustify = 0;
-      }
-
-      if (vert)
-      {
-        if (stricmp(vert, "top") == 0)
-          menu->cm_boundary_vjustify = 0;
-        else if (stricmp(vert, "center") == 0)
-          menu->cm_boundary_vjustify = 1;
-        else if (stricmp(vert, "bottom") == 0)
-          menu->cm_boundary_vjustify = 2;
-      }
-    }
-
-    if (maxcfg_toml_table_get(&cm, "boundary_layout", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
-    {
-      if (stricmp(v.v.s, "grid") == 0)
-        menu->cm_boundary_layout = 0;
-      else if (stricmp(v.v.s, "tight") == 0)
-        menu->cm_boundary_layout = 1;
-      else if (stricmp(v.v.s, "spread") == 0)
-        menu->cm_boundary_layout = 2;
-      else if (stricmp(v.v.s, "spread_width") == 0)
-        menu->cm_boundary_layout = 3;
-      else if (stricmp(v.v.s, "spread_height") == 0)
-        menu->cm_boundary_layout = 4;
-    }
-
-    if (maxcfg_toml_table_get(&cm, "top_boundary", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
-    {
-      int row = v.v.intv.items[0];
-      int col = v.v.intv.items[1];
-      if (row > 0 && col > 0)
-      {
-        menu->cm_y1 = (word)row;
-        menu->cm_x1 = (word)col;
-      }
-    }
-
-    if (maxcfg_toml_table_get(&cm, "bottom_boundary", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
-    {
-      int row = v.v.intv.items[0];
-      int col = v.v.intv.items[1];
-      if (row > 0 && col > 0)
-      {
-        menu->cm_y2 = (word)row;
-        menu->cm_x2 = (word)col;
-      }
-    }
-
-    if (maxcfg_toml_table_get(&cm, "title_location", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
-    {
-      int row = v.v.intv.items[0];
-      int col = v.v.intv.items[1];
-      if (row > 0 && col > 0)
-      {
-        menu->cm_title_y = (word)row;
-        menu->cm_title_x = (word)col;
-      }
-    }
-
-    if (maxcfg_toml_table_get(&cm, "prompt_location", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_INT_ARRAY && v.v.intv.count >= 2)
-    {
-      int row = v.v.intv.items[0];
-      int col = v.v.intv.items[1];
-      if (row > 0 && col > 0)
-      {
-        menu->cm_prompt_y = (word)row;
-        menu->cm_prompt_x = (word)col;
-      }
+      menu->cm_prompt_y = (word)cm->prompt_location_row;
+      menu->cm_prompt_x = (word)cm->prompt_location_col;
     }
 
     if (menu->cm_x1 > 0 && menu->cm_y1 > 0 && menu->cm_x2 > 0 && menu->cm_y2 > 0)
@@ -819,11 +615,6 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
       }
     }
   }
-
-  if (maxcfg_toml_table_get(&mt, "option", &opts) != MAXCFG_OK || opts.type != MAXCFG_VAR_TABLE_ARRAY)
-    return -2;
-  if (maxcfg_var_count(&opts, &opt_count) != MAXCFG_OK)
-    return -2;
 
   menu->m.header = HEADER_NONE;
   menu->m.num_options = (word)opt_count;
@@ -855,18 +646,16 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   for (i = 0; i < opt_count; i++)
   {
-    MaxCfgVar ot;
-    if (maxcfg_toml_array_get(&opts, i, &ot) != MAXCFG_OK || ot.type != MAXCFG_VAR_TABLE)
-      continue;
+    const MaxCfgNgMenuOption *o = &ng.options[i];
 
-    if (maxcfg_toml_table_get(&ot, "priv_level", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
-      heap_cap += strlen(v.v.s) + 1;
-    if (maxcfg_toml_table_get(&ot, "description", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
-      heap_cap += strlen(v.v.s) + 1;
-    if (maxcfg_toml_table_get(&ot, "key_poke", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
-      heap_cap += strlen(v.v.s) + 1;
-    if (maxcfg_toml_table_get(&ot, "arguments", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s && *v.v.s)
-      heap_cap += strlen(v.v.s) + 1;
+    if (o->priv_level && *o->priv_level)
+      heap_cap += strlen(o->priv_level) + 1;
+    if (o->description && *o->description)
+      heap_cap += strlen(o->description) + 1;
+    if (o->key_poke && *o->key_poke)
+      heap_cap += strlen(o->key_poke) + 1;
+    if (o->arguments && *o->arguments)
+      heap_cap += strlen(o->arguments) + 1;
   }
 
   menu->menuheap = malloc(heap_cap);
@@ -884,39 +673,36 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   for (i = 0; i < opt_count; i++)
   {
-    MaxCfgVar ot;
+    const MaxCfgNgMenuOption *ngo = &ng.options[i];
     const char *cmd = NULL;
     const char *args = "";
     const char *priv = "";
     const char *desc = "";
     const char *kp = "";
     MaxCfgStrView mods = {0};
-    option o;
+    option opt_type;
     struct _opt *popt;
 
-    if (maxcfg_toml_array_get(&opts, i, &ot) != MAXCFG_OK || ot.type != MAXCFG_VAR_TABLE)
-      continue;
+    if (ngo->command && *ngo->command)
+      cmd = ngo->command;
+    if (ngo->arguments)
+      args = ngo->arguments;
+    if (ngo->priv_level)
+      priv = ngo->priv_level;
+    if (ngo->description)
+      desc = ngo->description;
+    if (ngo->key_poke)
+      kp = ngo->key_poke;
+    mods.items = (const char **)(ngo->modifiers);
+    mods.count = ngo->modifier_count;
 
-    if (maxcfg_toml_table_get(&ot, "command", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-      cmd = v.v.s;
-    if (maxcfg_toml_table_get(&ot, "arguments", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-      args = v.v.s;
-    if (maxcfg_toml_table_get(&ot, "priv_level", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-      priv = v.v.s;
-    if (maxcfg_toml_table_get(&ot, "description", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-      desc = v.v.s;
-    if (maxcfg_toml_table_get(&ot, "key_poke", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING && v.v.s)
-      kp = v.v.s;
-    if (maxcfg_toml_table_get(&ot, "modifiers", &v) == MAXCFG_OK && v.type == MAXCFG_VAR_STRING_ARRAY)
-      mods = v.v.strv;
-
-    o = nothing;
+    opt_type = nothing;
     if (cmd && *cmd)
-      (void)mnu_cmd_to_opt(cmd, &o);
+      (void)mnu_cmd_to_opt(cmd, &opt_type);
 
     popt = &menu->opt[i];
     memset(popt, 0, sizeof(*popt));
-    popt->type = o;
+    popt->type = opt_type;
     popt->areatype = AREATYPE_ALL;
     mnu_apply_modifiers(mods, &popt->flag, &popt->areatype);
 
@@ -927,6 +713,7 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
       popt->type = nothing;
   }
 
+  maxcfg_ng_menu_free(&ng);
   return 0;
 
 fail:
@@ -941,6 +728,7 @@ fail:
     menu->opt = NULL;
   }
   memset(&menu->m, 0, sizeof(menu->m));
+  maxcfg_ng_menu_free(&ng);
   return -1;
 }
 

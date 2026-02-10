@@ -111,6 +111,63 @@ static void set_err(char *err, size_t err_len, const char *fmt, ...)
     va_end(ap);
 }
 
+/* DOS color name to value mapping */
+static const char *dos_color_name(int color_val)
+{
+    static const char *names[] = {
+        "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray",
+        "DarkGray", "LightBlue", "LightGreen", "LightCyan", "LightRed", "LightMagenta", "Yellow", "White"
+    };
+    if (color_val >= 0 && color_val < 16) {
+        return names[color_val];
+    }
+    return "Black";
+}
+
+/* DOS color name to value */
+static int dos_color_value(const char *name)
+{
+    if (!name) return 0;
+    
+    if (strcasecmp(name, "Black") == 0) return 0;
+    if (strcasecmp(name, "Blue") == 0) return 1;
+    if (strcasecmp(name, "Green") == 0) return 2;
+    if (strcasecmp(name, "Cyan") == 0) return 3;
+    if (strcasecmp(name, "Red") == 0) return 4;
+    if (strcasecmp(name, "Magenta") == 0) return 5;
+    if (strcasecmp(name, "Brown") == 0) return 6;
+    if (strcasecmp(name, "Gray") == 0 || strcasecmp(name, "Grey") == 0) return 7;
+    if (strcasecmp(name, "DarkGray") == 0 || strcasecmp(name, "DarkGrey") == 0) return 8;
+    if (strcasecmp(name, "LightBlue") == 0) return 9;
+    if (strcasecmp(name, "LightGreen") == 0) return 10;
+    if (strcasecmp(name, "LightCyan") == 0) return 11;
+    if (strcasecmp(name, "LightRed") == 0) return 12;
+    if (strcasecmp(name, "LightMagenta") == 0) return 13;
+    if (strcasecmp(name, "Yellow") == 0) return 14;
+    if (strcasecmp(name, "White") == 0) return 15;
+    
+    return 0;
+}
+
+/* Extract foreground and background from DOS attribute byte */
+static void attr_to_colors(unsigned char attr, const char **fg, const char **bg)
+{
+    int fg_val = attr & 0x0F;
+    int bg_val = (attr >> 4) & 0x0F;
+    
+    if (fg) *fg = dos_color_name(fg_val);
+    if (bg) *bg = dos_color_name(bg_val);
+}
+
+/* Create DOS attribute byte from foreground and background color names */
+static unsigned char colors_to_attr(const char *fg, const char *bg)
+{
+    int fg_val = fg ? dos_color_value(fg) : 7;
+    int bg_val = bg ? dos_color_value(bg) : 0;
+    
+    return (unsigned char)((fg_val & 0x0F) | ((bg_val & 0x0F) << 4));
+}
+
 static bool menu_types_from_flags(word flags, bool is_header, char ***out_types, size_t *out_count)
 {
     *out_types = NULL;
@@ -218,6 +275,60 @@ static bool menu_definition_from_ng(const MaxCfgNgMenu *ng, MenuDefinition **out
     (void)menu_flags_from_types(ng->header_types, ng->header_type_count, true, &m->header_flags);
     (void)menu_flags_from_types(ng->menu_types, ng->menu_type_count, false, &m->menu_flags);
 
+    /* Load custom menu fields if present */
+    if (ng->custom_menu != NULL && ng->custom_menu->enabled) {
+        const MaxCfgNgCustomMenu *cm = ng->custom_menu;
+        
+        m->cm_enabled = true;
+        m->cm_skip_canned = cm->skip_canned_menu;
+        m->cm_show_title = cm->show_title;
+        m->cm_lightbar = cm->lightbar_menu;
+        m->cm_lightbar_margin = cm->lightbar_margin;
+        
+        {
+            const char *fg, *bg;
+            if (cm->has_lightbar_normal) {
+                attr_to_colors(cm->lightbar_normal_attr, &fg, &bg);
+                m->cm_lb_normal_fg = safe_strdup(fg);
+                m->cm_lb_normal_bg = safe_strdup(bg);
+            }
+            if (cm->has_lightbar_selected) {
+                attr_to_colors(cm->lightbar_selected_attr, &fg, &bg);
+                m->cm_lb_selected_fg = safe_strdup(fg);
+                m->cm_lb_selected_bg = safe_strdup(bg);
+            }
+            if (cm->has_lightbar_high) {
+                attr_to_colors(cm->lightbar_high_attr, &fg, &bg);
+                m->cm_lb_high_fg = safe_strdup(fg);
+                m->cm_lb_high_bg = safe_strdup(bg);
+            }
+            if (cm->has_lightbar_high_selected) {
+                attr_to_colors(cm->lightbar_high_selected_attr, &fg, &bg);
+                m->cm_lb_high_sel_fg = safe_strdup(fg);
+                m->cm_lb_high_sel_bg = safe_strdup(bg);
+            }
+        }
+        
+        /* Boundary coordinates */
+        m->cm_top_row = cm->top_boundary_row;
+        m->cm_top_col = cm->top_boundary_col;
+        m->cm_bottom_row = cm->bottom_boundary_row;
+        m->cm_bottom_col = cm->bottom_boundary_col;
+        
+        /* Title and prompt locations */
+        m->cm_title_row = cm->title_location_row;
+        m->cm_title_col = cm->title_location_col;
+        m->cm_prompt_row = cm->prompt_location_row;
+        m->cm_prompt_col = cm->prompt_location_col;
+        
+        /* Layout options */
+        m->cm_option_spacing = cm->option_spacing;
+        m->cm_option_justify = cm->option_justify;
+        m->cm_boundary_justify = cm->boundary_justify;
+        m->cm_boundary_vjustify = cm->boundary_vjustify;
+        m->cm_boundary_layout = cm->boundary_layout;
+    }
+
     for (size_t i = 0; i < ng->option_count; i++) {
         const MaxCfgNgMenuOption *o = &ng->options[i];
         MenuOption *opt = create_menu_option();
@@ -287,6 +398,56 @@ bool save_menu_toml(MaxCfgToml *toml, const char *toml_path, const char *toml_pr
         fclose(fp);
         set_err(err, err_len, "Out of memory");
         return false;
+    }
+
+    /* Populate custom menu fields if enabled */
+    if (menu->cm_enabled) {
+        MaxCfgNgCustomMenu *cm = (MaxCfgNgCustomMenu *)calloc(1, sizeof(MaxCfgNgCustomMenu));
+        if (!cm) {
+            maxcfg_ng_menu_free(&ng);
+            fclose(fp);
+            set_err(err, err_len, "Out of memory");
+            return false;
+        }
+        
+        cm->enabled = true;
+        cm->skip_canned_menu = menu->cm_skip_canned;
+        cm->show_title = menu->cm_show_title;
+        cm->lightbar_menu = menu->cm_lightbar;
+        cm->lightbar_margin = menu->cm_lightbar_margin;
+        
+        /* Convert color name strings to attributes */
+        cm->lightbar_normal_attr = colors_to_attr(menu->cm_lb_normal_fg, menu->cm_lb_normal_bg);
+        cm->lightbar_selected_attr = colors_to_attr(menu->cm_lb_selected_fg, menu->cm_lb_selected_bg);
+        cm->lightbar_high_attr = colors_to_attr(menu->cm_lb_high_fg, menu->cm_lb_high_bg);
+        cm->lightbar_high_selected_attr = colors_to_attr(menu->cm_lb_high_sel_fg, menu->cm_lb_high_sel_bg);
+        
+        /* Mark which colors are set */
+        cm->has_lightbar_normal = (menu->cm_lb_normal_fg != NULL || menu->cm_lb_normal_bg != NULL);
+        cm->has_lightbar_selected = (menu->cm_lb_selected_fg != NULL || menu->cm_lb_selected_bg != NULL);
+        cm->has_lightbar_high = (menu->cm_lb_high_fg != NULL || menu->cm_lb_high_bg != NULL);
+        cm->has_lightbar_high_selected = (menu->cm_lb_high_sel_fg != NULL || menu->cm_lb_high_sel_bg != NULL);
+        
+        /* Boundary coordinates */
+        cm->top_boundary_row = menu->cm_top_row;
+        cm->top_boundary_col = menu->cm_top_col;
+        cm->bottom_boundary_row = menu->cm_bottom_row;
+        cm->bottom_boundary_col = menu->cm_bottom_col;
+        
+        /* Title and prompt locations */
+        cm->title_location_row = menu->cm_title_row;
+        cm->title_location_col = menu->cm_title_col;
+        cm->prompt_location_row = menu->cm_prompt_row;
+        cm->prompt_location_col = menu->cm_prompt_col;
+        
+        /* Layout options */
+        cm->option_spacing = menu->cm_option_spacing;
+        cm->option_justify = menu->cm_option_justify;
+        cm->boundary_justify = menu->cm_boundary_justify;
+        cm->boundary_vjustify = menu->cm_boundary_vjustify;
+        cm->boundary_layout = menu->cm_boundary_layout;
+        
+        ng.custom_menu = cm;
     }
 
     for (int i = 0; i < menu->option_count; i++) {
@@ -533,6 +694,41 @@ MenuDefinition *create_menu_definition(const char *name) {
         return NULL;
     }
     
+    /* Initialize custom menu fields with defaults */
+    menu->cm_enabled = false;
+    menu->cm_skip_canned = false;
+    menu->cm_show_title = true;
+    menu->cm_lightbar = false;
+    menu->cm_lightbar_margin = 1;
+    
+    menu->cm_lb_normal_fg = NULL;
+    menu->cm_lb_normal_bg = NULL;
+    menu->cm_lb_selected_fg = NULL;
+    menu->cm_lb_selected_bg = NULL;
+    menu->cm_lb_high_fg = NULL;
+    menu->cm_lb_high_bg = NULL;
+    menu->cm_lb_high_sel_fg = NULL;
+    menu->cm_lb_high_sel_bg = NULL;
+    
+    /* No boundaries by default */
+    menu->cm_top_row = 0;
+    menu->cm_top_col = 0;
+    menu->cm_bottom_row = 0;
+    menu->cm_bottom_col = 0;
+    
+    /* No title/prompt locations by default */
+    menu->cm_title_row = 0;
+    menu->cm_title_col = 0;
+    menu->cm_prompt_row = 0;
+    menu->cm_prompt_col = 0;
+    
+    /* Layout defaults */
+    menu->cm_option_spacing = false;
+    menu->cm_option_justify = 0;  /* Left */
+    menu->cm_boundary_justify = 0;
+    menu->cm_boundary_vjustify = 0;
+    menu->cm_boundary_layout = 0;
+    
     return menu;
 }
 
@@ -561,6 +757,16 @@ void free_menu_definition(MenuDefinition *menu) {
     free(menu->title);
     free(menu->header_file);
     free(menu->menu_file);
+    
+    /* Free custom menu color strings */
+    free(menu->cm_lb_normal_fg);
+    free(menu->cm_lb_normal_bg);
+    free(menu->cm_lb_selected_fg);
+    free(menu->cm_lb_selected_bg);
+    free(menu->cm_lb_high_fg);
+    free(menu->cm_lb_high_bg);
+    free(menu->cm_lb_high_sel_fg);
+    free(menu->cm_lb_high_sel_bg);
     
     for (int i = 0; i < menu->option_count; i++) {
         free_menu_option(menu->options[i]);

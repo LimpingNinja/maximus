@@ -3556,6 +3556,245 @@ static void open_menu_options_action(void *ctx)
     }
 }
 
+/* Color picker actions for custom menu lightbar colors */
+typedef struct {
+    MenuEditContext *mctx;
+    char **values;
+    int value_index;
+    char **menu_fg;
+    char **menu_bg;
+} MenuColorActionCtx;
+
+static void pick_normal_color(void *ctx);
+static void pick_selected_color(void *ctx);
+static void pick_high_color(void *ctx);
+static void pick_high_sel_color(void *ctx);
+
+static void set_owned_string(char **dst, const char *src)
+{
+    if (dst == NULL) {
+        return;
+    }
+    free(*dst);
+    *dst = NULL;
+    if (src && *src) {
+        *dst = strdup(src);
+    }
+}
+
+static int color_name_to_value(const char *name)
+{
+    if (!name || !*name) return -1;
+    if (strcasecmp(name, "Black") == 0) return 0;
+    if (strcasecmp(name, "Blue") == 0) return 1;
+    if (strcasecmp(name, "Green") == 0) return 2;
+    if (strcasecmp(name, "Cyan") == 0) return 3;
+    if (strcasecmp(name, "Red") == 0) return 4;
+    if (strcasecmp(name, "Magenta") == 0) return 5;
+    if (strcasecmp(name, "Brown") == 0) return 6;
+    if (strcasecmp(name, "Gray") == 0 || strcasecmp(name, "Grey") == 0) return 7;
+    if (strcasecmp(name, "DarkGray") == 0 || strcasecmp(name, "DarkGrey") == 0) return 8;
+    if (strcasecmp(name, "LightBlue") == 0) return 9;
+    if (strcasecmp(name, "LightGreen") == 0) return 10;
+    if (strcasecmp(name, "LightCyan") == 0) return 11;
+    if (strcasecmp(name, "LightRed") == 0) return 12;
+    if (strcasecmp(name, "LightMagenta") == 0) return 13;
+    if (strcasecmp(name, "Yellow") == 0) return 14;
+    if (strcasecmp(name, "White") == 0) return 15;
+    return -1;
+}
+
+static const char *color_value_to_name(int val)
+{
+    static const char *names[] = {
+        "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray",
+        "DarkGray", "LightBlue", "LightGreen", "LightCyan", "LightRed", "LightMagenta", "Yellow", "White"
+    };
+    if (val >= 0 && val < 16) return names[val];
+    return "Gray";
+}
+
+static char *format_color_pair(const char *fg, const char *bg)
+{
+    char buf[64];
+    if (!fg && !bg) {
+        snprintf(buf, sizeof(buf), "(default)");
+    } else if (!fg) {
+        snprintf(buf, sizeof(buf), "(default FG) on %s", bg);
+    } else if (!bg) {
+        snprintf(buf, sizeof(buf), "%s on (default BG)", fg);
+    } else {
+        snprintf(buf, sizeof(buf), "%s on %s", fg, bg);
+    }
+    return strdup(buf);
+}
+
+static void pick_menu_color(void *ctx)
+{
+    MenuColorActionCtx *a = (MenuColorActionCtx *)ctx;
+    if (a == NULL || a->mctx == NULL || a->mctx->current_menu == NULL ||
+        a->values == NULL || a->value_index < 0 || a->menu_fg == NULL || a->menu_bg == NULL) {
+        return;
+    }
+
+    int cur_fg = color_name_to_value(*a->menu_fg);
+    int cur_bg = color_name_to_value(*a->menu_bg);
+    if (cur_fg < 0) cur_fg = 7;
+    if (cur_bg < 0) cur_bg = 0;
+    if (cur_bg > 7) cur_bg = 0;
+
+    int new_fg = cur_fg;
+    int new_bg = cur_bg;
+    if (!colorpicker_select_full(cur_fg, cur_bg, &new_fg, &new_bg)) {
+        return;
+    }
+
+    const char *fg_name = color_value_to_name(new_fg);
+    const char *bg_name = color_value_to_name(new_bg);
+
+    set_owned_string(a->menu_fg, fg_name);
+    set_owned_string(a->menu_bg, bg_name);
+
+    free(a->values[a->value_index]);
+    a->values[a->value_index] = format_color_pair(*a->menu_fg, *a->menu_bg);
+
+    if (a->mctx->options_modified) {
+        *a->mctx->options_modified = true;
+    }
+}
+
+static void open_menu_customization_action(void *ctx)
+{
+    MenuEditContext *mctx = (MenuEditContext *)ctx;
+    if (mctx == NULL || mctx->current_menu == NULL) {
+        return;
+    }
+
+    char *old_lb_normal_fg = mctx->current_menu->cm_lb_normal_fg ? strdup(mctx->current_menu->cm_lb_normal_fg) : NULL;
+    char *old_lb_normal_bg = mctx->current_menu->cm_lb_normal_bg ? strdup(mctx->current_menu->cm_lb_normal_bg) : NULL;
+    char *old_lb_selected_fg = mctx->current_menu->cm_lb_selected_fg ? strdup(mctx->current_menu->cm_lb_selected_fg) : NULL;
+    char *old_lb_selected_bg = mctx->current_menu->cm_lb_selected_bg ? strdup(mctx->current_menu->cm_lb_selected_bg) : NULL;
+    char *old_lb_high_fg = mctx->current_menu->cm_lb_high_fg ? strdup(mctx->current_menu->cm_lb_high_fg) : NULL;
+    char *old_lb_high_bg = mctx->current_menu->cm_lb_high_bg ? strdup(mctx->current_menu->cm_lb_high_bg) : NULL;
+    char *old_lb_high_sel_fg = mctx->current_menu->cm_lb_high_sel_fg ? strdup(mctx->current_menu->cm_lb_high_sel_fg) : NULL;
+    char *old_lb_high_sel_bg = mctx->current_menu->cm_lb_high_sel_bg ? strdup(mctx->current_menu->cm_lb_high_sel_bg) : NULL;
+
+    static const char *justify_opts[] = { "Left", "Center", "Right", NULL };
+    static const char *boundary_justify_opts[] = {
+        "Left Top", "Left Center", "Left Bottom",
+        "Center Top", "Center Center", "Center Bottom",
+        "Right Top", "Right Center", "Right Bottom",
+        NULL
+    };
+    static const char *layout_opts[] = { "Grid", "Tight", "Spread", "Spread Width", "Spread Height", NULL };
+
+    char *values[32] = { NULL };
+    menu_load_customization_form(mctx->current_menu, values);
+
+    MenuColorActionCtx normal_ctx = {
+        .mctx = mctx,
+        .values = values,
+        .value_index = 6,
+        .menu_fg = &mctx->current_menu->cm_lb_normal_fg,
+        .menu_bg = &mctx->current_menu->cm_lb_normal_bg
+    };
+    MenuColorActionCtx selected_ctx = {
+        .mctx = mctx,
+        .values = values,
+        .value_index = 7,
+        .menu_fg = &mctx->current_menu->cm_lb_selected_fg,
+        .menu_bg = &mctx->current_menu->cm_lb_selected_bg
+    };
+    MenuColorActionCtx high_ctx = {
+        .mctx = mctx,
+        .values = values,
+        .value_index = 8,
+        .menu_fg = &mctx->current_menu->cm_lb_high_fg,
+        .menu_bg = &mctx->current_menu->cm_lb_high_bg
+    };
+    MenuColorActionCtx high_sel_ctx = {
+        .mctx = mctx,
+        .values = values,
+        .value_index = 9,
+        .menu_fg = &mctx->current_menu->cm_lb_high_sel_fg,
+        .menu_bg = &mctx->current_menu->cm_lb_high_sel_bg
+    };
+
+    FieldDef fields[] = {
+        { "CustomEnabled", "Enable customization", "Enable custom menu rendering (hybrid drawn menu +\nbounded canned options). Allows mixing ANSI art with\nMaximus-generated option lists.", FIELD_TOGGLE, 0, "No", toggle_yes_no, NULL, NULL, false, false, false, NULL, NULL },
+        { "SkipCanned", "Skip canned menu", "If Yes, show menu file only (no canned options).\nUseful when your custom screen already includes the\nfull menu text.", FIELD_TOGGLE, 0, "No", toggle_yes_no, NULL, NULL, false, false, false, NULL, NULL },
+        { "ShowTitle", "Show title", "Print the menu title when rendering canned options.\nIf title_location is set, prints at that position.\nOtherwise prints at current cursor.", FIELD_TOGGLE, 0, "Yes", toggle_yes_no, NULL, NULL, false, false, false, NULL, NULL },
+        { "Lightbar", "Lightbar menu", "Enable arrow-key navigation (highlight bar) over the\ncanned option list. Designed for bounded NOVICE menus.", FIELD_TOGGLE, 0, "No", toggle_yes_no, NULL, NULL, false, false, false, NULL, NULL },
+        { "LightbarMargin", "Lightbar margin", "Left/right margin (spaces) around each lightbar item.\nTotal width = option_width + (margin * 2). Default: 1.\nSet to 0 for no padding.", FIELD_NUMBER, 3, "1", NULL, NULL, NULL, false, false, false, NULL, NULL },
+
+        { NULL, NULL, NULL, FIELD_SEPARATOR, 0, NULL, NULL, NULL, NULL, false, false, false, NULL, NULL },
+
+        { "LbNormal", "Normal color", "Press ENTER or F2 to pick lightbar normal colors (foreground and background).", FIELD_ACTION, 0, "", NULL, NULL, NULL, false, false, false, pick_normal_color, &normal_ctx },
+        { "LbSelected", "Selected color", "Press ENTER or F2 to pick lightbar selected colors (foreground and background).", FIELD_ACTION, 0, "", NULL, NULL, NULL, false, false, false, pick_selected_color, &selected_ctx },
+        { "LbHigh", "High color", "Press ENTER or F2 to pick lightbar hotkey highlight colors (foreground and background).", FIELD_ACTION, 0, "", NULL, NULL, NULL, false, false, false, pick_high_color, &high_ctx },
+        { "LbHighSel", "High+Sel color", "Press ENTER or F2 to pick lightbar high+selected colors (foreground and background).", FIELD_ACTION, 0, "", NULL, NULL, NULL, false, false, false, pick_high_sel_color, &high_sel_ctx },
+
+        { NULL, NULL, NULL, FIELD_SEPARATOR, 0, NULL, NULL, NULL, NULL, false, false, false, NULL, NULL },
+
+        { "TopRow", "Top row", "Top boundary row (1-based). Defines rectangle where\ncanned options print. Set both top & bottom to enable.\nExample: top=[8,8] bottom=[20,61]", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "TopCol", "Top col", "Top boundary column (1-based). Works with top_row to\ndefine upper-left corner of option rectangle.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "BottomRow", "Bottom row", "Bottom boundary row (1-based, inclusive). Works with\nbottom_col to define lower-right corner of rectangle.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "BottomCol", "Bottom col", "Bottom boundary column (1-based, inclusive). Boundary\nwidth = bottom_col - top_col + 1.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "TitleRow", "Title row", "Where to print menu title (1-based). 0 = current\ncursor position. Only used if show_title=Yes.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "TitleCol", "Title col", "Title column (1-based). Works with title_row.\n0 = use current cursor position.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "PromptRow", "Prompt row", "Where to print NOVICE prompt (\"Select:\"). 1-based.\nPrevents \"prompt disappears\" with drawn menus.\n0 = current cursor.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+        { "PromptCol", "Prompt col", "Prompt column (1-based). Works with prompt_row.\n0 = use current cursor position.", FIELD_NUMBER, 5, "0", NULL, NULL, NULL, false, false, false, NULL, NULL },
+
+        { NULL, NULL, NULL, FIELD_SEPARATOR, 0, NULL, NULL, NULL, NULL, false, false, false, NULL, NULL },
+
+        { "OptionSpacing", "Option spacing", "Add extra blank line between option rows. Reduces how\nmany rows fit in boundary. Affects spread_height calc.", FIELD_TOGGLE, 0, "No", toggle_yes_no, NULL, NULL, false, false, false, NULL, NULL },
+        { "OptionJustify", "Option justify", "Align option text inside fixed-width field:\nLeft (classic), Center (balanced), Right.\nAffects NOVICE display.", FIELD_SELECT, 0, "Left", justify_opts, NULL, NULL, false, false, false, NULL, NULL },
+        { "BoundaryJustify", "Boundary justify", "Where option grid sits in boundary (when boundary is\nlarger than grid). Format: \"horiz [vert]\" e.g.\n\"center top\", \"left center\", \"right bottom\".", FIELD_SELECT, 0, "Left Top", boundary_justify_opts, NULL, NULL, false, false, false, NULL, NULL },
+        { "BoundaryLayout", "Boundary layout", "Column layout: Grid (fixed), Tight (last row centered),\nSpread (fill space), Spread_Width, Spread_Height.\nSpread distributes whitespace gracefully.", FIELD_SELECT, 0, "Grid", layout_opts, NULL, NULL, false, false, false, NULL, NULL },
+    };
+
+    bool saved = form_edit("Menu Customization",
+                           fields,
+                           (int)(sizeof(fields) / sizeof(fields[0])),
+                           values,
+                           NULL,
+                           NULL);
+
+    bool changed = false;
+    if (saved) {
+        changed = menu_save_customization_form(mctx->current_menu, values);
+    } else {
+        set_owned_string(&mctx->current_menu->cm_lb_normal_fg, old_lb_normal_fg);
+        set_owned_string(&mctx->current_menu->cm_lb_normal_bg, old_lb_normal_bg);
+        set_owned_string(&mctx->current_menu->cm_lb_selected_fg, old_lb_selected_fg);
+        set_owned_string(&mctx->current_menu->cm_lb_selected_bg, old_lb_selected_bg);
+        set_owned_string(&mctx->current_menu->cm_lb_high_fg, old_lb_high_fg);
+        set_owned_string(&mctx->current_menu->cm_lb_high_bg, old_lb_high_bg);
+        set_owned_string(&mctx->current_menu->cm_lb_high_sel_fg, old_lb_high_sel_fg);
+        set_owned_string(&mctx->current_menu->cm_lb_high_sel_bg, old_lb_high_sel_bg);
+    }
+
+    free(old_lb_normal_fg);
+    free(old_lb_normal_bg);
+    free(old_lb_selected_fg);
+    free(old_lb_selected_bg);
+    free(old_lb_high_fg);
+    free(old_lb_high_bg);
+    free(old_lb_high_sel_fg);
+    free(old_lb_high_sel_bg);
+
+    menu_free_values(values, (int)(sizeof(fields) / sizeof(fields[0])));
+    if (changed && mctx->options_modified) {
+        *mctx->options_modified = true;
+    }
+}
+
+/* Implement the color picker actions */
+static void pick_normal_color(void *ctx) { pick_menu_color(ctx); }
+static void pick_selected_color(void *ctx) { pick_menu_color(ctx); }
+static void pick_high_color(void *ctx) { pick_menu_color(ctx); }
+static void pick_high_sel_color(void *ctx) { pick_menu_color(ctx); }
+
 static bool edit_menu_properties(const char *sys_path, MenuDefinition **menus, int menu_count, MenuDefinition *menu)
 {
     if (!menu) return false;
@@ -3569,15 +3808,29 @@ static bool edit_menu_properties(const char *sys_path, MenuDefinition **menus, i
         .options_modified = &options_modified
     };
 
-    FieldDef fields_with_action[16];
+    FieldDef fields_with_action[20];
     for (int i = 0; i < menu_properties_field_count; i++) {
         fields_with_action[i] = menu_properties_fields[i];
     }
 
+    fields_with_action[menu_properties_field_count] = (FieldDef){
+        .keyword = "MenuCustomization",
+        .label = "Customize",
+        .help = "Press ENTER or F2 to edit custom menu rendering options (lightbar, boundaries, colors, layout).",
+        .type = FIELD_ACTION,
+        .max_length = 0,
+        .default_value = "",
+        .toggle_options = NULL,
+        .action = open_menu_customization_action,
+        .action_ctx = &mctx
+    };
+
+    int customization_idx = menu_properties_field_count;
+
     char options_label[80];
     snprintf(options_label, sizeof(options_label), "Menu options (%d defined)", menu->option_count);
 
-    fields_with_action[menu_properties_field_count] = (FieldDef){
+    fields_with_action[customization_idx + 1] = (FieldDef){
         .keyword = "MenuOptions",
         .label = "Menu options",
         .help = "Press ENTER or F2 to edit menu options (commands shown to users).",
@@ -3589,11 +3842,12 @@ static bool edit_menu_properties(const char *sys_path, MenuDefinition **menus, i
         .action_ctx = &mctx
     };
 
-    int field_count = menu_properties_field_count + 1;
+    int field_count = customization_idx + 2;
 
     char *values[16] = { NULL };
     menu_load_properties_form(menu, values);
-    values[menu_properties_field_count] = strdup(options_label);
+    values[customization_idx] = strdup("(edit...)");
+    values[customization_idx + 1] = strdup(options_label);
 
     bool saved = form_edit(menu->name ? menu->name : "Menu Properties",
                            fields_with_action,

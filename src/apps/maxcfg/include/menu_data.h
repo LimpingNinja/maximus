@@ -72,6 +72,42 @@ typedef struct {
     int menu_color;          /* AVATAR color (-1 = none) */
     int opt_width;           /* Option width (0 = default 20) */
     
+    /* Custom menu fields */
+    bool cm_enabled;         /* Custom menu enabled */
+    bool cm_skip_canned;     /* Skip canned menu output */
+    bool cm_show_title;      /* Show menu title */
+    bool cm_lightbar;        /* Lightbar menu enabled */
+    int cm_lightbar_margin;  /* Lightbar margin (columns) */
+    
+    /* Lightbar colors (DOS color names as strings) */
+    char *cm_lb_normal_fg;   /* Normal foreground color */
+    char *cm_lb_normal_bg;   /* Normal background color */
+    char *cm_lb_selected_fg; /* Selected foreground color */
+    char *cm_lb_selected_bg; /* Selected background color */
+    char *cm_lb_high_fg;     /* Highlighted foreground color */
+    char *cm_lb_high_bg;     /* Highlighted background color */
+    char *cm_lb_high_sel_fg; /* Highlighted+selected foreground */
+    char *cm_lb_high_sel_bg; /* Highlighted+selected background */
+    
+    /* Boundary coordinates */
+    int cm_top_row;          /* Top boundary row (0 = none) */
+    int cm_top_col;          /* Top boundary column (0 = none) */
+    int cm_bottom_row;       /* Bottom boundary row (0 = none) */
+    int cm_bottom_col;       /* Bottom boundary column (0 = none) */
+    
+    /* Title and prompt locations */
+    int cm_title_row;        /* Title row (0 = none) */
+    int cm_title_col;        /* Title column (0 = none) */
+    int cm_prompt_row;       /* Prompt row (0 = none) */
+    int cm_prompt_col;       /* Prompt column (0 = none) */
+    
+    /* Layout options */
+    bool cm_option_spacing;  /* Add spacing between options */
+    int cm_option_justify;   /* Option justification (0=left, 1=center, 2=right) */
+    int cm_boundary_justify; /* Boundary horizontal justify */
+    int cm_boundary_vjustify;/* Boundary vertical justify */
+    int cm_boundary_layout;  /* Boundary layout mode */
+    
     MenuOption **options;    /* Array of menu option pointers (owned) */
     int option_count;        /* Number of options */
     int option_capacity;     /* Allocated capacity */

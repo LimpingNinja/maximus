@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define LIBMAXCFG_ABI_VERSION 1
+#define LIBMAXCFG_ABI_VERSION 2
 
 typedef struct MaxCfg MaxCfg;
 
@@ -60,6 +60,10 @@ typedef enum MaxCfgStatus {
 } MaxCfgStatus;
 
 MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count);
+
+int maxcfg_dos_color_from_name(const char *s);
+const char *maxcfg_dos_color_to_name(int color);
+unsigned char maxcfg_make_attr(int fg, int bg);
 
 typedef struct {
     int config_version;
@@ -380,6 +384,40 @@ typedef struct {
 } MaxCfgNgMenuOption;
 
 typedef struct {
+    bool enabled;
+    bool skip_canned_menu;
+    bool show_title;
+
+    bool lightbar_menu;
+    int lightbar_margin;
+
+    unsigned char lightbar_normal_attr;
+    unsigned char lightbar_selected_attr;
+    unsigned char lightbar_high_attr;
+    unsigned char lightbar_high_selected_attr;
+
+    bool has_lightbar_normal;
+    bool has_lightbar_selected;
+    bool has_lightbar_high;
+    bool has_lightbar_high_selected;
+
+    bool option_spacing;
+    int option_justify;
+    int boundary_justify;
+    int boundary_vjustify;
+    int boundary_layout;
+
+    int top_boundary_row;
+    int top_boundary_col;
+    int bottom_boundary_row;
+    int bottom_boundary_col;
+    int title_location_row;
+    int title_location_col;
+    int prompt_location_row;
+    int prompt_location_col;
+} MaxCfgNgCustomMenu;
+
+typedef struct {
     char *name;
     char *title;
     char *header_file;
@@ -391,6 +429,8 @@ typedef struct {
     int menu_length;
     int menu_color;
     int option_width;
+
+    MaxCfgNgCustomMenu *custom_menu;
 
     MaxCfgNgMenuOption *options;
     size_t option_count;

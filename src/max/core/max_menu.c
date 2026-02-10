@@ -1027,7 +1027,13 @@ done:
   free(items);
 
   if (out_key > 0)
+  {
+    /* Move cursor to prompt location before processing command to avoid overwriting menu */
+    if (pam->cm_prompt_x > 0 && pam->cm_prompt_y > 0)
+      Goto(pam->cm_prompt_y, pam->cm_prompt_x);
+    
     return (int)toupper((unsigned char)out_key);
+  }
 
   return -1;
 }

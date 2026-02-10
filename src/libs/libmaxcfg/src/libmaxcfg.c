@@ -9,9 +9,155 @@
 
 #include <sys/stat.h>
 
+static int ng_stricmp(const char *a, const char *b)
+{
+    unsigned char ca;
+    unsigned char cb;
+
+    if (a == NULL) a = "";
+    if (b == NULL) b = "";
+
+    for (;;) {
+        ca = (unsigned char)*a++;
+        cb = (unsigned char)*b++;
+        ca = (unsigned char)tolower(ca);
+        cb = (unsigned char)tolower(cb);
+        if (ca != cb) {
+            return (int)ca - (int)cb;
+        }
+        if (ca == '\0') {
+            return 0;
+        }
+    }
+}
+
+int maxcfg_dos_color_from_name(const char *s)
+{
+    char buf[64];
+    size_t i;
+    size_t j;
+
+    if (s == NULL) {
+        return -1;
+    }
+
+    j = 0;
+    for (i = 0; s[i] && j + 1 < sizeof(buf); i++) {
+        unsigned char c = (unsigned char)s[i];
+        if (c == ' ' || c == '\t' || c == '_' || c == '-') {
+            continue;
+        }
+        buf[j++] = (char)tolower(c);
+    }
+    buf[j] = '\0';
+
+    if (strcmp(buf, "black") == 0) return 0;
+    if (strcmp(buf, "blue") == 0) return 1;
+    if (strcmp(buf, "green") == 0) return 2;
+    if (strcmp(buf, "cyan") == 0) return 3;
+    if (strcmp(buf, "red") == 0) return 4;
+    if (strcmp(buf, "magenta") == 0) return 5;
+    if (strcmp(buf, "brown") == 0) return 6;
+    if (strcmp(buf, "lightgray") == 0 || strcmp(buf, "lightgrey") == 0) return 7;
+    if (strcmp(buf, "darkgray") == 0 || strcmp(buf, "darkgrey") == 0) return 8;
+    if (strcmp(buf, "lightblue") == 0) return 9;
+    if (strcmp(buf, "lightgreen") == 0) return 10;
+    if (strcmp(buf, "lightcyan") == 0) return 11;
+    if (strcmp(buf, "lightred") == 0) return 12;
+    if (strcmp(buf, "lightmagenta") == 0) return 13;
+    if (strcmp(buf, "yellow") == 0) return 14;
+    if (strcmp(buf, "white") == 0) return 15;
+
+    return -1;
+}
+
+const char *maxcfg_dos_color_to_name(int color)
+{
+    static const char *names[16] = {
+        "Black",
+        "Blue",
+        "Green",
+        "Cyan",
+        "Red",
+        "Magenta",
+        "Brown",
+        "Light Gray",
+        "Dark Gray",
+        "Light Blue",
+        "Light Green",
+        "Light Cyan",
+        "Light Red",
+        "Light Magenta",
+        "Yellow",
+        "White",
+    };
+
+    if (color < 0 || color > 15) {
+        return "";
+    }
+    return names[color];
+}
+
+unsigned char maxcfg_make_attr(int fg, int bg)
+{
+    return (unsigned char)((fg & 0x0f) | ((bg & 0x0f) << 4));
+}
+
 int maxcfg_abi_version(void)
 {
     return LIBMAXCFG_ABI_VERSION;
+}
+
+static MaxCfgStatus ng_tbl_get_bool_default(const MaxCfgVar *tbl, const char *key, bool *out, bool def)
+{
+    if (out == NULL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    *out = def;
+    if (tbl == NULL || key == NULL || key[0] == '\0') {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+
+    MaxCfgVar v;
+    MaxCfgStatus st = maxcfg_toml_table_get(tbl, key, &v);
+    if (st == MAXCFG_ERR_NOT_FOUND) {
+        return MAXCFG_OK;
+    }
+    if (st != MAXCFG_OK) {
+        return st;
+    }
+    if (v.type != MAXCFG_VAR_BOOL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    *out = v.v.b ? true : false;
+    return MAXCFG_OK;
+}
+
+static MaxCfgStatus ng_tbl_get_int_array_view(const MaxCfgVar *tbl, const char *key, MaxCfgIntView *out)
+{
+    if (out == NULL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    out->items = NULL;
+    out->count = 0;
+    if (tbl == NULL || key == NULL || key[0] == '\0') {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+
+    MaxCfgVar v;
+    MaxCfgStatus st = maxcfg_toml_table_get(tbl, key, &v);
+    if (st == MAXCFG_ERR_NOT_FOUND) {
+        return MAXCFG_OK;
+    }
+    if (st != MAXCFG_OK) {
+        return st;
+    }
+    if (v.type != MAXCFG_VAR_INT_ARRAY) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    out->items = v.v.intv.items;
+    out->count = v.v.intv.count;
+    return MAXCFG_OK;
 }
 
 #ifndef FLOW_TXOFF
@@ -1150,6 +1296,14 @@ static MaxCfgStatus ng_copy_strv_from_view(char ***out_items, size_t *out_count,
     return MAXCFG_OK;
 }
 
+static void ng_custom_menu_set_defaults(MaxCfgNgCustomMenu *cm);
+static void ng_custom_menu_parse_justify(MaxCfgNgCustomMenu *cm, const char *s);
+static void ng_custom_menu_parse_boundary_justify(MaxCfgNgCustomMenu *cm, const char *s);
+static void ng_custom_menu_parse_boundary_layout(MaxCfgNgCustomMenu *cm, const char *s);
+static void ng_custom_menu_set_location_from_view(int *out_row, int *out_col, const MaxCfgIntView *v);
+static void ng_custom_menu_parse_lightbar_color_pair(const MaxCfgVar *tbl, const char *key,
+                                                     unsigned char *out_attr, bool *out_has);
+
 MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxCfgNgMenu *menu)
 {
     if (toml == NULL || menu == NULL) {
@@ -1176,7 +1330,7 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
     const char *header_file = "";
     const char *menu_file = "";
     int menu_length = 0;
-    int menu_color = 0;
+    int menu_color = -1;
     int option_width = 0;
     MaxCfgStrView header_types = {0};
     MaxCfgStrView menu_types = {0};
@@ -1198,7 +1352,7 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
 
     st = ng_tbl_get_int_default(&doc, "menu_length", &menu_length, 0);
     if (st != MAXCFG_OK) goto fail_menu;
-    st = ng_tbl_get_int_default(&doc, "menu_color", &menu_color, 0);
+    st = ng_tbl_get_int_default(&doc, "menu_color", &menu_color, -1);
     if (st != MAXCFG_OK) goto fail_menu;
     st = ng_tbl_get_int_default(&doc, "option_width", &option_width, 0);
     if (st != MAXCFG_OK) goto fail_menu;
@@ -1221,6 +1375,79 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
     menu->menu_length = menu_length;
     menu->menu_color = menu_color;
     menu->option_width = option_width;
+
+    MaxCfgVar cm;
+    if (maxcfg_toml_table_get(&doc, "custom_menu", &cm) == MAXCFG_OK && cm.type == MAXCFG_VAR_TABLE) {
+        MaxCfgNgCustomMenu *dst = (MaxCfgNgCustomMenu *)calloc(1, sizeof(*dst));
+        if (dst == NULL) {
+            st = MAXCFG_ERR_OOM;
+            goto fail_menu;
+        }
+        ng_custom_menu_set_defaults(dst);
+
+        (void)ng_tbl_get_bool_default(&cm, "skip_canned_menu", &dst->skip_canned_menu, dst->skip_canned_menu);
+        (void)ng_tbl_get_bool_default(&cm, "show_title", &dst->show_title, dst->show_title);
+        (void)ng_tbl_get_bool_default(&cm, "lightbar_menu", &dst->lightbar_menu, dst->lightbar_menu);
+        (void)ng_tbl_get_bool_default(&cm, "option_spacing", &dst->option_spacing, dst->option_spacing);
+
+        int margin = dst->lightbar_margin;
+        if (ng_tbl_get_int_default(&cm, "lightbar_margin", &margin, dst->lightbar_margin) == MAXCFG_OK) {
+            if (margin < 0) margin = 0;
+            if (margin > 255) margin = 255;
+            dst->lightbar_margin = margin;
+        }
+
+        const char *justify = "";
+        if (ng_tbl_get_string_default(&cm, "option_justify", &justify, "") == MAXCFG_OK) {
+            ng_custom_menu_parse_justify(dst, justify);
+        }
+
+        const char *bjustify = "";
+        if (ng_tbl_get_string_default(&cm, "boundary_justify", &bjustify, "") == MAXCFG_OK) {
+            ng_custom_menu_parse_boundary_justify(dst, bjustify);
+        }
+
+        const char *layout = "";
+        if (ng_tbl_get_string_default(&cm, "boundary_layout", &layout, "") == MAXCFG_OK) {
+            ng_custom_menu_parse_boundary_layout(dst, layout);
+        }
+
+        MaxCfgIntView loc = {0};
+        if (ng_tbl_get_int_array_view(&cm, "top_boundary", &loc) == MAXCFG_OK) {
+            ng_custom_menu_set_location_from_view(&dst->top_boundary_row, &dst->top_boundary_col, &loc);
+        }
+        if (ng_tbl_get_int_array_view(&cm, "bottom_boundary", &loc) == MAXCFG_OK) {
+            ng_custom_menu_set_location_from_view(&dst->bottom_boundary_row, &dst->bottom_boundary_col, &loc);
+        }
+        if (ng_tbl_get_int_array_view(&cm, "title_location", &loc) == MAXCFG_OK) {
+            ng_custom_menu_set_location_from_view(&dst->title_location_row, &dst->title_location_col, &loc);
+        }
+        if (ng_tbl_get_int_array_view(&cm, "prompt_location", &loc) == MAXCFG_OK) {
+            ng_custom_menu_set_location_from_view(&dst->prompt_location_row, &dst->prompt_location_col, &loc);
+        }
+
+        MaxCfgVar lc;
+        if (maxcfg_toml_table_get(&cm, "lightbar_color", &lc) == MAXCFG_OK) {
+            if (lc.type == MAXCFG_VAR_TABLE) {
+                ng_custom_menu_parse_lightbar_color_pair(&lc, "normal", &dst->lightbar_normal_attr, &dst->has_lightbar_normal);
+                ng_custom_menu_parse_lightbar_color_pair(&lc, "selected", &dst->lightbar_selected_attr, &dst->has_lightbar_selected);
+                ng_custom_menu_parse_lightbar_color_pair(&lc, "high", &dst->lightbar_high_attr, &dst->has_lightbar_high);
+                ng_custom_menu_parse_lightbar_color_pair(&lc, "high_selected", &dst->lightbar_high_selected_attr, &dst->has_lightbar_high_selected);
+            } else if (lc.type == MAXCFG_VAR_STRING_ARRAY) {
+                MaxCfgStrView sv = lc.v.strv;
+                if (sv.count >= 2) {
+                    int fg = maxcfg_dos_color_from_name(sv.items[0]);
+                    int bg = maxcfg_dos_color_from_name(sv.items[1]);
+                    if (fg >= 0 && bg >= 0) {
+                        dst->lightbar_selected_attr = maxcfg_make_attr(fg, bg);
+                        dst->has_lightbar_selected = true;
+                    }
+                }
+            }
+        }
+
+        menu->custom_menu = dst;
+    }
 
     MaxCfgVar opt_arr;
     if (maxcfg_toml_table_get(&doc, "option", &opt_arr) == MAXCFG_OK) {
@@ -4112,6 +4339,11 @@ void maxcfg_ng_menu_free(MaxCfgNgMenu *menu)
     maxcfg_free_strv(&menu->header_types, &menu->header_type_count);
     maxcfg_free_strv(&menu->menu_types, &menu->menu_type_count);
 
+    if (menu->custom_menu != NULL) {
+        free(menu->custom_menu);
+        menu->custom_menu = NULL;
+    }
+
     if (menu->options != NULL) {
         for (size_t i = 0; i < menu->option_count; i++) {
             MaxCfgNgMenuOption *opt = &menu->options[i];
@@ -4128,6 +4360,160 @@ void maxcfg_ng_menu_free(MaxCfgNgMenu *menu)
     }
 
     memset(menu, 0, sizeof(*menu));
+}
+
+static void ng_custom_menu_set_defaults(MaxCfgNgCustomMenu *cm)
+{
+    if (cm == NULL) {
+        return;
+    }
+
+    memset(cm, 0, sizeof(*cm));
+    cm->enabled = true;
+    cm->skip_canned_menu = false;
+    cm->show_title = true;
+    cm->lightbar_menu = false;
+    cm->lightbar_margin = 1;
+
+    cm->lightbar_normal_attr = 0x07;
+    cm->lightbar_selected_attr = 0x1e;
+    cm->lightbar_high_attr = 0;
+    cm->lightbar_high_selected_attr = 0;
+
+    cm->option_spacing = false;
+    cm->option_justify = 0;
+    cm->boundary_justify = 0;
+    cm->boundary_vjustify = 0;
+    cm->boundary_layout = 0;
+}
+
+static void ng_custom_menu_parse_justify(MaxCfgNgCustomMenu *cm, const char *s)
+{
+    if (cm == NULL || s == NULL || *s == '\0') {
+        return;
+    }
+    if (ng_stricmp(s, "left") == 0) {
+        cm->option_justify = 0;
+    } else if (ng_stricmp(s, "center") == 0) {
+        cm->option_justify = 1;
+    } else if (ng_stricmp(s, "right") == 0) {
+        cm->option_justify = 2;
+    }
+}
+
+static void ng_custom_menu_parse_boundary_justify(MaxCfgNgCustomMenu *cm, const char *s)
+{
+    char buf[64];
+    char *h;
+    char *vert;
+
+    if (cm == NULL || s == NULL || *s == '\0') {
+        return;
+    }
+
+    strncpy(buf, s, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    h = buf;
+    while (*h == ' ' || *h == '\t') {
+        h++;
+    }
+
+    vert = h;
+    while (*vert && *vert != ' ' && *vert != '\t') {
+        vert++;
+    }
+    if (*vert) {
+        *vert++ = '\0';
+        while (*vert == ' ' || *vert == '\t') {
+            vert++;
+        }
+        if (*vert == '\0') {
+            vert = NULL;
+        }
+    } else {
+        vert = NULL;
+    }
+
+    if (ng_stricmp(h, "left") == 0) {
+        cm->boundary_justify = 0;
+        cm->boundary_vjustify = 0;
+    } else if (ng_stricmp(h, "center") == 0) {
+        cm->boundary_justify = 1;
+        cm->boundary_vjustify = 1;
+    } else if (ng_stricmp(h, "right") == 0) {
+        cm->boundary_justify = 2;
+        cm->boundary_vjustify = 0;
+    }
+
+    if (vert) {
+        if (ng_stricmp(vert, "top") == 0) {
+            cm->boundary_vjustify = 0;
+        } else if (ng_stricmp(vert, "center") == 0) {
+            cm->boundary_vjustify = 1;
+        } else if (ng_stricmp(vert, "bottom") == 0) {
+            cm->boundary_vjustify = 2;
+        }
+    }
+}
+
+static void ng_custom_menu_parse_boundary_layout(MaxCfgNgCustomMenu *cm, const char *s)
+{
+    if (cm == NULL || s == NULL || *s == '\0') {
+        return;
+    }
+    if (ng_stricmp(s, "grid") == 0) {
+        cm->boundary_layout = 0;
+    } else if (ng_stricmp(s, "tight") == 0) {
+        cm->boundary_layout = 1;
+    } else if (ng_stricmp(s, "spread") == 0) {
+        cm->boundary_layout = 2;
+    } else if (ng_stricmp(s, "spread_width") == 0) {
+        cm->boundary_layout = 3;
+    } else if (ng_stricmp(s, "spread_height") == 0) {
+        cm->boundary_layout = 4;
+    }
+}
+
+static void ng_custom_menu_set_location_from_view(int *out_row, int *out_col, const MaxCfgIntView *v)
+{
+    if (out_row == NULL || out_col == NULL || v == NULL) {
+        return;
+    }
+    if (v->items != NULL && v->count >= 2) {
+        int row = v->items[0];
+        int col = v->items[1];
+        if (row > 0 && col > 0) {
+            *out_row = row;
+            *out_col = col;
+        }
+    }
+}
+
+static void ng_custom_menu_parse_lightbar_color_pair(const MaxCfgVar *tbl, const char *key,
+                                                     unsigned char *out_attr, bool *out_has)
+{
+    MaxCfgStrView vv = {0};
+    if (out_has) {
+        *out_has = false;
+    }
+
+    if (tbl == NULL || key == NULL || out_attr == NULL || out_has == NULL) {
+        return;
+    }
+
+    if (ng_tbl_get_string_array_view(tbl, key, &vv) != MAXCFG_OK || vv.count < 2) {
+        return;
+    }
+
+    int fg = maxcfg_dos_color_from_name(vv.items[0]);
+    int bg = maxcfg_dos_color_from_name(vv.items[1]);
+    if (fg < 0 || bg < 0) {
+        return;
+    }
+
+    *out_attr = maxcfg_make_attr(fg, bg);
+    *out_has = true;
 }
 
 static MaxCfgStatus maxcfg_ng_menu_ensure_capacity(MaxCfgNgMenu *menu, size_t want)
@@ -5358,6 +5744,111 @@ MaxCfgStatus maxcfg_ng_write_menu_toml(FILE *fp, const MaxCfgNgMenu *menu)
     toml_kv_int(fp, "menu_length", menu->menu_length);
     toml_kv_int(fp, "menu_color", menu->menu_color);
     toml_kv_int(fp, "option_width", menu->option_width);
+
+    if (menu->custom_menu != NULL && menu->custom_menu->enabled) {
+        const MaxCfgNgCustomMenu *cm = menu->custom_menu;
+
+        fputs("\n[custom_menu]\n", fp);
+        toml_kv_bool(fp, "skip_canned_menu", cm->skip_canned_menu);
+        toml_kv_bool(fp, "show_title", cm->show_title);
+        toml_kv_bool(fp, "lightbar_menu", cm->lightbar_menu);
+        toml_kv_int(fp, "lightbar_margin", cm->lightbar_margin);
+
+        if (cm->top_boundary_row > 0 && cm->top_boundary_col > 0) {
+            int items[2] = { cm->top_boundary_row, cm->top_boundary_col };
+            toml_kv_int_array(fp, "top_boundary", items, 2);
+        }
+        if (cm->bottom_boundary_row > 0 && cm->bottom_boundary_col > 0) {
+            int items[2] = { cm->bottom_boundary_row, cm->bottom_boundary_col };
+            toml_kv_int_array(fp, "bottom_boundary", items, 2);
+        }
+        if (cm->title_location_row > 0 && cm->title_location_col > 0) {
+            int items[2] = { cm->title_location_row, cm->title_location_col };
+            toml_kv_int_array(fp, "title_location", items, 2);
+        }
+        if (cm->prompt_location_row > 0 && cm->prompt_location_col > 0) {
+            int items[2] = { cm->prompt_location_row, cm->prompt_location_col };
+            toml_kv_int_array(fp, "prompt_location", items, 2);
+        }
+
+        if (cm->has_lightbar_normal || cm->has_lightbar_selected || cm->has_lightbar_high || cm->has_lightbar_high_selected) {
+            fputs("lightbar_color = { ", fp);
+            bool first = true;
+
+            unsigned char attr;
+            const char *fg;
+            const char *bg;
+
+            if (cm->has_lightbar_normal) {
+                attr = cm->lightbar_normal_attr;
+                fg = maxcfg_dos_color_to_name((int)(attr & 0x0f));
+                bg = maxcfg_dos_color_to_name((int)((attr >> 4) & 0x0f));
+                if (!first) fputs(", ", fp);
+                fputs("normal = [", fp);
+                toml_write_escaped(fp, fg);
+                fputs(", ", fp);
+                toml_write_escaped(fp, bg);
+                fputs("]", fp);
+                first = false;
+            }
+            if (cm->has_lightbar_high) {
+                attr = cm->lightbar_high_attr;
+                fg = maxcfg_dos_color_to_name((int)(attr & 0x0f));
+                bg = maxcfg_dos_color_to_name((int)((attr >> 4) & 0x0f));
+                if (!first) fputs(", ", fp);
+                fputs("high = [", fp);
+                toml_write_escaped(fp, fg);
+                fputs(", ", fp);
+                toml_write_escaped(fp, bg);
+                fputs("]", fp);
+                first = false;
+            }
+            if (cm->has_lightbar_selected) {
+                attr = cm->lightbar_selected_attr;
+                fg = maxcfg_dos_color_to_name((int)(attr & 0x0f));
+                bg = maxcfg_dos_color_to_name((int)((attr >> 4) & 0x0f));
+                if (!first) fputs(", ", fp);
+                fputs("selected = [", fp);
+                toml_write_escaped(fp, fg);
+                fputs(", ", fp);
+                toml_write_escaped(fp, bg);
+                fputs("]", fp);
+                first = false;
+            }
+            if (cm->has_lightbar_high_selected) {
+                attr = cm->lightbar_high_selected_attr;
+                fg = maxcfg_dos_color_to_name((int)(attr & 0x0f));
+                bg = maxcfg_dos_color_to_name((int)((attr >> 4) & 0x0f));
+                if (!first) fputs(", ", fp);
+                fputs("high_selected = [", fp);
+                toml_write_escaped(fp, fg);
+                fputs(", ", fp);
+                toml_write_escaped(fp, bg);
+                fputs("]", fp);
+                first = false;
+            }
+
+            fputs(" }\n", fp);
+        }
+
+        toml_kv_bool(fp, "option_spacing", cm->option_spacing);
+        toml_kv_string(fp, "option_justify", (cm->option_justify == 1) ? "center" : (cm->option_justify == 2) ? "right" : "left");
+
+        {
+            const char *hj = (cm->boundary_justify == 2) ? "right" : (cm->boundary_justify == 1) ? "center" : "left";
+            const char *vj = (cm->boundary_vjustify == 2) ? "bottom" : (cm->boundary_vjustify == 1) ? "center" : "top";
+            char buf[32];
+            if (snprintf(buf, sizeof(buf), "%s %s", hj, vj) < (int)sizeof(buf)) {
+                toml_kv_string(fp, "boundary_justify", buf);
+            }
+        }
+
+        toml_kv_string(fp, "boundary_layout",
+                       (cm->boundary_layout == 1) ? "tight" :
+                       (cm->boundary_layout == 2) ? "spread" :
+                       (cm->boundary_layout == 3) ? "spread_width" :
+                       (cm->boundary_layout == 4) ? "spread_height" : "grid");
+    }
 
     for (size_t i = 0; i < menu->option_count; i++) {
         const MaxCfgNgMenuOption *opt = &menu->options[i];

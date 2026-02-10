@@ -92,6 +92,30 @@ depend:
 # Dependencies
 $(OBJDIR)/main.o: $(SRCDIR)/main.c include/maxcfg.h include/ui.h
 $(OBJDIR)/ui/screen.o: $(SRCDIR)/ui/screen.c include/maxcfg.h include/ui.h
-$(OBJDIR)/ui/menubar.o: $(SRCDIR)/ui/menubar.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/menubar.o: $(SRCDIR)/ui/menubar.c include/maxcfg.h include/ui.h include/menu_data.h include/menu_edit.h include/treeview.h include/nextgen_export.h
 $(OBJDIR)/ui/dropdown.o: $(SRCDIR)/ui/dropdown.c include/maxcfg.h include/ui.h
 $(OBJDIR)/ui/dialog.o: $(SRCDIR)/ui/dialog.c include/maxcfg.h include/ui.h
+
+$(OBJDIR)/ui/form.o: $(SRCDIR)/ui/form.c include/maxcfg.h include/ui.h include/fields.h
+$(OBJDIR)/ui/colorpicker.o: $(SRCDIR)/ui/colorpicker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/colorform.o: $(SRCDIR)/ui/colorform.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/filepicker.o: $(SRCDIR)/ui/filepicker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/listpicker.o: $(SRCDIR)/ui/listpicker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/checkpicker.o: $(SRCDIR)/ui/checkpicker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/picker_with_help.o: $(SRCDIR)/ui/picker_with_help.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/modifier_picker.o: $(SRCDIR)/ui/modifier_picker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/command_picker.o: $(SRCDIR)/ui/command_picker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/privilege_picker.o: $(SRCDIR)/ui/privilege_picker.c include/maxcfg.h include/ui.h
+$(OBJDIR)/ui/menu_edit.o: $(SRCDIR)/ui/menu_edit.c include/maxcfg.h include/ui.h include/menu_data.h include/menu_edit.h
+$(OBJDIR)/ui/treeview.o: $(SRCDIR)/ui/treeview.c include/maxcfg.h include/ui.h include/treeview.h
+$(OBJDIR)/ui/treenode_edit.o: $(SRCDIR)/ui/treenode_edit.c include/maxcfg.h include/ui.h include/treeview.h
+$(OBJDIR)/ui/texteditor.o: $(SRCDIR)/ui/texteditor.c include/maxcfg.h include/ui.h include/texteditor.h
+$(OBJDIR)/ui/text_list_editor.o: $(SRCDIR)/ui/text_list_editor.c include/maxcfg.h include/ui.h include/texteditor.h
+
+$(OBJDIR)/config/fields.o: $(SRCDIR)/config/fields.c include/maxcfg.h include/fields.h
+$(OBJDIR)/config/ctl_parse.o: $(SRCDIR)/config/ctl_parse.c include/ctl_parse.h
+$(OBJDIR)/config/ctl_to_ng.o: $(SRCDIR)/config/ctl_to_ng.c include/ctl_to_ng.h include/menu_data.h
+$(OBJDIR)/config/area_parse.o: $(SRCDIR)/config/area_parse.c include/area_parse.h
+$(OBJDIR)/config/area_toml.o: $(SRCDIR)/config/area_toml.c include/area_toml.h
+$(OBJDIR)/config/nextgen_export.o: $(SRCDIR)/config/nextgen_export.c include/nextgen_export.h include/menu_data.h include/ctl_to_ng.h
+$(OBJDIR)/config/menu_parse.o: $(SRCDIR)/config/menu_parse.c include/menu_data.h include/ctl_parse.h

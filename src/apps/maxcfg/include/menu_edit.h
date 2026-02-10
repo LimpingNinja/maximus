@@ -15,6 +15,9 @@ typedef struct {
 void menu_load_properties_form(MenuDefinition *menu, char **values);
 bool menu_save_properties_form(MenuDefinition *menu, char **values);
 
+void menu_load_customization_form(MenuDefinition *menu, char **values);
+bool menu_save_customization_form(MenuDefinition *menu, char **values);
+
 void menu_load_option_form(MenuOption *opt, char **values);
 bool menu_save_option_form(MenuOption *opt, char **values);
 

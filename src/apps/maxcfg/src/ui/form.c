@@ -685,6 +685,11 @@ bool form_edit(const char *title, const FieldDef *fields, int field_count, char 
         .field_dirty = field_dirty
     };
     
+    /* Skip any leading separators */
+    while (state.selected < field_count && fields[state.selected].type == FIELD_SEPARATOR) {
+        state.selected++;
+    }
+    
     FormGeometry g = calc_geometry(title, fields, field_count);
     
     /* Track disabled state for each field */
