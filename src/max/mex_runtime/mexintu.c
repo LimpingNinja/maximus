@@ -25,6 +25,7 @@ static char rcs_id[]="$Id: mexintu.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
 #include "mm.h"
 #include "mexall.h"
 

@@ -23,6 +23,8 @@ static char rcs_id[]="$Id: m_util.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <stdlib.h>

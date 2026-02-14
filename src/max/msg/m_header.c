@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: m_header.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: Grab message header from user
 */
 
+#define MAX_LANG_global
 #define MAX_LANG_m_area
-
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -145,7 +145,8 @@ static int near SendWarnings(PMAH pmah)
 
   if (timeleft() <= 5)
   {
-    Printf(warn_mleft, timeleft());
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", timeleft());
+      LangPrintf(warn_mleft, _ib); }
 
     if (GetyNAnswer(strt_any, 0)==NO)
       return -1;
@@ -212,7 +213,7 @@ static int near IsHeaderOkay(XMSG *msg, PMAH pmah)
 
       if (!fexist(p))
       {
-        Printf(a_noex, p);
+        LangPrintf(a_noex, p);
         Press_ENTER();
       }
     }

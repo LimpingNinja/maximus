@@ -29,10 +29,12 @@ static char rcs_id[]="$Id: max_init.c,v 1.7 2004/06/06 21:48:51 paltas Exp $";
 /*# tname=Initialization code
 */
 
-#define MAX_LANG_max_init
-#define MAX_LANG_max_chat
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_max_init
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

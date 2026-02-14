@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: disp_qu.c,v 1.3 2004/01/27 21:00:26 paltas Exp $";
 /*# name=.BBS-file display routines (Questionnaire commands)
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>

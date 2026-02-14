@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: max_fbbs.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=FILES.BBS-specific routine for displaying file entry
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -38,6 +41,7 @@ static char rcs_id[]="$Id: max_fbbs.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #include "ffind.h"
 #include "max_file.h"
 #include "display.h"
+#include "mci.h"
 
 
   /* Get file size from description */
@@ -443,7 +447,7 @@ sword ShowFileEntry(word *type,
     if (DispMoreYnBreak(nstop, NULL, *type))
       return DRET_BREAK;
 
-    Printf(file_ar_name, PFAS(pfah, name), PFAS(pfah, descript));
+    LangPrintf(file_ar_name, PFAS(pfah, name), PFAS(pfah, descript));
 
     Putc('\n');
 
@@ -512,8 +516,9 @@ sword ShowFileEntry(word *type,
   {
     if (isoffline)
     {
-      Printf(file_offline, file_offline_col,
-             ngcfg_get_int("general.session.date_style")==3 ? '\x07' : '\x09');
+      { char _cb[4]; snprintf(_cb, sizeof(_cb), "%02d",
+          ngcfg_get_int("general.session.date_style")==3 ? 7 : 9);
+        LangPrintf(file_offline, file_offline_col, _cb); }
     }
     else
     {
@@ -542,6 +547,8 @@ sword ShowFileEntry(word *type,
   /* Now go through the description, copying out each word for          *
    * wordwrapping.                                                      */
 
+  MciPushParseFlags(MCI_PARSE_ALL, 0);
+
   while (*desc)
   {
     dw=descwork;
@@ -566,7 +573,10 @@ sword ShowFileEntry(word *type,
       Putc('\n');
 
       if (DispMoreYnBreak(nstop, NULL, *type))
+      {
+        MciPopParseFlags();
         return DRET_BREAK;
+      }
 
       Printf(file_desc_col);
 
@@ -593,6 +603,8 @@ sword ShowFileEntry(word *type,
 
     Puts(dw);
   }
+
+  MciPopParseFlags();
 
   /* Done the description */
 

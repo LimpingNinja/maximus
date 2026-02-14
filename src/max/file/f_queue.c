@@ -26,6 +26,7 @@ static char rcs_id[]="$id";
 /*# name=File area routines: upload/download fileslist management
 */
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>

@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: m_save.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: Message saving routines
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -190,7 +193,7 @@ int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
   if (!orig_area || !*orig_area)
     tlen=0;
   else
-    total_len +=(tlen=sprintf(temp, replying_to_area, orig_area));
+    total_len +=(tlen=LangSprintf(temp, sizeof(temp), replying_to_area, orig_area));
 
   fResetFile = FALSE;
 
@@ -251,10 +254,11 @@ int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
   mh=NULL;
 
   save_to=msgnum ? msgnum : MsgHighMsg(sq);
-  if (orig_area && *orig_area)
-    Printf(savedmsg3, PMAS(pmah,name), UIDnum(save_to));
-  else
-    Printf(savedmsg2, UIDnum(save_to));
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)UIDnum(save_to));
+    if (orig_area && *orig_area)
+      LangPrintf(savedmsg3, PMAS(pmah,name), _ib);
+    else
+      LangPrintf(savedmsg2, _ib); }
 
   /* Place entries in log file, and "all that jazz" */
 

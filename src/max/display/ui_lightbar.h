@@ -29,6 +29,14 @@
 #define UI_JUSTIFY_CENTER  1
 #define UI_JUSTIFY_RIGHT   2
 
+/** @name ui_select_prompt flags
+ *  Packed into the `flags` parameter of ui_select_prompt().
+ * @{ */
+#define UI_SP_FLAG_STRIP_BRACKETS  0x0001  /**< Strip [X] markers, highlight char only */
+#define UI_SP_HOTKEY_ATTR_SHIFT    8       /**< bits 8-15: hotkey attribute byte */
+#define UI_SP_DEFAULT_SHIFT        16      /**< bits 16-23: 1-based default index (0 = first) */
+/** @} */
+
 typedef struct {
   const char **items;
   int count;
@@ -85,5 +93,39 @@ int ui_select_prompt(
     const char *separator,
     int *out_key
 );
+
+/**
+ * @brief Callback function to format a single list item
+ * @param ctx User context pointer
+ * @param index Zero-based index of the item to format
+ * @param out Buffer to write formatted string
+ * @param out_sz Size of output buffer
+ * @return 0 on success, non-zero on error
+ */
+typedef int (*ui_lightbar_list_get_item_fn)(void *ctx, int index, char *out, size_t out_sz);
+
+/**
+ * @brief Configuration for paged lightbar list display
+ */
+typedef struct {
+  int x;                    /* Starting column (1-based) */
+  int y;                    /* Starting row (1-based) */
+  int width;                /* Width of each row */
+  int height;               /* Number of visible rows */
+  int count;                /* Total number of items in list */
+  int initial_index;        /* Starting selected index (0-based) */
+  byte normal_attr;         /* Attribute for normal rows */
+  byte selected_attr;       /* Attribute for selected row */
+  int wrap;                 /* Enable wrapping at edges (0=no wrap) */
+  ui_lightbar_list_get_item_fn get_item; /* Callback to format items */
+  void *ctx;                /* User context passed to get_item */
+} ui_lightbar_list_t;
+
+/**
+ * @brief Run a paged lightbar list with keyboard navigation
+ * @param list Configuration and callbacks
+ * @return Selected index (0-based), or -1 if cancelled (ESC)
+ */
+int ui_lightbar_list_run(ui_lightbar_list_t *list);
 
 #endif /* __UI_LIGHTBAR_H_DEFINED */

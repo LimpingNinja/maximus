@@ -98,6 +98,7 @@ extrn struct m_pointers prm;      /* Everything in the .CTL/PRM file        */
 extrn struct _arcinfo *ari;       /* Archiving programs                     */
 extrn struct _usr usr;            /* Current user!                          */
 extrn struct _usr origusr;        /* User record, as read when we started   */
+extrn long g_user_record_id IS(-1); /* DB record id of current user (-1=none) */
 extrn struct _bbs_stats bstats;   /* BBS statistics file                    */
 extrn union stamp_combo new_date; /* Date for F*, L* new files listing      */
 extrn union stamp_combo date_newfile; /* User's original new-files-date value*/

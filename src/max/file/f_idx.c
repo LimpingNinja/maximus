@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_idx.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=Routines for accessing the compiled file database
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>

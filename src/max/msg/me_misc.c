@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: me_misc.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message section: message entry routines (miscellaneous)
 */
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -136,9 +138,13 @@ static int near Handle_Matrix_Charges(NETADDR *dest,int total)
     if (total)
     {
       Puts(ms_1);
-      Printf(ms_2, usr.credit);
-      Printf(ms_3, usr.debit);
-      Printf(ms_4, cost);
+      { char _cr[16], _db[16], _co[16];
+        snprintf(_cr, sizeof(_cr), "%ld", (long)usr.credit);
+        snprintf(_db, sizeof(_db), "%ld", (long)usr.debit);
+        snprintf(_co, sizeof(_co), "%ld", (long)cost);
+        LangPrintf(ms_2, _cr);
+        LangPrintf(ms_3, _db);
+        LangPrintf(ms_4, _co); }
     }
 
     usr.debit += cost;
@@ -151,7 +157,8 @@ static int near Handle_Matrix_Charges(NETADDR *dest,int total)
 
     if (total)
     {
-      Printf(ms_5, usr.credit-usr.debit);
+      { char _bal[16]; snprintf(_bal, sizeof(_bal), "%ld", (long)(usr.credit-usr.debit));
+        LangPrintf(ms_5, _bal); }
 
       logit(log_charge, cost);
 

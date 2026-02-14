@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: m_intrin.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: Intrinsic functions
 */
 
-#define MAX_LANG_max_bor
-
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -64,6 +64,7 @@ int Exec_Msg(int type, char **result, int key, char *arg, char *menuname)
     case read_original:       Msg_Read_Original();            break;
     case read_reply:          Msg_Read_Reply();               break;
     case msg_kill:            Msg_Kill(-1L);                  break;
+    case msg_listtest:        Msg_ListTest();                break;
     case forward:             Msg_Forward(NULL);              break;
     case enter_message:       Msg_Enter();                    break;
     case msg_reply:           Msg_Reply();                    break;
@@ -288,7 +289,8 @@ void AreaError(int err)
     case MERR_BADA:
     case MERR_EOPEN:  Puts(merr_corrupt); break;
     default:
-    case MERR_NONE:   Printf(merr_unknown, err);  break;
+    case MERR_NONE:   { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", err);
+                        LangPrintf(merr_unknown, _ib); } break;
   }
 
   Putc('\n');

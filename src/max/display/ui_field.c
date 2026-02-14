@@ -22,6 +22,7 @@
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,7 @@
 #include "mm.h"
 #include "protod.h"
 #include "ui_field.h"
+#include "mci.h"
 
 int ui_field_can_fit_at(int col, int width)
 {
@@ -184,7 +186,27 @@ int ui_read_key(void)
   {
     while (!Mdm_keyp())
       Giveaway_Slice();
-    return Mdm_getcw();
+    {
+      const int sc = Mdm_getcw();
+
+      /* Translate classic DOS scan codes into our internal K_* values.
+       * This allows both doorway-style scan codes and terminal escape
+       * sequences to work across platforms.
+       */
+      switch (sc)
+      {
+        case 71: return K_HOME;
+        case 72: return K_UP;
+        case 73: return K_PGUP;
+        case 75: return K_LEFT;
+        case 77: return K_RIGHT;
+        case 79: return K_END;
+        case 80: return K_DOWN;
+        case 81: return K_PGDN;
+        case 83: return UI_KEY_DELETE;
+        default: return sc;
+      }
+    }
   }
 
   if (ch == K_ESC)
@@ -192,7 +214,7 @@ int ui_read_key(void)
     /* ESC alone should be returned as ESC. If additional bytes are ready,
      * treat as a terminal escape sequence.
      */
-    if (!Mdm_keyp())
+    if (Mdm_kpeek_tic(2) == -1)
       return K_ESC;
 
     ch = Mdm_getcw();
@@ -209,15 +231,66 @@ int ui_read_key(void)
         case 'B': return K_DOWN;
         case 'C': return K_RIGHT;
         case 'D': return K_LEFT;
+        case 'H': return K_HOME;
+        case 'F': return K_END;
       }
 
-      if (ch == '3')
+      if (ch >= '0' && ch <= '9')
       {
-        while (!Mdm_keyp())
-          Giveaway_Slice();
-        ch = Mdm_getcw();
+        int code = 0;
+
+        while (ch >= '0' && ch <= '9')
+        {
+          code = (code * 10) + (ch - '0');
+          while (!Mdm_keyp())
+            Giveaway_Slice();
+          ch = Mdm_getcw();
+        }
+
+        /* Some terminals add modifier parameters, like ESC [ 6 ; 2 ~.
+         * Ignore any parameters and use the base code.
+         */
+        while (ch == ';')
+        {
+          while (!Mdm_keyp())
+            Giveaway_Slice();
+          ch = Mdm_getcw();
+          while (ch >= '0' && ch <= '9')
+          {
+            while (!Mdm_keyp())
+              Giveaway_Slice();
+            ch = Mdm_getcw();
+          }
+        }
+
         if (ch == '~')
-          return UI_KEY_DELETE;
+        {
+          switch (code)
+          {
+            case 1:
+            case 7:
+              return K_HOME;
+
+            case 4:
+            case 8:
+              return K_END;
+
+            case 5:
+              return K_PGUP;
+
+            case 6:
+              return K_PGDN;
+
+            case 3:
+              return UI_KEY_DELETE;
+          }
+        }
+
+        if (ch == 'H')
+          return K_HOME;
+
+        if (ch == 'F')
+          return K_END;
       }
     }
   }
@@ -278,6 +351,8 @@ int ui_edit_field(
 
   if (!ui_field_can_fit_at(col, width))
     return UI_EDIT_NOROOM;
+  
+  MciPushParseFlags(MCI_PARSE_ALL, 0);
   
   /* Extract style fields */
   normal_attr = style->normal_attr;
@@ -729,6 +804,7 @@ int ui_edit_field(
   /* Ensure null termination */
   buf[len] = '\0';
   
+  MciPopParseFlags();
   return result;
 }
 

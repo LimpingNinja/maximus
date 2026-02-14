@@ -71,6 +71,9 @@ void ui_set_attr(int: attr);
 void ui_fill_rect(int: row, int: col, int: width, int: height, char: ch, int: attr);
 void ui_write_padded(int: row, int: col, int: width, string: s, int: attr);
 
+// Read a decoded key code (matches Maximus C keys.h / ui_field.h conventions)
+int ui_read_key();
+
 // Style struct for ui_edit_field
 struct ui_edit_field_style
 {
@@ -146,6 +149,7 @@ struct ui_select_prompt_style
   int: show_brackets;     // UI_BRACKET_NONE, UI_BRACKET_SQUARE, UI_BRACKET_ROUNDED, or UI_BRACKET_CURLY
   int: margin;            // Extra spaces appended after each option
   string: separator;      // Printed between options (default "")
+  int: default_index;     // 1-based default selection (0 = first option pre-selected)
   int: out_hotkey;        // Output: selected hotkey character (0 if cancelled)
 };
 
@@ -207,5 +211,52 @@ void ui_form_style_default(ref struct ui_form_style: s);
 
 // Run form (returns 1=saved, 0=cancelled, -1=error)
 int ui_form_run(ref array [1..] of struct ui_form_field: fields, int: count, ref struct ui_form_style: style);
+
+// ============================================================================
+// Scrolling / Viewer
+// ============================================================================
+
+// Append flags
+#define UI_SCROLL_APPEND_DEFAULT    0x0000
+#define UI_SCROLL_APPEND_FOLLOW     0x0001
+#define UI_SCROLL_APPEND_NOFOLLOW   0x0002
+
+// ScrollingRegion flags
+#define UI_SCROLL_REGION_SHOW_SCROLLBAR  0x0001
+#define UI_SCROLL_REGION_AUTO_FOLLOW     0x0002
+
+// TextViewer flags
+#define UI_TBV_SHOW_STATUS          0x0001
+#define UI_TBV_SHOW_SCROLLBAR       0x0002
+
+struct ui_scroll_region_style
+{
+  int: attr;
+  int: scrollbar_attr;
+  int: flags;
+};
+
+struct ui_text_viewer_style
+{
+  int: attr;
+  int: status_attr;
+  int: scrollbar_attr;
+  int: flags;
+};
+
+void ui_scroll_region_style_default(ref struct ui_scroll_region_style: s);
+int ui_scroll_region_create(string: key, int: x, int: y, int: width, int: height, int: max_lines, ref struct ui_scroll_region_style: style);
+int ui_scroll_region_destroy(string: key);
+int ui_scroll_region_append(string: key, string: text, int: flags);
+int ui_scroll_region_render(string: key);
+int ui_scroll_region_handle_key(string: key, int: keycode);
+
+void ui_text_viewer_style_default(ref struct ui_text_viewer_style: s);
+int ui_text_viewer_create(string: key, int: x, int: y, int: width, int: height, ref struct ui_text_viewer_style: style);
+int ui_text_viewer_destroy(string: key);
+int ui_text_viewer_set_text(string: key, string: text);
+int ui_text_viewer_render(string: key);
+int ui_text_viewer_handle_key(string: key, int: keycode);
+int ui_text_viewer_read_key(string: key);
 
 #endif // __MAXUI_MH_DEFINED

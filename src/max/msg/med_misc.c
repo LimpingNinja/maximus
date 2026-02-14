@@ -28,6 +28,9 @@ static char rcs_id[]="$Id: med_misc.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_bor
 #include "maxed.h"
 #include <stddef.h>
 
@@ -153,7 +156,7 @@ void MagnEt_Bad_Keystroke(void)
 {
   Goto(usrlen,1);
 
-  Printf(max_no_understand,ck_for_help);
+  LangPrintf(max_no_understand,ck_for_help);
 
   Goto(cursor_x,cursor_y);
   vbuf_flush();

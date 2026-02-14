@@ -26,10 +26,11 @@ static char rcs_id[]="$Id: mb_qwk.c,v 1.13 2004/01/28 06:38:10 paltas Exp $";
 /*# name=QWK creation code for the BROWSE command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-#define MAX_LANG_f_area
 #define MAX_LANG_max_chat
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -662,7 +663,8 @@ int QWK_Status(BROWSE *b, char *aname, int colour)
   if (!b->fSilent)
   {
     Rev_Up();
-    Printf(srchng, (colour % 7)+9, aname);
+    { char _col[8]; snprintf(_col, sizeof(_col), "|%02d", colour & 0x0F);
+      LangPrintf(srchng, _col, aname); }
     vbuf_flush();
   }
 
@@ -1220,8 +1222,12 @@ int QWK_After(BROWSE *b)
     {
       Rev_Up();
 
-      Printf(qwk_pack_fmt, MAS(mah, name), MAS(mah, descript),
-             num_msg, area_toyou, area_packed);
+      { char _i1[16], _i2[16], _i3[16];
+        snprintf(_i1, sizeof(_i1), "%lu", (unsigned long)num_msg);
+        snprintf(_i2, sizeof(_i2), "%lu", (unsigned long)area_toyou);
+        snprintf(_i3, sizeof(_i3), "%lu", (unsigned long)area_packed);
+        LangPrintf(qwk_pack_fmt, MAS(mah, name), MAS(mah, descript),
+                   _i1, _i2, _i3); }
     }
 
     total_msgs += num_msg;
@@ -1250,12 +1256,17 @@ int QWK_End(BROWSE *b)
   FinishControlDAT();
 
   if (!b->fSilent)
-    Printf(qwk_pack_end, total_msgs, total_toyou, total_packed);
+    { char _i1[16], _i2[16], _i3[16];
+      snprintf(_i1, sizeof(_i1), "%lu", (unsigned long)total_msgs);
+      snprintf(_i2, sizeof(_i2), "%lu", (unsigned long)total_toyou);
+      snprintf(_i3, sizeof(_i3), "%lu", (unsigned long)total_packed);
+      LangPrintf(qwk_pack_end, _i1, _i2, _i3); }
   
   {
     int max_pack = ngcfg_get_int("general.reader.max_pack");
     if (total_packed >= (dword)max_pack && max_pack)
-      Printf(qwk_too_many, (long)max_pack);
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)max_pack);
+        LangPrintf(qwk_too_many, _ib); }
   }
   
   /* If we got something, write the conference list and pack the mail. */
@@ -1406,7 +1417,7 @@ static int near QWK_Compress_Mail(BROWSE *b)
     /* Add MaxPipe to the call */
 
 #ifndef UNIX
-    sprintf(tmp, maxpipe_cmd, cmd);
+    LangSprintf(tmp, sizeof(tmp), maxpipe_cmd, cmd);
     strcpy(cmd, tmp);
 #endif
 

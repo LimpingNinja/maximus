@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: max_in.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -38,6 +40,7 @@ static char rcs_id[]="$Id: max_in.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #include "prog.h"
 #include "keys.h"
 #include "mm.h"
+#include "ui_lightbar.h"
 
 /* Max recursion level support for GetListAnswer() */
 
@@ -267,7 +270,12 @@ static int near Inputv(char *dest,int type,int ch,int max,char *prompt, va_list 
   int ret=0;
   char *s;
 
-  if (prompt && strchr(prompt,'%'))
+  if (prompt && strstr(prompt, "|!"))
+  {
+    LangVsprintf(szInputString, MAX_PRINTF, prompt, arg);
+    prompt=szInputString;
+  }
+  else if (prompt && strchr(prompt,'%'))
   {
     vsprintf(szInputString, prompt, arg);
     prompt=szInputString;
@@ -362,7 +370,12 @@ static int near Input_Charv(int type, char *extra, va_list arg)
   char *of;
   unsigned ret=0;
 
-  if (extra)
+  if (extra && strstr(extra, "|!"))
+  {
+    LangVsprintf(szCharString, MAX_PRINTF, extra, arg);
+    extra=szCharString;
+  }
+  else if (extra)
   {
     vsprintf(szCharString, extra, arg);
     extra=szCharString;
@@ -527,7 +540,8 @@ static int near Input_Charv(int type, char *extra, va_list arg)
     else
     {
       if ((byte)linebuf[0] >= (byte)32)
-        Printf(no_undrstnd, linebuf[0]);
+        { char _cb[2] = { linebuf[0], '\0' };
+          LangPrintf(no_undrstnd, _cb); }
 
       Puts(tryagain);
       vbuf_flush();
@@ -608,7 +622,14 @@ int cdecl GetListAnswer(char *list, char *help_file, char *invalid_response,
     *scratch='\0';
   else
   {
-    if (strchr(o_prompt,'%')==NULL)
+    if (strstr(o_prompt, "|!"))
+    {
+      va_list arg;
+      va_start(arg, o_prompt);
+      LangVsprintf(scratch, MAX_PRINTF, o_prompt, arg);
+      va_end(arg);
+    }
+    else if (strchr(o_prompt,'%')==NULL)
       strcpy(scratch,o_prompt);     /* The easy way */
     else
     {
@@ -619,6 +640,131 @@ int cdecl GetListAnswer(char *list, char *help_file, char *invalid_response,
       va_end(arg);
     }
   }
+
+  /* Lightbar path: on graphical terminals with no stacked input, present
+   * the list as an inline lightbar via ui_select_prompt. Handles both
+   * rich format ([Y]es,[n]o) and compact format (Yn). Falls through to
+   * legacy Input_Char loop for TTY users or when linebuf has input. */
+
+  if (list && *list && usr.video != GRAPH_TTY && !*linebuf)
+  {
+    const char *opts[16];
+    int opt_count = 0;
+    int default_idx = 0;
+    char list_copy[512];
+    char compact_opts[16][4]; /* for compact format: "[X]\0" per char */
+    int flags, out_key = 0, result;
+
+    if (strchr(list, '['))
+    {
+      /* Rich format: comma-separated options with [X] markers */
+      strncpy(list_copy, list, sizeof(list_copy) - 1);
+      list_copy[sizeof(list_copy) - 1] = '\0';
+
+      char *saveptr = NULL;
+      for (char *tok = strtok_r(list_copy, ",", &saveptr);
+           tok && opt_count < 16;
+           tok = strtok_r(NULL, ",", &saveptr))
+      {
+        while (*tok == ' ') tok++;
+        opts[opt_count] = tok;
+
+        char *br = strchr(tok, '[');
+        if (br && br[1] && br[2] == ']' && isupper((unsigned char)br[1]))
+          default_idx = opt_count;
+
+        opt_count++;
+      }
+    }
+    else
+    {
+      /* Compact format: each printable non-pipe char becomes [X] */
+      for (const char *lp = list; *lp && opt_count < 16; lp++)
+      {
+        if ((*lp > ' ' || *lp < 0) && *lp != '|')
+        {
+          compact_opts[opt_count][0] = '[';
+          compact_opts[opt_count][1] = *lp;
+          compact_opts[opt_count][2] = ']';
+          compact_opts[opt_count][3] = '\0';
+          opts[opt_count] = compact_opts[opt_count];
+
+          if (isupper((unsigned char)*lp))
+            default_idx = opt_count;
+
+          opt_count++;
+        }
+      }
+    }
+
+    if (opt_count > 0)
+    {
+      flags = UI_SP_FLAG_STRIP_BRACKETS;
+      flags |= ((default_idx + 1) << UI_SP_DEFAULT_SHIFT);
+
+lb_retry:
+      Puts(scratch);
+
+      result = ui_select_prompt(
+        "",
+        opts,
+        opt_count,
+        0x07, /* prompt_attr — already displayed */
+        0x03, /* normal_attr — cyan */
+        0x1e, /* selected_attr — yellow on blue */
+        flags,
+        1,    /* margin */
+        " ",  /* separator */
+        &out_key
+      );
+
+      Putc('\n');
+
+      /* Handle help: if last option is the help key and help_file exists */
+      if (result >= 0 && out_key && help_file && *help_file &&
+          result == opt_count - 1)
+      {
+        Display_File(0, NULL, help_file);
+        if (!rtnhelp)
+          goto lb_retry;
+      }
+
+      retval = (result >= 0 && out_key) ? (byte)toupper(out_key) : 0;
+
+      /* ESC with no selection: return the default */
+      if (result < 0)
+      {
+        const char *br = strchr(opts[default_idx], '[');
+        retval = (br && br[1] && br[2] == ']')
+                   ? (byte)toupper(br[1])
+                   : (byte)toupper(list[0]);
+      }
+
+      if (lvl > 0) { free(aszListString[lvl]); aszListString[lvl] = NULL; }
+      --lvl;
+      return retval;
+    }
+  }
+
+  /* Rich format fallback: if the list has [X] brackets but the lightbar
+   * path didn't fire, extract hotkey characters into a compact string
+   * so the legacy options-appending and Input_Char matching code works. */
+  {
+    char compact[32];
+    if (list && strchr(list, '['))
+    {
+      int ci = 0;
+      for (const char *lp = list; *lp && ci < (int)sizeof(compact) - 1; lp++)
+      {
+        if (lp[0] == '[' && lp[1] && lp[2] == ']')
+        {
+          compact[ci++] = lp[1];
+          lp += 2; /* skip past ] */
+        }
+      }
+      compact[ci] = '\0';
+      list = compact;
+    }
 
   /* These are (almost) always used */
 
@@ -737,6 +883,7 @@ int cdecl GetListAnswer(char *list, char *help_file, char *invalid_response,
 
   --lvl;
   return retval;
+  } /* end compact[] scope */
 }
 
 

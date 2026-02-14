@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: med_quot.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=MaxEd editor: Routines for quoting and copying
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_bor
 #include "maxed.h"
 #include "m_reply.h"
 
@@ -196,9 +199,10 @@ static int near Quote_Read(void)
 
       len=usrlen+1+lines_displayed;
       
-      if (QuoteThisLine(s2))
-        Printf(quote_format, len, msg_quote_col, initials, s2);
-      else Printf(norm_format, len, msg_quote_col, s2);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", len);
+        if (QuoteThisLine(s2))
+          LangPrintf(quote_format, _ib, msg_quote_col, initials, s2);
+        else LangPrintf(norm_format, _ib, msg_quote_col, s2); }
 
       if (temp > lines_displayed)
         strcpy(quotebuf+(lines_displayed*MAX_LINELEN),s2);
@@ -208,8 +212,8 @@ static int near Quote_Read(void)
       if (linetype[temp] & MSGLINE_END)
       {
         while (lines_displayed < QUOTELINES)
-          Printf(norm_format, usrlen+1+lines_displayed++, msg_quote_col,
-                 blank_str);
+        { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", usrlen+1+lines_displayed++);
+          LangPrintf(norm_format, _ib, msg_quote_col, blank_str); }
 
         /* Break out of loop */
 

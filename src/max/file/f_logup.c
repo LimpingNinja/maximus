@@ -28,6 +28,10 @@ static char rcs_id[]="$Id: f_logup.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -148,7 +152,7 @@ void Get_File_Description(char *filename, long fsize, char *dsc)
   stim=localtime(&curt);
 
   if (!(dsc && *dsc) && (local || carrier()))
-    Printf(desc_many, upper_fn(filename));
+    LangPrintf(desc_many, upper_fn(filename));
 
   /* Display a maximum-length bar */
 
@@ -214,23 +218,27 @@ void Get_File_Description(char *filename, long fsize, char *dsc)
           break;
 
         case 0: /* MM-DD-YY */
-          sprintf(&temp[strlen(temp)], date_str,
-                  stim->tm_mon+1, stim->tm_mday, (stim->tm_year % 100));
+          { char _a[8],_b[8],_c[8]; size_t _o=strlen(temp);
+            snprintf(_a,sizeof(_a),"%d",stim->tm_mon+1); snprintf(_b,sizeof(_b),"%d",stim->tm_mday); snprintf(_c,sizeof(_c),"%d",(stim->tm_year%100));
+            LangSprintf(temp+_o, sizeof(temp)-_o, date_str, _a, _b, _c); }
           break;
 
         case 1: /* DD-MM-YY */
-          sprintf(&temp[strlen(temp)], date_str,
-                  stim->tm_mday, stim->tm_mon+1, (stim->tm_year % 100));
+          { char _a[8],_b[8],_c[8]; size_t _o=strlen(temp);
+            snprintf(_a,sizeof(_a),"%d",stim->tm_mday); snprintf(_b,sizeof(_b),"%d",stim->tm_mon+1); snprintf(_c,sizeof(_c),"%d",(stim->tm_year%100));
+            LangSprintf(temp+_o, sizeof(temp)-_o, date_str, _a, _b, _c); }
           break;
 
         case 2: /* YY-MM-DD */
-          sprintf(&temp[strlen(temp)], date_str,
-                  (stim->tm_year % 100), stim->tm_mon+1, stim->tm_mday);
+          { char _a[8],_b[8],_c[8]; size_t _o=strlen(temp);
+            snprintf(_a,sizeof(_a),"%d",(stim->tm_year%100)); snprintf(_b,sizeof(_b),"%d",stim->tm_mon+1); snprintf(_c,sizeof(_c),"%d",stim->tm_mday);
+            LangSprintf(temp+_o, sizeof(temp)-_o, date_str, _a, _b, _c); }
           break;
 
         case 3: /* YYMMDD */
-          sprintf(&temp[strlen(temp)], datestr,
-                  (stim->tm_year % 100), stim->tm_mon+1, stim->tm_mday);
+          { char _a[8],_b[8],_c[8]; size_t _o=strlen(temp);
+            snprintf(_a,sizeof(_a),"%d",(stim->tm_year%100)); snprintf(_b,sizeof(_b),"%d",stim->tm_mon+1); snprintf(_c,sizeof(_c),"%d",stim->tm_mday);
+            LangSprintf(temp+_o, sizeof(temp)-_o, datestr, _a, _b, _c); }
           break;
       }
 
@@ -341,7 +349,7 @@ word LookForVirus(char *path, char *name)
 
   /* Tell the user what we're doing */
   
-  Printf(checking_ul, name);
+  LangPrintf(checking_ul, name);
 
   
   /* Run the command */

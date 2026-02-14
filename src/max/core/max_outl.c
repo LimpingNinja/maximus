@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: max_outl.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Local output and AVATAR translation routines
 */
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -33,9 +34,39 @@ static char rcs_id[]="$Id: max_outl.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 #include <stdarg.h>
 #include "prog.h"
 #include "mm.h"
+#include "mci.h"
 
 extern int last_cc;
 extern char strng[];
+
+static byte g_lcl_pipe_state=0;
+static byte g_lcl_pipe_d1=0;
+static byte g_lcl_pipe_inhibit=0;
+
+void Lputc(int ch);
+
+void LPipeFlush(void)
+{
+  if (g_lcl_pipe_state==0)
+    return;
+
+  if (g_lcl_pipe_state==1)
+  {
+    g_lcl_pipe_state=0;
+    g_lcl_pipe_inhibit=1;
+    Lputc('|');
+    return;
+  }
+
+  if (g_lcl_pipe_state==2)
+  {
+    g_lcl_pipe_state=0;
+    g_lcl_pipe_inhibit=1;
+    Lputc('|');
+    Lputc(g_lcl_pipe_d1);
+    return;
+  }
+}
 
 #ifdef MCP_VIDEO
   #define INCL_DOS
@@ -109,7 +140,6 @@ void Lputc(int ch)
   static char str2[25];
   static char state=-1;
   static char newattr;
-
   static word s2, s3;
 
   static byte uch;
@@ -120,6 +150,78 @@ void Lputc(int ch)
 
   if (state==-1)
   {
+    /* Pipe color parsing: Renegade/Mystic-style |## with || escape */
+    if (g_lcl_pipe_inhibit)
+      g_lcl_pipe_inhibit=0;
+    else if (g_lcl_pipe_state==0)
+    {
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch=='|')
+      {
+        g_lcl_pipe_state=1;
+        return;
+      }
+    }
+    else if (g_lcl_pipe_state==1)
+    {
+      g_lcl_pipe_state=0;
+
+      if (ch=='|')
+      {
+        g_lcl_pipe_inhibit=1;
+        Lputc('|');
+        return;
+      }
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= '0' && ch <= '9')
+      {
+        g_lcl_pipe_d1=(byte)ch;
+        g_lcl_pipe_state=2;
+        return;
+      }
+
+      g_lcl_pipe_inhibit=1;
+      Lputc('|');
+      Lputc(ch);
+      return;
+    }
+    else if (g_lcl_pipe_state==2)
+    {
+      g_lcl_pipe_state=0;
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= '0' && ch <= '9')
+      {
+        int code=((int)(g_lcl_pipe_d1 - '0') * 10) + (int)(ch - '0');
+
+        if (code >= 0 && code <= 31)
+        {
+          byte attr=(byte)curattr;
+
+          if (code <= 15)
+            attr=(byte)((attr & 0xf0u) | (byte)code);
+          else if (code <= 23)
+            attr=(byte)((attr & 0x0fu) | (byte)((code - 16) << 4) | (attr & 0x80u));
+          else
+            attr=(byte)((attr & 0x0fu) | (byte)((code - 24) << 4) | 0x80u);
+
+          Lputc(22);
+          Lputc(1);
+          Lputc(attr);
+          return;
+        }
+      }
+
+      g_lcl_pipe_inhibit=1;
+      Lputc('|');
+      Lputc(g_lcl_pipe_d1);
+      Lputc(ch);
+      return;
+    }
 
     /* Sift out RIP sequences */
 

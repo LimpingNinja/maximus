@@ -174,6 +174,9 @@ void Validate_Runtime_Settings(void);
 int Bad_Word_Check(char *username);
 void Get_Pwd(void);
 int _stdc Printf(char *format,...);
+int _stdc LangPrintf(char *format,...);
+int LangSprintf(char *buf, size_t bufsz, const char *format, ...);
+int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap);
 int _stdc Lprintf(char *format,...);
 int _stdc Mdm_printf(char *format,...);
 void Putc(int ch);
@@ -300,11 +303,17 @@ void Fix_RLE(char *s);
 sword IsBatch(sword protocol);
 int IsInFilesBbs(PFAH pfah, char *filename, word *flag, char *path);
 void Msg_Tag(void);
+void Msg_ListTest(void);
 void Wait_For_Caller(void);
 char *s_ret(word strn);
 char *s_reth(char *hname, word strn);
 void Initialize_Languages(void);
 void Set_Lang_Alternate(int usealt);
+
+/* TOML language handle (set by Initialize_Languages if .toml exists) */
+typedef struct MaxLang MaxLang;
+extern MaxLang *g_current_lang;
+const char *maxlang_get(MaxLang *lang, const char *key);
 void WFC_Idle(void);
 void WFC_LogMsg(char *s);
 int Get_Language(void);
@@ -523,6 +532,9 @@ void maximus_exit(int status);
 int mdm_nowonline(void);
 int xxspawnvp(int mode, const char *Cfile, char *const argv[], int is_door32);
 void beep(void);
+
+/* Path helpers */
+int safe_path_join(const char *base, const char *component, char *out, size_t out_sz);
 
 /* ngcfg configuration access functions */
 typedef struct MaxCfg MaxCfg;  /* Forward declaration */

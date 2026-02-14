@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: m_inq.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: I)nquire command
 */
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -91,7 +92,7 @@ void Msg_Inquire(char *menuname)
   display_line=display_col=1;
   nonstop=FALSE;
 
-  Printf(inq_search,temp);
+  LangPrintf(inq_search,temp);
 
   for (msgn=1L,found=FALSE;
        msgn < MsgHighMsg(sq) && (msgh=MsgOpenMsg(sq,MOPEN_READ,msgn)) != NULL;
@@ -200,7 +201,7 @@ void Msg_Inquire(char *menuname)
       free(rexp.table[x]);
 
   if (!found)
-    Printf(inq_nf,expr);
+    LangPrintf(inq_nf,expr);
 
   Clear_KBuffer();
 #endif

@@ -27,8 +27,8 @@ static char rcs_id[]="$Id: uedit.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 */
 
 #define INIT_UED
+#define MAX_LANG_m_area
 #define MAX_LANG_max_ued
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

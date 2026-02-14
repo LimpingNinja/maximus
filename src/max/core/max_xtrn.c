@@ -22,9 +22,12 @@
 static char rcs_id[]="$Id: max_xtrn.c,v 1.11 2004/01/28 06:38:10 paltas Exp $";
 #pragma on(unreferenced)
 #endif
-#define MAX_LANG_max_chat
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -287,7 +290,7 @@ int Outside(char *leaving,char *returning,int method,char *parm,
       logit(log_bad_erl);
     else
     {
-      sprintf(temp, erl_xx, parm);
+      LangSprintf(temp, sizeof(temp), erl_xx, parm);
 
       if (!in_wfc)
         logit(external_prog, temp);

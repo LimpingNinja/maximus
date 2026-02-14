@@ -23,14 +23,14 @@ static char rcs_id[]="$Id: language.c,v 1.5 2004/01/27 21:00:30 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
-#define MAX_LANG_max_chat
-#define MAX_LANG_max_chng
-#define MAX_LANG_end
-
 #ifdef INTERNAL_LANGUAGES
 
   #define INITIALIZE_LANGUAGE
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_max_chng
   #include "prog.h"
   #include "mm.h"
 
@@ -38,7 +38,10 @@ static char rcs_id[]="$Id: language.c,v 1.5 2004/01/27 21:00:30 paltas Exp $";
 
 #else /* external languages */
 
-
+#define MAX_LANG_global
+#define MAX_LANG_max_chat
+#define MAX_LANG_max_chng
+#define MAX_LANG_end
 #include <io.h>
 #include <fcntl.h>
 #include <string.h>
@@ -50,6 +53,7 @@ static char rcs_id[]="$Id: language.c,v 1.5 2004/01/27 21:00:30 paltas Exp $";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "libmaxcfg.h"
+#include "maxlang.h"
 #include "alc.h"
 #include "prog.h"
 #include "mm.h"
@@ -62,6 +66,30 @@ static char psps_ltf[]="%s%s.ltf";
 static char dotltf[]=".ltf";
 #endif
 static int using_alternate=0;
+
+/** @brief Dedup bitset for TOML fallback logging (one bit per string ID). */
+#define LANG_FALLBACK_BITS 8192
+static unsigned char lang_fb_seen[LANG_FALLBACK_BITS / 8];
+
+/** @brief Log a TOML→.ltf fallback once per string ID per session. */
+static void lang_log_fallback(int id)
+{
+  if (id < 0 || id >= LANG_FALLBACK_BITS) return;
+  int byte_idx = id / 8;
+  int bit_mask = 1 << (id % 8);
+  if (lang_fb_seen[byte_idx] & bit_mask) return;
+  lang_fb_seen[byte_idx] |= bit_mask;
+  logit("!Lang fallback to .ltf for string 0x%04x", id);
+}
+
+/**
+ * @brief Global TOML-based language handle.
+ *
+ * When non-NULL, s_ret() and s_reth() delegate string retrieval here
+ * instead of reading from the binary .ltf file.  Initialized in
+ * Initialize_Languages() if the corresponding .toml file exists.
+ */
+MaxLang *g_current_lang = NULL;
 
 static void near ngcfg_lang_compute_sizes(word *out_max_lang,
                                          word *out_max_ptrs,
@@ -208,6 +236,10 @@ static void near UpdateStaticStrings(void)
 void Set_Lang_Alternate(int usealt)
 {
   using_alternate=(usealt && !local) ? TRUE : FALSE;
+
+  /* Mirror RIP alternate state into the TOML language handle */
+  if (g_current_lang)
+    maxlang_set_use_rip(g_current_lang, using_alternate ? true : false);
 }
 
 
@@ -471,6 +503,25 @@ void Initialize_Languages(void)
   /* We only need to read the sysop stuff once, so close this file.         */
 
   close(sysfile);
+
+  /* Try to open the TOML language file for the new maxlang API.
+   * If it exists, s_ret()/s_reth() will prefer TOML strings. */
+  if (g_current_lang)
+  {
+    maxlang_close(g_current_lang);
+    g_current_lang = NULL;
+  }
+  {
+    char rel[PATHLEN], full[PATHLEN];
+    snprintf(rel, sizeof(rel), "etc/lang/%s.toml", user_lang);
+    safe_path_join(ngcfg_get_string_raw("maximus.sys_path"), rel,
+                   full, sizeof(full));
+    MaxCfgStatus mlst = maxlang_open(full, &g_current_lang);
+    if (mlst == MAXCFG_OK)
+      logit(">TOML language loaded: %s", full);
+    else
+      logit("!TOML language load FAILED: path='%s' status=%d", full, (int)mlst);
+  }
 }
 
 /* Return a pointer to the specified string based on the string# only       */
@@ -521,6 +572,25 @@ static char *heapnm(struct _lang *l, struct _heapdata *h)
 
 char *s_reth(char *hname, word strn)
 {
+  /* TOML path: compute global string ID from heap metadata + relative strn,
+   * then delegate to maxlang_get_by_id(). */
+  if (g_current_lang)
+  {
+    for (word h = 0; h < ush.inf.n_heap; h++)
+    {
+      if (eqstri(heapnm(&ush, &ush.hdat[h]), hname))
+      {
+        int global_id = (int)(ush.hdat[h].start_num + strn);
+        const char *ts = maxlang_get_by_id(g_current_lang, global_id);
+        if (ts && *ts)
+          return (char *)ts;
+        lang_log_fallback(global_id);
+        break;
+      }
+    }
+  }
+
+  /* Legacy binary .ltf path */
   word heap;
 
   if (ush.ch && eqstri(heapnm(&ush,ush.ch),hname))
@@ -537,19 +607,12 @@ char *s_reth(char *hname, word strn)
   }
   else
   {
-    /* It wasn't in any of the above, so it must have been in one of the    *
-     * non-current dynamic user heaps which are still on disk...            */
-
     ush.ch=NULL;
-
-    /* Now find out which heap it's in... */
 
     for (heap=0; heap < ush.inf.n_heap; heap++)
     {
       if (eqstri(heapnm(&ush,&ush.hdat[heap]),hname))
       {
-        /* Ah-hah; got it!  Now fish out the heap file from disk */
-
         ush.ch=&ush.hdat[heap];
         ReadHeap(langfile, &ush);
 
@@ -570,10 +633,17 @@ char *s_reth(char *hname, word strn)
 
 char *s_ret(word strn)
 {
-  word heap;
+  /* TOML path: if a TOML language handle is loaded, prefer it */
+  if (g_current_lang)
+  {
+    const char *ts = maxlang_get_by_id(g_current_lang, (int)strn);
+    if (ts && *ts)
+      return (char *)ts;
+    lang_log_fallback((int)strn);
+  }
 
-  /* First check to see if it's in either the current dynamic user heap     *
-   * (ush), the static global heap (glh), or the static sysop heap (syh).   */
+  /* Legacy binary .ltf path */
+  word heap;
 
   if (ush.ch && InHeap(strn, ush.ch))
   {
@@ -589,19 +659,12 @@ char *s_ret(word strn)
   }
   else
   {
-    /* It wasn't in any of the above, so it must have been in one of the    *
-     * non-current dynamic user heaps which are still on disk...            */
-
     ush.ch=NULL;
-
-    /* Now find out which heap it's in... */
 
     for (heap=0; heap < ush.inf.n_heap; heap++)
     {
       if (InHeap(strn, &ush.hdat[heap]))
       {
-        /* Ah-hah; got it!  Now fish out the heap file from disk */
-
         ush.ch=&ush.hdat[heap];
         ReadHeap(langfile, &ush);
 
@@ -646,6 +709,24 @@ void Switch_To_Language(void)
   ReadHeap(langfile, &glh);
   
   UpdateStaticStrings();
+
+  /* Reload TOML language handle for the new language */
+  if (g_current_lang)
+  {
+    maxlang_close(g_current_lang);
+    g_current_lang = NULL;
+  }
+  {
+    char rel[PATHLEN], full[PATHLEN];
+    snprintf(rel, sizeof(rel), "etc/lang/%s.toml", user_lang);
+    safe_path_join(ngcfg_get_string_raw("maximus.sys_path"), rel,
+                   full, sizeof(full));
+    MaxCfgStatus mlst = maxlang_open(full, &g_current_lang);
+    if (mlst == MAXCFG_OK)
+      logit(">TOML language reloaded: %s", full);
+    else
+      logit("!TOML language reload FAILED: path='%s' status=%d", full, (int)mlst);
+  }
 }
 
 
@@ -679,7 +760,8 @@ int Get_Language(void)
             struct _gheapinf gh;
 
             if (read(fd, (char *)&gh, sizeof gh) == sizeof gh)
-              Printf(list_option, lng+1, gh.language);
+              { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", lng+1);
+                LangPrintf(list_option, _tb, gh.language); }
 
             close(fd);
           }

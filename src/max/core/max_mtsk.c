@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: max_mtsk.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Multitasker autodetect logic
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_init
-
 #include "mm.h"
 #include "cfg_consts.h"
 #include "mtask.h"

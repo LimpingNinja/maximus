@@ -18,6 +18,8 @@
  */
 
 #define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <io.h>
 #include <fcntl.h>
 #include <ctype.h>

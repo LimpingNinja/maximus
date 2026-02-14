@@ -73,7 +73,6 @@ max/max
 *.bts
 trk*
 docs/FDCOMM_ANALYSIS.md
-.gitignore
 docs/TELNET_DEPLOYMENT.md
 maxtel/maxtel
 src/utils/util/init_userdb
@@ -83,7 +82,6 @@ src/utils/util/scanbld
 src/utils/util/mr
 src/utils/util/maid
 src/apps/maxcfg/maxcfg
-.gitignore
 src/apps/maxtel/maxtel
 src/max/max
 src/utils/sqafix/sqafix
@@ -108,3 +106,4 @@ src/apps/mex/mex
 src/libs/btree/bttest
 src/libs/btree/trackimp
 src/libs/btree/trackexp
+.windsurf/

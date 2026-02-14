@@ -26,8 +26,10 @@ static char rcs_id[]="$Id: m_for.c,v 1.4 2004/01/27 21:00:31 paltas Exp $";
 /*# name=Message Section: F)orward command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_main
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdarg.h>
 #include <io.h>
@@ -69,7 +71,7 @@ static int near Read_Bomb_File(XMSG *msg)
 
     if ((bombfile=shfopen(temp, fopen_read, O_RDONLY))==NULL)
     {
-      Printf(iseenoxhere,temp);
+      LangPrintf(iseenoxhere,temp);
       return FALSE;
     }
   }
@@ -113,10 +115,10 @@ static int near Read_Bomb_File(XMSG *msg)
           case 'D':   msg->attr |= (MSGCRASH|MSGHOLD);  break;
           case 'H':   msg->attr |= MSGHOLD;             break;
           case 'N':                                     break;
-          default:    Printf(huh, word);                break;
+          default:    LangPrintf(huh, word);                break;
         }
       }
-      else Printf(huh, word);
+      else LangPrintf(huh, word);
 
       getword(temp, word, cmd_delim, ++wn);
     }
@@ -497,7 +499,7 @@ static void near Forward_One(struct _fwdp *f,struct _fwdp *fp)
   if (!f->bomb && !fp)
     Puts("\n\n");
 
-  Printf(fwd_to, f->tmsg.to, Address(&f->tmsg.dest), to_id);
+  LangPrintf(fwd_to, f->tmsg.to, Address(&f->tmsg.dest), to_id);
 
   vbuf_flush();
 }

@@ -26,9 +26,11 @@ static char rcs_id[]="$Id: max_chng.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Change Setup menu options
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_bor
 #define MAX_LANG_max_chng
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -160,7 +162,8 @@ static void near Chg_Password(void)
     {
       Clear_KBuffer();
       logit(log_inv_pwd);
-      Printf(wrong_pwd, tries);
+      { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", tries);
+        LangPrintf(wrong_pwd, _tb); }
       Putc('\n');
 
       if (tries==3)
@@ -266,7 +269,8 @@ static void near Chg_Width(void)
     else
     {
       if (! *linebuf)
-        Printf(draw_line, usr.width);
+        { char _tb[16]; snprintf(_tb, sizeof(_tb), "%02d", usr.width);
+          LangPrintf(draw_line, _tb); }
 
       if (GetYnAnswer(check_x, 0)==YES)
       {
@@ -354,7 +358,8 @@ static void near Chg_Graphics(void)
   }
   else
   {
-    Printf(col_too_slow, min_graphics);
+    { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", min_graphics);
+      LangPrintf(col_too_slow, _tb); }
     Press_ENTER();
   }
 }
@@ -584,7 +589,8 @@ byte Get_Archiver(void)
       Puts(select_def_archiver);
     
       for (cn=1, ar=ari; ar; ar=ar->next, cn++)
-        Printf(list_option, cn, ar->arcname);
+        { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", cn);
+          LangPrintf(list_option, _tb, ar->arcname); }
 
       WhiteN();
     }

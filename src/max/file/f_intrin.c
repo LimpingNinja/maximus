@@ -26,6 +26,10 @@ static char rcs_id[]="$Id: f_intrin.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: Intrinsic functions
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -223,14 +227,14 @@ long XferTime(sword protocol,long bytes)
 
 void File_IsOffline(char *filename)
 {
-  Printf(file_offl, No_Path(fancy_fn(filename)));
+  LangPrintf(file_offl, No_Path(fancy_fn(filename)));
   *filename='\0';
 }
 
 
 void File_NotExist(char *filename)
 {
-  Printf(iseenoxhere, No_Path(fancy_fn(filename)));
+  LangPrintf(iseenoxhere, No_Path(fancy_fn(filename)));
   *filename='\0';
 }
 

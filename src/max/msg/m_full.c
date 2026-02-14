@@ -23,6 +23,8 @@ static char rcs_id[]="$Id: m_full.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
+#define MAX_LANG_m_browse
 #include <stdio.h>
 #include <string.h>
 #include "prog.h"
@@ -37,15 +39,16 @@ static void near DisplayMessageTo(XMSG *msg);
 void DrawReaderScreen(MAH *pmah, int inbrowse)
 {
   int use_umsgids = ngcfg_get_bool("general.session.use_umsgids");
-  Printf(inbrowse ? browse_rbox_top : reader_box_top,
-         PMAS(pmah, name),
-         PMAS(pmah, descript),
-         TermWidth() - strlen(MAS(*pmah, descript)) - strlen(MAS(*pmah, name)) - 5);
-  Printf(reader_box_mid, use_umsgids ? reader_box_highest : reader_box_of);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d",
+      (int)(TermWidth() - strlen(MAS(*pmah, descript)) - strlen(MAS(*pmah, name)) - 5));
+    LangPrintf(inbrowse ? browse_rbox_top : reader_box_top,
+               PMAS(pmah, name), PMAS(pmah, descript), _ib); }
+  LangPrintf(reader_box_mid, use_umsgids ? reader_box_highest : reader_box_of);
   Printf(reader_box_from);
   Printf(reader_box_to);
   Printf(reader_box_subj);
-  Printf(reader_box_bottom, TermWidth());
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", TermWidth());
+    LangPrintf(reader_box_bottom, _ib); }
 }
 
 
@@ -72,8 +75,10 @@ void DisplayMessageNumber(XMSG *msg, long msgnum, long highmsg)
   long tlong;
   char tmp[64];
 
-  Printf(rbox_msgn, UIDnum(msgnum ? msgnum : MsgGetHighMsg(sq)) + !msgnum);
-  Printf(rbox_high, UIDnum(highmsg));
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", UIDnum(msgnum ? msgnum : MsgGetHighMsg(sq)) + !msgnum);
+    LangPrintf(rbox_msgn, _ib); }
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", UIDnum(highmsg));
+    LangPrintf(rbox_high, _ib); }
 
   i=0;
   if (msg->replyto)
@@ -83,7 +88,8 @@ void DisplayMessageNumber(XMSG *msg, long msgnum, long highmsg)
            MsgUidToMsgn(sq, msg->replyto, UID_EXACT);
 
     if (tlong)
-      i+=sprintf(tmp, rbox_replyto, tlong);
+    { char _tl[16]; snprintf(_tl, sizeof(_tl), "%ld", tlong);
+      i+=LangSprintf(tmp, sizeof(tmp), rbox_replyto, _tl); }
   }
 
   if (msg->replies[0])
@@ -93,11 +99,12 @@ void DisplayMessageNumber(XMSG *msg, long msgnum, long highmsg)
           MsgUidToMsgn(sq, msg->replies[0], UID_EXACT);
 
     if (tlong)
-      i+=sprintf(tmp+i, rbox_replies, tlong);
+    { char _tl[16]; snprintf(_tl, sizeof(_tl), "%ld", tlong);
+      i+=LangSprintf(tmp+i, sizeof(tmp)-(size_t)i, rbox_replies, _tl); }
   }
 
   if (i)
-    Printf(rbox_links, tmp);
+    LangPrintf(rbox_links, tmp);
 }
 
 
@@ -115,7 +122,7 @@ void DisplayMessageAttributes(XMSG *msg, MAH *pmah)
   if (pmah->ma.attribs & MA_SHARED)
     amask &= ~MSGKILL;
 
-  Printf(rbox_attrs, Show_Attributes(msg->attr & amask, temp));
+  LangPrintf(rbox_attrs, Show_Attributes(msg->attr & amask, temp));
 }
 
 
@@ -129,7 +136,9 @@ static char * near Show_Attributes(long attr, char *str)
   for (i=0, acomp=1L, *str='\0'; i < 16; acomp <<= 1, i++)
     if (attr & acomp)
     {
-      strcat(str, s_ret(n_attribs0+i));
+      char akey[32];
+      snprintf(akey, sizeof(akey), "m_area.attribs%d", i);
+      strcat(str, maxlang_get(g_current_lang, akey));
       strcat(str, " ");
     }
 
@@ -162,19 +171,19 @@ static void near DisplayMessageTo(XMSG *msg)
 
 void DisplayShowName(char *sho_name, char *who)
 {
-  Printf(sho_name, Strip_Ansi(who, NULL, 0L));
+  LangPrintf(sho_name, Strip_Ansi(who, NULL, 0L));
 }
 
 void DisplayShowDate(char *sho_date, union stamp_combo *sc)
 {
   char temp[PATHLEN];
   
-  Printf(sho_date, MsgDte(sc, temp));
+  LangPrintf(sho_date, MsgDte(sc, temp));
 }
 
 void DisplayShowAddress(char *sho_addr, NETADDR *n, MAH *pmah)
 {
-  Printf(sho_addr, (pmah->ma.attribs & MA_NET) ? (char *)Address(n) : (char *)blank_str);
+  LangPrintf(sho_addr, (pmah->ma.attribs & MA_NET) ? (char *)Address(n) : (char *)blank_str);
 }
 
 void DisplayMessageSubj(XMSG *msg, PMAH pmah)
@@ -192,7 +201,7 @@ void DisplayMessageSubj(XMSG *msg, PMAH pmah)
     else
       subjline=reader_box_subj;
     Puts(subjline);
-    Printf(rbox_sho_subj, Strip_Ansi(msg->subj, NULL, 0L));
+    LangPrintf(rbox_sho_subj, Strip_Ansi(msg->subj, NULL, 0L));
   }
 }
 

@@ -23,6 +23,8 @@ static char rcs_id[]="$Id: node.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -100,12 +102,12 @@ static int near V56FindOpen(NFIND *nf)
   netinfo = ngcfg_get_path("maximus.net_info_path");
   nlver = ngcfg_get_nodelist_version_int();
 
-  sprintf(name, idxnode, netinfo);
+  LangSprintf(name, PATHLEN, idxnode, netinfo);
 
   if ((nf->v56.ifd=shopen(name, O_RDONLY | O_BINARY | O_NOINHERIT))==-1)
     return FALSE;
 
-  sprintf(name, (nlver==NLVER_5) ? sysnode : datnode, netinfo);
+  LangSprintf(name, PATHLEN, (nlver==NLVER_5) ? sysnode : datnode, netinfo);
 
   if ((nf->v56.dfd=shopen(name, O_RDONLY | O_BINARY | O_NOINHERIT))==-1)
   {

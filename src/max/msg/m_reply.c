@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: m_reply.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: R)eply command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <string.h>

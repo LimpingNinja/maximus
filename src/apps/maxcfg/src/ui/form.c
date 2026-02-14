@@ -18,6 +18,15 @@
 
 int g_form_last_action_key = 0;
 
+static void (*g_form_preview_action)(void *ctx) = NULL;
+static void *g_form_preview_ctx = NULL;
+
+void form_set_preview_action(void (*action)(void *ctx), void *ctx)
+{
+    g_form_preview_action = action;
+    g_form_preview_ctx = ctx;
+}
+
 /* Form state */
 typedef struct {
     char **values;              /* Current field values */
@@ -340,8 +349,8 @@ static void draw_help_separator(const FormGeometry *g, const FieldDef *field, bo
         printw("=Full");
         attroff(COLOR_PAIR(CP_MENU_BAR));
         
-        /* Add F4=MEX/BBS for fields that support MEX */
-        if (field->supports_mex) {
+        /* Add F4=MEX/BBS for fields that support MEX (unless F4 is reserved for Preview) */
+        if (field->supports_mex && g_form_preview_action == NULL) {
             attron(COLOR_PAIR(CP_DIALOG_BORDER));
             printw(" ");
             addch(ACS_HLINE);
@@ -373,6 +382,21 @@ static void draw_help_separator(const FormGeometry *g, const FieldDef *field, bo
         attroff(COLOR_PAIR(CP_MENU_HOTKEY) | A_BOLD);
         attron(COLOR_PAIR(CP_MENU_BAR));
         printw("=Toggle");
+        attroff(COLOR_PAIR(CP_MENU_BAR));
+    }
+
+    /* Optional F4=Preview (only when a preview hook is set) */
+    if (g_form_preview_action != NULL) {
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        printw(" ");
+        addch(ACS_HLINE);
+        printw(" ");
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        attron(COLOR_PAIR(CP_MENU_HOTKEY) | A_BOLD);
+        printw("F4");
+        attroff(COLOR_PAIR(CP_MENU_HOTKEY) | A_BOLD);
+        attron(COLOR_PAIR(CP_MENU_BAR));
+        printw("=Preview");
         attroff(COLOR_PAIR(CP_MENU_BAR));
     }
     
@@ -1262,8 +1286,24 @@ bool form_edit(const char *title, const FieldDef *fields, int field_count, char 
                         draw_form_window(&g, title);
                     } else if (field->type == FIELD_ACTION && field->action &&
                                (ch == KEY_F(2) || ch == '\n' || ch == '\r')) {
+                        /*
+                         * FIELD_ACTION handlers can mutate the form values (e.g. color picker).
+                         * Track the displayed value before/after so ESC correctly prompts to
+                         * abort changes when an action actually modified something.
+                         */
+                        char *before = values[state.selected] ? strdup(values[state.selected]) : NULL;
                         g_form_last_action_key = ch;
                         field->action(field->action_ctx);
+
+                        {
+                            const char *before_s = before ? before : "";
+                            const char *after_s = values[state.selected] ? values[state.selected] : "";
+                            if (strcmp(before_s, after_s) != 0) {
+                                state.dirty = true;
+                                state.field_dirty[state.selected] = true;
+                            }
+                        }
+                        free(before);
                         draw_form_window(&g, title);
                     } else if (field->type != FIELD_TOGGLE && field->type != FIELD_FILE && 
                                field->type != FIELD_MULTISELECT && field->type != FIELD_ACTION) {
@@ -1333,8 +1373,12 @@ bool form_edit(const char *title, const FieldDef *fields, int field_count, char 
                 break;
                 
             case KEY_F(4):
-                /* Toggle MEX mode for fields that support it */
-                {
+                if (g_form_preview_action != NULL) {
+                    g_form_last_action_key = KEY_F(4);
+                    g_form_preview_action(g_form_preview_ctx);
+                    draw_form_window(&g, title);
+                } else {
+                    /* Toggle MEX mode for fields that support it */
                     const FieldDef *field = &fields[state.selected];
                     if (field->type == FIELD_FILE && field->supports_mex && !disabled[state.selected]) {
                         mex_mode[state.selected] = !mex_mode[state.selected];
@@ -1385,7 +1429,9 @@ bool form_edit(const char *title, const FieldDef *fields, int field_count, char 
     free(field_to_row);
     
     if (saved) {
-        g_state.dirty = true;
+        if (state.dirty) {
+            g_state.dirty = true;
+        }
         
         /* Build dirty field list if requested */
         if (dirty_fields && dirty_count) {

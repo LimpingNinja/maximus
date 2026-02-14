@@ -28,6 +28,7 @@ static char rcs_id[]="$Id: max_outr.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +36,7 @@ static char rcs_id[]="$Id: max_outr.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 #include <ctype.h>
 #include "prog.h"
 #include "mm.h"
-
+#include "mci.h"
 
 #if !defined(OS_2) && !defined(NT)
 static int timer2=FALSE;
@@ -46,6 +47,35 @@ extern int last_cc;
 extern char strng[];
 
 static int rip_wrap=1;
+
+static byte g_mdm_pipe_state=0;
+static byte g_mdm_pipe_d1=0;
+static byte g_mdm_pipe_inhibit=0;
+
+void Mdm_putc(int ch);
+
+void MdmPipeFlush(void)
+{
+  if (g_mdm_pipe_state==0)
+    return;
+
+  if (g_mdm_pipe_state==1)
+  {
+    g_mdm_pipe_state=0;
+    g_mdm_pipe_inhibit=1;
+    Mdm_putc('|');
+    return;
+  }
+
+  if (g_mdm_pipe_state==2)
+  {
+    g_mdm_pipe_state=0;
+    g_mdm_pipe_inhibit=1;
+    Mdm_putc('|');
+    Mdm_putc(g_mdm_pipe_d1);
+    return;
+  }
+}
 
 #if defined(OS_2) || defined(NT) || defined(UNIX)
 
@@ -195,6 +225,9 @@ void Mdm_putc(int ch)
 
   static byte save_cx, uch, b36;
   static byte newattr;
+  static byte pipe_state=0;
+  static byte pipe_d1=0;
+  static byte pipe_inhibit=0;
 
   static word x, y, z, a;
 
@@ -331,6 +364,78 @@ void Mdm_putc(int ch)
           break;
 
       }
+    }
+
+    if (g_mdm_pipe_inhibit)
+      g_mdm_pipe_inhibit=0;
+    else if (g_mdm_pipe_state==0)
+    {
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch=='|')
+      {
+        g_mdm_pipe_state=1;
+        return;
+      }
+    }
+    else if (g_mdm_pipe_state==1)
+    {
+      g_mdm_pipe_state=0;
+
+      if (ch=='|')
+      {
+        g_mdm_pipe_inhibit=1;
+        Mdm_putc('|');
+        return;
+      }
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= '0' && ch <= '9')
+      {
+        g_mdm_pipe_d1=(byte)ch;
+        g_mdm_pipe_state=2;
+        return;
+      }
+
+      g_mdm_pipe_inhibit=1;
+      Mdm_putc('|');
+      Mdm_putc(ch);
+      return;
+    }
+    else if (g_mdm_pipe_state==2)
+    {
+      g_mdm_pipe_state=0;
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= '0' && ch <= '9')
+      {
+        int code=((int)(g_mdm_pipe_d1 - '0') * 10) + (int)(ch - '0');
+
+        if (code >= 0 && code <= 31)
+        {
+          byte attr=(byte)((mdm_attr==-1) ? DEFAULT_ATTR : mdm_attr);
+
+          if (code <= 15)
+            attr=(byte)((attr & 0xf0u) | (byte)code);
+          else if (code <= 23)
+            attr=(byte)((attr & 0x0fu) | (byte)((code - 16) << 4) | (attr & 0x80u));
+          else
+            attr=(byte)((attr & 0x0fu) | (byte)((code - 24) << 4) | 0x80u);
+
+          Mdm_putc(22);
+          Mdm_putc(1);
+          Mdm_putc(attr);
+          return;
+        }
+      }
+
+      g_mdm_pipe_inhibit=1;
+      Mdm_putc('|');
+      Mdm_putc(g_mdm_pipe_d1);
+      Mdm_putc(ch);
+      return;
     }
 
     switch (ch)

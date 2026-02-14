@@ -23,6 +23,9 @@ static char rcs_id[]="$Id: events.c,v 1.4 2004/01/27 21:00:27 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

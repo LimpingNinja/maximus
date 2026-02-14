@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define LIBMAXCFG_ABI_VERSION 2
+#define LIBMAXCFG_ABI_VERSION 3
 
 typedef struct MaxCfg MaxCfg;
 
@@ -85,6 +85,7 @@ typedef struct {
     char *menu_path;
     char *rip_path;
     char *stage_path;
+    char *msg_reader_menu;
     char *log_file;
     char *file_password;
     char *file_access;

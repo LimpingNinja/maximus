@@ -27,6 +27,10 @@ static char rcs_id[]="$Id: med_read.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 */
 
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_bor
+#define MAX_LANG_sysop
 #include <errno.h>
 #include "maxed.h"
 

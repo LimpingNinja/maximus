@@ -23,6 +23,7 @@ static char rcs_id[]="$Id: m_editu.c,v 1.3 2004/01/27 21:00:31 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
 #include "prog.h"
 #include "max_msg.h"
 

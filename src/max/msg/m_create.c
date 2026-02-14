@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: m_create.c,v 1.3 2004/01/27 21:00:30 paltas Exp $";
 /*# name=Message Section: Miscellaneous message creation functions
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -75,7 +77,7 @@ int Goodbye_Comment(void)
     msg.attr |= MSGPRIVATE; /* Then set MSGPRIVATE on by default */
 
   if (usr.bits2 & BITS2_BORED)
-    Printf(inrefto, msg.subj);
+    LangPrintf(inrefto, msg.subj);
 
   rc=Editor(&msg, NULL, 0L, NULL, NULL);
 

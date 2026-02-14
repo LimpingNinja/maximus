@@ -23,6 +23,8 @@ static char rcs_id[]="$Id: t_kill.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
+#define MAX_LANG_track
 #include "trackp.h"
 
 #ifdef MAX_TRACKER
@@ -47,7 +49,7 @@ int TrackKillMsg(char *ctrl)
     if (TrkLookupMsg(t, actrack+9, NULL, NULL, NULL, &tmn))
     {
       if (!TrkDeleteMsg(t, &tmn))
-        Printf(trk_err_removing, tmn.szTrackID);
+        LangPrintf(trk_err_removing, tmn.szTrackID);
     }
 
     TrackRelease(t);

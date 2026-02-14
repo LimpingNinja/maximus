@@ -105,6 +105,8 @@
   word EXPENTRY intrin_set_output(void);
   word EXPENTRY intrin_lang_string(void);
   word EXPENTRY intrin_lang_heap_string(void);
+  word EXPENTRY intrin_lang_get(void);
+  word EXPENTRY intrin_lang_get_rip(void);
   word EXPENTRY intrin_term_width(void);
   word EXPENTRY intrin_term_length(void);
   word EXPENTRY intrin_screen_width(void);
@@ -199,6 +201,23 @@
   word EXPENTRY intrin_ui_select_prompt_style_default(void);
   word EXPENTRY intrin_ui_form_style_default(void);
   word EXPENTRY intrin_ui_form_run(void);
+
+  word EXPENTRY intrin_ui_read_key(void);
+
+  word EXPENTRY intrin_ui_scroll_region_style_default(void);
+  word EXPENTRY intrin_ui_scroll_region_create(void);
+  word EXPENTRY intrin_ui_scroll_region_destroy(void);
+  word EXPENTRY intrin_ui_scroll_region_append(void);
+  word EXPENTRY intrin_ui_scroll_region_render(void);
+  word EXPENTRY intrin_ui_scroll_region_handle_key(void);
+
+  word EXPENTRY intrin_ui_text_viewer_style_default(void);
+  word EXPENTRY intrin_ui_text_viewer_create(void);
+  word EXPENTRY intrin_ui_text_viewer_destroy(void);
+  word EXPENTRY intrin_ui_text_viewer_set_text(void);
+  word EXPENTRY intrin_ui_text_viewer_render(void);
+  word EXPENTRY intrin_ui_text_viewer_handle_key(void);
+  word EXPENTRY intrin_ui_text_viewer_read_key(void);
 
   void _MexKillStructString(void *pstr, int increment);
   void MexReturnStringBytes(char *s, int len);

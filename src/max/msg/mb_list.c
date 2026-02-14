@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: mb_list.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=One-per-line (L)ist) code for the BROWSE command
 */
 
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
 #include <string.h>
 #include <stdlib.h>
 #include "prog.h"
@@ -74,7 +74,7 @@ Area 14: Fowl Weather Post Questions and Answers
 
   if (last_title && (b->bflag & BROWSE_ACUR)==0)
   {
-    Printf(br_this, MAS(mah, name), MAS(mah, descript));
+    LangPrintf(br_this, MAS(mah, name), MAS(mah, descript));
 
     if (MoreYnBreak(b->nonstop, CYAN))
       return -1;
@@ -88,18 +88,19 @@ Area 14: Fowl Weather Post Questions and Answers
 
   last_title=FALSE;
   
-  Printf(br_list_format,
-         ngcfg_get_bool("general.session.use_umsgids") ? MsgMsgnToUid(b->sq, b->msgn) : b->msgn,
-         (MsgToThisUser(b->msg.to) &&
-          ((mah.ma.attribs & MA_NET)==0 || MsgToUs(&b->msg.dest)) &&
-          (b->msg.attr & MSGREAD)==0)
-           ? br_msg_new 
-           : ((b->msg.attr & MSGPRIVATE) ? br_msg_pvt : br_msg_notnew),
-         MsgToThisUser(b->msg.from) ? LRED : YELLOW,
-         Strip_Ansi(b->msg.from, NULL, 0),
-         MsgToThisUser(b->msg.to) ? LRED : LGREEN,
-         Strip_Ansi(b->msg.to, NULL, 0),
-         Strip_Ansi(b->msg.subj, NULL, 0));
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld",
+      ngcfg_get_bool("general.session.use_umsgids") ? MsgMsgnToUid(b->sq, b->msgn) : b->msgn);
+    LangPrintf(br_list_format, _ib,
+               (MsgToThisUser(b->msg.to) &&
+                ((mah.ma.attribs & MA_NET)==0 || MsgToUs(&b->msg.dest)) &&
+                (b->msg.attr & MSGREAD)==0)
+                 ? br_msg_new 
+                 : ((b->msg.attr & MSGPRIVATE) ? br_msg_pvt : br_msg_notnew),
+               MsgToThisUser(b->msg.from) ? LRED : YELLOW,
+               Strip_Ansi(b->msg.from, NULL, 0),
+               MsgToThisUser(b->msg.to) ? LRED : LGREEN,
+               Strip_Ansi(b->msg.to, NULL, 0),
+               Strip_Ansi(b->msg.subj, NULL, 0)); }
 
   if (MoreYnBreak(b->nonstop, CYAN))
     return -1;

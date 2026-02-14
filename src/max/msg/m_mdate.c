@@ -27,6 +27,7 @@ static char rcs_id[]="$Id: m_mdate.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 */
 
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>

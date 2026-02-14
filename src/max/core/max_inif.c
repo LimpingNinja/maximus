@@ -26,9 +26,9 @@ static char rcs_id[]="$Id: max_inif.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=File-oriented initialization functions for Max
 */
 
-#define MAX_LANG_max_init
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_m_area
 #include <io.h>
 #include <fcntl.h>
 #include <sys/types.h>

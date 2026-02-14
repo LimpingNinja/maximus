@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: f_misc.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: Miscellaneous functions
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <mem.h>
@@ -40,7 +42,7 @@ static char rcs_id[]="$Id: f_misc.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 
 void Dont_Use_Wildcards(char *name)
 {
-  Printf(no_wildcard,name);
+  LangPrintf(no_wildcard,name);
 
   Puts(no_wc1);
   Puts(no_wc2);
@@ -115,7 +117,7 @@ char * Remove_Files_Entry(char *filename,char *description)
     {
       if (fputs(line, outfilesbbs)==EOF)
       {
-        Printf(err_writ, poo_name);
+        LangPrintf(err_writ, poo_name);
 
         free(temp);
         free(line);

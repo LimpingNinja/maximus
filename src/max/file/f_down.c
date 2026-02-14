@@ -26,9 +26,13 @@ static char rcs_id[]="$Id: f_down.c,v 1.4 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: D)ownload command and associated functions
 */
 
-#define MAX_LANG_max_chat
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -65,7 +69,8 @@ void File_Download(char *mname)
   if (baud < ClassGetInfo(cls,CIT_MIN_XFER_BAUD))
   {
     Display_File(0, NULL, ngcfg_get_path("general.display_files.xfer_baud"));
-    Printf(baudtoolowforxfer, ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+    { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+      LangPrintf(baudtoolowforxfer, _ib); }
     Press_ENTER();
     return;
   }
@@ -186,7 +191,8 @@ int File_Get_Download_Names(int do_tag,sword protocol)
     else
     {
 
-      InputGetsLL(namebuf,NAMEBUFLEN-1, IsBatch(protocol) ? file_dl : file1_dl, FileEntries()+1);
+      { char _n[12]; snprintf(_n, sizeof(_n), "%d", FileEntries()+1);
+        InputGetsLL(namebuf,NAMEBUFLEN-1, IsBatch(protocol) ? file_dl : file1_dl, _n); }
     }
 
 
@@ -428,7 +434,8 @@ int File_Get_Download_Names(int do_tag,sword protocol)
     /* If the user entered too many file names, mention it to user */
 
     if (!CanAddFileEntry())
-      Printf(file_max_expand, FileEntries());
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", FileEntries());
+        LangPrintf(file_max_expand, _ib); }
   }
   while (!do_tag && IsBatch(protocol)); /* loop if we're NOT tagging files */
 
@@ -635,7 +642,7 @@ static int near GotFile(char *fname, long size, int do_tag, sword protocol,
       /* Only display error message if not expanded during this wc pass */
       
       if ((fent.fFlags & FFLAG_THIS1)==0)
-        Printf(dup_filename, No_Path(fent.szName));
+        LangPrintf(dup_filename, No_Path(fent.szName));
 
       expd |= EXP_ERR;
       return 1;
@@ -644,12 +651,12 @@ static int near GotFile(char *fname, long size, int do_tag, sword protocol,
   if (do_tag==TAG_ONELINE)
     Putc('\r');
   
-  Printf(file_stats,
-         thisfile+1,
-         No_Path(fname),
-         (int)(this_time / 60L),
-         (int)(this_time % 60L),
-         (long)size);
+  { char _i1[16], _i2[16], _i3[16], _i4[32];
+    snprintf(_i1, sizeof(_i1), "%d", thisfile+1);
+    snprintf(_i2, sizeof(_i2), "%d", (int)(this_time / 60L));
+    snprintf(_i3, sizeof(_i3), "%d", (int)(this_time % 60L));
+    snprintf(_i4, sizeof(_i4), "%ld", (long)size);
+    LangPrintf(file_stats, _i1, No_Path(fname), _i2, _i3, _i4); }
 
   if (do_tag != TAG_ONELINE || usr.video==GRAPH_TTY)
     Putc('\n');
@@ -1278,9 +1285,10 @@ word File_Send_Files_Sub(sword protocol, char *mname, char *newuppath, long real
             Putc('\n');
           else
           {
-            Printf(cps_rating,
-                   (long)(last_bps/10L),
-                   last_bps*100L/(long)baud);
+            { char _ib1[32], _ib2[32];
+              snprintf(_ib1, sizeof(_ib1), "%ld", (long)(last_bps/10L));
+              snprintf(_ib2, sizeof(_ib2), "%ld", last_bps*100L/(long)baud);
+              LangPrintf(cps_rating, _ib1, _ib2); }
           }
         }
       }
@@ -1366,17 +1374,23 @@ word File_Send_Files(sword protocol, char *mname, char *newuppath, int flag)
 
   /* "Size: xxx bytes (xxx Xmodem blocks)" */
   
-  Printf(down_fsiz, realbytes, (realbytes/128L)+1);
+  { char _ib1[32], _ib2[32];
+    snprintf(_ib1, sizeof(_ib1), "%ld", realbytes);
+    snprintf(_ib2, sizeof(_ib2), "%ld", (realbytes/128L)+1);
+    LangPrintf(down_fsiz, _ib1, _ib2); }
 
 
   /* "Time: 12:34 minutes (estimated)" */
   
-  Printf(down_ftim, (word)(realtime / 60L), (word)(realtime % 60L));
+  { char _ib1[16], _ib2[16];
+    snprintf(_ib1, sizeof(_ib1), "%u", (word)(realtime / 60L));
+    snprintf(_ib2, sizeof(_ib2), "%u", (word)(realtime % 60L));
+    LangPrintf(down_ftim, _ib1, _ib2); }
 
 
   /* Mode: Zmodem */
   
-  Printf(down_fmode, Protocol_Name(protocol, pname));
+  LangPrintf(down_fmode, Protocol_Name(protocol, pname));
 
 
   /* If we need to, add a "wait 10 seconds to download" prompt */
@@ -1482,7 +1496,8 @@ static int near FileLimitsOkay(unsigned long ulSize, int flags, sword protocol,
     {
       ci_dlexceed();
       logit(log_exc_ratio);
-      Printf(exc_ratio, ClassGetInfo(cls,CIT_RATIO));
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", ClassGetInfo(cls,CIT_RATIO));
+        LangPrintf(exc_ratio, _ib); }
       Display_File(0, NULL, "%sexcratio", (char *)ngcfg_get_string_raw("maximus.misc_path"));
       return FALSE;
     }

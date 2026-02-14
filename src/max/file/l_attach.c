@@ -26,8 +26,7 @@ static char rcs_id[]="$Id: l_attach.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
-#define MAX_LANG_m_browse
-
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #include <time.h>

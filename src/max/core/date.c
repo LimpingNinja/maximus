@@ -28,5 +28,6 @@ char comp_time[]=__TIME__;
 
 #define MAX_INCL_VER
 #define MAX_DEFINE_VERSION
+#define MAX_LANG_m_area
 #include "max_vr.h"
 

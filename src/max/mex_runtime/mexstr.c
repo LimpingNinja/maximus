@@ -17,6 +17,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include "mexall.h"
 
 #ifdef MEX
@@ -219,7 +222,7 @@
 
     if (!str || !pos)
     {
-      sprintf(szMsg, called_with_idx_0, "substr");
+      LangSprintf(szMsg, sizeof(szMsg), called_with_idx_0, "substr");
       MexRTError(szMsg);
     }
     else

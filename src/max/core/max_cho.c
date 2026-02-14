@@ -27,8 +27,10 @@ static char rcs_id[]="$Id: max_cho.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
     name=for reading IPCxx.BBS, and for processing inbound messages.
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_chat
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <io.h>
@@ -294,7 +296,8 @@ static void near Page(void)
       ChatNotAvail(tid);
     else
     {
-      sprintf(temp, ch_being_paged, usrname, task_num);
+      { char _tn[8]; snprintf(_tn, sizeof(_tn), "%d", task_num);
+        LangSprintf(temp, sizeof(temp), ch_being_paged, usrname, _tn); }
 
       if (ChatSendMsg(tid, CMSG_PAGE, strlen(temp)+1, temp)==-1)
       #ifdef DEBUG
@@ -303,7 +306,8 @@ static void near Page(void)
         ;
       #endif
 
-      Printf(ch_waiting, tid);
+      { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", tid);
+        LangPrintf(ch_waiting, _tb); }
 
       sprintf(linebuf, "%d", tid);
       Chat(FALSE, FALSE);
@@ -345,8 +349,8 @@ void Who_Is_On(void)
     if (! tid)
       continue;
 
-    Printf(hu_is_on_3, username, tid, status,
-           eqstri(username, usrname) ? ch_you : blank_str);
+    LangPrintf(hu_is_on_3, username, tid, status,
+               eqstri(username, usrname) ? ch_you : blank_str);
 
     if (MoreYnBreak(&nonstop, CYAN))
       break;
@@ -414,7 +418,8 @@ static void near Chat(int use_cb, int doing_answer)
     if (cc < 1 || cc > 255)
       return;
 
-    sprintf(stat, ch_chat_cb, cc);
+    { char _cc[8]; snprintf(_cc, sizeof(_cc), "%d", cc);
+      LangSprintf(stat, sizeof(stat), ch_chat_cb, _cc); }
     logit(log_cb_start, cc);
   }
   else
@@ -456,7 +461,8 @@ static void near Chat(int use_cb, int doing_answer)
 
     cc=(y*256)+z;
 
-    sprintf(stat, ch_chat_pvt, x);
+    { char _xb[8]; snprintf(_xb, sizeof(_xb), "%d", x);
+      LangSprintf(stat, sizeof(stat), ch_chat_pvt, _xb); }
     logit(log_pvt_start, temp, x);
   }
 
@@ -508,7 +514,8 @@ static void near Chat(int use_cb, int doing_answer)
       if (colour==10)
         colour=15;
 
-      sprintf(prompt, ch_byline, usrname, colour);
+      { char _cb[8]; snprintf(_cb, sizeof(_cb), "%d", colour);
+        LangSprintf(prompt, sizeof(prompt), ch_byline, usrname, _cb); }
 
       if (*nextw)
         strcpy(temp, nextw);
@@ -666,7 +673,7 @@ int Header_Chat(int entry,int silent)
     Who_Is_On();
 
     if (ChatFindIndividual(task_num, NULL, NULL, &avail))
-      Printf(ch_us_avail, avail ? blank_str : ch_us_noavail);
+      LangPrintf(ch_us_avail, avail ? blank_str : ch_us_noavail);
   }
 
   restart_system=FALSE;
@@ -756,7 +763,7 @@ void ChatHandleMessage(byte tid, int type, int len, char *msg, int *redo)
 
         R_Cleol();
 
-        Printf(ch_xx_join, msg+2);
+        LangPrintf(ch_xx_join, msg+2);
 
         *redo=TRUE;
       }
@@ -782,7 +789,7 @@ void ChatHandleMessage(byte tid, int type, int len, char *msg, int *redo)
       if (Remove_From_Chat_List(tid))
       {
         R_Cleol();
-        Printf(ch_xx_leave,msg);
+        LangPrintf(ch_xx_leave,msg);
         WhiteN();
         Puts(ch_help_str);
 
@@ -805,7 +812,7 @@ void ChatHandleMessage(byte tid, int type, int len, char *msg, int *redo)
       else /* just display it! */
       {
         R_Cleol();
-        Printf(ch_msg, msg+sizeof(word));
+        LangPrintf(ch_msg, msg+sizeof(word));
         *redo=TRUE;
       }
       break;
@@ -816,7 +823,8 @@ void ChatHandleMessage(byte tid, int type, int len, char *msg, int *redo)
     
 static void near ChatNotAvail(int tid)
 {
-  Printf(ch_nodenavail, tid);
+  { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", tid);
+    LangPrintf(ch_nodenavail, _tb); }
   Press_ENTER();
 }
 

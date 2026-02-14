@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_xfer.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: Required functions for both ULing and DLing
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <ctype.h>
 #include <stdio.h>
 #include <mem.h>
@@ -127,7 +130,8 @@ int File_Get_Protocol(sword *protocol, int chng, int need_nonexit)
 
       /* Display the top of the box */
 
-      Printf(proto_box_top, max+3);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", max+3);
+        LangPrintf(proto_box_top, _ib); }
 
       /* Print the middle of the box */
         
@@ -137,21 +141,31 @@ int File_Get_Protocol(sword *protocol, int chng, int need_nonexit)
           if (no_zmodem && *ps->name=='Z')
             continue;
 
-          Printf(proto_box_mid, *ps->name, max-1, max-1, ps->name+1);
+          { char _cb[2] = { *ps->name, '\0' };
+            char _w1[16], _w2[16];
+            snprintf(_w1, sizeof(_w1), "%d", max-1);
+            snprintf(_w2, sizeof(_w2), "%d", max-1);
+            LangPrintf(proto_box_mid, _cb, _w1, _w2, ps->name+1); }
         }
 
       for (prot=0; prot < MAX_EXTERNP; prot++)
         if (!need_nonexit || !ngcfg_get_protocol_exitlevel(prot))
           if (*(s=Protocol_Name(prot, temp)))
-            Printf(proto_box_mid, toupper(*s), max-1, max-1, s+1);
+            { char _cb[2] = { (char)toupper(*s), '\0' };
+              char _w1[16], _w2[16];
+              snprintf(_w1, sizeof(_w1), "%d", max-1);
+              snprintf(_w2, sizeof(_w2), "%d", max-1);
+              LangPrintf(proto_box_mid, _cb, _w1, _w2, s+1); }
 
-      Printf(proto_box_mid, 
-             chng ? *proto_none : *proto_quit,
-             max-1,
-             max-1,
-             (chng ? proto_none : proto_quit)+1);
+      { char _cb[2] = { chng ? *proto_none : *proto_quit, '\0' };
+        char _w1[16], _w2[16];
+        snprintf(_w1, sizeof(_w1), "%d", max-1);
+        snprintf(_w2, sizeof(_w2), "%d", max-1);
+        LangPrintf(proto_box_mid, _cb, _w1, _w2,
+                   (chng ? proto_none : proto_quit)+1); }
 
-      Printf(proto_box_bot, max+3);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", max+3);
+        LangPrintf(proto_box_bot, _ib); }
     }
   }
 
@@ -181,7 +195,8 @@ int File_Get_Protocol(sword *protocol, int chng, int need_nonexit)
       }
 
   *linebuf='\0';
-  Printf(dontunderstand, ch);
+  { char _cb[2] = { (char)ch, '\0' };
+    LangPrintf(dontunderstand, _cb); }
   return -1;
 }
 
@@ -288,11 +303,13 @@ word Shall_We_Continue(word timeout, char *do_what)
 
   Putc('\n');
   
-  Printf(pause_msg, pause=timeout, do_what);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", (pause=timeout));
+    LangPrintf(pause_msg, _ib, do_what); }
     
   while (pause-- > 0)
   {
-    Printf(pause_time, pause);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", pause);
+      LangPrintf(pause_time, _ib); }
     
     tmr=timerset(100);
 

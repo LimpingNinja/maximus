@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: m_scan.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: Msg_Checkmail, S)can and L)ist
 */
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <string.h>

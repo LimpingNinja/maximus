@@ -27,6 +27,8 @@ static char rcs_id[]="$Id: v7.c,v 1.6 2004/01/28 06:38:11 paltas Exp $";
     credit=(C) Copyright 1987-91, Bit Bucket Software, a Delaware Corporation
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>

@@ -22,6 +22,8 @@
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

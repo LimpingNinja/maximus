@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_kill.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: K)ill function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <io.h>
@@ -61,13 +64,13 @@ void File_Kill(void)
   }
 
 
-  sprintf(temp, delete_yn, filename);
+  LangSprintf(temp, sizeof(temp), delete_yn, filename);
 
   if (GetyNAnswer(temp, 0)==YES)
   {
     if (unlink(filespec)==-1)
     {
-      Printf(cant_unlink, filespec);
+      LangPrintf(cant_unlink, filespec);
       Press_ENTER();
     }
     else Remove_Files_Entry(filename, NULL);

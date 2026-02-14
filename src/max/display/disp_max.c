@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: disp_max.c,v 1.4 2004/01/27 21:00:26 paltas Exp $";
 /*# name=.BBS-file display routines (Max-specific)
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -640,7 +643,8 @@ word DisplayMaxCode(DSTK *d)
           
         case 'T':
           if (usr.xp_flag & XFLAG_EXPMINS)
-            sprintf(d->scratch, xp_minutes, usr.xp_mins);
+            { char _xm[16]; snprintf(_xm, sizeof(_xm), "%ld", (long)usr.xp_mins);
+              LangSprintf(d->scratch, sizeof(d->scratch), xp_minutes, _xm); }
           else strcpy(d->scratch, gen_none);
           
           Puts(d->scratch);

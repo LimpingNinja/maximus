@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: max_bar.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Barricade-handling routines
 */
 
+#define MAX_LANG_global
 #define MAX_LANG_m_area
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -138,7 +139,8 @@ static void near BadBarPwd(char *pwd, char *name, int tries)
 {
   logit(log_bad_bar_pwd, name, pwd);
 
-  Printf(wrong_pwd, tries);
+  { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", tries);
+    LangPrintf(wrong_pwd, _tb); }
   Putc('\n');
 
   if (tries==3)

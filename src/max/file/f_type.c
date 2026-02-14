@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_type.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: T)ype command
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>

@@ -25,6 +25,9 @@ static char rcs_id[]="$Id: t_misc.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 
 /*#define TRACK_PERSISTENT*/  /* Only open tracking database once only */
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
+#define MAX_LANG_track
 #include <stdarg.h>
 #include "trackp.h"
 
@@ -327,7 +330,8 @@ int TrackValidOwner(TRK t, char *szOwner, TRK_OWNER to, int do_list)
   while ((pton=BtLookup(pbt, NULL, ppl)) != NULL)
   {
     if (do_list)
-      Printf(trk_list_type, pton->to, pton->szOwner);
+      { char _tb[8]; snprintf(_tb, sizeof(_tb), "%-4.4s", pton->to);
+        LangPrintf(trk_list_type, _tb, pton->szOwner); }
     else if (eqstri(pton->szOwner, szOwner) || eqstri(pton->to, szOwner))
     {
       strcpy(szOwner, pton->szOwner);

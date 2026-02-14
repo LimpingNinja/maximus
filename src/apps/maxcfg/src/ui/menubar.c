@@ -30,15 +30,20 @@
 #include "treeview.h"
 #include "menu_data.h"
 #include "menu_edit.h"
+#include "menu_preview.h"
 #include "nextgen_export.h"
+#include "lang_convert.h"
+#include "lang_browse.h"
 #include "texteditor.h"
 
 /* Forward declarations for menu actions */
 static void action_placeholder(void);
 static void action_save_config(void);
 static void action_export_nextgen_config(void);
+static void action_convert_legacy_lang(void);
 static void action_bbs_sysop_info(void);
 static void action_system_paths(void);
+static void action_msg_reader_menu(void);
 static void action_display_files(void);
 static void action_logging_options(void);
 static void action_global_toggles(void);
@@ -69,6 +74,7 @@ static bool load_file_areas_toml_for_ui(const char *sys_path, char *out_path, si
 
 /* Menu configuration action */
 static void action_menus_list(void);
+static void action_lang_editor(void);
 
 static bool edit_menu_properties(const char *sys_path, MenuDefinition **menus, int menu_count, MenuDefinition *menu);
 static bool menu_options_list(const char *sys_path, MenuDefinition **menus, int menu_count, MenuDefinition *menu);
@@ -108,6 +114,7 @@ static void user_editor_edit_security(HUF huf, long rec, const char *sys_path);
 static MenuItem setup_global_items[] = {
     { "BBS and Sysop Information", "B", NULL, 0, action_bbs_sysop_info, true },
     { "System Paths",              "S", NULL, 0, action_system_paths, true },
+    { "Message Reader Menu",       "M", NULL, 0, action_msg_reader_menu, true },
     { "Logging Options",           "L", NULL, 0, action_logging_options, true },
     { "Global Toggles",            "G", NULL, 0, action_global_toggles, true },
     { "Login Settings",            "o", NULL, 0, action_login_settings, true },
@@ -128,7 +135,7 @@ static MenuItem setup_matrix_items[] = {
 
 /* Setup menu items */
 static MenuItem setup_items[] = {
-    { "Global",           "G", setup_global_items, 7, NULL, true },
+    { "Global",           "G", setup_global_items, 8, NULL, true },
     { "Security Levels",  "S", NULL, 0, action_security_levels, true },
     { "Reader Settings",  "R", NULL, 0, action_reader_settings, true },
     { "Protocols",        "P", NULL, 0, action_protocols, true },
@@ -138,10 +145,11 @@ static MenuItem setup_items[] = {
 
 /* Content menu items */
 static MenuItem content_items[] = {
-    { "Menus",           "M", NULL, 0, action_menus_list, true },
-    { "Display Files",   "D", NULL, 0, action_display_files, true },
-    { "Help Files",      "H", NULL, 0, action_placeholder, true },
-    { "Bulletins",       "B", NULL, 0, action_placeholder, true },
+    { "Menus",            "M", NULL, 0, action_menus_list, true },
+    { "Display Files",    "D", NULL, 0, action_display_files, true },
+    { "Language Strings", "L", NULL, 0, action_lang_editor, true },
+    { "Help Files",       "H", NULL, 0, action_placeholder, true },
+    { "Bulletins",        "B", NULL, 0, action_placeholder, true },
 };
 
 /* Messages > Setup Message Areas submenu */
@@ -190,6 +198,7 @@ static MenuItem users_items[] = {
 static MenuItem tools_items[] = {
     { "Save",              "S", NULL, 0, action_save_config, true },
     { "Import Legacy Config (CTL)", "I", NULL, 0, action_export_nextgen_config, true },
+    { "Convert Legacy Language (MAD)", "L", NULL, 0, action_convert_legacy_lang, true },
     { "View Log",           "V", NULL, 0, action_placeholder, true },
     { "System Information", "n", NULL, 0, action_placeholder, true },
 };
@@ -201,7 +210,7 @@ static TopMenu top_menus[] = {
     { "Messages",    messages_items,    5 },
     { "Files",       files_items,       3 },
     { "Users",       users_items,       3 },
-    { "Tools",       tools_items,       4 },
+    { "Tools",       tools_items,       5 },
 };
 
 #define NUM_TOP_MENUS (sizeof(top_menus) / sizeof(top_menus[0]))
@@ -218,6 +227,296 @@ static void action_placeholder(void)
     dialog_message("Not Implemented", 
                    "This feature is not yet implemented.\n\n"
                    "Coming soon!");
+}
+
+typedef struct {
+    const char *sys_path;
+    MenuDefinition *menu;
+    char **overlay_values;
+    int overlay_kind;
+} MenuPreviewCtx;
+
+static int g_menu_preview_view_priv_idx = 3; /* Default to Normal */
+
+enum {
+    MENU_PREVIEW_OVERLAY_NONE = 0,
+    MENU_PREVIEW_OVERLAY_PROPERTIES = 1,
+    MENU_PREVIEW_OVERLAY_CUSTOMIZATION = 2,
+};
+
+static void menu_preview_overlay_free(MenuDefinition *m)
+{
+    if (!m) return;
+    free(m->title);
+    free(m->header_file);
+    free(m->menu_file);
+}
+
+static void preview_fill_rect_black(int top, int left, int height, int width)
+{
+    if (top < 0 || left < 0 || height < 1 || width < 1) return;
+    if (top >= LINES || left >= COLS) return;
+
+    if (top + height > LINES) height = LINES - top;
+    if (left + width > COLS) width = COLS - left;
+
+    attron(COLOR_PAIR(CP_DIALOG_TEXT));
+    for (int row = 0; row < height; row++) {
+        move(top + row, left);
+        for (int col = 0; col < width; col++) {
+            addch(' ');
+        }
+    }
+    attroff(COLOR_PAIR(CP_DIALOG_TEXT));
+}
+
+static void preview_draw_frame(int x, int y, int w, int h)
+{
+    attron(COLOR_PAIR(CP_DIALOG_BORDER));
+
+    if (y > 0) {
+        if (x > 0) mvaddch(y - 1, x - 1, ACS_ULCORNER);
+        mvhline(y - 1, x, ACS_HLINE, w);
+        if (x + w < COLS) mvaddch(y - 1, x + w, ACS_URCORNER);
+    }
+    if (y + h < LINES) {
+        if (x > 0) mvaddch(y + h, x - 1, ACS_LLCORNER);
+        mvhline(y + h, x, ACS_HLINE, w);
+        if (x + w < COLS) mvaddch(y + h, x + w, ACS_LRCORNER);
+    }
+
+    if (x > 0) {
+        for (int row = 0; row < h; row++) {
+            mvaddch(y + row, x - 1, ACS_VLINE);
+        }
+    }
+    if (x + w < COLS) {
+        for (int row = 0; row < h; row++) {
+            mvaddch(y + row, x + w, ACS_VLINE);
+        }
+    }
+
+    attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+}
+
+static bool preview_terminal_is_too_small(int min_cols, int min_rows)
+{
+    return (COLS < min_cols || LINES < min_rows);
+}
+
+static void menu_preview_stub(void *ctx)
+{
+    MenuPreviewCtx *p = (MenuPreviewCtx *)ctx;
+    MenuDefinition *base_menu = (p && p->menu) ? p->menu : NULL;
+
+    int view_priv_idx = g_menu_preview_view_priv_idx;
+    view_priv_idx = privilege_picker_show(view_priv_idx);
+    if (view_priv_idx < 0) {
+        return;
+    }
+    g_menu_preview_view_priv_idx = view_priv_idx;
+
+    const char *view_priv_name = privilege_picker_get_name(view_priv_idx);
+    int view_level = parse_priv_level((p && p->sys_path) ? p->sys_path : "", view_priv_name ? view_priv_name : "");
+
+    /* ANSI preview is always non-RIP. */
+    bool view_is_rip = false;
+
+    if (preview_terminal_is_too_small(80, 25)) {
+        dialog_message("Terminal too small",
+                       "Menu preview requires an 80x25 terminal.\n"
+                       "Restart maxcfg in an 80x25 window.");
+        return;
+    }
+
+    const int pv_w = 80;
+    const int pv_h = 25;
+
+    int x = (COLS - pv_w) / 2;
+    int y = (LINES - pv_h) / 2;
+
+    WINDOW *saved = dupwin(stdscr);
+    if (saved == NULL) {
+        dialog_message("Error", "Unable to allocate screen buffer for preview.");
+        return;
+    }
+
+    int selected = -1;
+
+    bool done = false;
+    while (!done) {
+        overwrite(saved, stdscr);
+
+        int left = (x > 0) ? x - 1 : x;
+        int top = (y > 0) ? y - 1 : y;
+        int right = (x + pv_w < COLS) ? x + pv_w : x + pv_w - 1;
+        int bottom = (y + pv_h < LINES) ? y + pv_h : y + pv_h - 1;
+        preview_fill_rect_black(top, left, bottom - top + 1, right - left + 1);
+        preview_draw_frame(x, y, pv_w, pv_h);
+
+        MenuPreviewVScreen vs;
+        MenuPreviewLayout layout = {0};
+
+        MenuDefinition overlay;
+        MenuDefinition *menu = base_menu;
+
+        if (base_menu && p && p->overlay_values && p->overlay_kind != MENU_PREVIEW_OVERLAY_NONE) {
+            overlay = *base_menu;
+
+            if (p->overlay_kind == MENU_PREVIEW_OVERLAY_PROPERTIES) {
+                overlay.title = base_menu->title ? strdup(base_menu->title) : NULL;
+                overlay.header_file = base_menu->header_file ? strdup(base_menu->header_file) : NULL;
+                overlay.menu_file = base_menu->menu_file ? strdup(base_menu->menu_file) : NULL;
+                (void)menu_save_properties_form(&overlay, p->overlay_values);
+            } else if (p->overlay_kind == MENU_PREVIEW_OVERLAY_CUSTOMIZATION) {
+                (void)menu_save_customization_form(&overlay, p->overlay_values);
+            }
+
+            menu = &overlay;
+        }
+
+        bool interactive = (menu && menu->cm_enabled && menu->cm_lightbar);
+
+        MenuDefinition filtered;
+        MenuDefinition *menu_for_preview = menu;
+        MenuOption **filtered_options = NULL;
+
+        if (menu_for_preview && menu_for_preview->options && menu_for_preview->option_count > 0) {
+            filtered_options = calloc((size_t)menu_for_preview->option_count, sizeof(MenuOption *));
+            if (filtered_options != NULL) {
+                int out_count = 0;
+                for (int i = 0; i < menu_for_preview->option_count; i++) {
+                    MenuOption *opt = menu_for_preview->options[i];
+                    if (!opt) continue;
+                    if (opt->flags & OFLAG_NODSP) continue;
+                    if (!opt->description || !opt->description[0]) continue;
+
+                    if ((opt->flags & OFLAG_RIP) != 0u && !view_is_rip) continue;
+
+                    int req_level = parse_priv_level((p && p->sys_path) ? p->sys_path : "", opt->priv_level ? opt->priv_level : "");
+                    if (view_level >= req_level) {
+                        filtered_options[out_count++] = opt;
+                    }
+                }
+
+                filtered = *menu_for_preview;
+                filtered.options = filtered_options;
+                filtered.option_count = out_count;
+                menu_for_preview = &filtered;
+            }
+        }
+
+        menu_preview_render(menu_for_preview, &vs, &layout, interactive ? selected : -1);
+
+        if (interactive && selected < 0 && layout.count > 0) {
+            selected = 0;
+        }
+        if (interactive && layout.count > 0) {
+            if (selected < 0) selected = 0;
+            if (selected >= layout.count) selected = layout.count - 1;
+        }
+
+        attron(COLOR_PAIR(CP_DIALOG_TEXT));
+        menu_preview_blit(menu_for_preview, &vs, interactive ? &layout : NULL, interactive ? selected : -1, x, y);
+        if (interactive) {
+            mvprintw(y + pv_h - 1, x + 0, "Arrows=Move  ENTER=Select  ESC/F4=Back");
+        } else {
+            mvprintw(y + pv_h - 1, x + 0, "ESC/F4 = Back");
+        }
+        attroff(COLOR_PAIR(CP_DIALOG_TEXT));
+
+        if (filtered_options != NULL) {
+            free(filtered_options);
+        }
+
+        if (menu == &overlay && p && p->overlay_kind == MENU_PREVIEW_OVERLAY_PROPERTIES) {
+            menu_preview_overlay_free(&overlay);
+        }
+
+        doupdate();
+        int ch = getch();
+
+        if (interactive && layout.count > 0) {
+            int cols = (layout.cols > 0) ? layout.cols : 1;
+            int rows = (layout.count + cols - 1) / cols;
+            int r = (selected >= 0) ? (selected / cols) : 0;
+            int c = (selected >= 0) ? (selected % cols) : 0;
+
+            if (ch == KEY_LEFT) {
+                if (c > 0) c--;
+                else c = cols - 1;
+                int idx = r * cols + c;
+                if (idx >= layout.count) idx = layout.count - 1;
+                selected = idx;
+            } else if (ch == KEY_RIGHT) {
+                if (c < cols - 1) c++;
+                else c = 0;
+                int idx = r * cols + c;
+                if (idx >= layout.count) idx = r * cols;
+                if (idx >= layout.count) idx = layout.count - 1;
+                selected = idx;
+            } else if (ch == KEY_UP) {
+                if (r > 0) r--;
+                else r = rows - 1;
+                int idx = r * cols + c;
+                if (idx >= layout.count) {
+                    idx = layout.count - 1;
+                }
+                selected = idx;
+            } else if (ch == KEY_DOWN) {
+                if (r < rows - 1) r++;
+                else r = 0;
+                int idx = r * cols + c;
+                if (idx >= layout.count) {
+                    idx = (rows - 1) * cols + c;
+                    while (idx >= layout.count && idx > 0) idx--;
+                }
+                selected = idx;
+            } else if (ch == '\n' || ch == '\r') {
+                if (selected >= 0 && selected < layout.count && layout.items && layout.items[selected].desc) {
+                    dialog_message("Preview", layout.items[selected].desc);
+                }
+            } else if (isprint(ch)) {
+                int idx = -1;
+                if (menu_preview_hotkey_to_index(&layout, ch, &idx)) {
+                    selected = idx;
+                }
+            }
+        }
+
+        menu_preview_layout_free(&layout);
+
+        switch (ch) {
+            case 27:
+            case KEY_F(4):
+                done = true;
+                break;
+            case KEY_RESIZE:
+                resize_term(0, 0);
+                if (preview_terminal_is_too_small(80, 25)) {
+                    dialog_message("Terminal too small",
+                                   "Menu preview requires an 80x25 terminal.\n"
+                                   "Restart maxcfg in an 80x25 window.");
+                    done = true;
+                    break;
+                }
+                x = (COLS - pv_w) / 2;
+                y = (LINES - pv_h) / 2;
+
+                delwin(saved);
+                saved = dupwin(stdscr);
+                if (saved == NULL) {
+                    dialog_message("Error", "Unable to allocate screen buffer for preview.");
+                    done = true;
+                }
+                break;
+        }
+    }
+
+    overwrite(saved, stdscr);
+    delwin(saved);
+    touchwin(stdscr);
+    wnoutrefresh(stdscr);
 }
 
 static void action_save_config(void)
@@ -276,6 +575,52 @@ static int toml_get_int_or_default(const char *path, int def)
         return v.v.i;
     }
     return def;
+}
+
+static char *msg_reader_menu_values[1] = { NULL };
+
+static const FieldDef msg_reader_menu_fields[] = {
+    {
+        .keyword = "msg_reader_menu",
+        .label = "Reader Menu",
+        .help = "Menu name used as the authoritative command set for the full-screen message reader (FSR).",
+        .type = FIELD_TEXT,
+        .max_length = 24,
+        .default_value = "MSGREAD"
+    },
+};
+
+static void action_msg_reader_menu(void)
+{
+    free(msg_reader_menu_values[0]);
+
+    if (g_maxcfg_toml == NULL) {
+        dialog_message("Configuration Not Loaded", "TOML configuration is not loaded.");
+        return;
+    }
+
+    const char *cur = toml_get_string_or_empty("maximus.msg_reader_menu");
+    if (cur[0] == '\0') {
+        cur = "MSGREAD";
+    }
+    msg_reader_menu_values[0] = strdup(cur);
+    if (msg_reader_menu_values[0] == NULL) {
+        dialog_message("Error", "Out of memory.");
+        return;
+    }
+
+    int dirty_fields[32];
+    int dirty_count = 0;
+    bool saved = form_edit("Message Reader Menu", msg_reader_menu_fields, 1, msg_reader_menu_values, dirty_fields, &dirty_count);
+    if (saved) {
+        const char *v = msg_reader_menu_values[0] ? msg_reader_menu_values[0] : "";
+        if (v[0] == '\0') {
+            (void)maxcfg_toml_override_unset(g_maxcfg_toml, "maximus.msg_reader_menu");
+        } else {
+            (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "maximus.msg_reader_menu", v);
+        }
+        g_state.dirty = true;
+    }
 }
 
 static const char *access_level_name_for_level(const char *sys_path, int level)
@@ -1596,7 +1941,7 @@ static void action_network_addresses(void)
 
 static void action_edit_lang_file_list(void *unused);
 
-static char *language_settings_values[3] = { NULL };
+static char *language_settings_values[4] = { NULL };
 
 static const FieldDef language_settings_with_list[] = {
     {
@@ -1628,7 +1973,7 @@ static const FieldDef language_settings_with_list[] = {
 
 static void action_languages(void)
 {
-    for (int i = 0; i < 3; i++) free(language_settings_values[i]);
+    for (int i = 0; i < 4; i++) free(language_settings_values[i]);
 
     if (g_maxcfg_toml == NULL) {
         dialog_message("Configuration Not Loaded", "TOML configuration is not loaded.");
@@ -1643,10 +1988,11 @@ static void action_languages(void)
     }
     language_settings_values[1] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.lang_path"), NULL);
     language_settings_values[2] = strdup("[Press Enter to edit]");
+    language_settings_values[3] = strdup("[Press Enter to browse]");
 
     int dirty_fields[32];
     int dirty_count = 0;
-    bool saved = form_edit("Language Settings", language_settings_with_list, 3, language_settings_values, dirty_fields, &dirty_count);
+    bool saved = form_edit("Language Settings", language_settings_with_list, 4, language_settings_values, dirty_fields, &dirty_count);
 
     if (saved) {
         (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "general.language.default_language", language_settings_values[0] ? language_settings_values[0] : "english");
@@ -3753,12 +4099,22 @@ static void open_menu_customization_action(void *ctx)
         { "BoundaryLayout", "Boundary layout", "Column layout: Grid (fixed), Tight (last row centered),\nSpread (fill space), Spread_Width, Spread_Height.\nSpread distributes whitespace gracefully.", FIELD_SELECT, 0, "Grid", layout_opts, NULL, NULL, false, false, false, NULL, NULL },
     };
 
+    MenuPreviewCtx preview_ctx = {
+        .sys_path = mctx->sys_path,
+        .menu = mctx->current_menu,
+        .overlay_values = values,
+        .overlay_kind = MENU_PREVIEW_OVERLAY_CUSTOMIZATION
+    };
+    form_set_preview_action(menu_preview_stub, &preview_ctx);
+
     bool saved = form_edit("Menu Customization",
                            fields,
                            (int)(sizeof(fields) / sizeof(fields[0])),
                            values,
                            NULL,
                            NULL);
+
+    form_set_preview_action(NULL, NULL);
 
     bool changed = false;
     if (saved) {
@@ -3849,12 +4205,22 @@ static bool edit_menu_properties(const char *sys_path, MenuDefinition **menus, i
     values[customization_idx] = strdup("(edit...)");
     values[customization_idx + 1] = strdup(options_label);
 
+    MenuPreviewCtx preview_ctx = {
+        .sys_path = sys_path,
+        .menu = menu,
+        .overlay_values = values,
+        .overlay_kind = MENU_PREVIEW_OVERLAY_PROPERTIES
+    };
+    form_set_preview_action(menu_preview_stub, &preview_ctx);
+
     bool saved = form_edit(menu->name ? menu->name : "Menu Properties",
                            fields_with_action,
                            field_count,
                            values,
                            NULL,
                            NULL);
+
+    form_set_preview_action(NULL, NULL);
 
     bool modified = false;
     if (saved) {
@@ -5524,6 +5890,109 @@ static void action_export_nextgen_config(void)
     }
 }
 
+/* ============================================================================
+ * Convert Legacy Language (MAD → TOML)
+ * ============================================================================ */
+
+static const FieldDef convert_lang_fields[] = {
+    {
+        NULL,
+        "Language file directory",
+        "Directory containing .MAD language files to convert.",
+        FIELD_TEXT,
+        255,
+        "",
+        NULL,
+        NULL,
+        NULL,
+        false,
+        false,
+        false,
+        NULL,
+        NULL,
+    },
+};
+
+static void action_convert_legacy_lang(void)
+{
+    const char *sys_path = current_sys_path();
+    if (!sys_path || !sys_path[0]) {
+        dialog_message("Error", "System path not configured.");
+        return;
+    }
+
+    char default_lang_dir[512];
+    if (snprintf(default_lang_dir, sizeof(default_lang_dir),
+                 "%s/etc/lang", sys_path) >= (int)sizeof(default_lang_dir)) {
+        dialog_message("Error", "Default language path too long.");
+        return;
+    }
+
+    char *values[1] = { NULL };
+    values[0] = strdup(default_lang_dir);
+    if (values[0] == NULL) {
+        dialog_message("Error", "Out of memory.");
+        return;
+    }
+
+    int dirty_fields[4];
+    int dirty_count = 0;
+    bool saved = form_edit("Convert Legacy Language (MAD)",
+                           convert_lang_fields,
+                           1,
+                           values,
+                           dirty_fields,
+                           &dirty_count);
+
+    if (!saved) {
+        free(values[0]);
+        return;
+    }
+
+    if (values[0] == NULL || values[0][0] == '\0') {
+        free(values[0]);
+        dialog_message("Convert Language", "Language directory is required.");
+        return;
+    }
+
+    char lang_dir[512];
+    if (snprintf(lang_dir, sizeof(lang_dir), "%s", values[0]) >= (int)sizeof(lang_dir)) {
+        free(values[0]);
+        dialog_message("Error", "Language path too long.");
+        return;
+    }
+    free(values[0]);
+
+    if (!dialog_confirm("Convert Legacy Language (MAD)",
+                        "Convert all .MAD files in this directory to TOML?")) {
+        return;
+    }
+
+    char err[512];
+    err[0] = '\0';
+    int count = lang_convert_all_mad(lang_dir, NULL, err, sizeof(err));
+    if (count < 0) {
+        dialog_message("Conversion Failed",
+                       err[0] ? err : "Failed to convert language files.");
+    } else if (count == 0) {
+        dialog_message("Convert Language", "No .MAD files found in the specified directory.");
+    } else {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Successfully converted %d .MAD file(s) to TOML.", count);
+        if (err[0]) {
+            /* Append warning about partial failures */
+            size_t mlen = strlen(msg);
+            snprintf(msg + mlen, sizeof(msg) - mlen, "\n\nWarning: %s", err);
+        }
+        dialog_message("Conversion Complete", msg);
+    }
+}
+
+static void action_lang_editor(void)
+{
+    action_browse_lang_strings(NULL);
+}
+
 static void action_menus_list(void)
 {
     const char *sys_path = current_sys_path();
@@ -5531,6 +6000,19 @@ static void action_menus_list(void)
         dialog_message("Error", "System path not configured.");
         return;
     }
+
+    /*
+     * Menu editing writes per-menu TOML directly via save_menu_toml().
+     *
+     * g_state.dirty is used elsewhere to mean "there are pending MaxCfgToml
+     * overrides to persist". The generic form editor will set g_state.dirty
+     * for any changed form, but menus are not saved through the override system.
+     *
+     * Snapshot and restore the override-dirty flag so editing/saving menus does
+     * not cause an extra save prompt on application exit or trigger a different
+     * TOML serialization path.
+     */
+    const bool dirty_before = g_state.dirty;
 
     /* Load menus from TOML */
     char err[256];
@@ -5652,6 +6134,9 @@ static void action_menus_list(void)
     }
     free(menu_paths);
     free(menu_prefixes);
+
+    /* Restore override-dirty state (see note at top of function). */
+    g_state.dirty = dirty_before;
     
     /* Redraw screen */
     touchwin(stdscr);

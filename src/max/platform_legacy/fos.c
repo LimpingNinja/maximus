@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: fos.c,v 1.5 2004/01/27 21:00:29 paltas Exp $";
 /*# name=FOSSIL interface routines
 */
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <conio.h>
 #include <string.h>

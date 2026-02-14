@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: async.c,v 1.3 2004/01/27 21:00:26 paltas Exp $";
 #ifdef OS_2
 
 #define MAX_INCL_COMMS
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <conio.h>

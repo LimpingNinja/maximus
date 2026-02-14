@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: emsi.c,v 1.3 2004/01/27 21:00:27 paltas Exp $";
 
 #ifdef EMSI
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
 #include <stdarg.h>
 #include <string.h>
 #include "mm.h"

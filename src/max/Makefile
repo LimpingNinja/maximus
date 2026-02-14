@@ -1,7 +1,8 @@
 include $(SRC)/vars.mk
 
 LANGHDR     	:=  $(SRC)/resources/lang/english.lth
-LANGSRC     	:=  $(SRC)/resources/lang/english.mad
+# LANGSRC removed — MAID is no longer in the build pipeline.
+# The frozen english.lth is used as-is; english.toml is the new source of truth.
 # smserial is OS/2-only, skip on UNIX platforms
 ifeq ($(PLATFORM),darwin)
 LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
@@ -28,7 +29,7 @@ MAXOBJ := max.o
 
 MOBJS :=        uedit.obj       ued_cmds.obj    ued_disp.obj    \
 display.obj     disp_dat.obj    disp_qu.obj     max_rip.obj     \
-disp_max.obj    disp_mis.obj    ui_field.obj    ui_lightbar.obj ui_form.obj     med_add.obj     maxed.obj       \
+disp_max.obj    disp_mis.obj    mci.obj         ui_field.obj    ui_lightbar.obj ui_form.obj     ui_shadowbuf.obj ui_scroll.obj   med_add.obj     maxed.obj       \
 med_scrn.obj    med_move.obj    med_del.obj     med_quot.obj    \
 med_read.obj    med_misc.obj    f_area.obj      f_con.obj       \
 f_intrin.obj    f_isval.obj     f_kill.obj      f_locate.obj    \
@@ -44,6 +45,7 @@ m_hurl.obj      m_inq.obj       m_intrin.obj    m_isval.obj     \
 m_kill.obj      m_lread.obj     m_mdate.obj     m_node.obj      \
 m_read.obj      m_reply.obj     m_save.obj      m_scan.obj      \
 m_tag.obj       mb_novl.obj     m_upload.obj    m_xport.obj     \
+m_listtest.obj  \
 me_misc.obj     m_edit.obj      m_misc.obj      m_restr.obj     \
 mb_read.obj     m_util.obj      m_attach.obj    l_attach.obj    \
 t_add.obj       t_disp.obj      t_kill.obj      max_clss.obj    \
@@ -120,15 +122,8 @@ libmax2.so: $(MOBJS) $(ZOBJS)
 
 bldupd.o: bldupd.h
 
-.PRECIOUS: $(SRC)/src/utils/util/maid $(LANGHDR)
-
-$(SRC)/src/utils/util/maid:
-	$(MAKE) -C $(SRC)/src/utils/util SRC=$(SRC) maid
-
-$(LANGHDR): $(LANGSRC) $(SRC)/src/utils/util/maid
-	touch $<
-	@(cd $(dir $<) && $(SRC)/src/utils/util/maid $(notdir $<) -d -p)
-#	cp -f $@ $(SLIBDIR)\$(@:f)
+# MAID build rules removed — the frozen english.lth is committed directly.
+# Language strings now come from english.toml via the maxlang API.
 
 max.o: CPPFLAGS += -DINSTALL_PREFIX=\"$(PREFIX)\"
 

@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: m_edit.c,v 1.3 2004/01/27 21:00:31 paltas Exp $";
 /*# name=Routines used by msg section and editor stuff
 */
 
+#define MAX_LANG_m_area
 #define MAX_LANG_max_bor
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

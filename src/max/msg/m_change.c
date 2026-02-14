@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: m_change.c,v 1.4 2004/01/27 21:00:30 paltas Exp $";
 /*# name=Message Section: C)hange command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -176,7 +178,8 @@ int Msg_Change(void)
 
       if (cost)
       {
-        Printf(balance_adjusted, cost);
+        { char _ib[16]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)cost);
+          LangPrintf(balance_adjusted, _ib); }
 
         if (usr.debit >= cost)
           usr.debit -= cost;

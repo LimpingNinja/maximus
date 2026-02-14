@@ -29,9 +29,13 @@ static char rcs_id[]="$Id: maxed.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #define INIT_MAXED
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_bor
 #include "maxed.h"
 #include "keys.h"
 #include "m_reply.h"
+#include "mci.h"
 
 static word near Process_Scan_Code(struct _replyp *pr);
 static word near Process_Cursor_Key(void);
@@ -114,6 +118,8 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
     free(quotebuf);
     return ABORT;
   }
+
+  MciPushParseFlags(MCI_PARSE_ALL, 0);
 
   now_cl=coreleft();
 
@@ -477,6 +483,7 @@ BackToCaller:
   free(quotebuf);
   free(quote_pos);
 
+  MciPopParseFlags();
   return ret;
 }
 

@@ -26,11 +26,14 @@ static char rcs_id[]="$Id: max_main.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Main menu functions and commands
 */
 
-#define MAX_LANG_max_main
 #define MAX_INCL_COMMS
 #define INCL_NOPM
 #define INCL_DOS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_main
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -216,7 +219,7 @@ static void near Yell(void)
 
     num_yells++;
 
-    Printf(user_yelling, usr.name);
+    LangPrintf(user_yelling, usr.name);
     vbuf_flush();
 
     yells=ye.data1;
@@ -285,7 +288,7 @@ static void near Max_Version(void)
 
   Puts(CLS);
 
-  Printf(slogan, LMAGENTA, version, test);
+  LangPrintf(slogan, LMAGENTA, version, test);
   Puts(copyright);
   Puts(dev_info);
 
@@ -345,11 +348,11 @@ static void near Max_Version(void)
             break;
 
           case 0x04:
-            Printf(class_ps2_mod, 50);
+            LangPrintf(class_ps2_mod, "50");
             break;
 
           case 0x05:
-            Printf(class_ps2_mod, 60);
+            LangPrintf(class_ps2_mod, "60");
             break;
 
           case 0x01: /* many clones have AT/339 - fall thru to "Generic AT" */
@@ -360,7 +363,7 @@ static void near Max_Version(void)
         break;
 
       case 0xfa:
-        Printf(class_ps2_mod, 30);
+        LangPrintf(class_ps2_mod, "30");
         break;
 
       case 0xf9:
@@ -372,18 +375,18 @@ static void near Max_Version(void)
         {
           case 0x2e: case 0x14: case 0x16: case 0x2a: case 0x2c: case 0x58:
           case 0x5a: case 0x5c: case 0x40: case 0x28:
-            Printf(class_ps2_mod, 95);
+            LangPrintf(class_ps2_mod, "95");
             subid=0;
             break;
 
           case 0x2f: case 0x11: case 0x13: case 0x2b: case 0x2d: case 0x57:
           case 0x59: case 0x5b: case 0x3f: case 0x29:
-            Printf(class_ps2_mod, 90);
+            LangPrintf(class_ps2_mod, "90");
             subid=0;
             break;
 
           default:
-            Printf(class_ps2_mod, 80);
+            LangPrintf(class_ps2_mod, "80");
         }
 
 
@@ -398,13 +401,15 @@ static void near Max_Version(void)
         break;
 
       default:
-        Printf(class_generic, (int)id);
+        { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", (int)id);
+          LangPrintf(class_generic, _ib); }
         break;
     }
 
     #ifdef OS_2
     if (subid)
-      Printf(minor_revision, subid+1);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", subid+1);
+        LangPrintf(minor_revision, _ib); }
     #endif
 #endif
 
@@ -442,7 +447,10 @@ static void near Max_Version(void)
       osminor = (_osminor - 30) * 10;
     }
 
-    Printf(os2_ver, osmajor/10, osminor);
+    { char _i1[16], _i2[16];
+      snprintf(_i1, sizeof(_i1), "%d", osmajor/10);
+      snprintf(_i2, sizeof(_i2), "%d", osminor);
+      LangPrintf(os2_ver, _i1, _i2); }
   }
 #elif defined(__MSDOS__)
 
@@ -450,11 +458,17 @@ static void near Max_Version(void)
     struct _fossil_info finfo;
 
     if (_osmajor > 9)
-      Printf(os2_dosbox,_osmajor/10,_osminor);
-    else Printf(dos_ver,_osmajor,_osminor);
+    { char _i1[16], _i2[16];
+      snprintf(_i1, sizeof(_i1), "%d", _osmajor/10);
+      snprintf(_i2, sizeof(_i2), "%d", _osminor);
+      LangPrintf(os2_dosbox, _i1, _i2); }
+    else { char _i1[16], _i2[16];
+      snprintf(_i1, sizeof(_i1), "%d", _osmajor);
+      snprintf(_i2, sizeof(_i2), "%d", _osminor);
+      LangPrintf(dos_ver, _i1, _i2); }
 
     fossil_inf(&finfo);
-    Printf(fossil_ver,finfo.id);
+    LangPrintf(fossil_ver,finfo.id);
   }
 
 #elif defined(UNIX)
@@ -472,7 +486,7 @@ static void near Max_Version(void)
 
   {
     char temp[40];
-    Printf(heap_mem, commaize((long)coreleft(), temp));
+    LangPrintf(heap_mem, commaize((long)coreleft(), temp));
   }
 
   Puts(WHITE);
@@ -524,8 +538,8 @@ static void near Compilation_Data(void)
   #define COMPVERMIN    0
 #endif
 
-  Printf(compiled_on,
-         comp_date, comp_time);
+  LangPrintf(compiled_on,
+             comp_date, comp_time);
 
   Printf(COMPILER COMPSTR ")\n", COMPVERMAJ, COMPVERMIN);
 }
@@ -641,11 +655,11 @@ int UserList(void)
             break;
           }
 
-          Printf(ul_format,
-                 (ngcfg_get_bool("general.session.alias_system") && *user.alias)
-                    ? user.alias : user.name,
-                 sc_time(&user.ludate,string),
-                 user.city);
+          LangPrintf(ul_format,
+                     (ngcfg_get_bool("general.session.alias_system") && *user.alias)
+                        ? user.alias : user.name,
+                     sc_time(&user.ludate,string),
+                     user.city);
         }
       }
 
@@ -663,7 +677,7 @@ int UserList(void)
   }
 
   if (!found)
-    Printf(ul_notfound, search);
+    LangPrintf(ul_notfound, search);
 
   UserFileClose(huf);
   return ret;
@@ -775,7 +789,7 @@ static void near Goodbye(void)
 
     Display_File(0, NULL, ngcfg_get_path("general.display_files.bye_bye"));
 
-    Printf(bibi, usrname);
+    LangPrintf(bibi, usrname);
     caller_online=FALSE;        /* To disable the "Caller dropped carrier" */
     Delay(200);                 /* message.                                */
   }

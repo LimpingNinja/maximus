@@ -26,10 +26,12 @@ static char rcs_id[]="$Id: ued_cmds.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 /*# name=Internal user editor (miscellaneous commands)
 */
 
-#define MAX_LANG_max_ued
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_chng
 #define MAX_LANG_max_init
-
+#define MAX_LANG_max_ued
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -393,7 +395,11 @@ void UedGetBday(void)
   char temp[PATHLEN];
   int yy, mm, dd;
 
-  InputGetsLL(temp, 15, ued_dob_prompt, user.dob_year, user.dob_month, user.dob_day);
+  { char _yr[8], _mo[4], _dy[4];
+    snprintf(_yr, sizeof(_yr), "%u", user.dob_year);
+    snprintf(_mo, sizeof(_mo), "%u", user.dob_month);
+    snprintf(_dy, sizeof(_dy), "%u", user.dob_day);
+    InputGetsLL(temp, 15, ued_dob_prompt, _yr, _mo, _dy); }
 
   if (*temp && sscanf(temp, "%4u-%u-%u", &yy, &mm, &dd)==3)
   {
@@ -798,7 +804,7 @@ void UedGetKeys(void)
   char *p;
   
   changes=TRUE;
-  Printf(ued_curkeys, Keys(user.xkeys));
+  LangPrintf(ued_curkeys, Keys(user.xkeys));
   InputGets(temp, ued_keytoggle);
 
   for (p=cstrupr(temp); *p; p++)
@@ -1311,10 +1317,11 @@ static int near UFileBusy(void)
 
     if ((byte)node != task_num)
     {
-      Printf(ued_cantdel1, node);
-      Printf(ued_cantdel2, node);
-      Puts(ued_cantdel3);
-      Printf(ued_cantdel4, original_path, node, node);
+      { char _nd[8]; snprintf(_nd, sizeof(_nd), "%02d", (int)(byte)node);
+        LangPrintf(ued_cantdel1, _nd);
+        LangPrintf(ued_cantdel2, _nd);
+        Puts(ued_cantdel3);
+        LangPrintf(ued_cantdel4, original_path, _nd, _nd); }
 
       Press_ENTER();
       rc=TRUE;
@@ -1358,7 +1365,7 @@ int UedPurgeUsers(void)
       if ((huff->usr.delflag & UFLAG_DEL) &&
           (!*usr.name || !eqstri(huff->usr.name, usr.name)))
       {
-        Printf(ued_deleted, huff->usr.name);
+        LangPrintf(ued_deleted, huff->usr.name);
 
         if (pn < MAX_PLR)
         {

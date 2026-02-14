@@ -29,9 +29,11 @@ static char rcs_id[]="$Id: max_menu.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Menu server
 */
 
-#define MAX_LANG_max_main
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -1147,7 +1149,8 @@ static int near ProcessMenuResponse(PAMENU pam, int *piSameMenu, char *name,
   if (!*piRanOpt && ch != '|' && ch != 0x7f && ch <= 255)
   {
     ShowOption(ch, *pbHelp, pam->m.flag);
-    Printf(dontunderstand, upper_ch);
+    { char _cb[2] = { (char)upper_ch, '\0' };
+      LangPrintf(dontunderstand, _cb); }
     mdm_dump(DUMP_INPUT);
     ResetAttr();
     Clear_KBuffer();

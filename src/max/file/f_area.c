@@ -28,6 +28,10 @@ static char rcs_id[]="$Id: f_area.c,v 1.3 2004/01/27 21:00:27 paltas Exp $";
 
 #define INITIALIZE_FILE    /* Intialize message-area variables */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -176,9 +180,8 @@ static int near FileAreaMenu(PFAH pfah, char *group, BARINFO *pbi)
 
     Puts(WHITE);
     
-    InputGets(input, file_prmpt, achg[0],
-                                 achg[1],
-                                 achg[2]);
+    { char _k0[2]={achg[0],0}, _k1[2]={achg[1],0}, _k2[2]={achg[2],0};
+      InputGets(input, file_prmpt, _k0, _k1, _k2); }
     cstrupr(input);
 
     /* See if the user wishes to search for something */
@@ -246,7 +249,8 @@ static int near FileAreaMenu(PFAH pfah, char *group, BARINFO *pbi)
       if (ChangeToArea(group, input, first, pfah))
         return did_valid;
     }
-    else Printf(dontunderstand, *input);
+    else { char _cb[2] = { *input, '\0' };
+           LangPrintf(dontunderstand, _cb); }
 
     first=FALSE;
   }

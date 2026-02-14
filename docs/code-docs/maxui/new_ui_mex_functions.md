@@ -5,6 +5,8 @@ This document describes the UI (User Interface) intrinsics available to MEX scri
 ## Table of Contents
 
 1. [Headers](#headers)
+2. [API Usage (C)](#api-usage-c)
+3. [API Usage (MEX)](#api-usage-mex)
 2. [Low-Level Primitives](#low-level-primitives)
 3. [Field Editing Functions](#field-editing-functions)
 4. [Lightbar and Select Prompt](#lightbar-and-select-prompt)
@@ -25,6 +27,163 @@ Core/non-UI intrinsics remain in:
 
 ```c
 #include <max.mh>
+```
+
+---
+
+## API Usage (C)
+
+This section describes how to use the underlying C APIs that the MEX intrinsics wrap.
+
+### ScrollingRegion (C)
+
+- **[header]** `#include "ui_scroll.h"`
+- **[lifecycle]**
+  - `ui_scrolling_region_style_default(&style);`
+  - `ui_scrolling_region_init(&r, x, y, w, h, max_lines, &style);`
+  - `ui_scrolling_region_free(&r);`
+- **[append]**
+  - `ui_scrolling_region_append(&r, "line...", UI_SCROLL_APPEND_FOLLOW);`
+- **[render]**
+  - `ui_scrolling_region_render(&r);`
+- **[input loop]**
+  - Read a key with `ui_read_key()`.
+  - Pass it to `ui_scrolling_region_handle_key(&r, key)`.
+  - If it returns `1`, re-render.
+  - If it returns `0`, treat the key as a “command” key for the caller.
+
+### TextBufferViewer (C)
+
+- **[header]** `#include "ui_scroll.h"`
+- **[lifecycle]**
+  - `ui_text_viewer_style_default(&style);`
+  - `ui_text_viewer_init(&v, x, y, w, h, &style);`
+  - `ui_text_viewer_free(&v);`
+- **[set buffer]**
+  - `ui_text_viewer_set_text(&v, text);`
+- **[render]**
+  - `ui_text_viewer_render(&v);`
+- **[two input patterns]**
+  - **[pattern A: handle_key]** caller does `key = ui_read_key();` and calls `ui_text_viewer_handle_key(&v, key)`.
+  - **[pattern B: read_key]** caller does `key = ui_text_viewer_read_key(&v);`.
+    - returns `0` if the viewer consumed a navigation key (and re-rendered)
+    - returns the key code for non-navigation keys (caller command)
+
+### Overlays / snapshot-restore (C)
+
+- **[shadow buffer]** implemented in `ui_shadowbuf.h/.c`.
+- **[widget helpers]**
+  - `ui_scrolling_region_overlay_push()` / `ui_scrolling_region_overlay_pop()`
+  - `ui_text_viewer_overlay_push()` / `ui_text_viewer_overlay_pop()`
+
+---
+
+## API Usage (MEX)
+
+This section describes:
+
+- **[intrinsic API surface]** what functions exist in `maxui.mh`
+- **[usage patterns]** how to structure your MEX input loop so “command” keys pass through
+
+### Intrinsic surface (ScrollingRegion / TextBufferViewer)
+
+Headers:
+
+```c
+#include <max.mh>
+#include <maxui.mh>
+```
+
+Keys:
+
+- **[ui_read_key()]** returns integer key codes consistent with C (`keys.h`)
+
+ScrollingRegion:
+
+- **[style]** `ui_scroll_region_style_default(ref style)`
+- **[create/destroy]** `ui_scroll_region_create(key, x, y, w, h, max_lines, style)` / `ui_scroll_region_destroy(key)`
+- **[append]** `ui_scroll_region_append(key, text, flags)`
+- **[render]** `ui_scroll_region_render(key)`
+- **[key handling]** `ui_scroll_region_handle_key(key, keycode)` (returns non-zero if consumed)
+
+TextBufferViewer:
+
+- **[style]** `ui_text_viewer_style_default(ref style)`
+- **[create/destroy]** `ui_text_viewer_create(key, x, y, w, h, style)` / `ui_text_viewer_destroy(key)`
+- **[set text]** `ui_text_viewer_set_text(key, text)`
+- **[render]** `ui_text_viewer_render(key)`
+- **[key handling]** `ui_text_viewer_handle_key(key, keycode)`
+- **[key helper]** `ui_text_viewer_read_key(key)`
+
+### MEX pattern A: focus routing (non-blocking)
+
+Use this when you want a page with multiple interactive regions (ex: feed + viewer + command bar).
+
+```c
+int: focus;  // 0=region, 1=viewer
+int: k;
+
+focus := 0;
+
+while (1)
+{
+  k := ui_read_key();
+
+  if (k = 27)  // ESC
+    return;
+
+  if (k = 't' or k = 'T')
+    focus := 1 - focus;
+  else if (focus = 0)
+  {
+    if (ui_scroll_region_handle_key("sr", k))
+      ui_scroll_region_render("sr");
+    else
+    {
+      // command keys for caller
+    }
+  }
+  else
+  {
+    if (ui_text_viewer_handle_key("tv", k))
+      ui_text_viewer_render("tv");
+    else
+    {
+      // command keys for caller
+    }
+  }
+}
+```
+
+### MEX pattern B: viewer-driven command passthrough
+
+Use this when the viewer is the primary UI and you want the “scroll keys are internal, everything else is a command” behavior.
+
+```c
+int: k;
+
+while (1)
+{
+  k := ui_text_viewer_read_key("tv");
+  if (k = 0)
+    ;
+  else if (k = 27)
+    return;
+  else
+  {
+    // command keys (R, [, ], etc.)
+  }
+}
+```
+
+### Rebuilding MEX scripts
+
+After editing `resources/m/*.mex`, rebuild the VM bytecode:
+
+```sh
+cd resources/m
+../../build/bin/mex uitest.mex
+cp -f uitest.vm ../../build/m/uitest.vm
 ```
 
 ---
@@ -586,6 +745,7 @@ struct ui_select_prompt_style
   int: show_brackets;
   int: margin;
   string: separator;
+  int: default_index;
   int: out_hotkey;
 };
 ```
@@ -597,6 +757,12 @@ struct ui_select_prompt_style
 **Hotkey output:**
 - `style.out_hotkey` receives the selected hotkey character (numeric codepoint)
 - `0` if cancelled
+
+**Default selection:**
+- `default_index` (default `0`): 1-based index of the option to pre-select
+  - `0` = first option is pre-selected (same as `1`)
+  - `1` = first option, `2` = second, etc.
+  - Values out of range are clamped to the first option
 
 **Margin and separator:**
 - `margin` (default `0`): adds padding spaces on **both sides** of each option when highlighted

@@ -23,6 +23,9 @@ static char rcs_id[]="$Id: t_qwk.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_track
 #include "trackp.h"
 #include "api_brow.h"
 #include "qwk.h"
@@ -126,12 +129,12 @@ void TrackProcessACInfo(char *actinfo, QWKTRACKINFO *pqti)
     strncpy(acbuf, actinfo+13, 16);
     acbuf[16]=0;
 
-    Printf(trk_got_actrack, acbuf);
+    LangPrintf(trk_got_actrack, acbuf);
 
     {
       if (!TrkLookupMsg(t, acbuf, NULL, NULL, NULL, &pqti->tmn))
       {
-        Printf(trk_err_msg_notfound, acbuf);
+        LangPrintf(trk_err_msg_notfound, acbuf);
 
         *pqti->tmn.szTrackID=0;
       }
@@ -161,7 +164,7 @@ void TrackProcessACInfo(char *actinfo, QWKTRACKINFO *pqti)
         pqti->tmn.ts=TS_CLOSED;
 
       if (pqti->tmn.ts != tsOld)
-        Printf(trk_new_status, TrkGetStatus(t, &pqti->tmn));
+        LangPrintf(trk_new_status, TrkGetStatus(t, &pqti->tmn));
     }
     else if (strncmp(actinfo+4, "Owner: ", 6)==0)
     {
@@ -185,13 +188,13 @@ void TrackProcessACInfo(char *actinfo, QWKTRACKINFO *pqti)
       /* Ensure that the specified owner is valid */
 
       if (!TrackValidOwner(t, acbuf, toNew, FALSE))
-        Printf(trk_bad_owner, acbuf);
+        LangPrintf(trk_bad_owner, acbuf);
       else
       {
         if (!eqstri(pqti->tmn.to, toNew))
         {
           strcpy(pqti->tmn.to, toNew);
-          Printf(trk_new_owner_is, acbuf);
+          LangPrintf(trk_new_owner_is, acbuf);
         }
       }
     }
@@ -237,7 +240,7 @@ void TrackProcessACInfo(char *actinfo, QWKTRACKINFO *pqti)
         pqti->tmn.tp=TP_CRIT;
 
       if (pqti->tmn.tp != tpOld)
-        Printf(trk_new_priority, TrkGetPriority(t, &pqti->tmn));
+        LangPrintf(trk_new_priority, TrkGetPriority(t, &pqti->tmn));
     }
     else if (strncmp(actinfo+4, "Discard ", 8)==0)
     {
@@ -252,7 +255,10 @@ void TrackProcessACInfo(char *actinfo, QWKTRACKINFO *pqti)
     }
     else
     {
-      Printf(trk_bad_cmd, end-actinfo, end-actinfo, actinfo);
+      { char _tb1[16], _tb2[16];
+        snprintf(_tb1, sizeof(_tb1), "%d", (int)(end-actinfo));
+        snprintf(_tb2, sizeof(_tb2), "%d", (int)(end-actinfo));
+        LangPrintf(trk_bad_cmd, _tb1, _tb2, actinfo); }
     }
   }
 
@@ -283,12 +289,12 @@ int TrackQWKUpdateTracking(QWKTRACKINFO *pqti)
     return FALSE;
 
   if (!TrkLookupMsg(t, pqti->tmn.szTrackID, NULL, NULL, NULL, &tmnOld))
-    Printf(trk_bad_old_id, pqti->tmn.szTrackID);
+    LangPrintf(trk_bad_old_id, pqti->tmn.szTrackID);
 
   if (!TrkUpdateMsg(t, &tmnOld, &pqti->tmn))
-    Printf(trk_err_updating_db, pqti->tmn.szTrackID);
+    LangPrintf(trk_err_updating_db, pqti->tmn.szTrackID);
   else
-    Printf(trk_info_updated, pqti->tmn.szTrackID);
+    LangPrintf(trk_info_updated, pqti->tmn.szTrackID);
 
   /* Modify the comment, if necessary */
 

@@ -286,6 +286,7 @@ struct mex_ui_select_prompt_style
   word show_brackets;
   word margin;
   IADDR separator;  /* string pointer */
+  word default_index; /* 1-based default selection (0 = first) */
   word out_hotkey;
 } __attribute__((packed));
 
@@ -306,6 +307,21 @@ struct mex_ui_prompt_field_style
   word flags;
   word start_mode;
   IADDR format_mask;  /* string pointer */
+} __attribute__((packed));
+
+struct mex_ui_scroll_region_style
+{
+  word attr;
+  word scrollbar_attr;
+  word flags;
+} __attribute__((packed));
+
+struct mex_ui_text_viewer_style
+{
+  word attr;
+  word status_attr;
+  word scrollbar_attr;
+  word flags;
 } __attribute__((packed));
 
 struct mex_ui_form_field

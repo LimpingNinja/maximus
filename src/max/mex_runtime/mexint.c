@@ -33,6 +33,8 @@ static char rcs_id[]="$Id: mexint.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
  * for the function to mexint.h.
  */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include "libmaxcfg.h"
 #include "mexall.h"
 

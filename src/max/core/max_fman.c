@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: max_fman.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Miscellaneous file-manipulation routines
 */
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <dos.h>

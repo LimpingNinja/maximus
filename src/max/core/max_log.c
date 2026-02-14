@@ -26,11 +26,13 @@ static char rcs_id[]="$Id: max_log.c,v 1.9 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Log-on routines and new-user junk
 */
 
-#define MAX_LANG_max_init
-#define MAX_LANG_max_chat
-#define MAX_LANG_max_main
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_max_init
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <string.h>
 #include <mem.h>
@@ -311,7 +313,7 @@ static int near GetName(void)
       }
       else
       {
-        sprintf(quest, what_first_name, blank_str);
+        LangSprintf(quest, sizeof(quest), what_first_name, blank_str);
         ui_prompt_field(quest, 35, 35, fname, BUFLEN, &pf_style);
       }
     }
@@ -342,7 +344,7 @@ static int near GetName(void)
 
       if (!found_it && !ngcfg_get_bool("general.session.single_word_names"))
       {
-        sprintf(quest, what_last_name,
+        LangSprintf(quest, sizeof(quest), what_last_name,
                 ngcfg_get_bool("general.session.alias_system") ? s_alias : blank_str);
 
         {
@@ -481,7 +483,8 @@ static int near GetName(void)
 
           logit(log_bad_pwd);
 
-          Printf(wrong_pwd, tries-1);
+          { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", tries-1);
+            LangPrintf(wrong_pwd, _tb); }
 
           if (tries==6)
           {
@@ -659,6 +662,7 @@ static int near Find_User(char *username)
     {
       /* Found the user successfully */
 
+      g_user_record_id = UserFileGetLastFoundId(huf);
       origusr=usr;
 
       if (!local && task_num > 0)
@@ -1223,8 +1227,10 @@ static void near Set_OnOffTime(void)
     logit(log_exc_daylimit);
     Display_File(0, NULL, ngcfg_get_path("general.display_files.day_limit"));
 
-    Printf(tlimit1, ClassGetInfo(cls,CIT_CALL_TIME));
-    Printf(tlimit2, usr.time);
+    { char _t1[16]; snprintf(_t1, sizeof(_t1), "%d", ClassGetInfo(cls,CIT_CALL_TIME));
+      LangPrintf(tlimit1, _t1); }
+    { char _t2[16]; snprintf(_t2, sizeof(_t2), "%d", usr.time);
+      LangPrintf(tlimit2, _t2); }
     
     do_timecheck=TRUE;
     ci_ejectuser();
@@ -1327,7 +1333,7 @@ void Get_Pwd(void)
 
     if (! eqstri(got, check))
     {
-      Printf(bad_pwd2, got, check);
+      LangPrintf(bad_pwd2, got, check);
       *got=0;
     }
     else

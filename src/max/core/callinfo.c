@@ -21,6 +21,7 @@
  * Caller information API
  */
 
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>

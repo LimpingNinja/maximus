@@ -17,6 +17,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <ctype.h>
 #include "mm.h"
 #include "max_msg.h"
@@ -28,9 +31,25 @@
 
 int CanAccessMsgCommand(PMAH pmah, option opt, char letter)
 {
-  char *menuname=PMAS(pmah, menuname);
+  char *menuname;
+  char *barricade;
   struct _opt *popt, *eopt;
   struct _amenu am;
+
+  /* Be defensive: these strings are offsets into the area heap. If the
+   * heap is missing/corrupt, fall back to defaults instead of crashing.
+   */
+
+  menuname="";
+  barricade="";
+
+  if (pmah && pmah->heap)
+  {
+    if (pmah->ma.cbHeap > 0 && pmah->ma.menuname < pmah->ma.cbHeap)
+      menuname=PMAS(pmah, menuname);
+    if (pmah->ma.cbHeap > 0 && pmah->ma.barricade < pmah->ma.cbHeap)
+      barricade=PMAS(pmah, barricade);
+  }
 
   if (! *menuname)
     menuname=mnu_msg;
@@ -55,7 +74,7 @@ int CanAccessMsgCommand(PMAH pmah, option opt, char letter)
     if (popt->type==opt &&
         (!letter || toupper(am.menuheap[popt->name])==letter))
     {
-      if (OptionOkay(&am, popt, FALSE, PMAS(pmah, barricade), pmah,
+      if (OptionOkay(&am, popt, FALSE, barricade, pmah,
                      &fah, menuname))
         break;
     }
@@ -71,9 +90,21 @@ int CanAccessMsgCommand(PMAH pmah, option opt, char letter)
 int CanAccessFileCommand(PFAH pfah, option opt, char letter, BARINFO *pbi)
 {
   BARINFO biSave;
-  char *menuname=PFAS(pfah, menuname);
+  char *menuname;
+  char *barricade;
   struct _opt *popt, *eopt;
   struct _amenu am;
+
+  menuname="";
+  barricade="";
+
+  if (pfah && pfah->heap)
+  {
+    if (pfah->fa.cbHeap > 0 && pfah->fa.menuname < pfah->fa.cbHeap)
+      menuname=PFAS(pfah, menuname);
+    if (pfah->fa.cbHeap > 0 && pfah->fa.barricade < pfah->fa.cbHeap)
+      barricade=PFAS(pfah, barricade);
+  }
 
   if (! *menuname)
     menuname=mnu_file;
@@ -107,7 +138,7 @@ int CanAccessFileCommand(PFAH pfah, option opt, char letter, BARINFO *pbi)
     if (popt->type==opt &&
         (!letter || toupper(am.menuheap[popt->name])==letter))
     {
-      if (OptionOkay(&am, popt, FALSE, PFAS(pfah, barricade), &mah,
+      if (OptionOkay(&am, popt, FALSE, barricade, &mah,
                      pfah, menuname))
         break;
     }

@@ -164,6 +164,10 @@ config_install:
  
 	@$(MAKE) reconfig
  
+	@[ -d ${PREFIX}/etc/lang ] || mkdir -p ${PREFIX}/etc/lang
+	@cp -f build/etc/lang/english.toml ${PREFIX}/etc/lang/english.toml
+	@cp -f resources/lang/delta_english.toml ${PREFIX}/etc/lang/delta_english.toml
+
 	@[ -d ${PREFIX}/etc/db ] || mkdir -p ${PREFIX}/etc/db
 	@cp -f scripts/db/userdb_schema.sql ${PREFIX}/etc/db/userdb_schema.sql
 	@cp -f scripts/db/init-userdb.sh ${PREFIX}/bin/init-userdb.sh
@@ -176,10 +180,6 @@ config_install:
 	@echo "Configuration complete."
 
 reconfig:
-	@echo "Pass one"
-	@echo " - Compiling english.mad (bootstrap)"
-	@cd $(PREFIX)/etc/lang && $(PREFIX)/bin/maid english -p
-
 	@echo " - Compiling MECCA help files"
 	@(cd $(PREFIX)/etc/help && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
@@ -190,9 +190,7 @@ reconfig:
 	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
 
 	@echo
-	@echo "Pass two"
-	@echo " - Re-Compiling english.mad "
-	@cd $(PREFIX)/etc/lang && $(PREFIX)/bin/maid english -d -s -p$(PREFIX)/etc/max
+	@echo "reconfig complete (MAID removed — language strings now via TOML)"
 
 install: mkdirs squish_install sqafix_install max_install maxtel_install config_install
 

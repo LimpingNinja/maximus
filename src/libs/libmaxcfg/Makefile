@@ -4,7 +4,7 @@ include $(SRC)/vars.mk
 
 CFLAGS += -I./include
 
-OBJS := src/libmaxcfg.o src/path.o
+OBJS := src/libmaxcfg.o src/path.o src/maxlang.o
 
 all: libmaxcfg.so
 

@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: m_hurl.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: H)url command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -106,7 +109,8 @@ static sword near DoTheHurlThing(HMSG omh, dword msgnum, byte *aname)
       Puts(hurl_cant);
     else
     {
-      Printf(hurling, msgnum, MAS(mah, name), MAS(to_mah, name));
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", msgnum);
+        LangPrintf(hurling, _ib, MAS(mah, name), MAS(to_mah, name)); }
 
       /* Ace the reply links */
 

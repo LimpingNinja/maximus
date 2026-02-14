@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: m_node.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: Display list of nodes and nets
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_chng
-
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -71,8 +72,8 @@ static int near Show_Nodelist(NETADDR *n)
         Puts(pad_net);
       else Puts(pad_none);
 
-      Printf(node_listing, nf->found.node ? nf->found.node : nf->found.net,
-             nf->found.name, nf->found.city);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", nf->found.node ? nf->found.node : nf->found.net);
+        LangPrintf(node_listing, _ib, nf->found.name, nf->found.city); }
 
       if (MoreYnBreak(&nonstop, CYAN))
       {

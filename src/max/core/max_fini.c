@@ -30,10 +30,13 @@ static char __attribute__((unused)) rcs_id[]="$Id: max_fini.c,v 1.6 2004/06/07 1
 /*# tname=Termination code
 */
 
-#define MAX_LANG_max_init
-#define MAX_LANG_max_chat
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_max_init
+#define MAX_LANG_max_main
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -563,7 +566,7 @@ void ChatCleanUp(void)
   
   for (x=0; x < num_task; x++)
   {
-    sprintf(temp, ch_off_abnormally, usrname);
+    LangSprintf(temp, sizeof(temp), ch_off_abnormally, usrname);
 
     if (ChatSendMsg((byte)tasks[x], CMSG_HEY_DUDE, strlen(temp)+1, temp)==-1)
     #ifdef DEBUG

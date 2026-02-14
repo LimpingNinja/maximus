@@ -23,6 +23,9 @@
 /*# name=Nodelist searching and retrieval functions
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -50,7 +53,7 @@ static int near NodeExist(NETADDR *d)
   if (! *ngcfg_get_string_raw("maximus.net_info_path"))
     return -1;
 
-  sprintf(temp, idxnode, ngcfg_get_string_raw("maximus.net_info_path"));
+  LangSprintf(temp, sizeof(temp), idxnode, ngcfg_get_string_raw("maximus.net_info_path"));
 
   if ((idxfile=shopen(temp,O_RDONLY | O_BINARY))==-1)
   {
@@ -111,16 +114,16 @@ int ReadNode(NETADDR *d,void *nodeptr)
   {
     if (nlver==NLVER_6)
     {
-      sprintf(temp, idxnode, ngcfg_get_string_raw("maximus.net_info_path"));
+      LangSprintf(temp, sizeof(temp), idxnode, ngcfg_get_string_raw("maximus.net_info_path"));
 
       x=(word)(fsize(temp)/(long)sizeof(struct _ndi));
 
-      sprintf(temp, datnode, ngcfg_get_string_raw("maximus.net_info_path"));
+      LangSprintf(temp, sizeof(temp), datnode, ngcfg_get_string_raw("maximus.net_info_path"));
 
       n6size=fsize(temp);
       n6size=n6size/(dword)x;
     }
-    else sprintf(temp, sysnode, ngcfg_get_string_raw("maximus.net_info_path"));
+    else LangSprintf(temp, sizeof(temp), sysnode, ngcfg_get_string_raw("maximus.net_info_path"));
 
     if ((nlfile=shopen(temp, O_RDONLY | O_BINARY))==-1)
     {

@@ -24,6 +24,8 @@ static char rcs_id[]="$Id: t_disp.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #endif
 
 #define MAX_LANG_m_area
+#define MAX_LANG_sysop
+#define MAX_LANG_track
 #include "trackp.h"
 
 #ifdef MAX_TRACKER
@@ -45,10 +47,10 @@ static void near TrackDisplayStatus(TRK_MSG_NDX *ptmn, int update_status)
   if (!TrkGetOwner(t, ptmn->to, szOwner))
     strcpy(szOwner, ptmn->to);
 
-  Printf(trk_msg_info,
-         " "+!(usr.bits & BITS_FSR),
-         TrkGetStatus(t, ptmn), TrkGetPriority(t, ptmn), szOwner,
-         " "+!(usr.bits & BITS_FSR));
+  LangPrintf(trk_msg_info,
+             " "+!(usr.bits & BITS_FSR),
+             TrkGetStatus(t, ptmn), TrkGetPriority(t, ptmn), szOwner,
+             " "+!(usr.bits & BITS_FSR));
 
   /* If the message was originally a new message, change its status         *
    * to "open" since we have now seen it.                                   */

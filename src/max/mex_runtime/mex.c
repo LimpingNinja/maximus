@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: mex.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 
 #define MEX_VM
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -110,6 +112,8 @@ static struct _usrfunc _intrinfunc[]=
   {"itostr",                  intrin_itostr,                  0},
   {"kbhit",                   intrin_kbhit,                   0},
   {"keyboard",                intrin_keyboard,                0},
+  {"lang_get",                intrin_lang_get,                0},
+  {"lang_get_rip",            intrin_lang_get_rip,            0},
   {"language_num_to_name",    intrin_LanguageNumberToName,    0},
   {"localkey",                intrin_localkey,                0},
   {"log",                     intrin_log,                     0},
@@ -187,6 +191,7 @@ static struct _usrfunc _intrinfunc[]=
   {"ui_edit_field",           intrin_ui_edit_field,           0},
   {"ui_edit_field_style_default", intrin_ui_edit_field_style_default, 0},
   {"ui_prompt_field_style_default", intrin_ui_prompt_field_style_default, 0},
+  {"ui_read_key",             intrin_ui_read_key,             0},
   {"ui_lightbar",             intrin_ui_lightbar,             0},
   {"ui_lightbar_pos",         intrin_ui_lightbar_pos,         0},
   {"ui_lightbar_hotkey",      intrin_ui_lightbar_hotkey,      0},
@@ -196,6 +201,21 @@ static struct _usrfunc _intrinfunc[]=
   {"ui_select_prompt_style_default", intrin_ui_select_prompt_style_default, 0},
   {"ui_form_style_default",   intrin_ui_form_style_default,   0},
   {"ui_form_run",             intrin_ui_form_run,             0},
+
+  {"ui_scroll_region_style_default", intrin_ui_scroll_region_style_default, 0},
+  {"ui_scroll_region_create", intrin_ui_scroll_region_create, 0},
+  {"ui_scroll_region_destroy", intrin_ui_scroll_region_destroy, 0},
+  {"ui_scroll_region_append", intrin_ui_scroll_region_append, 0},
+  {"ui_scroll_region_render", intrin_ui_scroll_region_render, 0},
+  {"ui_scroll_region_handle_key", intrin_ui_scroll_region_handle_key, 0},
+
+  {"ui_text_viewer_style_default", intrin_ui_text_viewer_style_default, 0},
+  {"ui_text_viewer_create",  intrin_ui_text_viewer_create,    0},
+  {"ui_text_viewer_destroy", intrin_ui_text_viewer_destroy,   0},
+  {"ui_text_viewer_set_text", intrin_ui_text_viewer_set_text, 0},
+  {"ui_text_viewer_render",  intrin_ui_text_viewer_render,    0},
+  {"ui_text_viewer_handle_key", intrin_ui_text_viewer_handle_key, 0},
+  {"ui_text_viewer_read_key", intrin_ui_text_viewer_read_key, 0},
   {"usercreate",              intrin_usercreate,              0},
   {"userfilesize",            intrin_userfilesize,            0},
   {"userfindclose",           intrin_userfindclose,           0},

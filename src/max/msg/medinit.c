@@ -25,6 +25,8 @@ static char rcs_id[]="$Id: medinit.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 
 #ifdef OS_2
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #define INCL_NOPM
@@ -204,13 +206,13 @@ static void _loadds near textify(void)
         else{
             buf[col+1] = 0;
             while(blanklines){
-                LogWrite("! CRASH ³\n");
+                LogWrite("! CRASH ï¿½\n");
 #ifdef MAXSNOOP
-                SnWrite("! CRASH ³\n");
+                SnWrite("! CRASH ï¿½\n");
 #endif
                 blanklines--;
             }
-            sprintf(str, "! CRASH ³%s\n", buf);
+            sprintf(str, "! CRASH ï¿½%s\n", buf);
             LogWrite(str);
 #ifdef MAXSNOOP
             SnWrite(str);

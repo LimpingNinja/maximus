@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_titles.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: F)ile Titles function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -82,7 +85,8 @@ void File_Titles(void)
     Dont_Use_Wildcards(ze_file_cmd);
   else
   {
-    Printf(searchingfor, temp, '\n');
+    { char _cb[2] = { '\n', '\0' };
+      LangPrintf(searchingfor, temp, _cb); }
     strcpy(searchfor, temp);
 
     first_search=TRUE;
@@ -101,7 +105,8 @@ void File_Titles(void)
   /* If doing a newfiles or a search, display the # of matches */
 
   if (attr & (DISPLAY_NEWFILES | DISPLAY_SEARCH))
-    Printf(located, matches, matches==1 ? blank_str : pl_match);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", matches);
+      LangPrintf(located, _ib, matches==1 ? blank_str : pl_match); }
 
   first_search=FALSE;
 

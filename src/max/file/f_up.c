@@ -26,10 +26,13 @@ static char rcs_id[]="$Id: f_up.c,v 1.5 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: U)pload command and associated functions
 */
 
-#define MAX_LANG_f_area
-#define MAX_LANG_max_chat
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_chat
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -116,7 +119,8 @@ void File_Upload(char *mname)
   if (!local && baud < ClassGetInfo(cls,CIT_MIN_XFER_BAUD))
   {
     Display_File(0, NULL, (char *)ngcfg_get_path("general.display_files.xfer_baud"));
-    Printf(baudtoolowforxfer, ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+    { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+      LangPrintf(baudtoolowforxfer, _ib); }
     Press_ENTER();
     return;
   }
@@ -131,7 +135,7 @@ void File_Upload(char *mname)
     return;
   }
 
-    Printf(bytes_for_ul, commaize(b_free-(long)min_free_kb*1000L, temp));
+    LangPrintf(bytes_for_ul, commaize(b_free-(long)min_free_kb*1000L, temp));
   }
 
 
@@ -192,7 +196,7 @@ void File_Get_Upload_Names(void)
       ngcfg_get_bool("general.session.upload_check_dupe") &&
       FileIsDupe(inp))
   {
-    Printf(dupe_file, upper_fn(inp));
+    LangPrintf(dupe_file, upper_fn(inp));
     Press_ENTER();
     return;
   }
@@ -288,7 +292,7 @@ static word near FileIsBad(char *name)
       if (fexist(badname))
         Display_File(0, NULL, badname);
       else
-        Printf(badupload, upper_fn(name));
+        LangPrintf(badupload, upper_fn(name));
 
       Press_ENTER();
     }
@@ -316,7 +320,7 @@ word File_Get_Files(sword protocol, char *mname, char *path)
   FENTRY fent;
 
 
-  Printf(mode_bg, Protocol_Name(protocol,temp));
+  LangPrintf(mode_bg, Protocol_Name(protocol,temp));
   AlwaysWhiteN();
 
   last_bps=0;
@@ -642,7 +646,7 @@ static void near ParseXferInfo(void)
 
     if (*temp == '*')
     {
-      Printf(dupe_file, upper_fn(temp+1));
+      LangPrintf(dupe_file, upper_fn(temp+1));
       Press_ENTER();
       continue;
     }
@@ -711,11 +715,14 @@ void File_Process_Uploads(long ul_start_time, sword protocol, char *path)
       Puts(xfercomplete);
 
       if (last_bps)
-        Printf(cps_rating,(long)(last_bps/10L),(long)(last_bps*100L/(long)baud));
+      { char _ib1[32], _ib2[32];
+        snprintf(_ib1, sizeof(_ib1), "%ld", (long)(last_bps/10L));
+        snprintf(_ib2, sizeof(_ib2), "%ld", (long)(last_bps*100L/(long)baud));
+        LangPrintf(cps_rating, _ib1, _ib2); }
       else Putc('\n');
 
       if (fn2 && (fn2 != dupes))
-        Printf(tnx4ul,firstname);
+        LangPrintf(tnx4ul,firstname);
     }
 
     /* Now find out what/how much user sent!  Screen out files with a    *
@@ -727,7 +734,7 @@ void File_Process_Uploads(long ul_start_time, sword protocol, char *path)
       {
         if (fent.fFlags & FFLAG_DUPE)
         {
-          Printf(dupe_file, upper_fn(fent.szName));
+          LangPrintf(dupe_file, upper_fn(fent.szName));
           Press_ENTER();
         }
         else
@@ -773,9 +780,10 @@ void File_Process_Uploads(long ul_start_time, sword protocol, char *path)
           temp_long=Add_To_Time((lReward * temp_long) / 100L);
 
           if (temp_long)
-            Printf(time_added_for_ul,
-                   (long)(temp_long / 60L),
-                   (long)(temp_long % 60L));
+          { char _ib1[32], _ib2[32];
+            snprintf(_ib1, sizeof(_ib1), "%ld", (long)(temp_long / 60L));
+            snprintf(_ib2, sizeof(_ib2), "%ld", (long)(temp_long % 60L));
+            LangPrintf(time_added_for_ul, _ib1, _ib2); }
         }
       }
     }

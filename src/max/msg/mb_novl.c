@@ -26,8 +26,10 @@ static char rcs_id[]="$Id: mb_novl.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: "root" overlay code for B)rowse command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -274,7 +276,8 @@ int List_Status(BROWSE *b,char *aname,int colour)
   if ((b->bflag & BROWSE_ACUR)==0)
   {
     Rev_Up();
-    Printf(srchng,(colour % 7)+9,aname);
+    { char _col[8]; snprintf(_col, sizeof(_col), "|%02d", colour & 0x0F);
+      LangPrintf(srchng, _col, aname); }
     last_title=TRUE;
     vbuf_flush();
   }

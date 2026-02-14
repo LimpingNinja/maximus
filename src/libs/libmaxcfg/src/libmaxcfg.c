@@ -2124,10 +2124,29 @@ static MaxCfgStatus parse_string(const char **p_io, char **out)
                 ch = '\r';
             } else if (e == 't') {
                 ch = '\t';
+            } else if (e == 'a') {
+                ch = '\a';
+            } else if (e == 'b') {
+                ch = '\b';
+            } else if (e == 'f') {
+                ch = '\f';
             } else if (e == '\\') {
                 ch = '\\';
             } else if (e == '"') {
                 ch = '"';
+            } else if (e == 'x' && isxdigit((unsigned char)p[0])
+                                 && isxdigit((unsigned char)p[1])) {
+                /* \xHH — two-digit hex byte */
+                unsigned int hv = 0;
+                for (int hi = 0; hi < 2; hi++) {
+                    unsigned char hc = (unsigned char)*p++;
+                    hv = (hv << 4) | (unsigned)((hc >= '0' && hc <= '9')
+                        ? hc - '0'
+                        : (hc >= 'a' && hc <= 'f')
+                            ? hc - 'a' + 10
+                            : hc - 'A' + 10);
+                }
+                ch = (char)hv;
             } else {
                 ch = e;
             }
@@ -4158,6 +4177,10 @@ MaxCfgStatus maxcfg_ng_system_init(MaxCfgNgSystem *sys)
 
     memset(sys, 0, sizeof(*sys));
     sys->config_version = 1;
+    sys->msg_reader_menu = strdup("MSGREAD");
+    if (sys->msg_reader_menu == NULL) {
+        return MAXCFG_ERR_OOM;
+    }
     return MAXCFG_OK;
 }
 
@@ -4183,6 +4206,7 @@ void maxcfg_ng_system_free(MaxCfgNgSystem *sys)
     maxcfg_free_and_null(&sys->menu_path);
     maxcfg_free_and_null(&sys->rip_path);
     maxcfg_free_and_null(&sys->stage_path);
+    maxcfg_free_and_null(&sys->msg_reader_menu);
     maxcfg_free_and_null(&sys->log_file);
     maxcfg_free_and_null(&sys->file_password);
     maxcfg_free_and_null(&sys->file_access);
@@ -5241,6 +5265,7 @@ MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys)
     toml_kv_string(fp, "menu_path", sys->menu_path);
     toml_kv_string(fp, "rip_path", sys->rip_path);
     toml_kv_string(fp, "stage_path", sys->stage_path);
+    toml_kv_string(fp, "msg_reader_menu", sys->msg_reader_menu);
 
     toml_kv_string(fp, "log_file", sys->log_file);
     toml_kv_string(fp, "log_mode", sys->log_mode);

@@ -20,10 +20,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#define MAX_LANG_m_area
 #include "mexall.h"
 #include "ui_field.h"
 #include "ui_lightbar.h"
 #include "ui_form.h"
+#include "ui_scroll.h"
 
 static char * near MexDupVMString(const IADDR *pia)
 {
@@ -64,6 +66,51 @@ static char * near MexDupEmptyString(void)
 
 #ifdef MEX
 
+typedef struct mex_scroll_region_obj
+{
+  char *key;
+  ui_scrolling_region_t r;
+  struct mex_scroll_region_obj *next;
+} mex_scroll_region_obj_t;
+
+typedef struct mex_text_viewer_obj
+{
+  char *key;
+  ui_text_viewer_t v;
+  struct mex_text_viewer_obj *next;
+} mex_text_viewer_obj_t;
+
+static mex_scroll_region_obj_t *near g_scroll_regions = NULL;
+static mex_text_viewer_obj_t *near g_text_viewers = NULL;
+
+static mex_scroll_region_obj_t *near mex_find_scroll_region(const char *key)
+{
+  mex_scroll_region_obj_t *cur;
+
+  if (!key || !*key)
+    return NULL;
+
+  for (cur = g_scroll_regions; cur; cur = cur->next)
+    if (cur->key && strcmp(cur->key, key) == 0)
+      return cur;
+
+  return NULL;
+}
+
+static mex_text_viewer_obj_t *near mex_find_text_viewer(const char *key)
+{
+  mex_text_viewer_obj_t *cur;
+
+  if (!key || !*key)
+    return NULL;
+
+  for (cur = g_text_viewers; cur; cur = cur->next)
+    if (cur->key && strcmp(cur->key, key) == 0)
+      return cur;
+
+  return NULL;
+}
+
 /* ui_goto(row, col) - Position cursor */
 word EXPENTRY intrin_ui_goto(void)
 {
@@ -80,6 +127,15 @@ word EXPENTRY intrin_ui_goto(void)
     vbuf_flush();
   
   return MexArgEnd(&ma);
+}
+
+/**
+ * @brief ui_read_key() - Return a MaxUI decoded key code.
+ */
+word EXPENTRY intrin_ui_read_key(void)
+{
+  regs_2[0] = (word)ui_read_key();
+  return 0;
 }
 
 word EXPENTRY intrin_ui_lightbar_pos(void)
@@ -736,10 +792,13 @@ word EXPENTRY intrin_ui_select_prompt(void)
   }
 
   if (style->show_brackets == 0)
-    flags |= 0x0001;
+    flags |= UI_SP_FLAG_STRIP_BRACKETS;
 
   if (style->hotkey_attr)
-    flags |= ((int)(style->hotkey_attr & 0xff) << 8);
+    flags |= ((int)(style->hotkey_attr & 0xff) << UI_SP_HOTKEY_ATTR_SHIFT);
+
+  if (style->default_index)
+    flags |= ((int)(style->default_index & 0xff) << UI_SP_DEFAULT_SHIFT);
 
   separator_str = MexDupVMString(&style->separator);
   if (!separator_str)
@@ -830,6 +889,7 @@ word EXPENTRY intrin_ui_select_prompt_style_default(void)
     style->show_brackets = 1;     /* UI_BRACKET_SQUARE */
     style->margin = 0;
     memset(&style->separator, 0, sizeof(style->separator));
+    style->default_index = 0;     /* 0 = first option */
     style->out_hotkey = 0;
   }
   
@@ -973,6 +1033,427 @@ word EXPENTRY intrin_ui_form_run(void)
   free(fields);
   
   regs_2[0] = (word)rc;
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_style_default(void)
+{
+  MA ma;
+  struct mex_ui_scroll_region_style *mex_style;
+  ui_scrolling_region_style_t style;
+
+  MexArgBegin(&ma);
+  mex_style = (struct mex_ui_scroll_region_style *)MexArgGetRef(&ma);
+
+  ui_scrolling_region_style_default(&style);
+
+  if (mex_style)
+  {
+    mex_style->attr = (word)style.attr;
+    mex_style->scrollbar_attr = (word)style.scrollbar_attr;
+    mex_style->flags = (word)style.flags;
+  }
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_create(void)
+{
+  MA ma;
+  char *key;
+  int x;
+  int y;
+  int width;
+  int height;
+  int max_lines;
+  struct mex_ui_scroll_region_style *mex_style;
+  ui_scrolling_region_style_t style;
+  mex_scroll_region_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  x = (int)MexArgGetWord(&ma);
+  y = (int)MexArgGetWord(&ma);
+  width = (int)MexArgGetWord(&ma);
+  height = (int)MexArgGetWord(&ma);
+  max_lines = (int)MexArgGetWord(&ma);
+  mex_style = (struct mex_ui_scroll_region_style *)MexArgGetRef(&ma);
+
+  regs_2[0] = (word)-1;
+
+  if (!key || !*key || !mex_style)
+  {
+    if (key)
+      free(key);
+    return MexArgEnd(&ma);
+  }
+
+  if (mex_find_scroll_region(key))
+  {
+    free(key);
+    regs_2[0] = (word)-2;
+    return MexArgEnd(&ma);
+  }
+
+  ui_scrolling_region_style_default(&style);
+  style.attr = (byte)mex_style->attr;
+  style.scrollbar_attr = (byte)mex_style->scrollbar_attr;
+  style.flags = (int)mex_style->flags;
+
+  obj = (mex_scroll_region_obj_t *)calloc(1, sizeof(*obj));
+  if (!obj)
+  {
+    free(key);
+    regs_2[0] = (word)-3;
+    return MexArgEnd(&ma);
+  }
+
+  obj->key = key;
+  ui_scrolling_region_init(&obj->r, x, y, width, height, max_lines, &style);
+  obj->next = g_scroll_regions;
+  g_scroll_regions = obj;
+
+  regs_2[0] = 0;
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_destroy(void)
+{
+  MA ma;
+  char *key;
+  mex_scroll_region_obj_t *cur;
+  mex_scroll_region_obj_t *prev;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = (word)-1;
+
+  if (!key)
+    return MexArgEnd(&ma);
+
+  prev = NULL;
+  for (cur = g_scroll_regions; cur; prev = cur, cur = cur->next)
+    if (cur->key && strcmp(cur->key, key) == 0)
+      break;
+
+  free(key);
+
+  if (!cur)
+    return MexArgEnd(&ma);
+
+  if (prev)
+    prev->next = cur->next;
+  else
+    g_scroll_regions = cur->next;
+
+  ui_scrolling_region_free(&cur->r);
+  if (cur->key)
+    free(cur->key);
+  free(cur);
+
+  regs_2[0] = 0;
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_append(void)
+{
+  MA ma;
+  char *key;
+  char *text;
+  int flags;
+  mex_scroll_region_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  text = MexArgGetString(&ma, FALSE);
+  flags = (int)MexArgGetWord(&ma);
+
+  regs_2[0] = (word)-1;
+
+  obj = mex_find_scroll_region(key);
+  if (obj)
+  {
+    ui_scrolling_region_append(&obj->r, text ? text : "", flags);
+    regs_2[0] = 0;
+  }
+
+  if (key)
+    free(key);
+  if (text)
+    free(text);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_render(void)
+{
+  MA ma;
+  char *key;
+  mex_scroll_region_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = (word)-1;
+
+  obj = mex_find_scroll_region(key);
+  if (obj)
+  {
+    ui_scrolling_region_render(&obj->r);
+    if (pmisThis->pmid->instant_video)
+      vbuf_flush();
+    regs_2[0] = 0;
+  }
+
+  if (key)
+    free(key);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_scroll_region_handle_key(void)
+{
+  MA ma;
+  char *key;
+  int keycode;
+  mex_scroll_region_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  keycode = (int)MexArgGetWord(&ma);
+
+  regs_2[0] = 0;
+
+  obj = mex_find_scroll_region(key);
+  if (obj)
+    regs_2[0] = (word)ui_scrolling_region_handle_key(&obj->r, keycode);
+
+  if (key)
+    free(key);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_style_default(void)
+{
+  MA ma;
+  struct mex_ui_text_viewer_style *mex_style;
+  ui_text_viewer_style_t style;
+
+  MexArgBegin(&ma);
+  mex_style = (struct mex_ui_text_viewer_style *)MexArgGetRef(&ma);
+
+  ui_text_viewer_style_default(&style);
+
+  if (mex_style)
+  {
+    mex_style->attr = (word)style.attr;
+    mex_style->status_attr = (word)style.status_attr;
+    mex_style->scrollbar_attr = (word)style.scrollbar_attr;
+    mex_style->flags = (word)style.flags;
+  }
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_create(void)
+{
+  MA ma;
+  char *key;
+  int x;
+  int y;
+  int width;
+  int height;
+  struct mex_ui_text_viewer_style *mex_style;
+  ui_text_viewer_style_t style;
+  mex_text_viewer_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  x = (int)MexArgGetWord(&ma);
+  y = (int)MexArgGetWord(&ma);
+  width = (int)MexArgGetWord(&ma);
+  height = (int)MexArgGetWord(&ma);
+  mex_style = (struct mex_ui_text_viewer_style *)MexArgGetRef(&ma);
+
+  regs_2[0] = (word)-1;
+
+  if (!key || !*key || !mex_style)
+  {
+    if (key)
+      free(key);
+    return MexArgEnd(&ma);
+  }
+
+  if (mex_find_text_viewer(key))
+  {
+    free(key);
+    regs_2[0] = (word)-2;
+    return MexArgEnd(&ma);
+  }
+
+  ui_text_viewer_style_default(&style);
+  style.attr = (byte)mex_style->attr;
+  style.status_attr = (byte)mex_style->status_attr;
+  style.scrollbar_attr = (byte)mex_style->scrollbar_attr;
+  style.flags = (int)mex_style->flags;
+
+  obj = (mex_text_viewer_obj_t *)calloc(1, sizeof(*obj));
+  if (!obj)
+  {
+    free(key);
+    regs_2[0] = (word)-3;
+    return MexArgEnd(&ma);
+  }
+
+  obj->key = key;
+  ui_text_viewer_init(&obj->v, x, y, width, height, &style);
+  obj->next = g_text_viewers;
+  g_text_viewers = obj;
+
+  regs_2[0] = 0;
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_destroy(void)
+{
+  MA ma;
+  char *key;
+  mex_text_viewer_obj_t *cur;
+  mex_text_viewer_obj_t *prev;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = (word)-1;
+
+  if (!key)
+    return MexArgEnd(&ma);
+
+  prev = NULL;
+  for (cur = g_text_viewers; cur; prev = cur, cur = cur->next)
+    if (cur->key && strcmp(cur->key, key) == 0)
+      break;
+
+  free(key);
+
+  if (!cur)
+    return MexArgEnd(&ma);
+
+  if (prev)
+    prev->next = cur->next;
+  else
+    g_text_viewers = cur->next;
+
+  ui_text_viewer_free(&cur->v);
+  if (cur->key)
+    free(cur->key);
+  free(cur);
+
+  regs_2[0] = 0;
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_set_text(void)
+{
+  MA ma;
+  char *key;
+  char *text;
+  mex_text_viewer_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  text = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = (word)-1;
+
+  obj = mex_find_text_viewer(key);
+  if (obj)
+  {
+    ui_text_viewer_set_text(&obj->v, text ? text : "");
+    regs_2[0] = 0;
+  }
+
+  if (key)
+    free(key);
+  if (text)
+    free(text);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_render(void)
+{
+  MA ma;
+  char *key;
+  mex_text_viewer_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = (word)-1;
+
+  obj = mex_find_text_viewer(key);
+  if (obj)
+  {
+    ui_text_viewer_render(&obj->v);
+    if (pmisThis->pmid->instant_video)
+      vbuf_flush();
+    regs_2[0] = 0;
+  }
+
+  if (key)
+    free(key);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_handle_key(void)
+{
+  MA ma;
+  char *key;
+  int keycode;
+  mex_text_viewer_obj_t *obj;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+  keycode = (int)MexArgGetWord(&ma);
+
+  regs_2[0] = 0;
+
+  obj = mex_find_text_viewer(key);
+  if (obj)
+    regs_2[0] = (word)ui_text_viewer_handle_key(&obj->v, keycode);
+
+  if (key)
+    free(key);
+
+  return MexArgEnd(&ma);
+}
+
+word EXPENTRY intrin_ui_text_viewer_read_key(void)
+{
+  MA ma;
+  char *key;
+  mex_text_viewer_obj_t *obj;
+  int k;
+
+  MexArgBegin(&ma);
+  key = MexArgGetString(&ma, FALSE);
+
+  regs_2[0] = 0;
+
+  obj = mex_find_text_viewer(key);
+  if (obj)
+  {
+    k = ui_text_viewer_read_key(&obj->v);
+    regs_2[0] = (word)k;
+  }
+
+  if (key)
+    free(key);
+
   return MexArgEnd(&ma);
 }
 

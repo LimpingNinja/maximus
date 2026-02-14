@@ -17,6 +17,7 @@
 #include "maxcfg.h"
 #include "ui.h"
 #include "nextgen_export.h"
+#include "lang_convert.h"
 
 /* Stub for Maximus runtime symbol */
 unsigned short dosProc_exitCode = 0;
@@ -33,6 +34,9 @@ static void sigwinch_handler(int sig)
 
 static bool g_cli_export_nextgen = false;
 static char g_cli_export_dir[MAX_PATH_LEN] = { 0 };
+static bool g_cli_convert_lang = false;
+static bool g_cli_convert_lang_all = false;
+static char g_cli_convert_lang_path[MAX_PATH_LEN] = { 0 };
 
 /* Request terminal to resize (xterm-compatible) */
 static void request_terminal_size(int cols, int rows)
@@ -220,6 +224,8 @@ static void print_usage(const char *prog)
     fprintf(stderr, "  -v, --version  Show version information\n");
     fprintf(stderr, "  --export-nextgen <path/to/max.ctl>  Export legacy CTL to next-gen TOML and exit\n");
     fprintf(stderr, "  --export-dir <path>  Override next-gen export directory (implies --export-nextgen)\n");
+    fprintf(stderr, "  --convert-lang <file.mad>  Convert a single .MAD language file to TOML and exit\n");
+    fprintf(stderr, "  --convert-lang-all         Convert all .MAD files in <sys_path>/etc/lang/ and exit\n");
     fprintf(stderr, "\nIf sys_path is not specified, it will be derived from argv[0] or the first positional argument.\n");
 }
 
@@ -261,6 +267,19 @@ static void parse_args(int argc, char *argv[])
             strncpy(g_cli_export_dir, argv[i + 1], MAX_PATH_LEN - 1);
             g_cli_export_dir[MAX_PATH_LEN - 1] = '\0';
             i++;
+        }
+        else if (strcmp(argv[i], "--convert-lang") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Missing value for %s\n", argv[i]);
+                exit(1);
+            }
+            g_cli_convert_lang = true;
+            strncpy(g_cli_convert_lang_path, argv[i + 1], MAX_PATH_LEN - 1);
+            g_cli_convert_lang_path[MAX_PATH_LEN - 1] = '\0';
+            i++;
+        }
+        else if (strcmp(argv[i], "--convert-lang-all") == 0) {
+            g_cli_convert_lang_all = true;
         }
         else if (argv[i][0] != '-') {
             /* Assume it's the sys_path */
@@ -422,6 +441,47 @@ int main(int argc, char *argv[])
 
     /* Parse command line arguments */
     parse_args(argc, argv);
+
+    /* Handle --convert-lang (single file, no TUI needed) */
+    if (g_cli_convert_lang) {
+        char err[512] = {0};
+        if (lang_convert_mad_to_toml(g_cli_convert_lang_path, NULL, err, sizeof(err))) {
+            printf("Converted: %s\n", g_cli_convert_lang_path);
+            return 0;
+        } else {
+            fprintf(stderr, "Error: %s\n", err[0] ? err : "conversion failed");
+            return 1;
+        }
+    }
+
+    /* Handle --convert-lang-all (batch, needs sys_path for lang dir) */
+    if (g_cli_convert_lang_all) {
+        char sys_path_buf2[MAX_PATH_LEN];
+        const char *sp = NULL;
+        if (strcmp(g_state.config_path, DEFAULT_CONFIG_PATH) != 0) {
+            sp = g_state.config_path;
+        } else if (resolve_sys_path_from_argv0(argv[0], sys_path_buf2, sizeof(sys_path_buf2))) {
+            sp = sys_path_buf2;
+        } else {
+            fprintf(stderr, "Error: unable to determine sys_path. Pass it as the first argument.\n");
+            return 1;
+        }
+
+        char lang_dir[MAX_PATH_LEN];
+        snprintf(lang_dir, sizeof(lang_dir), "%s/etc/lang", sp);
+
+        char err[512] = {0};
+        int count = lang_convert_all_mad(lang_dir, NULL, err, sizeof(err));
+        if (count < 0) {
+            fprintf(stderr, "Error: %s\n", err[0] ? err : "conversion failed");
+            return 1;
+        }
+        printf("Converted %d .MAD file(s) in %s\n", count, lang_dir);
+        if (err[0]) {
+            fprintf(stderr, "Warning: %s\n", err);
+        }
+        return 0;
+    }
 
     if (g_cli_export_nextgen) {
         const char *maxctl_path = g_state.config_path;

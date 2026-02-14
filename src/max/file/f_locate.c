@@ -26,6 +26,10 @@ static char rcs_id[]="$Id: f_locate.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: L)ocate function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <ctype.h>
 #include <io.h>
@@ -60,7 +64,8 @@ static sword near LocateDisplayJunk(byte *fnam, byte *desc, word *attr, char *no
   if (dp->times_dl || (dp->flag & FF_DLCTR))
   {
     /* [  12] */
-    sprintf(junk, fbbs_counter, dp->times_dl);
+    { char _dl[16]; snprintf(_dl, sizeof(_dl), "%u", (unsigned)dp->times_dl);
+      LangSprintf(junk, sizeof(junk), fbbs_counter, _dl); }
 
     /* Copy this into the right place */
 
@@ -362,7 +367,7 @@ static sword near LocateSearchArea(word attr, char *nstop, PFAH pfah,
 
   /* Print a little banner for this area */
 
-  Printf(srchng, (char)((colour % 7)+9), PFAS(pfah, name));
+  LangPrintf(srchng, "|03", PFAS(pfah, name));
   vbuf_flush();
 
 
@@ -498,7 +503,8 @@ void File_Locate(void)
   else
   {
     display_line=display_col=1;
-    Printf(searchingfor, searchfor, '\0');
+    { char _cb[2] = { '\0', '\0' };
+      LangPrintf(searchingfor, searchfor, _cb); }
     logit(log_searchingfor, searchfor);
   }
 
@@ -541,7 +547,8 @@ void File_Locate(void)
   
   Puts(space_over);
 
-  Printf(located, matches, matches==1 ? blank_str : pl_match);
+  { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", matches);
+    LangPrintf(located, _tb, matches==1 ? blank_str : pl_match); }
 
   /* Restore current area and priv level */
 

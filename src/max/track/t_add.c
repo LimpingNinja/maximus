@@ -23,6 +23,10 @@ static char rcs_id[]="$Id: t_add.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
+#define MAX_LANG_track
 #include "trackp.h"
 
 #ifdef MAX_TRACKER
@@ -57,17 +61,17 @@ int TrackAskOwner(TRK t, TRK_OWNER to)
 
       if (!PrivOK((char *)ngcfg_get_string_raw("general.session.track_privmod"), FALSE))
       {
-        Printf(trk_owner_not_accept, szOwner);
+        LangPrintf(trk_owner_not_accept, szOwner);
         Press_ENTER();
         continue;
       }
 
-      sprintf(prompt, trk_ask_owner_quest, szOwner);
+      LangSprintf(prompt, sizeof(prompt), trk_ask_owner_quest, szOwner);
 
       if (GetListAnswer(yCN, NULL, useyforyes, 0, prompt) != 'Y')
         continue;
 
-      sprintf(prompt, trk_enter_4char, szOwner);
+      LangSprintf(prompt, sizeof(prompt), trk_enter_4char, szOwner);
 
       Input(to, INPUT_LB_LINE, 0, 4, prompt);
 
@@ -80,7 +84,7 @@ int TrackAskOwner(TRK t, TRK_OWNER to)
         logit(log_err_setting_owner, to, szOwner);
       }
 
-      Printf(trk_added_owner_as, szOwner, to);
+      LangPrintf(trk_added_owner_as, szOwner, to);
       return TRUE;
     }
   }

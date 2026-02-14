@@ -25,6 +25,7 @@ static char rcs_id[]="$Id: static.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 
 #define MAX_INITIALIZE
 
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include "compat.h"
 #include "mm.h"

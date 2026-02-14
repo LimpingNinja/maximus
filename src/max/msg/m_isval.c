@@ -26,6 +26,7 @@ static char rcs_id[]="$Id: m_isval.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Routine to validate message areas
 */
 
+#define MAX_LANG_m_area
 #define MAX_LANG_max_main
 #include <string.h>
 #include "prog.h"

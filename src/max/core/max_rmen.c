@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: max_rmen.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Routines to read *.MNU files (Overlaid)
 */
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
@@ -244,6 +246,7 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out)
     {"msg_scan", msg_scan},
     {"msg_inquire", msg_inquir},
     {"msg_kill", msg_kill},
+    {"msg_listtest", msg_listtest},
     {"msg_hurl", msg_hurl},
     {"msg_forward", forward},
     {"msg_upload", msg_upload},
@@ -252,6 +255,7 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out)
     {"msg_checkmail", msg_checkmail},
     {"file_locate", locate},
     {"file_titles", file_titles},
+    {"file_type", file_type},
     {"file_view", file_type},
     {"file_upload", upload},
     {"file_download", download},
@@ -285,6 +289,7 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out)
     {"edit_from", edit_from},
     {"edit_subj", edit_subj},
     {"edit_handling", edit_handling},
+    {"who_is_on", who_is_on},
     {"read_diskfile", read_diskfile},
     {"edit_quote", edit_quote},
     {"cls", o_cls},

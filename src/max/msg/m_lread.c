@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: m_lread.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Lastread and message-scanning routines.
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>

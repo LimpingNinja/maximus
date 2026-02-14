@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: m_enter.c,v 1.3 2004/01/27 21:00:31 paltas Exp $";
 /*# name=Message Section: E)nter command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include "prog.h"
 #include "max_msg.h"
 

@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: f_hurl.c,v 1.3 2004/01/27 21:00:28 paltas Exp $";
 /*# name=File area routines: H)url function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
 #define MAX_LANG_m_area
-
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -122,7 +123,7 @@ void File_Hurl(void)
   sprintf(from, ss, FAS(fah, downpath), filename);
   sprintf(to, ss, FAS(fa, downpath), filename);
 
-  Printf(hurled_file, from, to);
+  LangPrintf(hurled_file, from, to);
 
   if (move_file(from, to)==-1)
     cant_open(to);

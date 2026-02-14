@@ -23,6 +23,8 @@ static char rcs_id[]="$Id: t_menu.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
+#define MAX_LANG_track
 #include "trackp.h"
 
 
@@ -74,7 +76,7 @@ static void near TrackModComment(TRK t, TRK_MSG_NDX *ptmn, dword msgnum, char *s
 
   WhiteN();
 
-  Printf(trk_existing_cmt, szComment ? szComment : trk_no_cmt);
+  LangPrintf(trk_existing_cmt, szComment ? szComment : trk_no_cmt);
 
   InputGetsL(temp, PATHLEN-1, trk_enter_cmt);
 
@@ -99,7 +101,7 @@ static void near TrackModStatus(TRK t, TRK_MSG_NDX *ptmn, dword msgnum,
   char *szStatusKeys=trk_status_keys;
   int ch;
 
-  sprintf(prompt, trk_status_txt,
+  LangSprintf(prompt, sizeof(prompt), trk_status_txt,
           ptmn->ts==TS_NEW ? szDefault : blank_str,
           ptmn->ts==TS_OPEN ? szDefault : blank_str,
           ptmn->ts==TS_WORKING ? szDefault : blank_str,
@@ -255,12 +257,12 @@ static void near TrackMenuModify(void)
 
               WhiteN();
 
-              Printf(trk_msg_stat_owner, szOwner);
-              Printf(trk_msg_stat_status, TrkGetStatus(t, &tmn));
-              Printf(trk_msg_stat_pri, TrkGetPriority(t, &tmn));
+              LangPrintf(trk_msg_stat_owner, szOwner);
+              LangPrintf(trk_msg_stat_status, TrkGetStatus(t, &tmn));
+              LangPrintf(trk_msg_stat_pri, TrkGetPriority(t, &tmn));
 
               if ((szComment=MsgGetCtrlToken(kludges, accomment_colon)) != NULL)
-                Printf(trk_msg_stat_cmt, szComment+11);
+                LangPrintf(trk_msg_stat_cmt, szComment+11);
 
               Putc('\n');
 
@@ -323,7 +325,8 @@ static void near TrackAdminRemove(void)
                            TRUE, comment,
                            FALSE, NULL))
   {
-    Printf(trk_rem_err, msgnum);
+    { char _tb[32]; snprintf(_tb, sizeof(_tb), "%ld", msgnum);
+      LangPrintf(trk_rem_err, _tb); }
   }
   else
   {
@@ -335,10 +338,11 @@ static void near TrackAdminRemove(void)
 
       if (TrkLookupMsg(t, actrack, NULL, NULL, NULL, &tmn))
       {
-        if (TrkDeleteMsg(t, &tmn))
-          Printf(trk_rem_done, msgnum);
-        else
-          Printf(trk_rem_err, msgnum);
+        { char _tb[32]; snprintf(_tb, sizeof(_tb), "%ld", msgnum);
+          if (TrkDeleteMsg(t, &tmn))
+            LangPrintf(trk_rem_done, _tb);
+          else
+            LangPrintf(trk_rem_err, _tb); }
       }
 
       TrackRelease(t);
@@ -402,9 +406,9 @@ static void near TrackAdminOwnerAssign(TRK t)
     return;
 
   if (TrkSetOwner(t, ton.to, ton.szOwner))
-    Printf(trk_set_alias, ton.to, ton.szOwner);
+    LangPrintf(trk_set_alias, ton.to, ton.szOwner);
   else
-    Printf(trk_err_alias, ton.to);
+    LangPrintf(trk_err_alias, ton.to);
 
   return;
 }
@@ -426,7 +430,8 @@ static void near TrackAdminOwnerList(TRK t)
   Puts(trk_owner_header);
 
   while ((pton=BtLookup(pbt, NULL, ppl)) != NULL)
-    Printf(trk_owner_fmt, pton->to, pton->szOwner);
+    { char _tb[8]; snprintf(_tb, sizeof(_tb), "%-6.6s", pton->to);
+      LangPrintf(trk_owner_fmt, _tb, pton->szOwner); }
 
   PalistDelete(ppl);
 }
@@ -448,9 +453,9 @@ static void near TrackAdminOwnerDelete(TRK t)
   while (eqstri(to, qmark));
 
   if (TrkSetOwner(t, to, NULL))
-    Printf(trk_remalias_done, to);
+    LangPrintf(trk_remalias_done, to);
   else
-    Printf(trk_remalias_err, to);
+    LangPrintf(trk_remalias_err, to);
 }
 
 
@@ -509,11 +514,11 @@ static void near TrackAdminAreaAssign(TRK t)
   {
     if (TrkSetDefaultOwner(t, tan.szArea, tan.to))
     {
-      Printf(trk_owner_assgn_done, tan.to, tan.szArea);
+      LangPrintf(trk_owner_assgn_done, tan.to, tan.szArea);
     }
     else
     {
-      Printf(trk_owner_assgn_err, tan.szArea);
+      LangPrintf(trk_owner_assgn_err, tan.szArea);
     }
 
   }
@@ -532,9 +537,9 @@ static void near TrackAdminAreaDelete(TRK t)
     return;
 
   if (TrkSetDefaultOwner(t, szArea, NULL))
-    Printf(trk_owner_lnk_done, szArea);
+    LangPrintf(trk_owner_lnk_done, szArea);
   else
-    Printf(trk_owner_lnk_err, szArea);
+    LangPrintf(trk_owner_lnk_err, szArea);
 }
 
 
@@ -554,7 +559,8 @@ static void near TrackAdminAreaList(TRK t)
   Puts(trk_owner_lnk_head);
 
   while ((ptan=BtLookup(pbt, NULL, ppl)) != NULL)
-    Printf(trk_owner_lnk_fmt, ptan->to, ptan->szArea);
+    { char _tb[8]; snprintf(_tb, sizeof(_tb), "%-6.6s", ptan->to);
+      LangPrintf(trk_owner_lnk_fmt, _tb, ptan->szArea); }
 
   PalistDelete(ppl);
 }

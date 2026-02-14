@@ -17,6 +17,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include "mm.h"
 #include "max_msg.h"
 #include "string.h"

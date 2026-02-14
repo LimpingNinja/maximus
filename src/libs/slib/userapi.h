@@ -33,6 +33,7 @@ typedef struct _huf
   int fdndx;                      /* Handle of the user.ndx file */
   void *db;                       /* MaxDB* handle (if using SQLite backend) */
   int use_sqlite;                 /* 1 if using SQLite, 0 if using legacy files */
+  long last_found_id;             /* Record id/offset of last UserFileFind result */
 } *HUF;
 
 
@@ -67,6 +68,7 @@ int _fast UserFileUpdate(HUF huf, char *name, char *alias, struct _usr *pusr);
 int _fast UserFileCreateRecord(HUF huf, struct _usr *pusr, int fCheckUnique);
 int _fast UserFileRemove(HUF huf, struct _usr *pusr);
 int _fast UserFileClose(HUF huf);
+long _fast UserFileGetLastFoundId(HUF huf);
 
 #define UserFileFindOpenR(huf, n, a) UserFileFindOpen(huf, n, a)
 #define UserFileFindSeqOpen(huf)     UserFileFindOpen(huf, NULL, NULL)

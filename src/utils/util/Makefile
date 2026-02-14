@@ -1,6 +1,7 @@
 include $(SRC)/vars.mk
 
-PROGS := 	maid mecca accem ansi2bbs scanbld ansi2mec cvtusr \
+# maid removed from build — TOML language files replace MAID preprocessing.
+PROGS := 	mecca accem ansi2bbs scanbld ansi2mec cvtusr \
 		editcall mr fixlr setlr fb maxcomm init_userdb import_userdb #oracle maxpipe mxpipe32 piper
 
 all: $(PROGS)
@@ -8,9 +9,6 @@ install: $(PROGS)
 #install: maid mecca accem fb ansi2bbs
 	cp -f $^ $(BIN)
 
-maid: EXTRA_LD_LIBRARY_PATH=$(SRC)/src/libs/slib $(SRC)/src/libs/unix
-maid: EXTRA_LOADLIBES += -lmaxcfg
-maid: maid.o
 mecca: mecca.o init.o
 oracle: EXTRA_INCLUDES += -I$(SRC)/resources/lang
 

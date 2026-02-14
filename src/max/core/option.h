@@ -48,7 +48,7 @@ typedef enum
                  msg_tag, msg_browse, msg_current, msg_edit_user,
                  msg_upload_qwk, msg_toggle_kludges, msg_unreceive,
                  msg_restrict, msg_area, msg_track, msg_dload_attach,
-                 msg_reply_area,
+                 msg_reply_area, msg_listtest,
 
   FILE_BLOCK=500, locate, file_titles, file_type, upload, download, raw,
                   file_kill, contents, file_hurl, override_path,

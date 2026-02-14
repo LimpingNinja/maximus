@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: max_gets.c,v 1.8 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -61,7 +63,8 @@ static void near Mdmgets_Home(void)
 {
   if (cur_pos)
   {
-    Printf(left_x,cur_pos);
+    { char _cb[2] = { (char)cur_pos, '\0' };
+      LangPrintf(left_x, _cb); }
     cur_pos=0;
   }
 }
@@ -589,7 +592,8 @@ int mdm_gets(char *string, int type, int c, int max, char *prompt)
                           (char)((type & INPUT_ECHO) ? c : 0)));
 
             if (string[cur_pos+1] != '\0')
-              Printf(left_x, strlen(string+cur_pos)-1);
+              { char _cb[2] = { (char)(strlen(string+cur_pos)-1), '\0' };
+                LangPrintf(left_x, _cb); }
           }
 
           num_ch++;

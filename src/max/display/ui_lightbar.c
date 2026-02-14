@@ -22,6 +22,7 @@
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -1055,8 +1056,8 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
   }
 }
 
-#define UI_SP_FLAG_STRIP_BRACKETS 0x0001
-#define UI_SP_HOTKEY_ATTR_SHIFT   8
+/* UI_SP_FLAG_STRIP_BRACKETS, UI_SP_HOTKEY_ATTR_SHIFT, UI_SP_DEFAULT_SHIFT
+ * are defined in ui_lightbar.h */
 
 static void near ui_sp_draw_option(int row, int col, const ui_lb_item_t *opt, int selected, byte normal_attr, byte selected_attr, byte hotkey_attr, int strip_brackets)
 {
@@ -1153,8 +1154,11 @@ int ui_select_prompt(
   int safe_margin;
   const char *sep;
 
+  int default_idx;
+
   strip_brackets = (flags & UI_SP_FLAG_STRIP_BRACKETS) ? 1 : 0;
   hk_attr = (byte)((flags >> UI_SP_HOTKEY_ATTR_SHIFT) & 0xff);
+  default_idx = (flags >> UI_SP_DEFAULT_SHIFT) & 0xff;
 
   if (out_key)
     *out_key = 0;
@@ -1179,6 +1183,10 @@ int ui_select_prompt(
     opts[i].orig = ui_lb_strdup(options[i]);
     opts[i].disp = ui_lb_strip_marker(options[i], &opts[i].hotkey, &opts[i].hotkey_pos);
   }
+
+  /* Apply default selection: 1-based index from flags, clamp to valid range */
+  if (default_idx >= 1 && default_idx <= option_count)
+    selected = default_idx - 1;
 
   ui_lb_hide_cursor(&did_hide_cursor);
 
@@ -1328,6 +1336,324 @@ int ui_select_prompt(
             }
           }
         }
+        break;
+    }
+  }
+}
+
+/**
+ * @brief Run a paged lightbar list with keyboard navigation
+ * 
+ * Implements Storm-style paging:
+ * - Up/Down move selection and auto-page at edges
+ * - PgUp/PgDn jump by height
+ * - Home/End jump to first/last
+ * - Enter returns selected index
+ * - ESC returns -1
+ */
+int ui_lightbar_list_run(ui_lightbar_list_t *list)
+{
+  int top_index = 0;
+  int selected_index;
+  int did_hide_cursor = 0;
+  int need_full_redraw = 1;
+  char *row_buffer = NULL;
+  int i;
+  int ch;
+
+  if (!list || !list->get_item || list->count <= 0 || list->height <= 0 || list->width <= 0)
+    return -1;
+
+  /* Allocate buffer for formatting rows */
+  row_buffer = (char *)malloc(list->width + 1);
+  if (!row_buffer)
+    return -1;
+
+  /* Clamp initial index */
+  selected_index = list->initial_index;
+  if (selected_index < 0)
+    selected_index = 0;
+  if (selected_index >= list->count)
+    selected_index = list->count - 1;
+
+  /* Position top_index so selected is visible */
+  if (selected_index >= list->height)
+    top_index = selected_index - list->height + 1;
+
+  ui_lb_hide_cursor(&did_hide_cursor);
+
+  while (1)
+  {
+    /* Redraw visible rows if needed */
+    if (need_full_redraw)
+    {
+      for (i = 0; i < list->height; i++)
+      {
+        int item_idx = top_index + i;
+        int is_selected = (item_idx == selected_index);
+        byte attr = is_selected ? list->selected_attr : list->normal_attr;
+
+        ui_goto(list->y + i, list->x);
+        ui_set_attr(attr);
+
+        if (item_idx < list->count)
+        {
+          if (list->get_item(list->ctx, item_idx, row_buffer, list->width + 1) == 0)
+          {
+            /* Pad or truncate to width */
+            int len = (int)strlen(row_buffer);
+            if (len > list->width)
+              row_buffer[list->width] = '\0';
+            Printf("%s", row_buffer);
+            /* Pad with spaces if needed */
+            for (; len < list->width; len++)
+              Printf(" ");
+          }
+          else
+          {
+            /* Error formatting item, show blank */
+            for (int j = 0; j < list->width; j++)
+              Printf(" ");
+          }
+        }
+        else
+        {
+          /* Past end of list, blank row */
+          for (int j = 0; j < list->width; j++)
+            Printf(" ");
+        }
+      }
+      vbuf_flush();
+      need_full_redraw = 0;
+    }
+
+    /* Read key */
+    ch = ui_read_key();
+
+    switch (ch)
+    {
+      case K_RETURN:
+        free(row_buffer);
+        ui_lb_show_cursor(did_hide_cursor);
+        return selected_index;
+
+      case 27: /* ESC */
+        free(row_buffer);
+        ui_lb_show_cursor(did_hide_cursor);
+        return -1;
+
+      case K_DOWN:
+        if (selected_index < list->count - 1)
+        {
+          int old_selected = selected_index;
+          int old_top = top_index;
+
+          selected_index++;
+
+          /* If selected moves past bottom of visible area, scroll */
+          if (selected_index >= top_index + list->height)
+          {
+            /* Storm-style: if we're at the last visible row, page forward */
+            if (old_selected == top_index + list->height - 1)
+            {
+              top_index += list->height;
+              if (top_index + list->height > list->count)
+                top_index = list->count - list->height;
+              if (top_index < 0)
+                top_index = 0;
+              need_full_redraw = 1;
+            }
+            else
+            {
+              top_index = selected_index - list->height + 1;
+              need_full_redraw = 1;
+            }
+          }
+          else
+          {
+            /* Just redraw the two affected rows */
+            int old_row = old_selected - old_top;
+            int new_row = selected_index - top_index;
+
+            /* Redraw old selected row as normal */
+            ui_goto(list->y + old_row, list->x);
+            ui_set_attr(list->normal_attr);
+            if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
+            {
+              int len = (int)strlen(row_buffer);
+              if (len > list->width)
+                row_buffer[list->width] = '\0';
+              Printf("%s", row_buffer);
+              for (; len < list->width; len++)
+                Printf(" ");
+            }
+            else
+            {
+              for (int j = 0; j < list->width; j++)
+                Printf(" ");
+            }
+
+            /* Redraw new selected row as selected */
+            ui_goto(list->y + new_row, list->x);
+            ui_set_attr(list->selected_attr);
+            if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
+            {
+              int len = (int)strlen(row_buffer);
+              if (len > list->width)
+                row_buffer[list->width] = '\0';
+              Printf("%s", row_buffer);
+              for (; len < list->width; len++)
+                Printf(" ");
+            }
+            else
+            {
+              for (int j = 0; j < list->width; j++)
+                Printf(" ");
+            }
+            vbuf_flush();
+          }
+        }
+        else if (list->wrap)
+        {
+          selected_index = 0;
+          top_index = 0;
+          need_full_redraw = 1;
+        }
+        break;
+
+      case K_UP:
+        if (selected_index > 0)
+        {
+          int old_selected = selected_index;
+          int old_top = top_index;
+
+          selected_index--;
+
+          /* If selected moves above visible area, scroll */
+          if (selected_index < top_index)
+          {
+            /* Storm-style: if we're at the first visible row, page backward */
+            if (old_selected == top_index)
+            {
+              top_index -= list->height;
+              if (top_index < 0)
+                top_index = 0;
+              need_full_redraw = 1;
+            }
+            else
+            {
+              top_index = selected_index;
+              need_full_redraw = 1;
+            }
+          }
+          else
+          {
+            /* Just redraw the two affected rows */
+            int old_row = old_selected - old_top;
+            int new_row = selected_index - top_index;
+
+            /* Redraw old selected row as normal */
+            ui_goto(list->y + old_row, list->x);
+            ui_set_attr(list->normal_attr);
+            if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
+            {
+              int len = (int)strlen(row_buffer);
+              if (len > list->width)
+                row_buffer[list->width] = '\0';
+              Printf("%s", row_buffer);
+              for (; len < list->width; len++)
+                Printf(" ");
+            }
+            else
+            {
+              for (int j = 0; j < list->width; j++)
+                Printf(" ");
+            }
+
+            /* Redraw new selected row as selected */
+            ui_goto(list->y + new_row, list->x);
+            ui_set_attr(list->selected_attr);
+            if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
+            {
+              int len = (int)strlen(row_buffer);
+              if (len > list->width)
+                row_buffer[list->width] = '\0';
+              Printf("%s", row_buffer);
+              for (; len < list->width; len++)
+                Printf(" ");
+            }
+            else
+            {
+              for (int j = 0; j < list->width; j++)
+                Printf(" ");
+            }
+            vbuf_flush();
+          }
+        }
+        else if (list->wrap)
+        {
+          selected_index = list->count - 1;
+          top_index = list->count - list->height;
+          if (top_index < 0)
+            top_index = 0;
+          need_full_redraw = 1;
+        }
+        break;
+
+      case K_PGDN:
+        if (selected_index < list->count - 1)
+        {
+          selected_index += list->height;
+          if (selected_index >= list->count)
+            selected_index = list->count - 1;
+
+          top_index += list->height;
+          if (top_index + list->height > list->count)
+            top_index = list->count - list->height;
+          if (top_index < 0)
+            top_index = 0;
+
+          need_full_redraw = 1;
+        }
+        break;
+
+      case K_PGUP:
+        if (selected_index > 0)
+        {
+          selected_index -= list->height;
+          if (selected_index < 0)
+            selected_index = 0;
+
+          top_index -= list->height;
+          if (top_index < 0)
+            top_index = 0;
+
+          need_full_redraw = 1;
+        }
+        break;
+
+      case K_HOME:
+        if (selected_index != 0)
+        {
+          selected_index = 0;
+          top_index = 0;
+          need_full_redraw = 1;
+        }
+        break;
+
+      case K_END:
+        if (selected_index != list->count - 1)
+        {
+          selected_index = list->count - 1;
+          top_index = list->count - list->height;
+          if (top_index < 0)
+            top_index = 0;
+          need_full_redraw = 1;
+        }
+        break;
+
+      default:
+        /* Ignore other keys */
         break;
     }
   }

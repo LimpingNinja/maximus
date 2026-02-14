@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: mh_graph.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 /*# name=Message Section: Grab msghdr (graphics mode version)
 */
 
-#define MAX_LANG_max_bor
-
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -597,7 +597,7 @@ static void near DisplayShowDest(NETADDR *d)
 
   if ((nf=NodeFindOpen(d)) != NULL)
   {
-    Printf(fsr_dest, nf->found.name, nf->found.city);
+    LangPrintf(fsr_dest, nf->found.name, nf->found.city);
     NodeFindClose(nf);
   }
   else

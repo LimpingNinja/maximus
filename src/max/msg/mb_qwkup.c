@@ -26,11 +26,12 @@ static char rcs_id[]="$Id: mb_qwkup.c,v 1.12 2004/01/28 06:38:10 paltas Exp $";
 /*# QWK uploads, for processing .REP packets
 */
 
-#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
 #define MAX_LANG_max_chat
 #define MAX_LANG_max_main
-
+#define MAX_LANG_sysop
 #include <stdlib.h>
 #include <string.h>
 #include <io.h>
@@ -101,7 +102,7 @@ void QWK_Upload(void)
     if (Read_Kludge_File(&akh, &akd) != -1)
     {
       if (Receive_REP(fname)==-1)
-        Printf(err_receive_rep, (char *)packet_name);
+        LangPrintf(err_receive_rep, (char *)packet_name);
       else
       {
         /* Default: it's okay to kill packet after toss. */
@@ -110,14 +111,14 @@ void QWK_Upload(void)
 
         if (Decompress_REP(fname)==-1)
         {
-          Printf(err_decompr_rep, (char *)packet_name);
+          LangPrintf(err_decompr_rep, (char *)packet_name);
           okay=FALSE;
         }
         else
         {
           if (Toss_QWK_Packet(msg_name)==-1)
           {
-            Printf(err_toss_qwk, msg_name);
+            LangPrintf(err_toss_qwk, msg_name);
             okay=FALSE;
           }
 
@@ -200,7 +201,7 @@ static int near Receive_REP(char *name)
   {
     FENTRY fent;
     
-    Printf(rep_to_send, temp);
+    LangPrintf(rep_to_send, temp);
     
     /* Temporarily disable the dupe upload checking, so that an upload      *
      * of SMURF.REP doesn't collide with SMURF.ZIP (or whatever) in a       *
@@ -371,7 +372,7 @@ static int near Toss_QWK_Packet(char *name)
   adaptcase(name);
 #endif
 
-  Printf(tossing_rep_packet, No_Path(name));
+  LangPrintf(tossing_rep_packet, No_Path(name));
   
   /* Allocate a block of memory to hold the QWK header */
   
@@ -437,7 +438,7 @@ static int near QWK_Get_Rep_Header(int qfd, char *block)
 
   if (!eqstri(block, (char *)packet_name))
   {
-    Printf(wrong_rep, block, (char *)packet_name);
+    LangPrintf(wrong_rep, block, (char *)packet_name);
     return -1;
   }
   
@@ -668,7 +669,7 @@ static int near QWKRetrieveAreaFromPkt(PXMSG msg, struct _qmhdr *qh, char *aname
 
   /* Now state what we're doing */
 
-  Printf(qwk_msg_stats, tossto, msg->to, msg->subj);
+  LangPrintf(qwk_msg_stats, tossto, msg->to, msg->subj);
 
   /* Adjust to internal offset */
 
@@ -707,7 +708,7 @@ static int near QWKGetValidArea(PXMSG msg, char *aname, word tossto)
          ((mah.ma.attribs & MA_READONLY) && !mailflag(CFLAGM_RDONLYOK)))
 	 #endif	 
   {
-    Printf(qwk_invalid_area, msg->to, msg->subj);
+    LangPrintf(qwk_invalid_area, msg->to, msg->subj);
 
     InputGets(aname, which_area);
 
@@ -768,7 +769,7 @@ static void near QWKFixHeader(PXMSG msg, struct _qmhdr *qh)
  
   /* Display the name of the real area to toss it to */
 
-  Printf(qwk_max_area, MAS(mah, name));
+  LangPrintf(qwk_max_area, MAS(mah, name));
   vbuf_flush();
 }
 

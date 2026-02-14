@@ -26,9 +26,12 @@ static char rcs_id[]="$Id: max_wfc.c,v 1.13 2004/06/06 21:48:51 paltas Exp $";
 /*# name=Waiting-for-caller routines
 */
 
-#define MAX_LANG_max_wfc
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_wfc
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -825,7 +828,8 @@ static void near Update_Event_Time(void)
     return;
 #endif
 
-  sprintf(temp, wfc_event_time, (next_event_time-time(NULL))/60L);
+  { char _et[16]; snprintf(_et, sizeof(_et), "%ld", (long)((next_event_time-time(NULL))/60L));
+    LangSprintf(temp, sizeof(temp), wfc_event_time, _et); }
   WinPutstr(win_stat, 0, 16, temp);
   WinSync(win_stat, FALSE);
 }

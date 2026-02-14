@@ -24,8 +24,9 @@ static char rcs_id[]="$Id: max_bor.c,v 1.3 2004/01/27 21:00:45 paltas Exp $";
 /*# name=BORED, the line-oriented editor
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_bor
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <io.h>
@@ -42,6 +43,7 @@ static char rcs_id[]="$Id: max_bor.c,v 1.3 2004/01/27 21:00:45 paltas Exp $";
 #include "max_edit.h"
 #include "maxedp.h"
 #include "m_reply.h"
+#include "mci.h"
 
 
 int linenum;
@@ -82,6 +84,8 @@ int Bored(XMSG *msg,HMSG msgh,struct _replyp *pr)
   }
   else                /* Things look A-OK! */
   {
+    MciPushParseFlags(MCI_PARSE_ALL, 0);
+
     if (setjmp(jumpto)==0) /* Really ugly, but the best way to handle errs */
     {
       int rc;
@@ -100,11 +104,13 @@ int Bored(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
       in_msghibit--;
 
+      MciPopParseFlags();
       return rc;
     }
     else
     {
       Free_All();
+      MciPopParseFlags();
       return ABORT;
     }
   }
@@ -200,16 +206,17 @@ static void near Bored_List(XMSG *msg)
 
   Puts("\n\n" CLS);
 
-  Printf(list_from, Strip_Ansi(msg->from, NULL, 0L));
-  Printf(list_to, Strip_Ansi(msg->to, NULL, 0L));
-  Printf(list_subj, Strip_Ansi(msg->subj, NULL, 0L));
+  LangPrintf(list_from, Strip_Ansi(msg->from, NULL, 0L));
+  LangPrintf(list_to, Strip_Ansi(msg->to, NULL, 0L));
+  LangPrintf(list_subj, Strip_Ansi(msg->subj, NULL, 0L));
 
   for (x=1; x <= num_lines; x++)
   {
     if (MoreYnBreak(&nonstop,CYAN))
       break;
 
-    Printf(blfmt1, x, screen[x]+1);
+    { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", x);
+      LangPrintf(blfmt1, _tb, screen[x]+1); }
     Putc('\n');
   }
 
@@ -223,7 +230,7 @@ static void near Bored_List(XMSG *msg)
 
 static void near Bored_To(XMSG *msg)
 {
-  Printf(bed_to, Strip_Ansi(msg->to, NULL, 0L));
+  LangPrintf(bed_to, Strip_Ansi(msg->to, NULL, 0L));
 
   if (!ngcfg_get_bool("general.session.disable_userlist") && !(mah.ma.attribs & MA_NET))
     Puts(bed_lu);
@@ -264,7 +271,7 @@ static void near Bored_To(XMSG *msg)
 
 static void near Bored_From(XMSG *msg)
 {
-  Printf(bfrom, Strip_Ansi(msg->from, NULL, 0L));
+  LangPrintf(bfrom, Strip_Ansi(msg->from, NULL, 0L));
 
   do
   {
@@ -282,7 +289,7 @@ static void near Bored_From(XMSG *msg)
 
 static void near Bored_Subject(XMSG *msg)
 {
-  Printf(bsubj, Strip_Ansi(msg->subj, NULL, 0));
+  LangPrintf(bsubj, Strip_Ansi(msg->subj, NULL, 0));
 
   if ((mah.ma.attribs & (MA_NET|MA_ATTACH))==(MA_NET|MA_ATTACH) &&
       !mailflag(CFLAGM_ATTRANY))
@@ -321,11 +328,14 @@ static void near Bored_Handling(XMSG *msg)
 
       for (x=0; x < 16; x++)
       {
+        char attr_key[32];
+        snprintf(attr_key, sizeof(attr_key), "max_bor.msg_attr%d", x);
+        const char *attr_str = maxlang_get(g_current_lang, attr_key);
         Printf(YELLOW "%c" GRAY ")%s",
-               s_ret(n_msg_attr0+x)[0],
-               &(s_ret(n_msg_attr0+x)[1]) );
+               attr_str[0],
+               &(attr_str[1]) );
 
-        Printf(rle_str, '.', 20-(strlen(s_ret(n_msg_attr0+x))+1));
+        Printf(rle_str, '.', 20-(strlen(attr_str)+1));
 
         Printf(WHITE " %s\n", (msg->attr & (1 << x)) ? yep : nope);
       }
@@ -336,7 +346,10 @@ static void near Bored_Handling(XMSG *msg)
     ch=(byte)toupper(KeyGetRNP(select_p));
 
     for (x=0; x < 16; x++)
-      if (ch==(s_ret(n_msg_attr0+x))[0])
+    {
+      char attr_key[32];
+      snprintf(attr_key, sizeof(attr_key), "max_bor.msg_attr%d", x);
+      if (ch==maxlang_get(g_current_lang, attr_key)[0])
       {
         if (msg->attr & (1 << x))
           msg->attr &= ~(1 << x);
@@ -362,6 +375,7 @@ static void near Bored_Handling(XMSG *msg)
 
         break;
       }
+    }
   }
   while (ch != 'Q' && ch != '\0' && ch != '|' && ch != '\r');
 }
@@ -471,7 +485,8 @@ static void near Bored_Edit(void)
     if (! *linebuf)
     {
       Putc('\n');
-      Printf(blfmt1, cx, screen[cx]+1);
+      { char _cx[8]; snprintf(_cx, sizeof(_cx), "%d", cx);
+        LangPrintf(blfmt1, _cx, screen[cx]+1); }
     
       WhiteN();
       WhiteN();
@@ -484,7 +499,7 @@ static void near Bored_Edit(void)
 
     if (*search && ! stristr(screen[cx]+1, search))
     {
-      Printf(word_not_found, search);
+      LangPrintf(word_not_found, search);
       return;
     }
 
@@ -500,9 +515,10 @@ static void near Bored_Edit(void)
 
     if (! *search)
       Puts(editl2);
-    else Printf(editl3, search);
+    else LangPrintf(editl3, search);
 
-    Printf(e_numch, rep_len);
+    { char _tb[16]; snprintf(_tb, sizeof(_tb), "%d", rep_len);
+      LangPrintf(e_numch, _tb); }
 
     InputGetsL(replace,
               min(BUFLEN, rep_len),
@@ -515,7 +531,8 @@ static void near Bored_Edit(void)
       memmove(screen[cx]+1, replace, strlen(replace));
 
       Putc('\n');
-      Printf(blfmt1, cx, screen[cx]+1);
+      { char _cx[8]; snprintf(_cx, sizeof(_cx), "%d", cx);
+        LangPrintf(blfmt1, _cx, screen[cx]+1); }
       Putc('\n');
     }
     else
@@ -542,7 +559,8 @@ static void near Bored_Edit(void)
       }
 
       Putc('\n');
-      Printf(blfmt1, cx, screen[cx]+1);
+      { char _cx[8]; snprintf(_cx, sizeof(_cx), "%d", cx);
+        LangPrintf(blfmt1, _cx, screen[cx]+1); }
       Putc('\n');
     }
   }

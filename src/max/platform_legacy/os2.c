@@ -32,6 +32,7 @@ static char rcs_id[]="$Id: os2.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 void OS2Init(void) {}
 #else
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include "mm.h"
 

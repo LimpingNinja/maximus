@@ -26,9 +26,11 @@ static char rcs_id[]="$Id: max_locl.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Local command functions
 */
 
-#define MAX_LANG_max_log
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -684,7 +686,8 @@ DL today: 12345678  DL total: 12345  UL total: 12345    Hotkeys: NO
   if (usr.xp_flag & XFLAG_EXPDATE)
     FileDateFormat(&usr.xp_date, temp);
   else if (usr.xp_flag & XFLAG_EXPMINS)
-    sprintf(temp, stat_mins, usr.xp_mins);
+    { char _xm[16]; snprintf(_xm, sizeof(_xm), "%ld", (long)usr.xp_mins);
+      LangSprintf(temp, sizeof(temp), stat_mins, _xm); }
   else strcpy(temp, proto_none);
   
   (*prfunc)(stat_10,

@@ -27,8 +27,9 @@ static char rcs_id[]="$Id: max_chat.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
     name=resident portion of inbound message handler.
 */
 
-#define MAX_LANG_max_chat
-
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <io.h>

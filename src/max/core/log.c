@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: log.c,v 1.3 2004/01/27 21:00:30 paltas Exp $";
 /*# name=Log-file manipulation functions
 */
 
-#define MAX_LANG_max_log
-
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
 #include <share.h>

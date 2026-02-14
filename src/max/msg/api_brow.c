@@ -25,6 +25,7 @@ static char rcs_id[]="$Id: api_brow.c,v 1.4 2004/01/27 21:00:25 paltas Exp $";
 
 #define NO_MSGH_DEF
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

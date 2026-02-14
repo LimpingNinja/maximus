@@ -28,6 +28,9 @@ static char rcs_id[]="$Id: med_scrn.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_bor
 #include "maxed.h"
 
 void Redraw_Text(void)
@@ -49,9 +52,9 @@ void Redraw_StatusLine(void)
 {
   Goto(usrlen, 1);
 
-  Printf(max_status,
-         mmsg->to,
-         mmsg->subj+(strnicmp(mmsg->subj, "Re:", 3)==0 ? 4 : 0));
+  LangPrintf(max_status,
+             mmsg->to,
+             mmsg->subj+(strnicmp(mmsg->subj, "Re:", 3)==0 ? 4 : 0));
 
   if (insert)
   {
@@ -78,8 +81,9 @@ void Redraw_Quote(void)
     Goto(usrlen+1,usrwidth-12);
 
     for (temp=0;temp < QUOTELINES;temp++)
-      Printf(quote_format, usrlen+1+temp, msg_quote_col, 
-             initials, quotebuf+(temp*MAX_LINELEN));
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", usrlen+1+temp);
+      LangPrintf(quote_format, _ib, msg_quote_col, 
+                 initials, quotebuf+(temp*MAX_LINELEN)); }
 
     Puts(CLEOL);
   }
@@ -112,7 +116,7 @@ void Update_Line(word cx, word cy, word inc, word update_cursor)
         }
         else Printf("%0.*s",usrwidth-cy,screen[cx]+cy);
       }
-      else Printf(end_widget, msg_text_col);
+      else LangPrintf(end_widget, msg_text_col);
 
       if (cx >= max_lines || screen[cx]==NULL ||
           (cy+strlen(screen[cx]+cy) <= usrwidth))

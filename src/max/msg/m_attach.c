@@ -25,11 +25,12 @@ static char rcs_id[]="$Id: m_attach.c,v 1.4 2004/01/27 21:00:30 paltas Exp $";
 /*# name=Message Section: File attach related functions
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
 #define MAX_LANG_m_area
 #define MAX_LANG_m_browse
 #define MAX_LANG_max_chat
-#define MAX_LANG_f_area
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -275,7 +276,8 @@ static int near Receive_Attach(void)
     if (baud < ClassGetInfo(cls,CIT_MIN_XFER_BAUD))
     {
       Display_File(0, NULL, ngcfg_get_path("general.display_files.xfer_baud"));
-      Printf(baudtoolowforxfer, ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", ClassGetInfo(cls,CIT_MIN_XFER_BAUD));
+        LangPrintf(baudtoolowforxfer, _ib); }
       Press_ENTER();
       return -1;
     }
@@ -290,7 +292,7 @@ static int near Receive_Attach(void)
         return -1;
       }
 
-      Printf(bytes_for_ul, commaize(b_free-(long)min_free_kb*1000L, temp));
+      LangPrintf(bytes_for_ul, commaize(b_free-(long)min_free_kb*1000L, temp));
     }
 
     if (! IsBatch(protocol))
@@ -397,7 +399,7 @@ static int near Compress_Attach_Files(PMAH pmah, char *szAttachName, dword *pulF
 
     /* Add MaxPipe to the call */
 
-    sprintf(tmp, maxpipe_cmd, cmd);
+    LangSprintf(tmp, sizeof(tmp), maxpipe_cmd, cmd);
     strcpy(cmd, tmp);
 
     Puts(wait_compr_attach);
@@ -729,7 +731,7 @@ static int near Send_Attach(int fDelok)
 
         if (fexist(temp2))
         {
-          sprintf(prompt, ok_to_overwrite, temp2);
+          LangSprintf(prompt, sizeof(prompt), ok_to_overwrite, temp2);
 
           if (GetyNAnswer(prompt, 0)==NO)
             continue;
@@ -1089,8 +1091,9 @@ void Msg_Attach_Download(void)
   }
   else
   {
-    char * p = malloc(strlen(n_files_attached)+12);
-    sprintf(p, n_files_attached, n);
+    char _nb[16]; snprintf(_nb, sizeof(_nb), "%d", n);
+    char * p = malloc(strlen(n_files_attached)+16);
+    LangSprintf(p, strlen(n_files_attached)+16, n_files_attached, _nb);
 
     if (n==1 || GetYnAnswer(p, 0)!=NO)
       Download_Attaches();
@@ -1112,7 +1115,7 @@ static int near Attach_List(void)
     nonstop=FALSE;
     display_line=display_col=1;
 
-    Printf(attach_hdr0,usr.name);
+    LangPrintf(attach_hdr0, usr.name);
     WhiteN();
     Puts(attach_hdr0_5);
     Puts(attach_hdr1);
@@ -1153,12 +1156,14 @@ static int near Attach_List(void)
       else
         sprintf(szSize, "%dK", lSize);
 
-      Printf(attach_fmt, FileDateFormat(&pLfaF->lfa.scDateAttached,temp),
-                         pLfaF->lfa.scDateAttached.msg_st.time.hh,
-                         pLfaF->lfa.scDateAttached.msg_st.time.mm,
-                         pLfaF->lfa.szFrom,
-                         szSize,
-                         pLfaF->lfa.szArea);
+      { char _h[8], _m[8];
+        snprintf(_h, sizeof(_h), "%02d", pLfaF->lfa.scDateAttached.msg_st.time.hh);
+        snprintf(_m, sizeof(_m), "%02d", pLfaF->lfa.scDateAttached.msg_st.time.mm);
+        LangPrintf(attach_fmt, FileDateFormat(&pLfaF->lfa.scDateAttached,temp),
+                               _h, _m,
+                               pLfaF->lfa.szFrom,
+                               szSize,
+                               pLfaF->lfa.szArea); }
     }
     while (LFAFindNext(pLfaF));
     LFAFindClose(pLfaF);
@@ -1182,11 +1187,13 @@ static void near Download_Attaches(void)
     do
     {
 
-      Printf(attach_fmt2, FileDateFormat(&pLfaF->lfa.scDateAttached, temp),
-                          pLfaF->lfa.scDateAttached.msg_st.time.hh,
-                          pLfaF->lfa.scDateAttached.msg_st.time.mm,
-                          pLfaF->lfa.szFrom,
-                          pLfaF->lfa.szArea);
+      { char _hh[4], _mm[4];
+        snprintf(_hh, sizeof(_hh), "%02d", pLfaF->lfa.scDateAttached.msg_st.time.hh);
+        snprintf(_mm, sizeof(_mm), "%02d", pLfaF->lfa.scDateAttached.msg_st.time.mm);
+        LangPrintf(attach_fmt2, FileDateFormat(&pLfaF->lfa.scDateAttached, temp),
+                   _hh, _mm,
+                   pLfaF->lfa.szFrom,
+                   pLfaF->lfa.szArea); }
 
 
       if (Attach_File(&pLfaF->lfa,temp,attach_notavail) &&

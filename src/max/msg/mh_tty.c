@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: mh_tty.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 /*# name=Message Section: Grab msghdr (TTY version)
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_bor
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -327,7 +328,7 @@ int near TTYGetToField(PMAH pmah, XMSG *msg)
     /* If we're doing a change message */
     
     if (*oldto && !isareply)
-      Printf(keep_to, oldto);
+      LangPrintf(keep_to, oldto);
 
     Puts(eto);       /* "    To: " */
 
@@ -373,7 +374,7 @@ int near TTYGetToField(PMAH pmah, XMSG *msg)
 
     if ((pmah->ma.attribs & MA_NET)==0 && eqstri(msg->to, sysop_txt))
     {
-      Printf(mroute_sysop, ngcfg_get_string_raw("maximus.sysop"));
+      LangPrintf(mroute_sysop, (char *)ngcfg_get_string_raw("maximus.sysop"));
       strcpy(msg->to, (char *)ngcfg_get_string_raw("maximus.sysop"));
     }
     else
@@ -473,9 +474,11 @@ static void near AskMessageAttrs(XMSG *msg)
   
   for (i=1; i < 16; i++)
   {
+    char mattr_key[32];
+    snprintf(mattr_key, sizeof(mattr_key), "max_bor.msg_attr%d", i);
     if (GEPriv(usr.priv, ngcfg_get_msg_assume_priv(i)) ||
         (GEPriv(usr.priv, ngcfg_get_msg_ask_priv(i)) &&
-         GetyNAnswer(s_ret(n_msg_attr0+i), 0)==YES))
+         GetyNAnswer((char *)maxlang_get(g_current_lang, mattr_key), 0)==YES))
     {
       msg->attr |= (1 << i);
     }
@@ -517,7 +520,7 @@ static void near DisplayEmptyHeader(PMAH pmah)
     Puts(th_e); /* "... echomail message" */
 
   /* ...in area #xx. */
-  Printf(this_area, msgname);
+  LangPrintf(this_area, msgname);
 }
 
 int near TTYGetAttach(PMAH pmah, XMSG *msg)

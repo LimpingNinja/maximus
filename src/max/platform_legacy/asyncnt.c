@@ -28,6 +28,7 @@ static char __attribute__((unused)) rcs_id[]="$Id: asyncnt.c,v 1.8 2004/06/06 21
 
 #if defined(NT) || defined(UNIX)
 
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <conio.h>

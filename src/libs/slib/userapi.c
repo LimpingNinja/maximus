@@ -323,6 +323,7 @@ HUF _fast UserFileOpen(char *name, int mode)
   huf->id_huf=ID_HUF;
   huf->db = NULL;
   huf->use_sqlite = _use_sqlite_backend();
+  huf->last_found_id = -1;
 
   {
     int flags = MAXDB_OPEN_READWRITE;
@@ -532,6 +533,7 @@ int _fast UserFileFind(HUF huf, char *name, char *alias, struct _usr *pusr)
     
     if (dbuser)
     {
+      huf->last_found_id = (long)dbuser->id;
       _convert_maxdbuser_to_usr(dbuser, pusr);
       maxdb_user_free(dbuser);
       return TRUE;
@@ -541,7 +543,12 @@ int _fast UserFileFind(HUF huf, char *name, char *alias, struct _usr *pusr)
   }
 
   /* Legacy file backend */
-  return _UserFileFind(huf, name, alias, pusr, &ofs, 0L, TRUE);
+  if (_UserFileFind(huf, name, alias, pusr, &ofs, 0L, TRUE))
+  {
+    huf->last_found_id = ofs;
+    return TRUE;
+  }
+  return FALSE;
 }
 
 
@@ -1041,3 +1048,14 @@ int _fast UserFileClose(HUF huf)
 }
 
 
+/**
+ * @brief Return the record id/offset of the last user found by UserFileFind().
+ * @return Record id (>= 0) or -1 if no find has been performed.
+ */
+long _fast UserFileGetLastFoundId(HUF huf)
+{
+  if (!huf || huf->id_huf != ID_HUF)
+    return -1;
+
+  return huf->last_found_id;
+}

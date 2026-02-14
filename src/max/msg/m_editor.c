@@ -26,9 +26,10 @@ static char rcs_id[]="$Id: m_editor.c,v 1.3 2004/01/27 21:00:31 paltas Exp $";
 /*# name=Message Section: Editor shell
 */
 
-#define MAX_LANG_max_chat
+#define MAX_LANG_m_area
 #define MAX_LANG_max_bor
-
+#define MAX_LANG_max_chat
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>

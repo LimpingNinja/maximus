@@ -24,6 +24,8 @@
  * User class API
  */
 
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>

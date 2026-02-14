@@ -23,8 +23,9 @@ static char rcs_id[]="$Id: t_report.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
-#define MAX_LANG_max_init
-#define MAX_LANG_max_main
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_track
 #include "trackp.h"
 
 #ifdef MAX_TRACKER
@@ -369,9 +370,10 @@ static unsigned near RepShow(TRK t, TRK_MSG_NDX *ptmn, FILE *fp, int *piFirst, c
 
   /* Display the name/number of msg as "areaname#msgnum" */
 
-  sprintf(buf, trk_rep_msgnum, ptmn->tl.szArea,
-          ngcfg_get_bool("general.session.use_umsgids")
-           ? ptmn->tl.uid : MsgUidToMsgn(sq, ptmn->tl.uid, UID_EXACT));
+  { char _uid[16]; snprintf(_uid, sizeof(_uid), "%ld",
+      (long)(ngcfg_get_bool("general.session.use_umsgids")
+             ? ptmn->tl.uid : MsgUidToMsgn(sq, ptmn->tl.uid, UID_EXACT)));
+    LangSprintf(buf, sizeof(buf), trk_rep_msgnum, ptmn->tl.szArea, _uid); }
 
   /*
   ID               Date     Owner Priority     Status  Message
@@ -387,16 +389,15 @@ static unsigned near RepShow(TRK t, TRK_MSG_NDX *ptmn, FILE *fp, int *piFirst, c
 
 
 
-  sprintf(line, trk_rep_fmt,
-          ptmn->szTrackID,
-          (ptmn->scDateWritten.msg_st.date.yr + 80) % 100,
-          ptmn->scDateWritten.msg_st.date.mo,
-          ptmn->scDateWritten.msg_st.date.da,
-          EntryTooOld((SCOMBO *)&ptmn->scDateWritten) ? '*' : ' ',
-          ptmn->to,
-          TrkGetPriority(t, ptmn),
-          TrkGetStatus(t, ptmn),
-          buf);
+  { char _yr[8], _mo[8], _da[8], _old[4];
+    snprintf(_yr, sizeof(_yr), "%02d", (ptmn->scDateWritten.msg_st.date.yr + 80) % 100);
+    snprintf(_mo, sizeof(_mo), "%02d", ptmn->scDateWritten.msg_st.date.mo);
+    snprintf(_da, sizeof(_da), "%02d", ptmn->scDateWritten.msg_st.date.da);
+    snprintf(_old, sizeof(_old), "%c", EntryTooOld((SCOMBO *)&ptmn->scDateWritten) ? '*' : ' ');
+    LangSprintf(line, sizeof(line), trk_rep_fmt,
+            ptmn->szTrackID, _yr, _mo, _da, _old,
+            ptmn->to, TrkGetPriority(t, ptmn),
+            TrkGetStatus(t, ptmn), buf); }
 
   /* Output to the appropriate place */
 
@@ -683,7 +684,7 @@ int TrackReportOurMessages(char *qwk_path)
 
     /* Generate the message report as bulletin #99. */
 
-    sprintf(fname, trk_rep_qwk_bulletin, qwk_path);
+    LangSprintf(fname, sizeof(fname), trk_rep_qwk_bulletin, qwk_path);
 
     if ((fp=fopen(fname, fopen_write))==NULL)
       cant_open(fname);

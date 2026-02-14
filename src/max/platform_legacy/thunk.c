@@ -23,6 +23,7 @@ static char rcs_id[]="$Id: thunk.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 #pragma on(unreferenced)
 #endif
 
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include <string.h>
 #include "alc.h"

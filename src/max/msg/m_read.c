@@ -27,8 +27,10 @@ static char rcs_id[]="$Id: m_read.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 */
 
 #define MAX_INCL_COMMS
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -41,6 +43,7 @@ static char rcs_id[]="$Id: m_read.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include "m_full.h"
 #include "node.h"
 #include "trackm.h"
+#include "mci.h"
 
 static int near ngcfg_get_kill_mode_int(const char *toml_path)
 {
@@ -335,7 +338,8 @@ static void near Show_Replies(XMSG *msg)
 
     if (otlong)
     {
-      Printf(this_reply, otlong);
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", otlong);
+        LangPrintf(this_reply, _ib); }
 
       if (! msg->replies[0])
         Puts(endofline);
@@ -353,7 +357,8 @@ static void near Show_Replies(XMSG *msg)
         Puts(dot_spsp);
       else Putc('\n');
 
-      Printf(see_also, tlong);
+      { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", tlong);
+        LangPrintf(see_also, _ib); }
       
       for (i=1; i < MAX_REPLY && msg->replies[i]; i++)
       {
@@ -392,7 +397,7 @@ static int near ShowMessageHeader(XMSG *msg, word *msgoffset, long mn)
   
   /* Build the first part of the 'FROM:' line */
   
-  sprintf(string, mfrom, msg_from_col, msg_from_txt_col,
+  LangSprintf(string, PATHLEN, mfrom, msg_from_col, msg_from_txt_col,
           Strip_Ansi(msg->from, NULL, 0L), msg_attr_col);
   
   /* Build a mask for the message attributes, but strip off MSGLOCAL */
@@ -410,11 +415,16 @@ static int near ShowMessageHeader(XMSG *msg, word *msgoffset, long mn)
                      
   for (i=0, acomp=1L; i < 16; acomp <<= 1, i++)
     if (amask & acomp)
-      if (strlen(string) + strlen(s_ret(n_attribs0 + i)) < MAXLEN)
+    {
+      char akey[32];
+      snprintf(akey, sizeof(akey), "m_area.attribs%d", i);
+      const char *aval = maxlang_get(g_current_lang, akey);
+      if (strlen(string) + strlen(aval) < MAXLEN)
       {
-        strcat(string, s_ret(n_attribs0 + i));
+        strcat(string, aval);
         strcat(string, " ");
       }
+    }
 
   Puts(string);
   Putc('\n');
@@ -428,8 +438,9 @@ static int near ShowMessageHeader(XMSG *msg, word *msgoffset, long mn)
   
   /* Display the To: address */
   
-  Printf(mto, msg_to_col, msg_to_txt_col, Strip_Ansi(msg->to, NULL, 0L),
-         msg_date_col, UIDnum(mn), MsgDate(msg, string));
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", UIDnum(mn));
+    LangPrintf(mto, msg_to_col, msg_to_txt_col, Strip_Ansi(msg->to, NULL, 0L),
+              msg_date_col, _ib, MsgDate(msg, string)); }
 
   if (halt())
     return -1;
@@ -523,7 +534,9 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
                                    int inbrowse)
 {
   int this;
-  
+
+  MciPushParseFlags(MCI_PARSE_ALL, 0);
+
   for (this=0; this < got; this++)
   {
     /* If we're near the end of the message, strip excess blank lines */
@@ -544,15 +557,22 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
     Putc('\n');
 
     if (halt())
+    {
+      MciPopParseFlags();
       return -1;
+    }
 
     if (display_line >= TermLength() && pause && ! *nonstop)
     {
       if (! DoTheMoreThing(nonstop, paged, msgoffset, inbrowse))
+      {
+        MciPopParseFlags();
         return -2;
+      }
     }
   }
-  
+
+  MciPopParseFlags();
   return 0;
 }
 
@@ -734,12 +754,15 @@ static void near Display_Addr(char *orig_or_dest,char *type,word *msgoffset,NETA
   
   if ((nf=NodeFindOpen(addr)) != NULL)
   {
-    Printf(addrfmt, msg_addr_col, orig_or_dest, msg_locus_col,
-           nf->found.name, Address(addr), nf->found.city);
+    { char _n[35], _c[31];
+      snprintf(_n, sizeof(_n), "%.34s", nf->found.name);
+      snprintf(_c, sizeof(_c), "%.30s", nf->found.city);
+      LangPrintf(addrfmt, msg_addr_col, orig_or_dest, msg_locus_col,
+                 _n, Address(addr), _c); }
 
     NodeFindClose(nf);
   }
-  else Printf(unlisted_system, type, Address(addr));
+  else LangPrintf(unlisted_system, type, Address(addr));
 
   if (msgoffset)
     (*msgoffset)++;
@@ -780,7 +803,7 @@ int Msg_Previous(long startmsg)
 int Msg_Nonstop(void)
 {
   Puts(CLS);
-  Printf(message_name, msgar_name, usr.msg, MAS(mah, descript));
+  LangPrintf(message_name, msgar_name, usr.msg, MAS(mah, descript));
   Putc('\n');
   
   while (Msg_Get_Msgs(direction,
@@ -922,8 +945,8 @@ static int near Msg_Get_Msgs(int dir,dword startmsg,int nonstop,int exact,int sh
     else last_msg=0;
   }
 
-  Printf(endavailmsg, (mah.ma.attribs & MA_PVT)==0 ? blank_str
-                                                   : remain_pvt);
+  LangPrintf(endavailmsg, (mah.ma.attribs & MA_PVT)==0 ? blank_str
+                                                        : remain_pvt);
   Clear_KBuffer();
 
   /* We dump input here because new users (who aren't used to            *

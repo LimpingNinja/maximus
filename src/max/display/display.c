@@ -31,7 +31,9 @@ static char rcs_id[]="$Id: display.c,v 1.4 2004/01/27 21:00:26 paltas Exp $";
 
 #define MAX_INCL_COMMS
 #define MAX_LANG_f_area
-
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>

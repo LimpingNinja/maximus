@@ -177,6 +177,11 @@ void action_fsr_colors(void);
 bool form_edit(const char *title, const FieldDef *fields, int field_count, char **values,
                int *dirty_fields, int *dirty_count);
 
+/* Optional preview hook for form_edit (invoked on F4 when enabled).
+ * Callers should set this before calling form_edit, then clear it after.
+ */
+void form_set_preview_action(void (*action)(void *ctx), void *ctx);
+
 extern int g_form_last_action_key;
 
 /* ============================================================================

@@ -26,6 +26,8 @@ static char rcs_id[]="$Id: f_raw.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: R)aw function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>

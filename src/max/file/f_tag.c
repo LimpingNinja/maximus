@@ -26,8 +26,10 @@ static char rcs_id[]="$Id: f_tag.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: T)ag functions
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_max_main
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -80,7 +82,8 @@ void File_Tag(int dl_cmd)
       Display_File(0, NULL, "%stag_file", (char *)ngcfg_get_string_raw("maximus.misc_path"));
     else if (ch=='\0' || ch=='|' || ch=='\r' || ch==tag_keys[5])
       return;
-    else Printf(dontunderstand,ch);
+    else { char _cb[2] = { (char)ch, '\0' };
+           LangPrintf(dontunderstand, _cb); }
   }
 }
 
@@ -105,12 +108,12 @@ static void near File_Tag_List(void)
   {
     this_time=XferTime(PROTOCOL_ZMODEM, fent.ulSize);
 
-    Printf(file_stats,
-           n+1,
-           No_Path(fent.szName),
-           (int)(this_time/60L),
-           (int)(this_time % 60L),
-           (long)fent.ulSize);
+    { char _i1[16], _i2[16], _i3[16], _i4[32];
+      snprintf(_i1, sizeof(_i1), "%d", n+1);
+      snprintf(_i2, sizeof(_i2), "%d", (int)(this_time/60L));
+      snprintf(_i3, sizeof(_i3), "%d", (int)(this_time % 60L));
+      snprintf(_i4, sizeof(_i4), "%ld", (long)fent.ulSize);
+      LangPrintf(file_stats, _i1, No_Path(fent.szName), _i2, _i3, _i4); }
 
     Putc('\n');
     total_size += fent.ulSize;
@@ -118,10 +121,11 @@ static void near File_Tag_List(void)
     vbuf_flush();
   }
   
-  Printf(file_tag_total,
-         total_size,
-         XferTime(PROTOCOL_ZMODEM, total_size) / 60L,
-         XferTime(PROTOCOL_ZMODEM, total_size) % 60L);
+  { char _i1[32], _i2[32], _i3[32];
+    snprintf(_i1, sizeof(_i1), "%ld", total_size);
+    snprintf(_i2, sizeof(_i2), "%ld", XferTime(PROTOCOL_ZMODEM, total_size) / 60L);
+    snprintf(_i3, sizeof(_i3), "%ld", XferTime(PROTOCOL_ZMODEM, total_size) % 60L);
+    LangPrintf(file_tag_total, _i1, _i2, _i3); }
 }
 
 static void near File_Tag_Delete(void)
@@ -138,7 +142,8 @@ static void near File_Tag_Delete(void)
     return;
   }
 
-  InputGets(temp, file_untag, FileEntries());
+  { char _n[12]; snprintf(_n, sizeof(_n), "%d", FileEntries());
+    InputGets(temp, file_untag, _n); }
 
   WhiteN();
 
@@ -185,7 +190,7 @@ static void near File_Tag_Delete(void)
 
         /* And inform the user */
 
-        Printf(file_untagged, fname);
+        LangPrintf(file_untagged, fname);
 
         if (ft)
           --ft;

@@ -21,6 +21,8 @@
  */
 
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdlib.h>
 #include "prog.h"
 #include "mm.h"

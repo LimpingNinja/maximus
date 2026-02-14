@@ -26,9 +26,12 @@ static char rcs_id[]="$Id: ued_disp.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 /*# name=Internal user editor (screen-display routines)
 */
 
-#define MAX_LANG_max_ued
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_max_ued
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -104,7 +107,7 @@ static char * near Expire_Action(struct _usr *user,char *temp)
   {
     char ptmp[16];
 
-    sprintf(temp, ued_xp_demote, privstr(user->xp_priv,ptmp));
+    LangSprintf(temp, PATHLEN, ued_xp_demote, privstr(user->xp_priv,ptmp));
     return temp;
   }
 
@@ -124,7 +127,8 @@ static char * near Expire_At(struct _usr *user,char *temp)
 
   if (user->xp_flag & XFLAG_EXPMINS)
   {
-    sprintf(temp, ued_xp_minutes, user->xp_mins);
+    { char _xm[16]; snprintf(_xm, sizeof(_xm), "%ld", (long)user->xp_mins);
+      LangSprintf(temp, PATHLEN, ued_xp_minutes, _xm); }
     return temp;
   }
 
@@ -140,8 +144,14 @@ void DrawUserScreen(void)
   int i;
   char *str;
 
-  for (i=0; *(str=s_ret(n_ued_ss1+i)) != 0; i++)
-    Puts(str);
+  for (i=1; i <= 22; i++)
+  {
+    char sskey[32];
+    snprintf(sskey, sizeof(sskey), "max_ued.ued_ss%d", i);
+    const char *ss = maxlang_get(g_current_lang, sskey);
+    if (*ss)
+      Puts((char *)ss);
+  }
 }
 
 
@@ -206,134 +216,156 @@ void DisplayUser(void)
 
   Puts(WHITE);
 
-  Printf(ued_spermflag,
-            eqstri(usr.name, user.name) ? ued_sstatcur
-          : (user.delflag & UFLAG_DEL)  ? ued_sstatdel
-          : (user.delflag & UFLAG_PERM) ? ued_sstatprm
-                                        : ued_sstatblank);
+  LangPrintf(ued_spermflag,
+               eqstri(usr.name, user.name) ? ued_sstatcur
+             : (user.delflag & UFLAG_DEL)  ? ued_sstatdel
+             : (user.delflag & UFLAG_PERM) ? ued_sstatprm
+                                           : ued_sstatblank);
 
   if (MKD()) goto Dump;
-  Printf(ued_slastcall,    sc_time(&user.ludate, temp));
+  LangPrintf(ued_slastcall,    sc_time(&user.ludate, temp));
   if (MKD()) goto Dump;
-  Printf(ued_sname,        user.name);
+  LangPrintf(ued_sname,        user.name);
   if (MKD()) goto Dump;
-  Printf(ued_scity,        user.city);
+  LangPrintf(ued_scity,        user.city);
   if (MKD()) goto Dump;
   /* Always show [Encrypted] - never expose passwords to sysop */
-  Printf(ued_spwd,         brackets_encrypted);
+  LangPrintf(ued_spwd,         brackets_encrypted);
   if (MKD()) goto Dump;
-  Printf(ued_salias,       user.alias);
+  LangPrintf(ued_salias,       user.alias);
   if (MKD()) goto Dump;
-  Printf(ued_svoicephone,  user.phone);
+  LangPrintf(ued_svoicephone,  user.phone);
   if (MKD()) goto Dump;
-  Printf(ued_sdataphone,   user.dataphone);
+  LangPrintf(ued_sdataphone,   user.dataphone);
   if (MKD()) goto Dump;
-  Printf(ued_ssex,         Sex(user.sex));
+  LangPrintf(ued_ssex,         Sex(user.sex));
   if (MKD()) goto Dump;
-  Printf(ued_sdob,         DOB(&user, temp));
+  LangPrintf(ued_sdob,         DOB(&user, temp));
   if (MKD()) goto Dump;
-  Printf(ued_spriv,        privstr(user.priv,ptmp));
+  LangPrintf(ued_spriv,        privstr(user.priv,ptmp));
   if (MKD()) goto Dump;
-  Printf(ued_skeys,        Keys(user.xkeys));
+  LangPrintf(ued_skeys,        Keys(user.xkeys));
   if (MKD()) goto Dump;
-  Printf(ued_sgroup,       user.group);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.group);
+    LangPrintf(ued_sgroup, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_sallocpts,    user.point_credit);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)user.point_credit);
+    LangPrintf(ued_sallocpts, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_snerd,        Yes_or_No((user.bits  & BITS_NERD)));
+  LangPrintf(ued_snerd,        Yes_or_No((user.bits  & BITS_NERD)));
   if (MKD()) goto Dump;
-  Printf(ued_scredit,      user.credit);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)user.credit);
+    LangPrintf(ued_scredit, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_sdebit,       user.debit);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)user.debit);
+    LangPrintf(ued_sdebit, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_susedpts,     user.point_debit);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)user.point_debit);
+    LangPrintf(ued_susedpts, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_sulistshow,   Yes_or_No(!(user.bits & BITS_NOULIST)));
-  if (MKD()) goto Dump;
-
-  sprintf(temp, ued_sxfertemplate, user.down, user.ndown);
-  Printf(ued_sdlall, temp);
-  if (MKD()) goto Dump;
-
-  sprintf(temp, ued_sxfertemplate, user.downtoday, user.ndowntoday);
-  Printf(ued_sdltoday,     temp);
+  LangPrintf(ued_sulistshow,   Yes_or_No(!(user.bits & BITS_NOULIST)));
   if (MKD()) goto Dump;
 
-  sprintf(temp, ued_sxfertemplate, user.up, user.nup);
-  Printf(ued_sup,          temp);
+  { char _kb[16], _nf[16];
+    snprintf(_kb, sizeof(_kb), "%ld", (long)user.down);
+    snprintf(_nf, sizeof(_nf), "%u", (unsigned)user.ndown);
+    LangSprintf(temp, sizeof(temp), ued_sxfertemplate, _kb, _nf); }
+  LangPrintf(ued_sdlall, temp);
   if (MKD()) goto Dump;
 
-  Printf(ued_sposted,      user.msgs_posted);
+  { char _kb[16], _nf[16];
+    snprintf(_kb, sizeof(_kb), "%ld", (long)user.downtoday);
+    snprintf(_nf, sizeof(_nf), "%u", (unsigned)user.ndowntoday);
+    LangSprintf(temp, sizeof(temp), ued_sxfertemplate, _kb, _nf); }
+  LangPrintf(ued_sdltoday,     temp);
+  if (MKD()) goto Dump;
+
+  { char _kb[16], _nf[16];
+    snprintf(_kb, sizeof(_kb), "%ld", (long)user.up);
+    snprintf(_nf, sizeof(_nf), "%u", (unsigned)user.nup);
+    LangSprintf(temp, sizeof(temp), ued_sxfertemplate, _kb, _nf); }
+  LangPrintf(ued_sup,          temp);
+  if (MKD()) goto Dump;
+
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.msgs_posted);
+    LangPrintf(ued_sposted, _ib); }
   if (MKD()) goto Dump;
 
   CreateDate(temp, &user.date_1stcall);
-  Printf(ued_s1stcall,     temp);
+  LangPrintf(ued_s1stcall,     temp);
   if (MKD()) goto Dump;
 
-  Printf(ued_stimetoday,   user.time);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%d", user.time);
+    LangPrintf(ued_stimetoday, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_stimeadded,   user.time_added);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%d", user.time_added);
+    LangPrintf(ued_stimeadded, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_stimes,       user.times);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.times);
+    LangPrintf(ued_stimes, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_sreadmsgs,    user.msgs_read);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.msgs_read);
+    LangPrintf(ued_sreadmsgs, _ib); }
   if (MKD()) goto Dump;
 
   CreateDate(temp, &user.date_pwd_chg);
-  Printf(ued_spwdchg,      temp);
+  LangPrintf(ued_spwdchg,      temp);
   if (MKD()) goto Dump;
 
-  Printf(ued_swidth,       user.width);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.width);
+    LangPrintf(ued_swidth, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_slength,      user.len);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.len);
+    LangPrintf(ued_slength, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_snulls,       user.nulls);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%u", (unsigned)user.nulls);
+    LangPrintf(ued_snulls, _ib); }
   if (MKD()) goto Dump;
-  Printf(ued_slastmarea,   user.msg);
+  LangPrintf(ued_slastmarea,   user.msg);
   if (MKD()) goto Dump;
-  Printf(ued_slastfarea,   user.files);
+  LangPrintf(ued_slastfarea,   user.files);
   if (MKD()) goto Dump;
-  Printf(ued_svideo,       Graphics_Mode(user.video));
+  LangPrintf(ued_svideo,       Graphics_Mode(user.video));
   if (MKD()) goto Dump;
-  Printf(ued_shelp,        Help_Level(user.help));
+  LangPrintf(ued_shelp,        Help_Level(user.help));
   if (MKD()) goto Dump;
   {
     const char *lname = ngcfg_lang_file_name((byte)user.lang);
-    Printf(ued_slang, (char *)lname);
+    LangPrintf(ued_slang, (char *)lname);
   }
   if (MKD()) goto Dump;
-  Printf(ued_sproto,       Protocol_Name(user.def_proto, temp));
+  LangPrintf(ued_sproto,       Protocol_Name(user.def_proto, temp));
   if (MKD()) goto Dump;
 
   ar=UserAri(user.compress);
-  Printf(ued_scompress,    ar ? ar->arcname : proto_none);
+  LangPrintf(ued_scompress,    ar ? ar->arcname : proto_none);
 
   if (MKD()) goto Dump;
-  Printf(ued_shotkeys,     Yes_or_No((user.bits  & BITS_HOTKEYS)));
+  LangPrintf(ued_shotkeys,     Yes_or_No((user.bits  & BITS_HOTKEYS)));
   if (MKD()) goto Dump;
-  Printf(ued_smaxed,       Yes_or_No(!(user.bits2& BITS2_BORED)));
+  LangPrintf(ued_smaxed,       Yes_or_No(!(user.bits2& BITS2_BORED)));
   if (MKD()) goto Dump;
-  Printf(ued_stabs,        Yes_or_No((user.bits  & BITS_TABS)));
+  LangPrintf(ued_stabs,        Yes_or_No((user.bits  & BITS_TABS)));
   if (MKD()) goto Dump;
-  Printf(ued_srip,         Yes_or_No((user.bits  & BITS_RIP)));
+  LangPrintf(ued_srip,         Yes_or_No((user.bits  & BITS_RIP)));
   if (MKD()) goto Dump;
-  Printf(ued_sibmchars,    Yes_or_No((user.bits2 & BITS2_IBMCHARS)));
+  LangPrintf(ued_sibmchars,    Yes_or_No((user.bits2 & BITS2_IBMCHARS)));
   if (MKD()) goto Dump;
-  Printf(ued_spause,       Yes_or_No((user.bits2 & BITS2_MORE)));
+  LangPrintf(ued_spause,       Yes_or_No((user.bits2 & BITS2_MORE)));
   if (MKD()) goto Dump;
-  Printf(ued_scalledbefore,Yes_or_No((user.bits2 & BITS2_CONFIGURED)));
+  LangPrintf(ued_scalledbefore,Yes_or_No((user.bits2 & BITS2_CONFIGURED)));
   if (MKD()) goto Dump;
-  Printf(ued_sscrnclr,     Yes_or_No((user.bits2 & BITS2_CLS)));
+  LangPrintf(ued_sscrnclr,     Yes_or_No((user.bits2 & BITS2_CLS)));
   if (MKD()) goto Dump;
-  Printf(ued_schatavail,   Yes_or_No(!(user.bits & BITS_NOTAVAIL)));
+  LangPrintf(ued_schatavail,   Yes_or_No(!(user.bits & BITS_NOTAVAIL)));
   if (MKD()) goto Dump;
-  Printf(ued_sfsr,         Yes_or_No((user.bits  & BITS_FSR)));
+  LangPrintf(ued_sfsr,         Yes_or_No((user.bits  & BITS_FSR)));
   if (MKD()) goto Dump;
-  Printf(ued_sexpireby,    Expire_By(&user));
+  LangPrintf(ued_sexpireby,    Expire_By(&user));
   if (MKD()) goto Dump;
-  Printf(ued_sexpireact,   Expire_Action(&user, temp));
+  LangPrintf(ued_sexpireact,   Expire_Action(&user, temp));
   if (MKD()) goto Dump;
-  Printf(ued_sexpiredate,  Expire_At(&user, temp));
+  LangPrintf(ued_sexpiredate,  Expire_At(&user, temp));
   return;
 
 Dump:

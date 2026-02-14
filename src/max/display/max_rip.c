@@ -28,6 +28,9 @@ static char rcs_id[]="$Id: max_rip.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>

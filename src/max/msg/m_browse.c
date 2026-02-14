@@ -26,8 +26,9 @@ static char rcs_id[]="$Id: m_browse.c,v 1.4 2004/01/27 21:00:30 paltas Exp $";
 /*# name=Message Section: B)rowse command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
@@ -159,7 +160,8 @@ static int near Browse_Get_Area(BROWSE *b)
       }
       else if (ch==bkeys[7])
         Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
-      else Printf(dontunderstand, ch);
+      else { char _cb[2] = { (char)ch, '\0' };
+             LangPrintf(dontunderstand, _cb); }
     }
     while ((b->bflag & BROWSE_AREA)==0);
 
@@ -282,7 +284,7 @@ static void near Browse_Display_Search_Criteria(SEARCH *first)
       else Puts(br_and);
     }
 
-    Printf(br_in_the_xxx_fields,s->txt);
+    LangPrintf(br_in_the_xxx_fields,s->txt);
 
     Browse_Show_List(NULL,
                      br_field_to, (int)(s->where & WHERE_TO),
@@ -341,7 +343,8 @@ static int near Browse_Get_Search_Where(SEARCH *s,BROWSE *b)
         return -1;
       else if (*p==br_sk[5])
         Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
-      else Printf(dontunderstand,*p);
+      else { char _cb[2] = { *p, '\0' };
+             LangPrintf(dontunderstand, _cb); }
     }
   }
 
@@ -399,7 +402,8 @@ static int near Browse_Get_Search_Next(SEARCH *s)
       Puts(browse_select_c);
       return -1;
     }
-    else Printf(dontunderstand,ch);
+    else { char _cb[2] = { (char)ch, '\0' };
+           LangPrintf(dontunderstand, _cb); }
   }
   while (s->next==NULL && ch != *br_s_opt_go);
   
@@ -515,7 +519,8 @@ static int near Browse_Get_Type(BROWSE *b)
         Puts(browse_select_c);
         return -1;
       }
-      else Printf(dontunderstand,ch);
+      else { char _cb[2] = { (char)ch, '\0' };
+             LangPrintf(dontunderstand, _cb); }
     }
     while ( (b->bflag & BROWSE_TYPE)==0 );
   }
@@ -592,7 +597,8 @@ static int near Browse_Get_Display(BROWSE *b)
       }
       else if (ch==br_dispk[4])
         Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
-      else Printf(dontunderstand,ch);
+      else { char _cb[2] = { (char)ch, '\0' };
+             LangPrintf(dontunderstand, _cb); }
     }
     while ( (b->bflag & BROWSE_DISPLAY)==0 );
   }

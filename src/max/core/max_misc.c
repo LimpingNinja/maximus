@@ -26,12 +26,11 @@ static char rcs_id[]="$Id: max_misc.c,v 1.11 2004/06/06 21:48:51 paltas Exp $";
 /*# name=Miscellaneous routines
 */
 
-#define MAX_LANG_max_init
-#define MAX_LANG_max_log
-#define MAX_LANG_max_main
-#define MAX_LANG_f_area
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <time.h>
 #include <dos.h>
@@ -1132,19 +1131,27 @@ char * FileDateFormat(union stamp_combo *stamp,char *temp)
   switch (ds)
   {
     case 0:
-      sprintf(temp, date_str, mo, da, yr);
+      { char _a[8], _b[8], _c[8];
+        snprintf(_a, sizeof(_a), "%d", mo); snprintf(_b, sizeof(_b), "%d", da); snprintf(_c, sizeof(_c), "%d", yr);
+        LangSprintf(temp, PATHLEN, date_str, _a, _b, _c); }
       break;
 
     case 1:
-      sprintf(temp, date_str, da, mo, yr);
+      { char _a[8], _b[8], _c[8];
+        snprintf(_a, sizeof(_a), "%d", da); snprintf(_b, sizeof(_b), "%d", mo); snprintf(_c, sizeof(_c), "%d", yr);
+        LangSprintf(temp, PATHLEN, date_str, _a, _b, _c); }
       break;
 
     case 2:
-      sprintf(temp, date_str, yr, mo, da);
+      { char _a[8], _b[8], _c[8];
+        snprintf(_a, sizeof(_a), "%d", yr); snprintf(_b, sizeof(_b), "%d", mo); snprintf(_c, sizeof(_c), "%d", da);
+        LangSprintf(temp, PATHLEN, date_str, _a, _b, _c); }
       break;
 
     case 3:
-      sprintf(temp, datestr, yr, mo, da);
+      { char _a[8], _b[8], _c[8];
+        snprintf(_a, sizeof(_a), "%d", yr); snprintf(_b, sizeof(_b), "%d", mo); snprintf(_c, sizeof(_c), "%d", da);
+        LangSprintf(temp, PATHLEN, datestr, _a, _b, _c); }
       break;
   }
   

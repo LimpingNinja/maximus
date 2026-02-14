@@ -9,7 +9,27 @@
 #ifndef MAXCFG_H
 #define MAXCFG_H
 
-#include <ncurses.h>
+/*
+ * ncurses exposes wide-character APIs/types (cchar_t, mvadd_wch, setcchar)
+ * only when X/Open extended curses is enabled.
+ */
+#ifndef _XOPEN_SOURCE_EXTENDED
+#define _XOPEN_SOURCE_EXTENDED 1
+#endif
+
+#if defined(__has_include)
+#  if __has_include(<ncursesw/curses.h>)
+#    include <ncursesw/curses.h>
+#  elif __has_include(<ncursesw/ncurses.h>)
+#    include <ncursesw/ncurses.h>
+#  elif __has_include(<ncurses.h>)
+#    include <ncurses.h>
+#  else
+#    include <curses.h>
+#  endif
+#else
+#  include <ncurses.h>
+#endif
 #include <stdbool.h>
 #include "libmaxcfg.h"
 

@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: max_mcmd.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 
 #define MAX_INCL_COMMS
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <time.h>
 #include <string.h>
 #include "prog.h"

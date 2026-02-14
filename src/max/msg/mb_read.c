@@ -26,8 +26,8 @@ static char rcs_id[]="$Id: mb_read.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=R)ead function for the BROWSE command
 */
 
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -67,9 +67,9 @@ int Read_Display(BROWSE *b)
     if (hasRIP() || !usr.video || (usr.bits & BITS_FSR)==0)
     {
       Puts(CLS);
-      Printf(br_area_banner,
-             MAS(mah, name),
-             MAS(mah, descript));
+      LangPrintf(br_area_banner,
+                 MAS(mah, name),
+                 MAS(mah, descript));
     }
 
     no_remote_output=was_no_remote_output;
@@ -103,7 +103,6 @@ int Read_Display(BROWSE *b)
       free(ctrl);
 
     menu_lines=save_mlines;
-
     Recd_Msg(b->m, &b->msg, TRUE);
 
     /* Only update the lastread pointer if we're doing a read               *
@@ -111,7 +110,9 @@ int Read_Display(BROWSE *b)
      * higher than the current lastread pointer for that area.              */
 
     if (OkToFixLastread(b))
+    {
       Lmsg_Set(b, b->msgn);
+    }
   }
   while ((ret=Read_Get_Option(b))==2);
 
@@ -202,7 +203,7 @@ static int near Read_Get_Option(BROWSE *b)
   long savelast, new;
   char msginf[32];
   char temp[32];
-  char prompt[PATHLEN*4];
+  char prompt[4096];
   char *mkeys=mchk_keys;
   char *nkeys=mchk_nmsgk;
   int ch;
@@ -215,8 +216,9 @@ static int near Read_Get_Option(BROWSE *b)
 
     /* sprintf()'d for possible positioning */
 
-    sprintf(prompt, mchk_nmsg, TermLength()-1);
-    strcpy(msginf, nkeys);
+    snprintf(prompt, sizeof(prompt), mchk_nmsg, TermLength()-1);
+    strncpy(msginf, nkeys, sizeof(msginf) - 1);
+    msginf[sizeof(msginf) - 1] = '\0';
 
     if (GEPriv(usr.priv, ngcfg_get_int("general.session.mailchecker_reply_priv")) &&
         CanAccessMsgCommand(&mah, msg_reply, 0))
@@ -224,8 +226,8 @@ static int near Read_Get_Option(BROWSE *b)
       temp[0]=mkeys[0];
       temp[1]=0;
 
-      strcat(prompt, mchk_reply);
-      strcat(msginf, temp);
+      strncat(prompt, mchk_reply, sizeof(prompt) - strlen(prompt) - 1);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
 
     if (MsgToThisUser(b->msg.to) &&
@@ -234,8 +236,8 @@ static int near Read_Get_Option(BROWSE *b)
       temp[0]=mkeys[5];
       temp[1]=0;
 
-      strcat(prompt, mchk_dload);
-      strcat(msginf, temp);
+      strncat(prompt, mchk_dload, sizeof(prompt) - strlen(prompt) - 1);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
     else if (GEPriv(usr.priv, ngcfg_get_int("general.session.mailchecker_kill_priv")) &&
         CanKillMsg(&b->msg) &&
@@ -244,8 +246,8 @@ static int near Read_Get_Option(BROWSE *b)
       temp[0]=mkeys[1];
       temp[1]=0;
 
-      strcat(prompt, mchk_kill);
-      strcat(msginf, temp);
+      strncat(prompt, mchk_kill, sizeof(prompt) - strlen(prompt) - 1);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
 
 
@@ -254,12 +256,12 @@ static int near Read_Get_Option(BROWSE *b)
     if (MsgToThisUser(b->msg.to) &&
         CanAccessMsgCommand(&mah, msg_unreceive, 0))
     {
-      strcat(prompt, mchk_unreceive);
+      strncat(prompt, mchk_unreceive, sizeof(prompt) - strlen(prompt) - 1);
 
       temp[0]=mkeys[4];
       temp[1]='\0';
 
-      strcat(msginf, temp);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
 
 
@@ -270,8 +272,8 @@ static int near Read_Get_Option(BROWSE *b)
       temp[0]=mkeys[3];
       temp[1]='\0';
 
-      strcat(prompt, mchk_kludge);
-      strcat(msginf, temp);
+      strncat(prompt, mchk_kludge, sizeof(prompt) - strlen(prompt) - 1);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
 
     /* Option to go to next area, only if we're scanning > 1 area. */
@@ -281,11 +283,11 @@ static int near Read_Get_Option(BROWSE *b)
       temp[0]=mkeys[2];
       temp[1]=0;
 
-      strcat(prompt, mchk_nextar);
-      strcat(msginf, temp);
+      strncat(prompt, mchk_nextar, sizeof(prompt) - strlen(prompt) - 1);
+      strncat(msginf, temp, sizeof(msginf) - strlen(msginf) - 1);
     }
 
-    strcat(prompt, mchk_end_prompt);
+    strncat(prompt, mchk_end_prompt, sizeof(prompt) - strlen(prompt) - 1);
 
     ch=toupper(GetListAnswer(msginf, NULL, mchk_nunder,
                              CINPUT_FULLPROMPT, prompt));

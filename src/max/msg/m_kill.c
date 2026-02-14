@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: m_kill.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Message Section: K)ill command
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <io.h>
 #include <string.h>
@@ -156,7 +159,8 @@ void Msg_Kill(long n)
     last_msg=MsgHighMsg(sq);
 
   logit(log_kill, uidnum, usr.msg);
-  Printf(kill_done, uidnum);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", uidnum);
+    LangPrintf(kill_done, _ib); }
 }
 
 

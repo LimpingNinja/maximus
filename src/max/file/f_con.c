@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_con.c,v 1.4 2004/01/27 21:00:27 paltas Exp $";
 /*# name=File area routines: C)ontents functions
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <ctype.h>
 #include <mem.h>
@@ -123,7 +126,7 @@ void File_Contents(void)
       if (strrchr(filespec, '.'))
         *strrchr(filespec, '.')='\0';
 
-      Printf(bad_arc, upper_fn(filename));
+      LangPrintf(bad_arc, upper_fn(filename));
     }
   }
 }
@@ -142,7 +145,7 @@ static sword near Display_Contents(char *filename)
 
   strcpy(an, filename);
 
-  Printf(sarc, No_Path(upper_fn(an)));
+  LangPrintf(sarc, No_Path(upper_fn(an)));
 
   if ((arcfile=shopen(an, O_RDONLY | O_BINARY))==-1)
     return -1;
@@ -416,33 +419,33 @@ static sword near Zip_Read_Directory(int zipfile,long zip_pos,int offset)
       ratio_decimal = (int)(1000-((dir_head.info.compressed_size*1000)/
                            dir_head.info.uncompressed_size)) % 10;
 
-      Printf(zip_format,
-             dir_head.info.uncompressed_size,
-             method,
-             dir_head.info.compressed_size,
-             ratio_percent,
-             ratio_decimal,
-             stamp.msg_st.date.mo,
-             stamp.msg_st.date.da,
-             (stamp.msg_st.date.yr+80) % 100,
-             stamp.msg_st.time.hh,
-             stamp.msg_st.time.mm,
-             dir_head.info.crc,
-             attributes,
-             (dir_head.info.bits & 0x01) ? '*' : ' ',
-             filename);
+      { char _uc[16], _cc[16], _rp[4], _rd[4], _mo[4], _da[4], _yr[4],
+             _hh[4], _mm[4], _crc[8], _enc[4];
+        snprintf(_uc, sizeof(_uc), "%lu", (unsigned long)dir_head.info.uncompressed_size);
+        snprintf(_cc, sizeof(_cc), "%lu", (unsigned long)dir_head.info.compressed_size);
+        snprintf(_rp, sizeof(_rp), "%d", ratio_percent);
+        snprintf(_rd, sizeof(_rd), "%d", ratio_decimal);
+        snprintf(_mo, sizeof(_mo), "%02d", stamp.msg_st.date.mo);
+        snprintf(_da, sizeof(_da), "%02d", stamp.msg_st.date.da);
+        snprintf(_yr, sizeof(_yr), "%02d", (stamp.msg_st.date.yr+80) % 100);
+        snprintf(_hh, sizeof(_hh), "%02d", stamp.msg_st.time.hh);
+        snprintf(_mm, sizeof(_mm), "%02d", stamp.msg_st.time.mm);
+        snprintf(_crc, sizeof(_crc), "%08lX", (unsigned long)dir_head.info.crc);
+        snprintf(_enc, sizeof(_enc), "%c", (dir_head.info.bits & 0x01) ? '*' : ' ');
+        LangPrintf(zip_format, _uc, method, _cc, _rp, _rd,
+                   _mo, _da, _yr, _hh, _mm, _crc, attributes, _enc, filename); }
 
 
       /* Now display the file comment... */
 
       if (dir_head.info.file_comment_length)
-        Printf(zip_cmnt,file_comment);
+        LangPrintf(zip_cmnt,file_comment);
 
 
       /* Display a warning message if file is encrypted... */
 
       if (dir_head.info.bits & 0x01)
-        Printf(zip_encrypt,filename);
+        LangPrintf(zip_encrypt,filename);
 
 
       /* Add this to the totals... */
@@ -474,11 +477,13 @@ static sword near Zip_Read_Directory(int zipfile,long zip_pos,int offset)
        Puts(zip_trail1);
 
       if (total_uncompressed)
-        Printf(zip_trail2,
-               total_uncompressed,total_compressed,
-               (int)(100-((total_compressed*100)/total_uncompressed)),
-               (int)(1000-((total_compressed*1000)/total_uncompressed)) % 10,
-               num_files);
+      { char _tu[16], _tc[16], _rp[4], _rd[4], _nf[8];
+        snprintf(_tu, sizeof(_tu), "%lu", (unsigned long)total_uncompressed);
+        snprintf(_tc, sizeof(_tc), "%lu", (unsigned long)total_compressed);
+        snprintf(_rp, sizeof(_rp), "%d", (int)(100-((total_compressed*100)/total_uncompressed)));
+        snprintf(_rd, sizeof(_rd), "%d", (int)(1000-((total_compressed*1000)/total_uncompressed)) % 10);
+        snprintf(_nf, sizeof(_nf), "%d", num_files);
+        LangPrintf(zip_trail2, _tu, _tc, _rp, _rd, _nf); }
 
       return 0;
     }
@@ -788,21 +793,21 @@ static sword near Read_LzhArc(int type,int lzhfile)
       if (strrchr(p, '\\'))
         p=strrchr(p, '\\')+1;
 
-      Printf(lzh_type,
-             p,
-             uncompressed_size,
-             compressed_size,
-             percent,
-             (int)(1000-((compressed_size*1000)/uncompressed_size)) % 10,
-             file_date.msg_st.date.mo,
-             file_date.msg_st.date.da,
-             (file_date.msg_st.date.yr+80) % 100,
-             file_date.msg_st.time.hh,
-             file_date.msg_st.time.mm,
-             file_date.msg_st.time.ss << 1,
-             attr,
-             method,
-             crc);
+      { char _uc[16], _cc[16], _pct[4], _pd[4], _mo[4], _da[4], _yr[4],
+             _hh[4], _mm[4], _ss[4], _crc[8];
+        snprintf(_uc, sizeof(_uc), "%lu", (unsigned long)uncompressed_size);
+        snprintf(_cc, sizeof(_cc), "%lu", (unsigned long)compressed_size);
+        snprintf(_pct, sizeof(_pct), "%d", percent);
+        snprintf(_pd, sizeof(_pd), "%d", (int)(1000-((compressed_size*1000)/uncompressed_size)) % 10);
+        snprintf(_mo, sizeof(_mo), "%02d", file_date.msg_st.date.mo);
+        snprintf(_da, sizeof(_da), "%02d", file_date.msg_st.date.da);
+        snprintf(_yr, sizeof(_yr), "%02d", (file_date.msg_st.date.yr+80) % 100);
+        snprintf(_hh, sizeof(_hh), "%02d", file_date.msg_st.time.hh);
+        snprintf(_mm, sizeof(_mm), "%02d", file_date.msg_st.time.mm);
+        snprintf(_ss, sizeof(_ss), "%02d", file_date.msg_st.time.ss << 1);
+        snprintf(_crc, sizeof(_crc), "%04X", crc);
+        LangPrintf(lzh_type, p, _uc, _cc, _pct, _pd,
+                   _mo, _da, _yr, _hh, _mm, _ss, attr, method, _crc); }
     }
 
     total_compressed += compressed_size;
@@ -846,11 +851,13 @@ static sword near Read_LzhArc(int type,int lzhfile)
   Puts(arc_t1);
 
   if (total_uncompressed)
-      Printf(arc_t2, num_files,
-         total_uncompressed,
-         total_compressed,
-         (int)(100-((total_compressed*100)/total_uncompressed)),
-         (int)(1000-((total_compressed*1000)/total_uncompressed)) % 10);
+  { char _nf[8], _tu[16], _tc[16], _rp[4], _rd[4];
+    snprintf(_nf, sizeof(_nf), "%d", num_files);
+    snprintf(_tu, sizeof(_tu), "%lu", (unsigned long)total_uncompressed);
+    snprintf(_tc, sizeof(_tc), "%lu", (unsigned long)total_compressed);
+    snprintf(_rp, sizeof(_rp), "%d", (int)(100-((total_compressed*100)/total_uncompressed)));
+    snprintf(_rd, sizeof(_rd), "%d", (int)(1000-((total_compressed*1000)/total_uncompressed)) % 10);
+    LangPrintf(arc_t2, _nf, _tu, _tc, _rp, _rd); }
 
   return 0;
 }

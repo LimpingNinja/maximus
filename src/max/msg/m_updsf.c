@@ -28,6 +28,8 @@ static char rcs_id[]="$Id: m_updsf.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Module to update SCANFILE.DAT after reading a message
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>

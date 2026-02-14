@@ -24,8 +24,8 @@ static char rcs_id[]="$Id: m_restr.c,v 1.3 2004/01/27 21:00:31 paltas Exp $";
 /*# name=Set restrictions for QWK downloading
 */
 
+#define MAX_LANG_m_area
 #define MAX_LANG_m_browse
-
 #include "mm.h"
 #include "max_msg.h"
 

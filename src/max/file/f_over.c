@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: f_over.c,v 1.3 2004/01/27 21:00:29 paltas Exp $";
 /*# name=File area routines: O)verride Path function
 */
 
+#define MAX_LANG_f_area
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <stdio.h>
 #include <mem.h>
 #include <string.h>
@@ -46,7 +49,7 @@ void File_Override_Path(void)
   
   if (! direxist(path))
   {
-    Printf(cantfind, path);
+    LangPrintf(cantfind, path);
     return;
   }
 

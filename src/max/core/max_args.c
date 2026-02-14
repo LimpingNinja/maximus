@@ -26,6 +26,9 @@ static char rcs_id[]="$Id: max_args.c,v 1.10 2004/01/28 06:38:10 paltas Exp $";
 /*# name=Command-line argument processing code
 */
 
+#define MAX_LANG_global
+#define MAX_LANG_m_area
+#define MAX_LANG_sysop
 #include <string.h>
 #include <stdlib.h>
 #include <io.h>
