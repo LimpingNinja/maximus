@@ -1,0 +1,49 @@
+name = "SYSOP"
+title = "SYSOP (%t mins)"
+header_file = ""
+header_types = []
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "User_Editor"
+arguments = ""
+priv_level = "Sysop"
+description = "User editor"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Xtern_Run"
+arguments = "/bin/sh"
+priv_level = "Sysop"
+description = "OS shell"
+key_poke = ""
+modifiers = ["UsrLocal"]
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Sysop"
+description = "Main menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Sysop"
+description = "Q"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Sysop"
+description = "|"
+key_poke = ""
+modifiers = ["NoDsp"]

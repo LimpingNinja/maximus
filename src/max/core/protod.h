@@ -22,6 +22,15 @@
 
 cpp_begin()
 
+/**
+ * @brief Build a per-node file path: <node_path>/<NN>/<filename>
+ * @param task   Node/task number (hex-formatted as 2-digit dir name)
+ * @param file   Filename within the node directory (e.g. "lastus.bbs")
+ * @param out    Output buffer
+ * @param outsz  Size of output buffer
+ */
+void node_file_path(byte task, const char *file, char *out, size_t outsz);
+
 void Update_User(void);
 int TrackNeedToInsertRemoteMsg(PMAH pmah, XMSG *pxmsg, char *kludges);
 void CLIMax(void);

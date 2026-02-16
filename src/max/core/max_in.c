@@ -41,6 +41,7 @@ static char rcs_id[]="$Id: max_in.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #include "keys.h"
 #include "mm.h"
 #include "ui_lightbar.h"
+#include "mci.h"
 
 /* Max recursion level support for GetListAnswer() */
 
@@ -709,10 +710,10 @@ lb_retry:
         "",
         opts,
         opt_count,
-        0x07, /* prompt_attr — already displayed */
-        0x03, /* normal_attr — cyan */
-        0x1e, /* selected_attr — yellow on blue */
-        flags,
+        Mci2Attr("|pr", 0x07),            /* prompt_attr — theme prompt color */
+        Mci2Attr("|tx", 0x07),            /* normal_attr — theme text color */
+        Mci2Attr("|lf|lb", 0x07),         /* selected_attr — lightbar fg+bg */
+        flags | (((int)Mci2Attr("|hk", 0x07)) << UI_SP_HOTKEY_ATTR_SHIFT),
         1,    /* margin */
         " ",  /* separator */
         &out_key

@@ -13,8 +13,7 @@
 #include <max.mh>
 #include <max_menu.mh>
 
-#define INCL_max_chat
-#include <language.mh>
+string lang_get(string: key);
 
 int main(string: argv)
 {
@@ -29,7 +28,7 @@ int main(string: argv)
 
     // Display chat section banner
 
-    print(str_ch_chat_sect);
+    print(lang_get("max_chat.ch_chat_sect"));
 
     // Display list of active nodes
 
@@ -43,12 +42,12 @@ int main(string: argv)
 
     if (chat_querystatus(cstat) <> 0)
     {
-        print(str_ch_youare);
+        print(lang_get("max_chat.ch_youare"));
 
         if (cstat.avail = 0)
-            print(str_ch_us_noavail);
+            print(lang_get("max_chat.ch_us_noavail"));
 
-        print(str_ch_availforchat);
+        print(lang_get("max_chat.ch_availforchat"));
     }
 
     print("\n");

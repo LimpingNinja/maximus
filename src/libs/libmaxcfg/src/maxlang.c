@@ -30,11 +30,7 @@
 /* Internal structures                                                         */
 /* ========================================================================== */
 
-/** A single legacy ID → dotted key mapping */
-typedef struct {
-    int id;
-    char *key;          /**< Dotted key: "heap.symbol" */
-} MlLegacyEntry;
+/* MlLegacyEntry removed — legacy_keys[] is now a direct-index array. */
 
 /** A single runtime-registered string */
 typedef struct {
@@ -54,8 +50,8 @@ struct MaxLang {
     MaxCfgToml *toml;                  /**< Underlying TOML data store */
     bool owns_toml;                    /**< true if we allocated the toml handle */
 
-    MlLegacyEntry legacy_map[ML_MAX_LEGACY_MAP];
-    int legacy_count;
+    char *legacy_keys[ML_MAX_LEGACY_MAP]; /**< Direct-index: legacy_keys[id] → dotted key */
+    int legacy_max_id;                     /**< Highest populated ID + 1 */
 
     MlRtNamespace rt_ns[ML_MAX_RUNTIME_NS];
     int rt_ns_count;
@@ -69,35 +65,32 @@ struct MaxLang {
 
 /**
  * @brief Parse the [_legacy_map] table from the loaded TOML into the
- *        fast-lookup legacy_map array.
+ *        direct-index legacy_keys array.
  *
  * The TOML legacy map has entries like:
  *   "0x0000" = "global.left_x"
+ *
+ * IDs may be sparse (gaps between heap sections), so we skip missing
+ * entries rather than stopping at the first gap.
  */
 static void ml_load_legacy_map(MaxLang *lang)
 {
-    lang->legacy_count = 0;
+    memset(lang->legacy_keys, 0, sizeof(lang->legacy_keys));
+    lang->legacy_max_id = 0;
 
-    /*
-     * Iterate keys under _legacy_map.  The MaxCfgToml API doesn't expose
-     * a table iterator directly, so we probe hex IDs sequentially until
-     * we hit a gap.  This is a pragmatic approach for Round 1 — the
-     * converter emits contiguous IDs starting from 0.
-     */
     for (int id = 0; id < ML_MAX_LEGACY_MAP; id++) {
         char probe_key[ML_MAX_KEY];
         snprintf(probe_key, sizeof(probe_key), "_legacy_map.\"0x%04x\"", id);
 
         MaxCfgVar v;
         if (maxcfg_toml_get(lang->toml, probe_key, &v) != MAXCFG_OK)
-            break;
+            continue;   /* skip gaps between heap sections */
 
         if (v.type != MAXCFG_VAR_STRING || v.v.s == NULL)
             continue;
 
-        MlLegacyEntry *e = &lang->legacy_map[lang->legacy_count++];
-        e->id = id;
-        e->key = strdup(v.v.s);
+        lang->legacy_keys[id] = strdup(v.v.s);
+        lang->legacy_max_id = id + 1;
     }
 }
 
@@ -227,8 +220,8 @@ void maxlang_close(MaxLang *lang)
         return;
 
     /* Free legacy map keys */
-    for (int i = 0; i < lang->legacy_count; i++)
-        free(lang->legacy_map[i].key);
+    for (int i = 0; i < lang->legacy_max_id; i++)
+        free(lang->legacy_keys[i]);  /* free(NULL) is safe */
 
     /* Free runtime namespaces */
     for (int i = 0; i < lang->rt_ns_count; i++) {
@@ -311,18 +304,47 @@ bool maxlang_has_flag(MaxLang *lang, const char *key, const char *flag)
 
 const char *maxlang_get_by_id(MaxLang *lang, int strn)
 {
-    if (!lang)
+    if (!lang || strn < 0 || strn >= ML_MAX_LEGACY_MAP)
         return "";
 
-    /* Binary search would be ideal, but the IDs are contiguous from 0,
-     * so direct indexing works if the map is populated densely. */
-    for (int i = 0; i < lang->legacy_count; i++) {
-        if (lang->legacy_map[i].id == strn) {
-            return maxlang_get(lang, lang->legacy_map[i].key);
+    const char *key = lang->legacy_keys[strn];
+    if (!key)
+        return "";
+
+    return maxlang_get(lang, key);
+}
+
+const char *maxlang_get_by_heap_id(MaxLang *lang, const char *heap_name, int strn)
+{
+    if (!lang || !heap_name || strn < 0)
+        return "";
+
+    /* Find the base ID for this heap by scanning legacy_keys for the first
+     * entry whose dotted key starts with "heap_name." */
+    size_t prefix_len = strlen(heap_name);
+    int base_id = -1;
+
+    for (int id = 0; id < lang->legacy_max_id; id++) {
+        const char *k = lang->legacy_keys[id];
+        if (k && strncmp(k, heap_name, prefix_len) == 0 && k[prefix_len] == '.') {
+            base_id = id;
+            break;
         }
     }
 
-    return "";
+    if (base_id < 0)
+        return "";
+
+    return maxlang_get_by_id(lang, base_id + strn);
+}
+
+const char *maxlang_get_name(MaxLang *lang)
+{
+    if (!lang)
+        return "";
+
+    const char *name = ml_get_raw(lang, "meta.name");
+    return name ? name : "";
 }
 
 /* ========================================================================== */
@@ -333,6 +355,61 @@ void maxlang_set_use_rip(MaxLang *lang, bool use_rip)
 {
     if (lang)
         lang->use_rip = use_rip;
+}
+
+/* ========================================================================== */
+/* Public API: Extension language file loading                                  */
+/* ========================================================================== */
+
+MaxCfgStatus maxlang_load_extension(MaxLang *lang, const char *path)
+{
+    if (!lang || !lang->toml || !path)
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+
+    /* Pre-scan the TOML file for [heap_name] section headers and check each
+     * against the existing store.  Abort if any heap name already exists. */
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return MAXCFG_ERR_NOT_FOUND;
+
+    char line[1024];
+    while (fgets(line, sizeof(line), fp)) {
+        /* Skip whitespace */
+        char *p = line;
+        while (*p == ' ' || *p == '\t') p++;
+
+        /* Look for [name] but not [[name]] (table arrays) */
+        if (*p != '[' || *(p + 1) == '[')
+            continue;
+
+        p++;  /* skip '[' */
+        char *end = strchr(p, ']');
+        if (!end)
+            continue;
+
+        *end = '\0';
+
+        /* Trim whitespace around table name */
+        while (*p == ' ' || *p == '\t') p++;
+        char *tail = end - 1;
+        while (tail > p && (*tail == ' ' || *tail == '\t'))
+            *tail-- = '\0';
+
+        /* Skip empty names and metadata tables */
+        if (!*p || *p == '_')
+            continue;
+
+        /* Check if this heap already exists in the main store */
+        MaxCfgVar probe;
+        if (maxcfg_toml_get(lang->toml, p, &probe) == MAXCFG_OK) {
+            fclose(fp);
+            return MAXCFG_ERR_DUPLICATE;  /* Heap name conflicts */
+        }
+    }
+    fclose(fp);
+
+    /* No conflicts — merge into the main TOML store */
+    return maxcfg_toml_load_file(lang->toml, path, "");
 }
 
 /* ========================================================================== */

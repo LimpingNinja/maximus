@@ -38,8 +38,7 @@
 #include <intpad.mh>
 #endif
 
-#define INCL_max_init
-#include <language.mh>
+string lang_get(string: key);
 
 int main()
 {
@@ -57,8 +56,8 @@ int main()
 
   print("\n!|*|e|#|#|#\n" AVATAR_CLS);
 
-  print(str_logo1,'\n');
-  print(str_logo2,"\n\n");
+  print(lang_get("max_init.logo1"),'\n');
+  print(lang_get("max_init.logo2"),"\n\n");
 
   if (id.local OR id.speed > 300)
   {

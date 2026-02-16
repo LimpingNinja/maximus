@@ -1,0 +1,417 @@
+name = "MESSAGE"
+title = "MESSAGE (%t mins)"
+header_file = ":scripts/headmsg"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = "display/screens/max_msg"
+menu_types = ["Novice"]
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "Msg_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "Area change"
+key_poke = ""
+modifiers = ["NoRIP"]
+
+[[option]]
+command = "MEX"
+arguments = "scripts/msgarea"
+priv_level = "Demoted"
+description = "Area change"
+key_poke = ""
+modifiers = ["RIP"]
+
+[[option]]
+command = "Msg_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "["
+key_poke = "["
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Msg_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "]"
+key_poke = "]"
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Next"
+arguments = ""
+priv_level = "Demoted"
+description = "Next message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Read_Previous"
+arguments = ""
+priv_level = "Demoted"
+description = "Previous message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Enter"
+arguments = ""
+priv_level = "Demoted"
+description = "Enter message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "Reply to a message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Browse"
+arguments = ""
+priv_level = "Demoted"
+description = "Browse messages"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Change"
+arguments = ""
+priv_level = "Demoted"
+description = "Change current msg"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Read_Nonstop"
+arguments = ""
+priv_level = "Demoted"
+description = "=ReadNonStop"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Read_Original"
+arguments = ""
+priv_level = "Demoted"
+description = "-ReadOriginal"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Read_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "+ReadReply"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Current"
+arguments = ""
+priv_level = "Demoted"
+description = "*ReadCurrent"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_List"
+arguments = ""
+priv_level = "Demoted"
+description = "List (brief)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Tag"
+arguments = ""
+priv_level = "Demoted"
+description = "Tag areas"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "Main menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "FILE"
+priv_level = "Transient"
+description = "Jump to file areas"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Transient"
+description = "Goodbye (log off)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Kill"
+arguments = ""
+priv_level = "Demoted"
+description = "Kill (delete) msg"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Upload"
+arguments = ""
+priv_level = "Demoted"
+description = "Upload a message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Forward"
+arguments = ""
+priv_level = "Demoted"
+description = "Forward (copy)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Reply_Area"
+arguments = "."
+priv_level = "Demoted"
+description = "$Reply Elsewhere"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Download_Attach"
+arguments = ""
+priv_level = "Demoted"
+description = "^Download Attaches"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Hurl"
+arguments = ""
+priv_level = "Sysop"
+description = "Hurl (move)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Xport"
+arguments = ""
+priv_level = "Sysop"
+description = "Xport to disk"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Edit_User"
+arguments = ""
+priv_level = "Sysop"
+description = "@Edit user"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Kludges"
+arguments = ""
+priv_level = "Sysop"
+description = "!Toggle Kludges"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Unreceive"
+arguments = ""
+priv_level = "Sysop"
+description = "#Unreceive Msg"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Same_Direction"
+arguments = ""
+priv_level = "Demoted"
+description = "|"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "0"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "1"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "2"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "3"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "4"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "5"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "6"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "7"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "8"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Individual"
+arguments = ""
+priv_level = "Demoted"
+description = "9"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Msg_Change"
+arguments = ""
+priv_level = "Demoted"
+description = "`46"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Previous"
+arguments = ""
+priv_level = "Demoted"
+description = "`75"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Original"
+arguments = ""
+priv_level = "Demoted"
+description = "`115"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Next"
+arguments = ""
+priv_level = "Demoted"
+description = "`77"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Read_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "`116"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Msg_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "`16"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Msg_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "`19"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Msg_Kill"
+arguments = ""
+priv_level = "Demoted"
+description = "`37"
+key_poke = "="
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/msg"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = ["Local"]
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/mail"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = ["Matrix"]
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/echo"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = ["Echo"]

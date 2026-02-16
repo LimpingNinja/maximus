@@ -25,11 +25,16 @@
 #include "mexall.h"
 
 /* Forward declarations from maxlang API — we avoid #include "maxlang.h" here
- * because mexall.h pulls in english.lth macros that collide with libmaxcfg.h
+ * because mexall.h pulls in english.h macros that collide with libmaxcfg.h
  * struct field names (e.g. file_offline → s_ret(...)). */
 struct MaxLang;
 extern const char *maxlang_get(struct MaxLang *lang, const char *key);
 extern const char *maxlang_get_rip(struct MaxLang *lang, const char *key);
+extern int maxlang_register(struct MaxLang *lang, const char *ns,
+                            const char **keys, const char **values,
+                            int count);
+extern void maxlang_unregister(struct MaxLang *lang, const char *ns);
+extern int maxlang_load_extension(struct MaxLang *lang, const char *path);
 
 #ifdef MEX
 
@@ -95,7 +100,7 @@ extern const char *maxlang_get_rip(struct MaxLang *lang, const char *key);
     char *key;
 
     MexArgBegin(&ma);
-    key = MexArgGetString(&ma, TRUE);
+    key = MexArgGetString(&ma, FALSE);
 
     if (key && g_current_lang)
     {
@@ -125,7 +130,7 @@ extern const char *maxlang_get_rip(struct MaxLang *lang, const char *key);
     char *key;
 
     MexArgBegin(&ma);
-    key = MexArgGetString(&ma, TRUE);
+    key = MexArgGetString(&ma, FALSE);
 
     if (key && g_current_lang)
     {
@@ -139,6 +144,106 @@ extern const char *maxlang_get_rip(struct MaxLang *lang, const char *key);
 
     if (key)
       free(key);
+
+    return MexArgEnd(&ma);
+  }
+
+  /**
+   * @brief MEX intrinsic: lang_register(string ns, string key, string value) -> int
+   *
+   * Registers a single language string under a runtime namespace.
+   * The string becomes accessible as "<ns>.<key>" via lang_get().
+   * Returns 1 on success, 0 on failure.
+   */
+  word EXPENTRY intrin_lang_register(void)
+  {
+    MA ma;
+    char *ns, *key, *value;
+
+    MexArgBegin(&ma);
+    ns    = MexArgGetString(&ma, TRUE);
+    key   = MexArgGetString(&ma, TRUE);
+    value = MexArgGetString(&ma, TRUE);
+
+    regs_2[0] = 0;
+
+    if (ns && key && value && g_current_lang)
+    {
+      const char *k = key;
+      const char *v = value;
+      /* maxlang_register returns MAXCFG_OK (0) on success */
+      if (maxlang_register(g_current_lang, ns, &k, &v, 1) == 0)
+        regs_2[0] = 1;
+    }
+
+    if (ns)    free(ns);
+    if (key)   free(key);
+    if (value) free(value);
+
+    return MexArgEnd(&ma);
+  }
+
+  /**
+   * @brief MEX intrinsic: lang_unregister(string ns) -> void
+   *
+   * Removes all runtime-registered strings under the given namespace.
+   */
+  word EXPENTRY intrin_lang_unregister(void)
+  {
+    MA ma;
+    char *ns;
+
+    MexArgBegin(&ma);
+    ns = MexArgGetString(&ma, TRUE);
+
+    if (ns && g_current_lang)
+      maxlang_unregister(g_current_lang, ns);
+
+    if (ns)
+      free(ns);
+
+    return MexArgEnd(&ma);
+  }
+
+  /**
+   * @brief MEX intrinsic: lang_load_extension(string path) -> int
+   *
+   * Loads an extension language TOML file.  All heaps in the file become
+   * accessible via lang_get() as "heap.key".
+   * If the path is not absolute, it is resolved relative to the configured
+   * language directory (config/lang under the system prefix, or as set by lang_path).
+   * Returns 1 on success, 0 on failure (file not found, heap conflict, etc.).
+   */
+  word EXPENTRY intrin_lang_load_extension(void)
+  {
+    MA ma;
+    char *path;
+
+    MexArgBegin(&ma);
+    path = MexArgGetString(&ma, TRUE);
+
+    regs_2[0] = 0;
+
+    if (path && g_current_lang)
+    {
+      char full_path[1024];
+
+      if (path[0] == '/' || path[0] == '\\') {
+        /* Absolute path — use as-is */
+        snprintf(full_path, sizeof(full_path), "%s", path);
+      } else {
+        /* Relative path — resolve against lang directory */
+        snprintf(full_path, sizeof(full_path), "%s/%s",
+                 ngcfg_get_path("maximus.lang_path"), path);
+      }
+
+      /* maxlang_load_extension returns MAXCFG_OK (0) on success */
+      if (maxlang_load_extension(g_current_lang, full_path) == 0)
+        regs_2[0] = 1;
+    }
+
+    if (path)
+      free(path);
 
     return MexArgEnd(&ma);
   }

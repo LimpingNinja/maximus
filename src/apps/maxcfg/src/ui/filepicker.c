@@ -139,7 +139,7 @@ static int find_current(FileList *list, const char *current, const char *base_pa
 {
     if (!current || !list->files) return 0;
     
-    /* Extract just the filename from current (e.g., "etc/misc/logo" -> "logo") */
+    /* Extract just the filename from current (e.g., "display/screens/logo" -> "logo") */
     const char *filename = current;
     if (base_path) {
         size_t base_len = strlen(base_path);

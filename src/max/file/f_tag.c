@@ -79,7 +79,7 @@ void File_Tag(int dl_cmd)
       Puts(all_untagged);
     }
     else if (ch==tag_keys[4])
-      Display_File(0, NULL, "%stag_file", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, "%stag_file", (char *)ngcfg_get_string_raw("maximus.display_path"));
     else if (ch=='\0' || ch=='|' || ch=='\r' || ch==tag_keys[5])
       return;
     else { char _cb[2] = { (char)ch, '\0' };

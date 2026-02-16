@@ -492,7 +492,7 @@ static int near GetName(void)
             logit(l_invalid_pwd);
             Puts(invalid_pwd);
 
-            Display_File(0, NULL, "%sbad_pwd", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+            Display_File(0, NULL, "%sbad_pwd", (char *)ngcfg_get_string_raw("maximus.display_path"));
             mdm_hangup();
           }
         }
@@ -845,7 +845,7 @@ static void near Get_AnsiMagnEt(void)
   if (local || baud >= (dword)min_graphics)
   {
     NoWhiteN();
-    sprintf(string,"%swhy_ansi",(char *)ngcfg_get_path("maximus.misc_path"));
+    sprintf(string,"%swhy_ansi",(char *)ngcfg_get_path("maximus.display_path"));
 
 /* TODO: Check up on this.. (Bo) */
 
@@ -871,7 +871,7 @@ static void near Get_AnsiMagnEt(void)
     if (local || baud >= (dword)min_rip)
     {
       NoWhiteN();
-      sprintf(string, "%swhy_rip", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(string, "%swhy_rip", (char *)ngcfg_get_path("maximus.display_path"));
 
 /* TODO: Check up on this.. (Bo) */
       x=autodetect_rip();
@@ -893,7 +893,7 @@ static void near Get_AnsiMagnEt(void)
 
     if (usr.video!=GRAPH_TTY)
     {
-      sprintf(string, "%swhy_fsed", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(string, "%swhy_fsed", (char *)ngcfg_get_path("maximus.display_path"));
 
       NoWhiteN();
 
@@ -910,7 +910,7 @@ static void near Get_AnsiMagnEt(void)
       }
     }
 
-    sprintf(string, "%swhy_pc", (char *)ngcfg_get_path("maximus.misc_path"));
+    sprintf(string, "%swhy_pc", (char *)ngcfg_get_path("maximus.display_path"));
 
     NoWhiteN();
 
@@ -928,7 +928,7 @@ static void near Get_AnsiMagnEt(void)
     {
       NoWhiteN();
 
-      sprintf(string, "%swhy_hot", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(string, "%swhy_hot", (char *)ngcfg_get_path("maximus.display_path"));
 
       if (GetYnhAnswer(string, get_hotkeys, 0)==YES)
         usr.bits |= BITS_HOTKEYS;
@@ -952,7 +952,7 @@ static int near checkterm(char *prompt, char *helpfile)
 {
   char string[PATHLEN];
 
-  sprintf(string, ss, (char *)ngcfg_get_string_raw("maximus.misc_path"), helpfile);
+  sprintf(string, ss, (char *)ngcfg_get_string_raw("maximus.display_path"), helpfile);
 
   NoWhiteN();
   return (GetYnhAnswer(string, prompt, 0)==YES);
@@ -1080,7 +1080,8 @@ int Bad_Word_Check(char *username)
   char line[PATHLEN];
   char *p;
 
-  sprintf(fname, "%sbaduser.bbs", original_path);
+  snprintf(fname, sizeof(fname), "%s/security/baduser.bbs",
+           ngcfg_get_path("maximus.config_path"));
 
   /* If it's not there and can't be opened, don't worry about it */
   
@@ -1112,7 +1113,7 @@ int Bad_Word_Check(char *username)
 
         logit(bad_uword);
         ci_ejectuser();
-        Display_File(0, NULL, szBadUserName, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(0, NULL, szBadUserName, (char *)ngcfg_get_string_raw("maximus.display_path"));
         mdm_hangup();
 
         /* This should never return, but... */
@@ -1143,42 +1144,33 @@ static void near Check_For_User_On_Other_Node(void)
 
   unsigned int their_task;
 
-  FFIND *ff;
-
-  sprintf(fname,active_star,original_path);
-
-  for (ff=FindOpen(fname, 0), ret=0; ff && ret==0; ret=FindNext(ff))
+  /* Iterate node directories looking for active.bbs on other nodes */
+  for (their_task = 0; their_task <= 255; their_task++)
   {
-    if (sscanf(cstrlwr(ff->szName), active_x_bbs, &their_task) != 1)
+    if ((byte)their_task == task_num)
       continue;
 
-    /* Don't process our own task number */
-    
-    if ((byte)their_task==task_num)
+    node_file_path((byte)their_task, "active.bbs", fname, sizeof(fname));
+    if (!fexist(fname))
       continue;
-        
-    sprintf(fname,
-            their_task ? lastusxx_bbs : lastuser_bbs,
-            original_path, their_task);
 
-    if ((lastuser=shopen(fname, O_RDONLY | O_BINARY))==-1)
+    node_file_path((byte)their_task, "lastus.bbs", fname, sizeof(fname));
+
+    if ((lastuser = shopen(fname, O_RDONLY | O_BINARY)) == -1)
       continue;
 
     read(lastuser, (char *)&user, sizeof(struct _usr));
     close(lastuser);
 
-
     /* If we found this turkey on another node... */
 
     if (eqstri(user.name, usr.name))
     {
-      Display_File(0, NULL, "%sACTIVE_2", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, "%sACTIVE_2", (char *)ngcfg_get_string_raw("maximus.display_path"));
       ci_ejectuser();
       mdm_hangup();
     }
   }
-
-  FindClose(ff);
 }
 
 
@@ -1254,7 +1246,7 @@ static void near Write_Active(void)
   int file;
   char fname[PATHLEN];
 
-  sprintf(fname, activexx_bbs, original_path, task_num);
+  node_file_path(task_num, "active.bbs", fname, sizeof(fname));
 
   if ((file=sopen(fname, O_CREAT | O_WRONLY | O_BINARY,
                   SH_DENYWR, S_IREAD | S_IWRITE))==-1)

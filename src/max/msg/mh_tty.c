@@ -96,7 +96,7 @@ int near TTYGetPrivate(PMAH pmah, XMSG *msg)
   char temp[PATHLEN];
   byte ch;;
   
-  sprintf(temp, "%sWHY_PVT", (char *)ngcfg_get_path("maximus.misc_path"));
+  sprintf(temp, "%sWHY_PVT", (char *)ngcfg_get_path("maximus.display_path"));
 
   if ((pmah->ma.attribs & (MA_PUB|MA_PVT))==(MA_PUB|MA_PVT))
   {
@@ -353,7 +353,7 @@ int near TTYGetToField(PMAH pmah, XMSG *msg)
       /* Try 'misc\userlist' first, since it might simply contain
          help, menu, other information or even [menu_cmd userlist].. */
 
-      sprintf(temp, "%suserlist", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(temp, "%suserlist", (char *)ngcfg_get_path("maximus.display_path"));
       if (Display_File(DISPLAY_NONE, NULL, temp)!=0 && !ngcfg_get_bool("general.session.disable_userlist"))
       {
         Putc('\n');

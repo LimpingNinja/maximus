@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Description: Add params metadata to english.toml strings that use |!N positional parameters.
-#              Extracts parameter names from LangPrintf() C call sites.
+# Description: Generate @merge params metadata for delta_english.toml.
+#              Scans C call sites to derive parameter names and types.
 # Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
 
 """
-Phase 2.6 tool: annotate english.toml strings that contain |!N positional
-parameters with a 'params' array describing each parameter.
+Generate params metadata entries for the language delta overlay file.
 
-Workflow:
-  1. Parse english.toml (latin-1 for CP437 compat) to find strings with |!N
-  2. Grep C sources for LangPrintf() calls to extract argument expressions
-  3. Apply naming heuristics to derive human-readable param names
-  4. Rewrite english.toml with params metadata added
+Scans english.toml for strings with |!N positional parameters, extracts type
+suffixes (d/l/u/c), greps C sources for call sites to derive parameter names,
+and appends # @merge entries to delta_english.toml.
 
-Output format examples:
-  Simple string:
-    key = "Hello |!1"  →  key = { text = "Hello |!1", params = ["name"] }
-  Existing inline table:
-    key = { text = "...|!1...", flags = [...] }  →  adds params = [...]
+The delta overlay's @merge directive triggers shallow field merge: the params
+array is appended to the base TOML line without replacing existing fields
+(text, flags, rip, etc.).
+
+Output format:
+  # @merge
+  key = { params = [{name = "version", type = "string"}, {name = "task", type = "int"}] }
+
+Call site patterns scanned:
+  - LangPrintf(format_key, ...)     — format = arg[0], params = arg[1:]
+  - logit(format_key, ...)          — format = arg[0], params = arg[1:]
+  - LangSprintf(buf, sz, format_key, ...) — format = arg[2], params = arg[3:]
 """
 
 import os
@@ -28,12 +32,24 @@ import glob
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOML_PATH = os.path.join(PROJECT_ROOT, "resources", "lang", "english.toml")
+DELTA_PATH = os.path.join(PROJECT_ROOT, "resources", "lang", "delta_english.toml")
 SRC_DIR = os.path.join(PROJECT_ROOT, "src", "max")
 
-# --- Step 1: Extract |!N info from TOML ---
+# Type suffix → human-readable type name
+SUFFIX_TYPES = {
+    'd': 'int',
+    'l': 'long',
+    'u': 'uint',
+    'c': 'char',
+}
+
+# --- Step 1: Extract |!N info from TOML (with type suffixes) ---
 
 def find_toml_params():
-    """Return dict: key_name → max_param_index for strings containing |!N."""
+    """Return dict: key_name → list of (slot_index, type_str) tuples.
+
+    Parses |!N[suffix] where N is 1-9/A-F and suffix is d/l/u/c or absent (string).
+    """
     result = {}
     with open(TOML_PATH, "r", encoding="latin-1") as f:
         for line in f:
@@ -42,28 +58,37 @@ def find_toml_params():
             if not m:
                 continue
             key = m.group(1)
-            # Find all |!N references in the line
-            params = re.findall(r'\|!([1-9A-F])', line)
+            # Find all |!N[suffix] references
+            params = re.findall(r'\|!([1-9A-F])([dlucDLUC])?', line)
             if not params:
                 continue
-            max_idx = 0
-            for p in params:
-                if p.isdigit():
-                    idx = int(p)
-                else:
-                    idx = ord(p) - ord('A') + 10
-                if idx > max_idx:
-                    max_idx = idx
-            result[key] = max_idx
+            slots = {}
+            for slot_ch, suffix in params:
+                idx = int(slot_ch) if slot_ch.isdigit() else ord(slot_ch) - ord('A') + 10
+                type_str = SUFFIX_TYPES.get(suffix.lower(), 'string') if suffix else 'string'
+                slots[idx] = type_str
+            # Build ordered list from slot 1..max
+            max_slot = max(slots.keys())
+            slot_list = [(i, slots.get(i, 'string')) for i in range(1, max_slot + 1)]
+            result[key] = slot_list
     return result
 
 
-# --- Step 2: Extract LangPrintf call sites ---
+# --- Step 2: Extract call sites from C sources ---
 
-def extract_langprintf_calls():
-    """
-    Return dict: lang_string_name → list of argument expression lists.
-    Each call gives one list of arg expressions (excluding the format string).
+# Call site patterns: (function_prefix, format_arg_index)
+CALL_PATTERNS = [
+    ("LangPrintf(", 0),      # LangPrintf(format, ...)
+    ("logit(", 0),           # logit(format, ...)
+    ("LangSprintf(", 2),     # LangSprintf(buf, bufsz, format, ...)
+]
+
+
+def extract_call_sites():
+    """Return dict: lang_string_name → list of argument expression lists.
+
+    Each call gives one list of arg expressions (the varargs AFTER the format).
+    Scans LangPrintf, logit, and LangSprintf call sites.
     """
     calls = {}
     c_files = glob.glob(os.path.join(SRC_DIR, "**", "*.c"), recursive=True)
@@ -75,56 +100,51 @@ def extract_langprintf_calls():
         except Exception:
             continue
 
-        # Find LangPrintf calls - may span multiple lines
-        # Pattern: LangPrintf( identifier , args... )
-        # We need to handle multi-line calls and nested parens
-        idx = 0
-        while True:
-            pos = content.find("LangPrintf(", idx)
-            if pos == -1:
-                break
-            # Check it's not in a comment or #define
-            line_start = content.rfind("\n", 0, pos) + 1
-            prefix = content[line_start:pos].strip()
-            if prefix.startswith("//") or prefix.startswith("*") or prefix.startswith("#"):
-                idx = pos + 1
-                continue
+        for func_prefix, fmt_idx in CALL_PATTERNS:
+            idx = 0
+            while True:
+                pos = content.find(func_prefix, idx)
+                if pos == -1:
+                    break
+                # Skip if inside a comment or preprocessor directive
+                line_start = content.rfind("\n", 0, pos) + 1
+                prefix = content[line_start:pos].strip()
+                if prefix.startswith("//") or prefix.startswith("*") or prefix.startswith("#"):
+                    idx = pos + 1
+                    continue
 
-            # Extract the full argument list by matching parens
-            paren_start = content.index("(", pos)
-            depth = 1
-            i = paren_start + 1
-            while i < len(content) and depth > 0:
-                if content[i] == "(":
-                    depth += 1
-                elif content[i] == ")":
-                    depth -= 1
-                i += 1
-            if depth != 0:
-                idx = pos + 1
-                continue
+                # Extract the full argument list by matching parens
+                paren_start = content.index("(", pos)
+                depth = 1
+                i = paren_start + 1
+                while i < len(content) and depth > 0:
+                    if content[i] == "(":
+                        depth += 1
+                    elif content[i] == ")":
+                        depth -= 1
+                    i += 1
+                if depth != 0:
+                    idx = pos + 1
+                    continue
 
-            args_str = content[paren_start + 1:i - 1]
-            # Normalize whitespace
-            args_str = re.sub(r'\s+', ' ', args_str).strip()
+                args_str = content[paren_start + 1:i - 1]
+                args_str = re.sub(r'\s+', ' ', args_str).strip()
+                args = split_args(args_str)
 
-            # Split by top-level commas (not inside parens)
-            args = split_args(args_str)
-            if len(args) < 1:
-                idx = pos + 1
-                continue
+                if len(args) <= fmt_idx:
+                    idx = i
+                    continue
 
-            lang_name = args[0].strip()
-            param_args = [a.strip() for a in args[1:]]
+                lang_name = args[fmt_idx].strip()
+                param_args = [a.strip() for a in args[fmt_idx + 1:]]
 
-            # Only track calls where first arg is a simple identifier (lang string name)
-            if re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', lang_name):
-                if lang_name not in calls:
-                    calls[lang_name] = []
-                calls[lang_name].append(param_args)
+                # Only track calls where format arg is a simple identifier
+                if re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', lang_name):
+                    if lang_name not in calls:
+                        calls[lang_name] = []
+                    calls[lang_name].append(param_args)
 
-            idx = i
-
+                idx = i
 
     return calls
 
@@ -344,7 +364,6 @@ def get_param_names(lang_name, call_args_list, expected_count):
     seen = {}
     for i, n in enumerate(names):
         if n in seen:
-            # Rename the first occurrence too if not already
             first_idx = seen[n]
             if not names[first_idx].endswith(str(first_idx + 1)):
                 names[first_idx] = f"{n}{first_idx + 1}"
@@ -355,86 +374,108 @@ def get_param_names(lang_name, call_args_list, expected_count):
     return names
 
 
-# --- Step 4: Rewrite TOML with params metadata ---
+def build_params_toml(slot_types, param_names):
+    """Build a TOML params array string from slot types and param names.
 
-def rewrite_toml(toml_params, call_sites):
-    """Rewrite english.toml adding params metadata to strings with |!N."""
-    with open(TOML_PATH, "r", encoding="latin-1") as f:
-        lines = f.readlines()
+    Returns e.g.: [{name = "version", type = "string"}, {name = "task", type = "int"}]
+    """
+    parts = []
+    for i, (slot_idx, type_str) in enumerate(slot_types):
+        name = param_names[i] if i < len(param_names) else f"param{i+1}"
+        parts.append(f'{{name = "{name}", type = "{type_str}"}}')
+    return "[" + ", ".join(parts) + "]"
 
-    output = []
-    modified = 0
 
-    for line in lines:
-        raw = line.rstrip("\n")
-        m = re.match(r'^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*', raw)
-        if not m or m.group(1) not in toml_params:
-            output.append(line)
-            continue
+# --- Step 4: Generate @merge entries for delta file ---
 
-        key = m.group(1)
-        expected_count = toml_params[key]
+def generate_delta_entries(toml_params, call_sites):
+    """Generate # @merge delta entries for params metadata.
+
+    Returns list of (key, params_toml_str) tuples.
+    """
+    entries = []
+    for key, slot_types in sorted(toml_params.items()):
+        expected_count = len(slot_types)
         call_args = call_sites.get(key, [])
         param_names = get_param_names(key, call_args, expected_count)
-        params_str = ", ".join(f'"{n}"' for n in param_names)
+        params_toml = build_params_toml(slot_types, param_names)
+        entries.append((key, params_toml))
+    return entries
 
-        value_part = raw[m.end():].strip()
 
-        # Check if already has params
-        if "params" in value_part:
+def write_delta_entries(entries):
+    """Append @merge params entries to delta_english.toml.
+
+    Preserves existing non-@merge content. Replaces the @merge section
+    if it already exists (delimited by the @merge-section markers).
+    """
+    SECTION_START = "# --- @merge: params metadata (auto-generated) ---\n"
+    SECTION_END = "# --- end @merge params ---\n"
+
+    # Read existing delta file
+    existing_lines = []
+    if os.path.isfile(DELTA_PATH):
+        with open(DELTA_PATH, "r", encoding="latin-1") as f:
+            existing_lines = f.readlines()
+
+    # Strip any previous @merge section
+    output = []
+    in_section = False
+    for line in existing_lines:
+        if line.strip() == SECTION_START.strip():
+            in_section = True
+            continue
+        if line.strip() == SECTION_END.strip():
+            in_section = False
+            continue
+        if not in_section:
             output.append(line)
-            continue
 
-        # Case 1: inline table  { text = "...", ... }
-        if value_part.startswith("{"):
-            # Insert params before the closing }
-            closing = value_part.rfind("}")
-            if closing >= 0:
-                inner = value_part[:closing].rstrip().rstrip(",")
-                new_line = f"{key} = {inner}, params = [{params_str}] }}\n"
-                output.append(new_line)
-                modified += 1
-                continue
+    # Ensure trailing newline before our section
+    if output and not output[-1].endswith("\n"):
+        output[-1] += "\n"
+    if output and output[-1].strip():
+        output.append("\n")
 
-        # Case 2: simple string  "..."
-        if value_part.startswith('"'):
-            new_line = f'{key} = {{ text = {value_part}, params = [{params_str}] }}\n'
-            output.append(new_line)
-            modified += 1
-            continue
+    # Append the new @merge section
+    output.append(SECTION_START)
+    for key, params_toml in entries:
+        output.append("# @merge\n")
+        output.append(f"{key} = {{ params = {params_toml} }}\n")
+    output.append(SECTION_END)
 
-        # Unknown format, leave as-is
-        output.append(line)
-
-    with open(TOML_PATH, "w", encoding="latin-1") as f:
+    with open(DELTA_PATH, "w", encoding="latin-1") as f:
         f.writelines(output)
 
-    return modified
+    return len(entries)
 
 
 def main():
-    print("Step 1: Scanning english.toml for |!N parameters...")
+    print("Step 1: Scanning english.toml for |!N parameters (with type suffixes)...")
     toml_params = find_toml_params()
     print(f"  Found {len(toml_params)} strings with positional parameters")
 
-    print("Step 2: Extracting LangPrintf() call sites from C sources...")
-    call_sites = extract_langprintf_calls()
+    print("Step 2: Extracting call sites (LangPrintf, logit, LangSprintf)...")
+    call_sites = extract_call_sites()
     print(f"  Found {len(call_sites)} unique lang string names in call sites")
 
-    # Show coverage
     matched = sum(1 for k in toml_params if k in call_sites)
     print(f"  {matched}/{len(toml_params)} TOML strings have matching call sites")
 
-    print("Step 3: Deriving parameter names and rewriting TOML...")
-    modified = rewrite_toml(toml_params, call_sites)
-    print(f"  Modified {modified} TOML entries with params metadata")
+    print("Step 3: Generating @merge params entries...")
+    entries = generate_delta_entries(toml_params, call_sites)
 
-    # Show unmatched strings (TOML has |!N but no call site found)
+    print(f"Step 4: Writing {len(entries)} entries to {DELTA_PATH}...")
+    written = write_delta_entries(entries)
+    print(f"  Wrote {written} @merge entries")
+
+    # Show unmatched strings
     unmatched = [k for k in toml_params if k not in call_sites]
     if unmatched:
         print(f"\n  {len(unmatched)} strings without call sites (may use Puts/other paths):")
         for k in sorted(unmatched)[:20]:
-            print(f"    - {k} ({toml_params[k]} params)")
+            slots = toml_params[k]
+            print(f"    - {k} ({len(slots)} params)")
         if len(unmatched) > 20:
             print(f"    ... and {len(unmatched) - 20} more")
 

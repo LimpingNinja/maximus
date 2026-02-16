@@ -94,7 +94,7 @@ static struct _cgs * near ChatFindOpen(void)
   static struct _cgs *cgs;
 
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return NULL;
 #endif
 
@@ -139,7 +139,7 @@ static struct _cgs * near ChatFindOpen(void)
 
     /* Scan all of the current IPC files, and read them into an array */
 
-    ipc_base = ngcfg_get_path("maximus.ipc_path");
+    ipc_base = ngcfg_get_path("maximus.node_path");
     sprintf(temp, ipc_star, ipc_base);
 
     cgs->num_tid=0;
@@ -218,7 +218,7 @@ int ChatFindIndividual(byte tid, char *username, char *status, word *avail)
 #else
   int fd;
 
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return FALSE;
 
   if ((fd=ChatOpenIPC(tid))==-1)
@@ -274,7 +274,7 @@ static void near Page(void)
   byte tid;
 
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
 
@@ -331,7 +331,7 @@ void Who_Is_On(void)
   char status[80];
 
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
 
@@ -404,7 +404,7 @@ static void near Chat(int use_cb, int doing_answer)
   *nextw='\0';
 
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
 
@@ -550,7 +550,7 @@ static void near Chat(int use_cb, int doing_answer)
         Putc('\n');
       }
       else if (eqstri(temp, "/?") || eqstri(temp, qmark))
-        Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.misc_path"), "CHATHELP");
+        Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.display_path"), "CHATHELP");
       else if (eqstri(temp, "/q"))
         break;
       else    /* Must have been a text string */
@@ -731,7 +731,7 @@ void ChatHandleMessage(byte tid, int type, int len, char *msg, int *redo)
 
       if ((temp=malloc(PATHLEN)) != NULL)
       {
-        sprintf(temp, "%schatpage", (char *)ngcfg_get_path("maximus.misc_path"));
+        sprintf(temp, "%schatpage", (char *)ngcfg_get_path("maximus.display_path"));
         Display_File(0, NULL, temp);
         free(temp);
       }
@@ -846,7 +846,7 @@ void ChatAPB(char *msg)
   byte tid;
 
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
   

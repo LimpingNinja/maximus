@@ -125,7 +125,7 @@ build_for_arch() {
                 codesign --force --sign - "$bin" 2>/dev/null || true
             fi
         done
-        for lib in "${BUILD_DIR}/lib/"*.so "${BUILD_DIR}/lib/"*.dylib; do
+        for lib in "${BUILD_DIR}/bin/lib/"*.so "${BUILD_DIR}/bin/lib/"*.dylib; do
             if [ -f "$lib" ]; then
                 codesign --force --sign - "$lib" 2>/dev/null || true
             fi
@@ -152,7 +152,7 @@ create_release_package() {
     
     # Replace /var/max paths with relative paths for portable release
     log_info "Updating config paths..."
-    for file in etc/max.ctl etc/areas.bbs etc/compress.cfg etc/squish.cfg etc/sqafix.cfg; do
+    for file in config/legacy/max.ctl config/legacy/areas.bbs config/compress.cfg config/squish.cfg config/sqafix.cfg; do
         if [ -f "$release_path/$file" ]; then
             # Replace both /var/max/ and /var/max (with or without trailing slash)
             LC_ALL=C sed -i.bak -e "s;/var/max/;./;g" -e "s;/var/max$;.;g" -e "s;/var/max\([^/]\);./\1;g" "$release_path/$file"
@@ -165,26 +165,28 @@ create_release_package() {
     cp -f "${BUILD_DIR}/bin/"* "$release_path/bin/" 2>/dev/null || true
 
     # Copy SQLite userdb init resources (schema + wrapper)
-    mkdir -p "$release_path/etc/db"
-    cp -f "${PROJECT_ROOT}/scripts/db/userdb_schema.sql" "$release_path/etc/db/userdb_schema.sql" 2>/dev/null || true
+    mkdir -p "$release_path/data/db"
+    mkdir -p "$release_path/data/users"
+    cp -f "${PROJECT_ROOT}/scripts/db/userdb_schema.sql" "$release_path/data/db/userdb_schema.sql" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/scripts/db/init-userdb.sh" "$release_path/bin/init-userdb.sh" 2>/dev/null || true
     chmod +x "$release_path/bin/init-userdb.sh" 2>/dev/null || true
     
-    # Copy libraries (overwrites empty lib/ from install_tree)
+    # Copy libraries (into bin/lib/)
     log_info "Copying libraries..."
-    cp -f "${BUILD_DIR}/lib/"*.so "$release_path/lib/" 2>/dev/null || true
-    cp -f "${BUILD_DIR}/lib/"*.dylib "$release_path/lib/" 2>/dev/null || true
+    mkdir -p "$release_path/bin/lib"
+    cp -f "${BUILD_DIR}/bin/lib/"*.so "$release_path/bin/lib/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/bin/lib/"*.dylib "$release_path/bin/lib/" 2>/dev/null || true
     
     # Codesign and clear quarantine on macOS
     if [ "$os" = "macos" ]; then
         log_info "Codesigning release binaries..."
-        xattr -cr "$release_path/bin" "$release_path/lib" 2>/dev/null || true
+        xattr -cr "$release_path/bin" "$release_path/bin/lib" 2>/dev/null || true
         for bin in "$release_path/bin/"*; do
             if [ -f "$bin" ] && file "$bin" | grep -q "Mach-O"; then
                 codesign --force --sign - "$bin" 2>/dev/null || true
             fi
         done
-        for lib in "$release_path/lib/"*.so "$release_path/lib/"*.dylib; do
+        for lib in "$release_path/bin/lib/"*.so "$release_path/bin/lib/"*.dylib; do
             if [ -f "$lib" ]; then
                 codesign --force --sign - "$lib" 2>/dev/null || true
             fi
@@ -193,16 +195,16 @@ create_release_package() {
     
     # Copy compiled display files (.bbs) from build
     log_info "Copying compiled display files..."
-    cp -f "${BUILD_DIR}/etc/misc/"*.bbs "$release_path/etc/misc/" 2>/dev/null || true
-    cp -f "${BUILD_DIR}/etc/help/"*.bbs "$release_path/etc/help/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/display/screens/"*.bbs "$release_path/display/screens/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/display/help/"*.bbs "$release_path/display/help/" 2>/dev/null || true
     
-    # Copy compiled language file
-    log_info "Copying compiled language file..."
-    cp -f "${BUILD_DIR}/etc/lang/"*.ltf "$release_path/etc/lang/" 2>/dev/null || true
+    # Copy language TOML files
+    log_info "Copying language files..."
+    cp -f "${BUILD_DIR}/config/lang/"*.toml "$release_path/config/lang/" 2>/dev/null || true
     
     # Copy compiled MEX files (.vm)
     log_info "Copying compiled MEX files..."
-    cp -f "${BUILD_DIR}/m/"*.vm "$release_path/m/" 2>/dev/null || true
+    cp -f "${BUILD_DIR}/scripts/"*.vm "$release_path/scripts/" 2>/dev/null || true
     
     # Copy documentation
     log_info "Copying documentation..."
@@ -213,55 +215,45 @@ create_release_package() {
     cp -f "${PROJECT_ROOT}/LICENSE"* "$release_path/docs/" 2>/dev/null || true
     cp -f "${PROJECT_ROOT}/COPYING"* "$release_path/docs/" 2>/dev/null || true
     
-    # Create run script
-    cat > "$release_path/bin/runbbs.sh" << 'EOF'
+    # Create run script at root level
+    cat > "$release_path/runbbs.sh" << 'EOF'
 #!/bin/bash
-# Maximus BBS launcher
+# Maximus BBS launcher — starts maxtel supervisor
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BASE_DIR="$(dirname "$SCRIPT_DIR")"
-export LD_LIBRARY_PATH="${BASE_DIR}/lib:$LD_LIBRARY_PATH"
-export DYLD_LIBRARY_PATH="${BASE_DIR}/lib:$DYLD_LIBRARY_PATH"
-export MEX_INCLUDE="${BASE_DIR}/m"
-cd "$BASE_DIR"
-exec "${SCRIPT_DIR}/max" etc/max "$@"
+export LD_LIBRARY_PATH="${SCRIPT_DIR}/bin/lib:${LD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH="${SCRIPT_DIR}/bin/lib:${DYLD_LIBRARY_PATH}"
+export MEX_INCLUDE="${SCRIPT_DIR}/scripts/include"
+export MAX_INSTALL_PATH="${SCRIPT_DIR}"
+cd "$SCRIPT_DIR"
+exec bin/maxtel -d "$SCRIPT_DIR" -p 2323 -n 4 "$@"
 EOF
-    chmod +x "$release_path/bin/runbbs.sh"
+    chmod +x "$release_path/runbbs.sh"
     
     # Create recompile script for end users
     cat > "$release_path/bin/recompile.sh" << 'EOF'
 #!/bin/bash
-# Recompile all Maximus configuration files
-# Run this after modifying .ctl, .mec, .mad, or .mex files
+# Recompile all Maximus display and MEX files
+# Run this after modifying .mec or .mex files
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$BASE_DIR"
 
-export LD_LIBRARY_PATH="${BASE_DIR}/lib:$LD_LIBRARY_PATH"
-export DYLD_LIBRARY_PATH="${BASE_DIR}/lib:$DYLD_LIBRARY_PATH"
-export MEX_INCLUDE="${BASE_DIR}/m"
+export LD_LIBRARY_PATH="${BASE_DIR}/bin/lib:$LD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="${BASE_DIR}/bin/lib:$DYLD_LIBRARY_PATH"
+export MEX_INCLUDE="${BASE_DIR}/scripts/include"
 
 echo "=== Recompiling Maximus Configuration ==="
 echo
 
-echo "Step 1: Compiling language file (english.mad)..."
-(cd etc/lang && ../../bin/maid english -p)
+echo "Step 1: Compiling help display files (.mec -> .bbs)..."
+(cd display/help && for f in *.mec; do ../../bin/mecca "$f" 2>&1 || true; done)
 
-echo "Step 2: Compiling help display files (.mec -> .bbs)..."
-for f in etc/help/*.mec; do
-    [ -f "$f" ] && bin/mecca "$f"
-done
+echo "Step 2: Compiling screen display files (.mec -> .bbs)..."
+(cd display/screens && for f in *.mec; do ../../bin/mecca "$f" 2>&1 || true; done)
 
-echo "Step 3: Compiling misc display files (.mec -> .bbs)..."
-for f in etc/misc/*.mec; do
-    [ -f "$f" ] && bin/mecca "$f"
-done
-
-echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
-(cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
-
-echo "Step 5: Re-linking language file..."
-(cd etc/lang && ../../bin/maid english -d -s -p../max)
+echo "Step 3: Compiling MEX scripts (.mex -> .vm)..."
+(cd scripts && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
 
 echo
 echo "=== Recompilation complete ==="
@@ -301,27 +293,37 @@ modify any configuration, edit the source files and run bin/recompile.sh
 
 Directory Structure:
 --------------------
-  bin/      - Executables (max, mex, maid, squish, etc.)
-  lib/      - Shared libraries
-  etc/      - Configuration files
-    *.ctl   - Source config files (edit these)
-    misc/   - Display files (.mec source, .bbs compiled)
-    help/   - Help files (.mec source, .bbs compiled)  
-    lang/   - Language files (.mad source, .ltf compiled)
-  m/        - MEX scripts (.mex source, .vm compiled)
-  spool/    - Message bases and file areas
-  log/      - Log files
-  docs/     - Documentation
+  runbbs.sh      - Primary BBS launcher (starts maxtel)
+  bin/           - Executables (max, maxtel, maxcfg, mex, mecca, squish, etc.)
+    lib/         - Shared libraries
+  config/        - Configuration (TOML is sole authority)
+    maximus.toml - Core system config
+    general/     - General BBS settings (session, equipment, etc.)
+    lang/        - Language files (TOML)
+    menus/       - Menu definitions (TOML)
+    security/    - Access control
+    legacy/      - Legacy .ctl files (read-only reference)
+  display/       - User-facing display content
+    screens/     - System screens (.mec source, .bbs compiled)
+    help/        - Help screens
+    menus/       - Menu display art
+    tunes/       - Tune files
+  scripts/       - MEX scripts (.mex source, .vm compiled)
+    include/     - MEX headers (.mh, .lh)
+  data/          - Persistent data (users, msgbase, mail, etc.)
+  run/           - Ephemeral runtime state (node dirs, tmp)
+  log/           - Log files
+  doors/         - External door programs
+  docs/          - Documentation
 
-After Modifying Config Files:
-----------------------------
-If you edit .ctl, .mec, .mad, or .mex files, run:
+After Modifying Display or MEX Files:
+-------------------------------------
+If you edit .mec or .mex files, run:
   bin/recompile.sh
 
 Or manually:
-  bin/mecca etc/misc/*.mec    # Recompile display files
-  bin/maid english -p         # Recompile language (in etc/lang/)
-  bin/mex script.mex          # Recompile a MEX script (in m/)
+  bin/mecca display/screens/*.mec   # Recompile display files
+  bin/mex scripts/script.mex        # Recompile a MEX script
 
 MAXTEL (Telnet Supervisor):
 --------------------------

@@ -1,0 +1,88 @@
+[[area]]
+name = "1"
+description = "Comments to the SysOp"
+acs = "Transient"
+menu = ""
+division = "Local Areas"
+tag = ""
+path = "data/msgbase/private"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Squish", "Local", "Pvt"]
+renum_max = 100
+renum_days = 0
+
+[[area]]
+name = "2"
+description = "Public Messages"
+acs = "Demoted"
+menu = ""
+division = "Local Areas"
+tag = ""
+path = "data/msgbase/public"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Squish", "Local", "Pvt", "Pub"]
+renum_max = 150
+renum_days = 0
+
+[[area]]
+name = "MUF"
+description = "FidoNet Echo: MUFFIN (Maximus Tips'n'Tricks)"
+acs = "Sysop"
+menu = ""
+division = ""
+tag = "MUFFIN"
+path = "data/msgbase/muffin"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Squish", "Echo", "Pub"]
+renum_max = 100
+renum_days = 0
+
+[[area]]
+name = "NET"
+description = "NetMail"
+acs = "Sysop"
+menu = ""
+division = ""
+tag = ""
+path = "data/mail/netmail"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Net", "Pvt"]
+renum_max = 100
+renum_days = 0
+
+[[area]]
+name = "USERS249"
+description = "FidoNet Echo: Net 249 (Quite) Users"
+acs = "Transient"
+menu = ""
+division = ""
+tag = "USERS249"
+path = "data/msgbase/muffin"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Squish", "Echo", "Pub"]
+renum_max = 100
+renum_days = 0
+
+[[division]]
+name = "Local Areas"
+key = "Local Areas"
+description = "Local BBS Message Areas"
+acs = "Demoted"
+display_file = ""
+level = 0
+

@@ -1125,18 +1125,20 @@ char * Startup(void)
 
   Lputs(GRAY);
 
+  /* Derive menupath from config_path (menus are TOML under config/menus/) */
+  snprintf(menupath, PATHLEN, "%s/menus",
+           ngcfg_get_path("maximus.config_path"));
+
+  /* Derive rippath from display_path: strip last component, append /rip.
+   * e.g. display_path="display/screens" → rippath="<resolved>/display/rip" */
   {
-    const char *menu_base;
-
-    menu_base = ngcfg_get_path("maximus.menu_path");
-    strcpy(menupath, menu_base);
-  }
-
-  {
-    const char *rip_base;
-
-    rip_base = ngcfg_get_path("maximus.rip_path");
-    strcpy(rippath, rip_base);
+    char disp_tmp[PATHLEN];
+    strncpy(disp_tmp, ngcfg_get_path("maximus.display_path"), PATHLEN - 1);
+    disp_tmp[PATHLEN - 1] = '\0';
+    char *slash = strrchr(disp_tmp, '/');
+    if (slash)
+      *slash = '\0';  /* "…/display/screens" → "…/display" */
+    snprintf(rippath, PATHLEN, "%s/rip", disp_tmp);
   }
 
   timeon=time(NULL);              /* Initalize time on/off counters */
@@ -1260,15 +1262,13 @@ char * Startup(void)
 
     close(fd);
 
-    sprintf(temp, activexx_bbs, original_path, task_num);
+    node_file_path(task_num, "active.bbs", temp, sizeof(temp));
 
     if (fexist(temp))
     {
       unlink(temp);
 
-      if (task_num)
-        sprintf(temp, lastusxx_bbs, original_path, task_num);
-      else sprintf(temp, lastuser_bbs, original_path);
+      node_file_path(task_num, "lastus.bbs", temp, sizeof(temp));
 
       if ((fd=shopen(temp, O_RDONLY | O_BINARY)) != -1)
       {
@@ -1507,7 +1507,7 @@ static void near Initialize_Colours(void)
   if (colors_dat && *colors_dat)
     strnncpy(temp, (char *)colors_dat, sizeof(temp)-1);
   else
-    sprintf(temp, "%scolours.dat", sys_base);
+    sprintf(temp, "%s/config/colours.dat", sys_base);
   
   if ((fd=open(temp, O_RDONLY | O_BINARY))==-1)
   {

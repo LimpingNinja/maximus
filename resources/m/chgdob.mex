@@ -35,8 +35,7 @@
 #endif
 
 #include <max.mh>
-#define INCL_max_chng
-#include <language.mh>
+string lang_get(string: key);
 
 int getdigit(ref string: instr)
 {
@@ -92,7 +91,7 @@ int main(string: argv)
 
     // Print prompt and get instr from user
 
-    len := input_str(instr, INPUT_WORD, 0, 120, str_ask_dob);
+    len := input_str(instr, INPUT_WORD, 0, 120, lang_get("max_chng.ask_dob"));
 
     // Exit if user pressed <enter> and one is not required
 
@@ -126,7 +125,7 @@ int main(string: argv)
       }
 
       if (DGT_1=0 OR DGT_2=0 OR DGT_3=0 OR len<>0)
-        print(str_invalid_dob, '\n');
+        print(lang_get("max_chng.invalid_dob"), '\n');
       else
       {
 
@@ -143,15 +142,15 @@ int main(string: argv)
         // Now, validate all fields
 
         if (temp_year < 1900 OR temp_year > (now.date.year + 1980))
-          print(str_invalid_dob, str_invalid_dob_year, '\n');
+          print(lang_get("max_chng.invalid_dob"), lang_get("max_chng.invalid_dob_year"), '\n');
 
         else
         {
           if (temp_month < 1 or temp_month > 12)
-            print(str_invalid_dob, str_invalid_dob_mon, '\n');
+            print(lang_get("max_chng.invalid_dob"), lang_get("max_chng.invalid_dob_mon"), '\n');
 
           else if (temp_day < 1 or temp_day > 31)
-            print(str_invalid_dob, str_invalid_dob_day, '\n');
+            print(lang_get("max_chng.invalid_dob"), lang_get("max_chng.invalid_dob_day"), '\n');
 
           else  // instr ok
           {

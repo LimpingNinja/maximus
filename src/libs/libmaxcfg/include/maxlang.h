@@ -95,6 +95,27 @@ bool maxlang_has_flag(MaxLang *lang, const char *key, const char *flag);
  */
 const char *maxlang_get_by_id(MaxLang *lang, int strn);
 
+/**
+ * @brief Resolve a legacy heap-relative string ID to a TOML string.
+ *
+ * Scans the [_legacy_map] to find the base ID for the named heap,
+ * then delegates to maxlang_get_by_id(lang, base + strn).
+ *
+ * @param lang       Language handle.
+ * @param heap_name  Heap name (e.g. "m_area", "mexbank").
+ * @param strn       Relative string index within the heap.
+ * @return The string, or "" if not mapped.
+ */
+const char *maxlang_get_by_heap_id(MaxLang *lang, const char *heap_name, int strn);
+
+/**
+ * @brief Get the language display name from the TOML [meta] section.
+ *
+ * @param lang  Language handle.
+ * @return The name string, or "" if not available.
+ */
+const char *maxlang_get_name(MaxLang *lang);
+
 /* ========================================================================== */
 /* RIP alternate mode                                                          */
 /* ========================================================================== */
@@ -106,6 +127,25 @@ const char *maxlang_get_by_id(MaxLang *lang, int strn);
  * falling back to the primary text otherwise.
  */
 void maxlang_set_use_rip(MaxLang *lang, bool use_rip);
+
+/* ========================================================================== */
+/* Extension language file loading                                              */
+/* ========================================================================== */
+
+/**
+ * @brief Load an extension language TOML file into the language handle.
+ *
+ * All heaps (top-level tables) in the extension file become accessible
+ * via maxlang_get() using "heap.key" dotted notation, just like the
+ * primary language file.
+ *
+ * @param lang  Language handle.
+ * @param path  Full path to the extension TOML file.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_DUPLICATE if any heap name
+ *         in the extension file conflicts with an existing heap,
+ *         MAXCFG_ERR_NOT_FOUND if the file does not exist.
+ */
+MaxCfgStatus maxlang_load_extension(MaxLang *lang, const char *path);
 
 /* ========================================================================== */
 /* Runtime string registration (MEX / extensions)                              */

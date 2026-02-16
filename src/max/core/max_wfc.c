@@ -883,10 +883,7 @@ static void near Update_Lastuser(void)
     return;
 #endif
 
-  sprintf(temp,
-          task_num ? lastusxx_bbs : lastuser_bbs,
-          original_path,
-          task_num);
+  node_file_path(task_num, "lastus.bbs", temp, sizeof(temp));
 
   if ((lu=shopen(temp, O_RDONLY | O_BINARY))==-1)
     WinPutstr(win_stat, 4, 16, wfc_no_last_caller);

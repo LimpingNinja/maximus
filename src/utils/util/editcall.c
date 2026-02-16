@@ -56,7 +56,7 @@ int _stdc main(int argc,char *argv[])
     return 1;
   }
 
-  sprintf(temp,"etc/bbstat%02x.bbs",atoi(argv[1]));
+  sprintf(temp,"run/node/%02x/bbstat.bbs",atoi(argv[1]));
 
   if ((bfile=open(temp,O_RDWR | O_BINARY))==-1)
   {

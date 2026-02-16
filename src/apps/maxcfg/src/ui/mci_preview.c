@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,7 +104,7 @@ void mci_mock_load(MciMockData *m)
     if (!sys_path) return;
 
     char db_path[1024];
-    snprintf(db_path, sizeof(db_path), "%s/etc/user.db", sys_path);
+    snprintf(db_path, sizeof(db_path), "%s/data/users/user.db", sys_path);
     MaxDB *db = maxdb_open(db_path, MAXDB_OPEN_READONLY);
     if (!db) return;
 
@@ -149,6 +150,12 @@ static int parse_pos_idx(char ch)
     if (ch >= '1' && ch <= '9') return ch - '1';
     if (ch >= 'A' && ch <= 'F') return ch - 'A' + 9;
     return -1;
+}
+
+/** @brief Check if ch is a TOML-converter type suffix (d=int, l=long, u=uint, c=char). */
+static inline bool is_type_suffix(char ch)
+{
+    return ch == 'd' || ch == 'l' || ch == 'u' || ch == 'c';
 }
 
 /** @brief Put a single character + attribute into the virtual screen. */
@@ -394,16 +401,19 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
                         vs_putc(vs, st, ch);
                     p += 5; continue;
                 }
-                /* $D|!NC — positional param as count, then char */
+                /* $D|!N[suffix]C — positional param as count, then char.
+                 * Optional type suffix (d/l/u/c) between slot and fill char. */
                 if (p[2] == '|' && p[3] == '!' && p[4] && p[5]) {
                     int idx = parse_pos_idx(p[4]);
+                    int skip = 6;
+                    char ch = p[5];
+                    if (is_type_suffix(p[5]) && p[6]) { ch = p[6]; skip = 7; }
                     if (idx >= 0 && idx < 15) {
                         int cnt = atoi(mci_pos_mocks[idx]);
-                        char ch = p[5];
                         for (int i = 0; i < cnt && st->cy < vs->rows; i++)
                             vs_putc(vs, st, ch);
                     }
-                    p += 6; continue;
+                    p += skip; continue;
                 }
             }
 
@@ -417,15 +427,18 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
                         vs_putc(vs, st, ch);
                     p += 5; continue;
                 }
+                /* $X|!N[suffix]C — same type suffix handling as $D */
                 if (p[2] == '|' && p[3] == '!' && p[4] && p[5]) {
                     int idx = parse_pos_idx(p[4]);
+                    int skip = 6;
+                    char ch = p[5];
+                    if (is_type_suffix(p[5]) && p[6]) { ch = p[6]; skip = 7; }
                     if (idx >= 0 && idx < 15) {
                         int target = atoi(mci_pos_mocks[idx]) - 1;
-                        char ch = p[5];
                         while (st->cx < target && st->cx < vs->cols && st->cy < vs->rows)
                             vs_putc(vs, st, ch);
                     }
-                    p += 6; continue;
+                    p += skip; continue;
                 }
             }
         }
@@ -473,13 +486,44 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
         /* ---- Pipe codes ---- */
 
         if (p[0] == '|' && p[1]) {
-            /* |!N — positional parameter substitution (with format) */
+            /* |!N[suffix] — positional parameter substitution (with format).
+             * The TOML converter may append a type suffix (d/l/u/c) after
+             * the slot character — skip it so it doesn't render as text. */
             if (p[1] == '!' && p[2]) {
                 int idx = parse_pos_idx(p[2]);
                 if (idx >= 0 && idx < 15) {
                     char fmtbuf[256];
                     apply_fmt(fmtbuf, sizeof(fmtbuf), mci_pos_mocks[idx], st);
                     vs_puts(vs, st, fmtbuf);
+                }
+                p += 3;
+                if (is_type_suffix(*p)) p++; /* skip optional type suffix */
+                continue;
+            }
+
+            /* |xx — lowercase semantic theme color codes.
+             * Look up in the global theme table and recursively expand the
+             * stored pipe string (which contains |NN color codes). */
+            if (p[1] >= 'a' && p[1] <= 'z' && p[2] >= 'a' && p[2] <= 'z') {
+                extern MaxCfgThemeColors g_theme_colors;
+                const char *exp = maxcfg_theme_lookup(&g_theme_colors, p[1], p[2]);
+                if (exp) {
+                    /* Walk the expansion string and apply any |NN codes it contains */
+                    const char *e = exp;
+                    while (*e) {
+                        if (e[0] == '|' && isdigit((unsigned char)e[1]) && isdigit((unsigned char)e[2])) {
+                            int code = (e[1] - '0') * 10 + (e[2] - '0');
+                            if (code >= 0 && code <= 15)
+                                st->ca = (st->ca & 0xf0) | (uint8_t)(code & 0x0f);
+                            else if (code >= 16 && code <= 23)
+                                st->ca = (st->ca & 0x0f) | (uint8_t)((code - 16) << 4);
+                            else if (code >= 24 && code <= 31)
+                                st->ca = (st->ca & 0x0f) | (uint8_t)((code - 24) << 4);
+                            e += 3;
+                        } else {
+                            e++;
+                        }
+                    }
                 }
                 p += 3; continue;
             }

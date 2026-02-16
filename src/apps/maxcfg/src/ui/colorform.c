@@ -192,54 +192,53 @@ static bool build_config_basename(char *out, size_t out_sz)
     return snprintf(out, out_sz, "%s", base) < (int)out_sz;
 }
 
+/**
+ * @brief Resolve lang_path from TOML, joining against sys_path if relative.
+ * @return true if out was written successfully.
+ */
+static bool resolve_lang_path(char *out, size_t out_sz)
+{
+    extern MaxCfgToml *g_maxcfg_toml;
+    if (!g_maxcfg_toml) return false;
+
+    MaxCfgVar v;
+    const char *lang_rel = NULL;
+    if (maxcfg_toml_get(g_maxcfg_toml, "maximus.lang_path", &v) == MAXCFG_OK &&
+        v.type == MAXCFG_VAR_STRING && v.v.s && v.v.s[0]) {
+        lang_rel = v.v.s;
+    }
+
+    /* If lang_path is absolute, use directly */
+    if (lang_rel && (lang_rel[0] == '/' || lang_rel[0] == '\\'))
+        return snprintf(out, out_sz, "%s", lang_rel) < (int)out_sz;
+
+    /* Resolve relative lang_path against sys_path */
+    char root[MAX_PATH_LEN];
+    if (!build_bbs_root_dir(root, sizeof(root))) return false;
+
+    if (lang_rel)
+        return snprintf(out, out_sz, "%s/%s", root, lang_rel) < (int)out_sz;
+
+    /* Last resort: config_path/lang */
+    const char *cfg_rel = NULL;
+    if (maxcfg_toml_get(g_maxcfg_toml, "maximus.config_path", &v) == MAXCFG_OK &&
+        v.type == MAXCFG_VAR_STRING && v.v.s && v.v.s[0])
+        cfg_rel = v.v.s;
+
+    return snprintf(out, out_sz, "%s/%s/lang", root,
+                    cfg_rel ? cfg_rel : "config") < (int)out_sz;
+}
+
 static bool build_colors_lh_path(char *out, size_t out_sz)
 {
-    char root[MAX_PATH_LEN];
-    if (build_bbs_root_dir(root, sizeof(root))) {
-        if (strcmp(root, ".") != 0 && strcmp(root, "/") != 0) {
-            return snprintf(out, out_sz, "%s/etc/lang/colors.lh", root) < (int)out_sz;
-        }
-    }
-
-    char config_dir[MAX_PATH_LEN];
-    if (!build_config_dir(config_dir, sizeof(config_dir))) {
-        return false;
-    }
-
-    if (strcmp(config_dir, "/") == 0) {
-        return snprintf(out, out_sz, "/lang/colors.lh") < (int)out_sz;
-    }
-
-    if (strcmp(config_dir, ".") == 0) {
-        return snprintf(out, out_sz, "etc/lang/colors.lh") < (int)out_sz;
-    }
-
-    return snprintf(out, out_sz, "%s/lang/colors.lh", config_dir) < (int)out_sz;
+    char lang_dir[MAX_PATH_LEN];
+    if (!resolve_lang_path(lang_dir, sizeof(lang_dir))) return false;
+    return snprintf(out, out_sz, "%s/colors.lh", lang_dir) < (int)out_sz;
 }
 
 static bool build_lang_dir(char *out, size_t out_sz)
 {
-    char root[MAX_PATH_LEN];
-    if (build_bbs_root_dir(root, sizeof(root))) {
-        if (strcmp(root, ".") != 0 && strcmp(root, "/") != 0) {
-            return snprintf(out, out_sz, "%s/etc/lang", root) < (int)out_sz;
-        }
-    }
-
-    char config_dir[MAX_PATH_LEN];
-    if (!build_config_dir(config_dir, sizeof(config_dir))) {
-        return false;
-    }
-
-    if (strcmp(config_dir, "/") == 0) {
-        return snprintf(out, out_sz, "/lang") < (int)out_sz;
-    }
-
-    if (strcmp(config_dir, ".") == 0) {
-        return snprintf(out, out_sz, "etc/lang") < (int)out_sz;
-    }
-
-    return snprintf(out, out_sz, "%s/lang", config_dir) < (int)out_sz;
+    return resolve_lang_path(out, out_sz);
 }
 
 static bool build_maid_path(char *out, size_t out_sz)
@@ -870,6 +869,212 @@ static bool colorform_edit(const char *title, ColorFieldDef *fields, int field_c
     return saved;
 }
 
+/* ============================================================================
+ * Theme color editor — edits |xx semantic color slots as MCI pipe strings
+ * ============================================================================ */
+
+/**
+ * @brief Save current g_theme_colors to TOML via the override system.
+ * @return true on success.
+ */
+static bool theme_colors_save(void)
+{
+    extern MaxCfgToml *g_maxcfg_toml;
+    extern MaxCfgThemeColors g_theme_colors;
+    if (!g_maxcfg_toml) return false;
+
+    for (int i = 0; i < MCI_THEME_SLOT_COUNT; i++) {
+        char path[128];
+        snprintf(path, sizeof(path), "colors.theme.colors.%s", g_theme_colors.slots[i].key);
+        if (maxcfg_toml_override_set_string(g_maxcfg_toml, path,
+                                             g_theme_colors.slots[i].value) != MAXCFG_OK)
+            return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Edit theme color slots in a scrollable form.
+ *
+ * Each slot shows its description and current MCI pipe string.
+ * Enter/F2 opens the color picker; the chosen fg/bg is written as |NN codes.
+ * @return true if the user saved changes.
+ */
+static bool themeform_edit(void)
+{
+    extern MaxCfgThemeColors g_theme_colors;
+    int selected = 0;
+    int scroll_offset = 0;
+    bool dirty = false;
+    bool done = false;
+    bool saved = false;
+
+    const char *title = "Theme Colors";
+    int field_count = MCI_THEME_SLOT_COUNT;
+    int max_visible = field_count;
+    if (max_visible > MAX_VISIBLE_FIELDS) max_visible = MAX_VISIBLE_FIELDS;
+
+    int label_w = 28;
+    int value_w = 16;
+    int content_w = label_w + 2 + value_w;
+    int title_len = (int)strlen(title);
+    if (title_len + 4 > content_w) content_w = title_len + 4;
+
+    int win_w = content_w + 6;
+    int win_h = max_visible + 9;
+    if (win_w > COLS - 4) win_w = COLS - 4;
+    if (win_h > LINES - 4) win_h = LINES - 4;
+
+    int win_x = (COLS - win_w) / 2;
+    int win_y = (LINES - win_h) / 2;
+    int field_x = win_x + 2;
+    int field_y = win_y + 2;
+    int help_y  = win_y + win_h - 5;
+
+    while (!done) {
+        if (selected < scroll_offset) scroll_offset = selected;
+        else if (selected >= scroll_offset + max_visible)
+            scroll_offset = selected - max_visible + 1;
+
+        draw_work_area();
+
+        /* --- Window chrome --- */
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        mvaddch(win_y, win_x, ACS_ULCORNER);
+        addch(ACS_HLINE); addch(' ');
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        attron(COLOR_PAIR(CP_MENU_BAR));
+        printw("%s", title);
+        attroff(COLOR_PAIR(CP_MENU_BAR));
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        addch(' ');
+        for (int i = title_len + 4; i < win_w - 1; i++) addch(ACS_HLINE);
+        addch(ACS_URCORNER);
+        for (int i = 1; i < win_h - 1; i++) {
+            mvaddch(win_y + i, win_x, ACS_VLINE);
+            mvaddch(win_y + i, win_x + win_w - 1, ACS_VLINE);
+        }
+        mvaddch(win_y + win_h - 1, win_x, ACS_LLCORNER);
+        for (int i = 1; i < win_w - 1; i++) addch(ACS_HLINE);
+        addch(ACS_LRCORNER);
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        attron(COLOR_PAIR(CP_FORM_BG));
+        for (int i = 1; i < win_h - 1; i++) mvhline(win_y + i, win_x + 1, ' ', win_w - 2);
+        attroff(COLOR_PAIR(CP_FORM_BG));
+
+        /* --- Help separator --- */
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        mvaddch(help_y, win_x, ACS_LTEE); addch(ACS_HLINE); addch(' ');
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        attron(COLOR_PAIR(CP_MENU_BAR));
+        printw("Help");
+        attroff(COLOR_PAIR(CP_MENU_BAR));
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        addch(' ');
+        for (int c = getcurx(stdscr) + 1; c < win_x + win_w - 1; c++) addch(ACS_HLINE);
+        mvaddch(help_y, win_x + win_w - 1, ACS_RTEE);
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+
+        /* --- Draw visible slots --- */
+        for (int i = 0; i < max_visible && (scroll_offset + i) < field_count; i++) {
+            int idx = scroll_offset + i;
+            MaxCfgThemeSlot *slot = &g_theme_colors.slots[idx];
+            int y = field_y + i;
+
+            /* Label: "|xx  Description" */
+            if (idx == selected) attron(COLOR_PAIR(CP_MENU_BAR) | A_BOLD);
+            else                 attron(COLOR_PAIR(CP_MENU_BAR));
+            mvprintw(y, field_x, "|%s  %-*s", slot->code, label_w - 5, slot->desc);
+            attroff(COLOR_PAIR(CP_MENU_BAR) | A_BOLD);
+
+            attron(COLOR_PAIR(CP_DIALOG_BORDER));
+            printw(": ");
+            attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+
+            /* Value — show the raw MCI string with a color swatch */
+            if (idx == selected) {
+                attron(COLOR_PAIR(CP_DROPDOWN_HIGHLIGHT) | A_BOLD);
+                mvprintw(y, field_x + label_w + 2, " %-*s", value_w - 1, slot->value);
+                attroff(COLOR_PAIR(CP_DROPDOWN_HIGHLIGHT) | A_BOLD);
+            } else {
+                attron(COLOR_PAIR(CP_FORM_VALUE));
+                mvprintw(y, field_x + label_w + 2, " %-*s", value_w - 1, slot->value);
+                attroff(COLOR_PAIR(CP_FORM_VALUE));
+            }
+        }
+
+        /* Scroll indicators */
+        if (field_count > max_visible) {
+            attron(COLOR_PAIR(CP_DIALOG_BORDER));
+            if (scroll_offset > 0)
+                mvprintw(field_y - 1, win_x + win_w - 4, "^^^");
+            if (scroll_offset + max_visible < field_count)
+                mvprintw(field_y + max_visible, win_x + win_w - 4, "vvv");
+            attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        }
+
+        /* Help text */
+        attron(COLOR_PAIR(CP_MENU_BAR));
+        mvprintw(help_y + 1, win_x + 2, "%-*.*s", win_w - 4, win_w - 4,
+                 g_theme_colors.slots[selected].desc);
+        attroff(COLOR_PAIR(CP_MENU_BAR));
+
+        draw_status_bar("ESC=Abort  F10=Save/Exit  F2/Enter=Pick Color");
+        refresh();
+
+        int ch = getch();
+        switch (ch) {
+        case KEY_UP:    if (selected > 0) selected--; break;
+        case KEY_DOWN:  if (selected < field_count - 1) selected++; break;
+        case KEY_HOME:  selected = 0; break;
+        case KEY_END:   selected = field_count - 1; break;
+        case KEY_PPAGE: selected -= max_visible; if (selected < 0) selected = 0; break;
+        case KEY_NPAGE: selected += max_visible; if (selected >= field_count) selected = field_count - 1; break;
+        case '\n': case '\r': case KEY_F(2): {
+            /* Parse current value to seed the picker */
+            int cur_fg = 7, cur_bg = 0;
+            const char *v = g_theme_colors.slots[selected].value;
+            /* Simple parse: first |NN sets fg, second sets bg */
+            for (const char *s = v; *s; s++) {
+                if (s[0] == '|' && isdigit((unsigned char)s[1]) && isdigit((unsigned char)s[2])) {
+                    int code = (s[1] - '0') * 10 + (s[2] - '0');
+                    if (code <= 15) cur_fg = code;
+                    else if (code <= 23) cur_bg = code - 16;
+                    s += 2;
+                }
+            }
+            int new_fg, new_bg;
+            if (colorpicker_select_full(cur_fg, cur_bg, &new_fg, &new_bg)) {
+                MaxCfgNgColor c = { .fg = new_fg, .bg = new_bg, .blink = false };
+                maxcfg_ng_color_to_mci(&c, g_theme_colors.slots[selected].value,
+                                       sizeof(g_theme_colors.slots[selected].value));
+                dirty = true;
+            }
+            break;
+        }
+        case KEY_F(10):
+            saved = true;
+            done = true;
+            break;
+        case 27:
+            if (dirty) {
+                if (dialog_confirm("Abort Changes", "Abort changes without saving?"))
+                    done = true;
+            } else {
+                done = true;
+            }
+            break;
+        }
+    }
+
+    if (saved) {
+        theme_colors_save();
+        g_state.dirty = true;
+    }
+
+    return saved;
+}
+
 /* Action for Default Colors menu item - shows category picker */
 void action_default_colors(void)
 {
@@ -879,14 +1084,16 @@ void action_default_colors(void)
         "Menu Colors",
         "File Colors", 
         "Message Colors",
-        "Reader Colors"
+        "Reader Colors",
+        "Theme Colors"
     };
+    int num_categories = 5;
     int selected = 0;
     int ch;
     bool done = false;
     
     int width = 22;
-    int height = 8;
+    int height = 9;
     int x = (COLS - width) / 2;
     int y = (LINES - height) / 2;
     
@@ -922,7 +1129,7 @@ void action_default_colors(void)
         attroff(COLOR_PAIR(CP_DIALOG_BORDER));
         
         /* Draw options */
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < num_categories; i++) {
             if (i == selected) {
                 attron(COLOR_PAIR(CP_DROPDOWN_HIGHLIGHT) | A_BOLD);
             } else {
@@ -944,7 +1151,7 @@ void action_default_colors(void)
                 if (selected > 0) selected--;
                 break;
             case KEY_DOWN:
-                if (selected < 3) selected++;
+                if (selected < num_categories - 1) selected++;
                 break;
             case '\n':
             case '\r':
@@ -1024,6 +1231,9 @@ void action_default_colors(void)
                     draw_status_bar("F1=Help  ESC=Menu  Ctrl+Q=Quit");
                 }
             }
+            break;
+        case 4:
+            themeform_edit();
             break;
     }
 }

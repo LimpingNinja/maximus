@@ -21,9 +21,8 @@ LIB_PREFIX	:= lib
 #PREFIX		= /var/max
 
 BIN		= $(PREFIX)/bin
-ETC		= $(PREFIX)/etc
 LIBEXEC		= $(PREFIX)/libexec
-LIB		= $(PREFIX)/lib
+LIB		= $(PREFIX)/bin/lib
 STATIC_LIB	= $(SRC)/lib
 
 H_DIRS		:= src/libs/unix/include src/libs/slib src/libs/msgapi src/libs/btree src/max src/libs/prot src/libs/mexvm src/libs/libmaxcfg/include

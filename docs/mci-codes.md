@@ -10,12 +10,14 @@
 
 Non-goals (for the first pass):
 
-- A full Mystic feature set (text boxes, pick lists, cursor save/restore, theme color sets `T1..T0`, etc.).
+- A full Mystic feature set (text boxes, pick lists, cursor save/restore, etc.).
+  - **Note:** Theme color codes (`|xx`) are now implemented — see Feature 6.
 - Replacing Maximus’ native display-file compiled codes (`DCMaximus`, AVATAR control bytes). Those remain supported.
 
 ## Terminology
 
 - **Pipe colors**: `|##` where `##` is numeric, used to change colors.
+- **Theme colors**: `|xx` where `x`/`x` are lowercase letters, resolved to pipe color strings from `colors.toml`.
 - **MCI codes**: `|XY` where `X`/`Y` are typically letters, replaced with data (user name, time left, etc.).
 - **Formatting operators**: `$...` operators (Mystic-style) that apply to the *next* MCI expansion.
 - **AVATAR attribute**: Maximus’ “set attribute” control sequence `\x16\x01<attr>`.
@@ -231,33 +233,33 @@ Primary:
 
 | Code | Meaning | Maximus source |
 |---|---|---|
-| `|BN` | BBS name | `ngcfg_get_string_raw("maximus.system_name")` |
-| `|SN` | Sysop name | `ngcfg_get_string_raw("maximus.sysop")` |
-| `|UH` | User handle (alias) | `usr.alias` |
-| `|UN` | User name | `usrname` |
-| `|UR` | User real name | `usr.name` |
-| `|UC` | City/State | `usr.city` |
-| `|UP` | Home phone | `usr.phone` |
-| `|UD` | Data phone | `usr.dataphone` |
-| `|U#` | User number | `g_user_record_id` (DB record id, set at login) |
-| `|CS` | Total calls | `usr.times` |
-| `|CT` | Calls today | `usr.call` |
-| `|MP` | Total msg posts | `usr.msgs_posted` |
-| `|DK` | Downloaded KB total | `usr.down` |
-| `|FK` | Uploaded KB total | `usr.up` |
-| `|DL` | Downloaded files total | `usr.ndown` |
-| `|FU` | Uploaded files total | `usr.nup` |
-| `|DT` | Downloaded KB today | `usr.downtoday` |
-| `|TL` | Time left (minutes) | `timeleft()` |
-| `|US` | Screen lines | `usr.len` |
-| `|TE` | Terminal emulation | `usr.video` → `"TTY"`, `"ANSI"`, `"AVATAR"` |
-| `|DA` | Current date | `strftime("%d %b %y")` |
-| `|TM` | Time (HH:MM) | `strftime("%H:%M")` |
-| `|TS` | Time (HH:MM:SS) | `strftime("%H:%M:%S")` |
-| `|MB` | Message area name | `MAS(mah, name)` |
-| `|MD` | Message area description | `MAS(mah, descript)` |
-| `|FB` | File area name | `FAS(fah, name)` |
-| `|FD` | File area description | `FAS(fah, descript)` |
+| `\|BN` | BBS name | `ngcfg_get_string_raw("maximus.system_name")` |
+| `\|SN` | Sysop name | `ngcfg_get_string_raw("maximus.sysop")` |
+| `\|UH` | User handle (alias) | `usr.alias` |
+| `\|UN` | User name | `usrname` |
+| `\|UR` | User real name | `usr.name` |
+| `\|UC` | City/State | `usr.city` |
+| `\|UP` | Home phone | `usr.phone` |
+| `\|UD` | Data phone | `usr.dataphone` |
+| `\|U#` | User number | `g_user_record_id` (DB record id, set at login) |
+| `\|CS` | Total calls | `usr.times` |
+| `\|CT` | Calls today | `usr.call` |
+| `\|MP` | Total msg posts | `usr.msgs_posted` |
+| `\|DK` | Downloaded KB total | `usr.down` |
+| `\|FK` | Uploaded KB total | `usr.up` |
+| `\|DL` | Downloaded files total | `usr.ndown` |
+| `\|FU` | Uploaded files total | `usr.nup` |
+| `\|DT` | Downloaded KB today | `usr.downtoday` |
+| `\|TL` | Time left (minutes) | `timeleft()` |
+| `\|US` | Screen lines | `usr.len` |
+| `\|TE` | Terminal emulation | `usr.video` → `"TTY"`, `"ANSI"`, `"AVATAR"` |
+| `\|DA` | Current date | `strftime("%d %b %y")` |
+| `\|TM` | Time (HH:MM) | `strftime("%H:%M")` |
+| `\|TS` | Time (HH:MM:SS) | `strftime("%H:%M:%S")` |
+| `\|MB` | Message area name | `MAS(mah, name)` |
+| `\|MD` | Message area description | `MAS(mah, descript)` |
+| `\|FB` | File area name | `FAS(fah, name)` |
+| `\|FD` | File area description | `FAS(fah, descript)` |
 
 ### Items for future consideration
 
@@ -419,6 +421,122 @@ value feeds into `$D##C`, `[Y##`, `[X##`, or similar 2-digit fields.
   - Positions (0x16 0x08 R C) → `[Y##[X##`
   - RLE repeat (0x19 ch count) → `$D##C`
   - DSR (ESC[6n) → `|&&`
+
+## Feature 6: Semantic Theme Color Codes (`|xx`)
+
+### Design
+
+Theme color codes use **two lowercase letters** — a namespace that was
+previously unused in the MCI grammar:
+
+- **Uppercase** two-letter codes = terminal control / info codes (`|CL`, `|UN`)
+- **Digit** codes = raw numeric colors (`|00`–`|31`)
+- **Lowercase** two-letter codes = semantic theme slots (`|tx`, `|pr`, etc.)
+
+Each slot maps to a configured pipe color string (e.g., `"|07"` or `"|15|17"`)
+stored in `colors.toml` under `[theme.colors]`.
+
+### Slot Table
+
+| Code | Key           | Purpose                            | Default |
+|------|---------------|------------------------------------|---------|
+| `tx` | text          | Normal body text                   | `\|07`   |
+| `hi` | highlight     | Emphasized / important text        | `\|15`   |
+| `pr` | prompt        | User-facing prompts                | `\|14`   |
+| `in` | input         | User keystroke echo                | `\|15`   |
+| `tf` | textbox_fg    | Text input field foreground        | `\|15`   |
+| `tb` | textbox_bg    | Text input field background        | `\|17`   |
+| `hd` | heading       | Section headings                   | `\|11`   |
+| `lf` | lightbar_fg   | Lightbar selected foreground       | `\|15`   |
+| `lb` | lightbar_bg   | Lightbar selected background       | `\|17`   |
+| `er` | error         | Error messages                     | `\|12`   |
+| `wn` | warning       | Warnings                           | `\|14`   |
+| `ok` | success       | Confirmations / success            | `\|10`   |
+| `dm` | dim           | De-emphasized / help text          | `\|08`   |
+| `fi` | file_info     | File area descriptions             | `\|03`   |
+| `sy` | sysop         | SysOp-only text                    | `\|13`   |
+| `qt` | quote         | Quoted message text                | `\|09`   |
+| `br` | border        | Box borders, dividers              | `\|01`   |
+| `cd` | default       | Reset to theme default color       | `\|07`   |
+
+### TOML Schema (`colors.toml`)
+
+```toml
+[theme.colors]
+text         = "|07"
+highlight    = "|15"
+prompt       = "|14"
+input        = "|15"
+textbox_fg   = "|15"
+textbox_bg   = "|17"
+heading      = "|11"
+lightbar_fg  = "|15"
+lightbar_bg  = "|17"
+error        = "|12"
+warning      = "|14"
+success      = "|10"
+dim          = "|08"
+file_info    = "|03"
+sysop        = "|13"
+quote        = "|09"
+border       = "|01"
+default      = "|07"
+```
+
+Values are arbitrary MCI pipe strings. Compound values (e.g. `"|15|17"`) are
+supported — the expansion emits the full string, which then flows through
+normal `|##` color processing in the output layer.
+
+### Runtime Flow
+
+1. **Startup**: `colors.toml` is loaded by `maxcfg_toml_load_file()` and
+   the `[theme.colors]` section is parsed into a `MaxCfgThemeColors` struct
+   via `maxcfg_theme_load_from_toml()`.
+
+2. **Runtime pointer**: `g_mci_theme` (declared in `mci.h`, defined in
+   `mci.c`) points to the loaded theme table. Set at startup.
+
+3. **Expansion**: In `MciExpand()` (`src/max/display/mci.c`), when
+   `MCI_PARSE_PIPE_COLORS` is set and the next three characters are
+   `|` + lowercase + lowercase, the handler calls
+   `maxcfg_theme_lookup(g_mci_theme, ch1, ch2)`.
+   - If a matching slot is found, its stored pipe string is emitted into
+     the output buffer. The `|##` codes within that string are then
+     processed by the output layer (`Mdm_putc` state machine).
+   - If no match is found, the `|xx` falls through to literal output.
+
+4. **Preview**: `mci_preview.c` (maxcfg editor) has a parallel handler
+   that resolves `|xx` codes against `g_theme_colors` and applies the
+   resulting `|##` codes to the virtual screen attribute byte.
+
+### Implementation Files
+
+| File | Role |
+|---|---|
+| `src/libs/libmaxcfg/include/libmaxcfg.h` | `MaxCfgThemeSlot`, `MaxCfgThemeColors` structs, API declarations |
+| `src/libs/libmaxcfg/src/libmaxcfg.c` | `maxcfg_theme_init`, `maxcfg_theme_load_from_toml`, `maxcfg_theme_lookup`, `maxcfg_theme_write_toml`, `maxcfg_ng_color_to_mci` |
+| `src/max/display/mci.h` | `extern void *g_mci_theme` |
+| `src/max/display/mci.c` | `\|xx` handler in `MciExpand()` |
+| `src/apps/maxcfg/src/ui/mci_preview.c` | `\|xx` handler for preview rendering |
+| `src/apps/maxcfg/src/ui/colorform.c` | `themeform_edit()` — Theme Colors editor form |
+| `src/apps/maxcfg/src/ui/mci_helper.c` | Theme tab in MCI code helper popup |
+| `src/apps/maxcfg/src/main.c` | Loads theme from `colors.toml` into `g_theme_colors` |
+
+### maxcfg Integration
+
+- **Setup → Global → Default Colors → Theme Colors**: scrollable form
+  showing all 18 slots with their current MCI string values. F2/Enter
+  opens the color picker; chosen fg/bg is converted to a `|NN` string
+  via `maxcfg_ng_color_to_mci()`. Saved via `maxcfg_toml_override_set_string()`.
+
+- **F3 MCI Helper**: a "Theme" tab lists all 18 `|xx` codes with descriptions.
+
+### Parse Flag
+
+Theme codes are gated by `MCI_PARSE_PIPE_COLORS` — the same flag that
+controls `|##` numeric color codes. When pipe color parsing is disabled
+(e.g., in the message editor or user input fields), theme codes are also
+ignored.
 
 ## Open Decisions
 

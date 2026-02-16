@@ -182,7 +182,7 @@ byte getDynamicTaskNumber(int cleanup)
     return 0;
   }
 
-  path = (char *)ngcfg_get_path("maximus.ipc_path");
+  path = (char *)ngcfg_get_path("maximus.node_path");
   if (path == NULL || *path == '\0')
     path = "/tmp";
 

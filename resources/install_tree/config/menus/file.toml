@@ -1,0 +1,206 @@
+name = "FILE"
+title = "FILE (%t mins)"
+header_file = ":scripts/headfile"
+header_types = []
+menu_file = "display/screens/max_file"
+menu_types = ["Novice"]
+menu_length = 0
+menu_color = -1
+option_width = 16
+
+[[option]]
+command = "File_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "Area change"
+key_poke = ""
+modifiers = ["NoRIP"]
+
+[[option]]
+command = "MEX"
+arguments = "scripts/filearea"
+priv_level = "Demoted"
+description = "Area change"
+key_poke = ""
+modifiers = ["RIP"]
+
+[[option]]
+command = "File_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "["
+key_poke = "["
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "File_Area"
+arguments = ""
+priv_level = "Demoted"
+description = "]"
+key_poke = "]"
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "File_Locate"
+arguments = ""
+priv_level = "Demoted"
+description = "Locate a file"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Titles"
+arguments = ""
+priv_level = "Demoted"
+description = "File titles"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_View"
+arguments = ""
+priv_level = "Demoted"
+description = "View text file"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Download"
+arguments = ""
+priv_level = "Demoted"
+description = "Download (receive)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Upload"
+arguments = ""
+priv_level = "Demoted"
+description = "Upload (send)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/stats"
+priv_level = "Demoted"
+description = "Statistics"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Press_Enter"
+arguments = ""
+priv_level = "Demoted"
+description = "S"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "File_Contents"
+arguments = ""
+priv_level = "Demoted"
+description = "Contents (archive)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Tag"
+arguments = ""
+priv_level = "Demoted"
+description = "Tag (queue) files"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_NewFiles"
+arguments = ""
+priv_level = "Demoted"
+description = "New files scan"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Raw"
+arguments = ""
+priv_level = "Sysop"
+description = "Raw directory"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Kill"
+arguments = ""
+priv_level = "Sysop"
+description = "Kill file"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Hurl"
+arguments = ""
+priv_level = "Sysop"
+description = "Hurl (move)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "File_Override"
+arguments = ""
+priv_level = "Sysop"
+description = "Override path"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "Main menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MSGS"
+priv_level = "Transient"
+description = "Jump to msg. areas"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Transient"
+description = "Goodbye (log off)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/filehelp"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []
+
+
+[custom_menu]
+skip_canned_menu = false
+show_title = true
+lightbar_menu = true
+lightbar_margin = 1
+top_boundary = [7, 5]
+bottom_boundary = [21, 58]
+title_location = [22, 15]
+prompt_location = [23, 1]
+option_spacing = false
+option_justify = "left"
+boundary_justify = "center center"
+boundary_layout = "spread"
+
+[custom_menu.lightbar_color]
+normal = ["Light Gray", "Black"]
+high = ["Yellow", "Black"]
+selected = ["White", "Blue"]
+high_selected = ["Yellow", "Blue"]

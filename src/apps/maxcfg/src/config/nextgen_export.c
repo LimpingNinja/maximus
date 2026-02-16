@@ -589,7 +589,7 @@ static bool write_matrix_toml(FILE *fp, void *vctx, char *err, size_t err_len)
         bool have_levels = false;
         if (ctx->sys_path && ctx->sys_path[0]) {
             char access_path[PATH_MAX];
-            if (snprintf(access_path, sizeof(access_path), "%s/etc/access.ctl", ctx->sys_path) < (int)sizeof(access_path)) {
+            if (snprintf(access_path, sizeof(access_path), "%s/config/legacy/access.ctl", ctx->sys_path) < (int)sizeof(access_path)) {
                 have_levels = parse_access_ctl(access_path, &levels, err, err_len);
             }
         }
@@ -1002,7 +1002,7 @@ static bool protocol_ctl_path(char *out, size_t out_len, const char *sys_path)
     if (out == NULL || out_len == 0) {
         return false;
     }
-    return join_sys_path(out, out_len, sys_path, "etc/protocol.ctl");
+    return join_sys_path(out, out_len, sys_path, "config/legacy/protocol.ctl");
 }
 
 static bool parse_protocol_ctl_into_list(const char *path, const char *pmax_path, bool have_pmax, MaxCfgNgProtocolList *list, char *err, size_t err_len)
@@ -1539,7 +1539,7 @@ static bool write_security_access_levels_toml(FILE *fp, void *vctx, char *err, s
     }
 
     char in_path[PATH_MAX];
-    if (snprintf(in_path, sizeof(in_path), "%s/etc/access.ctl", ctx->sys_path) >= (int)sizeof(in_path)) {
+    if (snprintf(in_path, sizeof(in_path), "%s/config/legacy/access.ctl", ctx->sys_path) >= (int)sizeof(in_path)) {
         set_err(err, err_len, "Path too long");
         return false;
     }
@@ -1634,10 +1634,28 @@ static bool write_general_colors_toml(FILE *fp, void *vctx, char *err, size_t er
         return false;
     }
 
+    /* Resolve colors.lh via lang_path TOML key, fallback to config_path/lang */
     char colors_lh_path[PATH_MAX];
-    if (snprintf(colors_lh_path, sizeof(colors_lh_path), "%s/etc/lang/colors.lh", ctx->sys_path) >= (int)sizeof(colors_lh_path)) {
-        set_err(err, err_len, "Path too long");
-        return false;
+    {
+        extern MaxCfgToml *g_maxcfg_toml;
+        MaxCfgVar v;
+        const char *lang_rel = NULL;
+        if (g_maxcfg_toml &&
+            maxcfg_toml_get(g_maxcfg_toml, "maximus.lang_path", &v) == MAXCFG_OK &&
+            v.type == MAXCFG_VAR_STRING && v.v.s && v.v.s[0])
+            lang_rel = v.v.s;
+        const char *cfg_rel = NULL;
+        if (!lang_rel && g_maxcfg_toml &&
+            maxcfg_toml_get(g_maxcfg_toml, "maximus.config_path", &v) == MAXCFG_OK &&
+            v.type == MAXCFG_VAR_STRING && v.v.s && v.v.s[0])
+            cfg_rel = v.v.s;
+        if (lang_rel && lang_rel[0] == '/')
+            snprintf(colors_lh_path, sizeof(colors_lh_path), "%s/colors.lh", lang_rel);
+        else if (lang_rel)
+            snprintf(colors_lh_path, sizeof(colors_lh_path), "%s/%s/colors.lh", ctx->sys_path, lang_rel);
+        else
+            snprintf(colors_lh_path, sizeof(colors_lh_path), "%s/%s/lang/colors.lh",
+                     ctx->sys_path, cfg_rel ? cfg_rel : "config");
     }
 
     /* Best-effort parse; missing entries simply stay 0/0/false */

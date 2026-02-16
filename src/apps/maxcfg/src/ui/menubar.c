@@ -688,7 +688,7 @@ static int parse_priv_level(const char *sys_path, const char *level_name)
 #endif
 
     char access_ctl[PATH_MAX];
-    if (snprintf(access_ctl, sizeof(access_ctl), "%s/etc/access.ctl", sys_path) >= (int)sizeof(access_ctl)) {
+    if (snprintf(access_ctl, sizeof(access_ctl), "%s/config/legacy/access.ctl", sys_path) >= (int)sizeof(access_ctl)) {
         return 0;
     }
 
@@ -1292,10 +1292,10 @@ static void action_system_paths(void)
 
     bool exists[8] = { false };
     system_paths_values[0] = canonicalize_for_display("", toml_get_string_or_empty("maximus.sys_path"), &exists[0]);
-    system_paths_values[1] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.misc_path"), &exists[1]);
+    system_paths_values[1] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.display_path"), &exists[1]);
     system_paths_values[2] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.lang_path"), &exists[2]);
     system_paths_values[3] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.temp_path"), &exists[3]);
-    system_paths_values[4] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.ipc_path"), &exists[4]);
+    system_paths_values[4] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.node_path"), &exists[4]);
     system_paths_values[5] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.file_password"), &exists[5]);
     system_paths_values[6] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.file_access"), &exists[6]);
     system_paths_values[7] = canonicalize_for_display(sys_path, toml_get_string_or_empty("maximus.log_file"), &exists[7]);
@@ -1334,7 +1334,7 @@ static void action_system_paths(void)
         const char *sys_path = system_paths_values[0] ? system_paths_values[0] : current_sys_path();
 
         char *misc_path = normalize_under_sys_path(sys_path, system_paths_values[1] ? system_paths_values[1] : "");
-        (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "maximus.misc_path", misc_path ? misc_path : "");
+        (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "maximus.display_path", misc_path ? misc_path : "");
         free(misc_path);
 
         char *lang_path = normalize_under_sys_path(sys_path, system_paths_values[2] ? system_paths_values[2] : "");
@@ -1346,7 +1346,7 @@ static void action_system_paths(void)
         free(temp_path);
 
         char *ipc_path = normalize_under_sys_path(sys_path, system_paths_values[4] ? system_paths_values[4] : "");
-        (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "maximus.ipc_path", ipc_path ? ipc_path : "");
+        (void)maxcfg_toml_override_set_string(g_maxcfg_toml, "maximus.node_path", ipc_path ? ipc_path : "");
         free(ipc_path);
 
         char *file_password = normalize_under_sys_path(sys_path, system_paths_values[5] ? system_paths_values[5] : "");
@@ -1958,7 +1958,7 @@ static const FieldDef language_settings_with_list[] = {
         .help = "Directory containing language files (.LTF, .MAD, .LTH). Must contain at minimum an .LTF file for each declared language.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/lang"
+        .default_value = "config/lang"
     },
     {
         .keyword = NULL,
@@ -2563,7 +2563,7 @@ static const FieldDef reader_settings_with_stub[] = {
         .help = "Path to compress.cfg which defines archiving/unarchiving programs for QWK bundles. Maximus and Squish use compatible formats.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/compress.cfg"
+        .default_value = "config/compress.cfg"
     },
     {
         .keyword = "packet_name",
@@ -4750,7 +4750,7 @@ static void load_area_values(char **area_values, int selected)
     area_values[0] = strdup(sample_areas[selected].name);                /* MsgArea */
     area_values[1] = strdup("(None)");                                   /* Division - TODO: get from data */
     area_values[2] = strdup(sample_areas[selected].extra ? sample_areas[selected].extra : ""); /* Tag */
-    area_values[3] = strdup("spool/msgbase/area");                       /* Path */
+    area_values[3] = strdup("data/msgbase/area");                       /* Path */
     area_values[4] = strdup("Sample message area description");          /* Desc */
     area_values[5] = strdup("");                                         /* Owner */
     /* 6 = separator */
@@ -5921,11 +5921,18 @@ static void action_convert_legacy_lang(void)
         return;
     }
 
+    /* Resolve lang_path from TOML, fall back to config_path/lang */
     char default_lang_dir[512];
-    if (snprintf(default_lang_dir, sizeof(default_lang_dir),
-                 "%s/etc/lang", sys_path) >= (int)sizeof(default_lang_dir)) {
-        dialog_message("Error", "Default language path too long.");
-        return;
+    const char *lang_rel = toml_get_string_or_empty("maximus.lang_path");
+    if (lang_rel[0]) {
+        if (lang_rel[0] == '/')
+            snprintf(default_lang_dir, sizeof(default_lang_dir), "%s", lang_rel);
+        else
+            snprintf(default_lang_dir, sizeof(default_lang_dir), "%s/%s", sys_path, lang_rel);
+    } else {
+        const char *cfg_rel = toml_get_string_or_empty("maximus.config_path");
+        snprintf(default_lang_dir, sizeof(default_lang_dir), "%s/%s/lang",
+                 sys_path, cfg_rel[0] ? cfg_rel : "config");
     }
 
     char *values[1] = { NULL };
@@ -5970,7 +5977,7 @@ static void action_convert_legacy_lang(void)
 
     char err[512];
     err[0] = '\0';
-    int count = lang_convert_all_mad(lang_dir, NULL, err, sizeof(err));
+    int count = lang_convert_all_mad(lang_dir, NULL, LANG_DELTA_FULL, err, sizeof(err));
     if (count < 0) {
         dialog_message("Conversion Failed",
                        err[0] ? err : "Failed to convert language files.");

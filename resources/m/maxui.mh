@@ -67,6 +67,7 @@
 // UI function prototypes
 void ui_goto(int: row, int: col);
 int ui_make_attr(int: fg, int: bg);
+int mci2attr(string: mci_str);
 void ui_set_attr(int: attr);
 void ui_fill_rect(int: row, int: col, int: width, int: height, char: ch, int: attr);
 void ui_write_padded(int: row, int: col, int: width, string: s, int: attr);

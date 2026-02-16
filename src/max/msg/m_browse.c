@@ -159,7 +159,7 @@ static int near Browse_Get_Area(BROWSE *b)
         return -1;
       }
       else if (ch==bkeys[7])
-        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.display_path"));
       else { char _cb[2] = { (char)ch, '\0' };
              LangPrintf(dontunderstand, _cb); }
     }
@@ -342,7 +342,7 @@ static int near Browse_Get_Search_Where(SEARCH *s,BROWSE *b)
       else if (*p==br_sk[4])
         return -1;
       else if (*p==br_sk[5])
-        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.display_path"));
       else { char _cb[2] = { *p, '\0' };
              LangPrintf(dontunderstand, _cb); }
     }
@@ -396,7 +396,7 @@ static int near Browse_Get_Search_Next(SEARCH *s)
     else if (ch==*br_s_opt_go)
       s->next=NULL;
     else if (ch=='?')
-      Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.display_path"));
     else if (ch==*br_s_opt_quit || ch=='\0' || ch=='\r')
     {
       Puts(browse_select_c);
@@ -513,7 +513,7 @@ static int near Browse_Get_Type(BROWSE *b)
       else if (ch==br_typek[4])
         b->bflag |= BROWSE_SEARCH;
       else if (ch==br_typek[5])
-        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.display_path"));
       else if (ch==br_typek[6])
       {
         Puts(browse_select_c);
@@ -596,7 +596,7 @@ static int near Browse_Get_Display(BROWSE *b)
         return -1;
       }
       else if (ch==br_dispk[4])
-        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(0, NULL, browse_fname, (char *)ngcfg_get_string_raw("maximus.display_path"));
       else { char _cb[2] = { (char)ch, '\0' };
              LangPrintf(dontunderstand, _cb); }
     }

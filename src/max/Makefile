@@ -1,8 +1,8 @@
 include $(SRC)/vars.mk
 
-LANGHDR     	:=  $(SRC)/resources/lang/english.lth
+LANGHDR     	:=  $(SRC)/src/max/core/english.h
 # LANGSRC removed — MAID is no longer in the build pipeline.
-# The frozen english.lth is used as-is; english.toml is the new source of truth.
+# english.h (formerly english.lth) lives in the source tree; english.toml is the source of truth.
 # smserial is OS/2-only, skip on UNIX platforms
 ifeq ($(PLATFORM),darwin)
 LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
@@ -14,8 +14,7 @@ else
 LOADLIBES	+= -lmexvm -lmsgapi -lsmserial -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
 endif
 CFLAGS 		+= -USWAP -UOVERLAY_BUILD
-CPPFLAGS	+= -I$(SRC)/resources/lang \
-		   -I./core -I./display -I./msg -I./file -I./track -I./mex_runtime -I./netmail -I./platform_legacy
+CPPFLAGS	+= -I./core -I./display -I./msg -I./file -I./track -I./mex_runtime -I./netmail -I./platform_legacy
 
 CPPFLAGS	+= -I$(SRC)/src/libs/libmaxdb/include -I$(SRC)/src/libs/sqlite
 
@@ -122,7 +121,7 @@ libmax2.so: $(MOBJS) $(ZOBJS)
 
 bldupd.o: bldupd.h
 
-# MAID build rules removed — the frozen english.lth is committed directly.
+# MAID build rules removed — english.h (formerly english.lth) is in src/max/core/.
 # Language strings now come from english.toml via the maxlang API.
 
 max.o: CPPFLAGS += -DINSTALL_PREFIX=\"$(PREFIX)\"
@@ -148,6 +147,12 @@ fsend.o frecv.o: xmodem.h
 #rbsb.o zm.o rz.o sz.o: zsjd.h zmodem.h
 
 language.o: $(LANGSRC)
+
+# Any .o that includes libmaxcfg.h must rebuild when the header changes
+# (struct size changes, e.g. MCI_THEME_SLOT_COUNT, cause silent corruption otherwise)
+LIBMAXCFG_H := $(SRC)/src/libs/libmaxcfg/include/libmaxcfg.h
+language.o mci.o mexint.o f_xfer.o f_intrin.o ued_disp.o m_misc.o \
+max_cmod.o node.o max_init.o max_rmen.o max_fini.o: $(LIBMAXCFG_H)
 
 $(ZOBJS): xmodem.h pdata.h
 

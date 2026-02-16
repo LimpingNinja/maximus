@@ -116,6 +116,7 @@ static char rcs_id[]="$Id: ipcomm.c,v 1.18 2004/06/06 21:46:58 paltas Exp $";
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
@@ -307,13 +308,46 @@ BOOL COMMAPI IpComOpen(LPTSTR pszDevice, HCOMM *phc, DWORD dwRxBuf, DWORD dwTxBu
 
   portnum=atoi(pszDevice);
 
-  sprintf(sockpath, "%s/%s%d", getcwd(tmpPath, PATH_MAX), SOCKPATH, portnum);
-  sprintf(lockpath, "%s/%s%d.lck", getcwd(tmpPath, PATH_MAX), SOCKPATH, portnum);
+  /* Build socket path under $MAXIMUS/run/node/<hex>/maxipc to match
+   * maxtel's expected layout.  Falls back to $CWD/maxipc<N> if the
+   * MAXIMUS environment variable is not set. */
+  {
+    const char *max_base = getenv("MAXIMUS");
+    if (max_base && *max_base)
+    {
+      snprintf(sockpath, sizeof(sockpath), "%s/run/node/%02x/%s",
+               max_base, (unsigned)portnum, SOCKPATH);
+      snprintf(lockpath, sizeof(lockpath), "%s/run/node/%02x/%s.lck",
+               max_base, (unsigned)portnum, SOCKPATH);
+    }
+    else
+    {
+      snprintf(sockpath, sizeof(sockpath), "%s/%s%d",
+               getcwd(tmpPath, PATH_MAX), SOCKPATH, portnum);
+      snprintf(lockpath, sizeof(lockpath), "%s/%s%d.lck",
+               getcwd(tmpPath, PATH_MAX), SOCKPATH, portnum);
+    }
+  }
 
   if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
   {
     logit("!Unable to create AF_INET socket! (%s)", strerror(errno));
     return FALSE;
+  }
+
+  /* Ensure the node directory exists before attempting bind.  In legacy
+   * Maximus the install/SILT step created these; with TOML configs we
+   * create them on demand. */
+  {
+    char dirpath[PATH_MAX];
+    strncpy(dirpath, sockpath, sizeof(dirpath) - 1);
+    dirpath[sizeof(dirpath) - 1] = '\0';
+    char *slash = strrchr(dirpath, '/');
+    if (slash && slash != dirpath)
+    {
+      *slash = '\0';
+      mkdir(dirpath);   /* ignore EEXIST; macro adds mode */
+    }
   }
 
   serv_addr.sun_family = AF_UNIX;

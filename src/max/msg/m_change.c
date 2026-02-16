@@ -105,7 +105,7 @@ int Msg_Change(void)
       lmsg <= hwm)
   {
     RipClear();
-    Display_File(0, NULL, "%sCHG_SENT", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+    Display_File(0, NULL, "%sCHG_SENT", (char *)ngcfg_get_string_raw("maximus.display_path"));
 
     /* Only allow the SysOp to edit a message which has been sent/rec'd */
 
@@ -207,7 +207,7 @@ Done:
 
 static int Msg_Change_Err(void)
 {
-  Display_File(0, NULL, "%sCHG_NO", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+  Display_File(0, NULL, "%sCHG_NO", (char *)ngcfg_get_string_raw("maximus.display_path"));
   return TRUE;
 }
 

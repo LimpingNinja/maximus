@@ -22,6 +22,7 @@
 #include "menu_preview.h"
 #include "mci_preview.h"
 #include "lang_browse.h"
+#include "mci_helper.h"
 
 /* ========================================================================== */
 /* Constants                                                                   */
@@ -548,14 +549,36 @@ static int *lb_build_vis(LbEntry *entries, int count, const char *filter,
 /* Preview — delegates to shared MCI interpreter (mci_preview.c)               */
 /* ========================================================================== */
 
-#define PREVIEW_W 80
-#define PREVIEW_H 6
+#define PREVIEW_W     80
+#define PREVIEW_H_MIN  3   /**< Minimum preview rows */
+#define PREVIEW_H_MAX 50   /**< Buffer ceiling for MCI expansion */
+
+/**
+ * @brief Count the minimum lines a string will occupy after MCI expansion.
+ *
+ * Scans for literal newlines and |CR codes to estimate the needed height.
+ * The actual rendered height may differ (cursor codes, wrapping), so we
+ * expand into a generous buffer and trim to the last used row.
+ */
+static int le_count_text_lines(const char *text)
+{
+    int lines = 1;
+    for (const char *p = text; *p; p++) {
+        if (*p == '\n') { lines++; continue; }
+        /* |CR — carriage return + line feed */
+        if (p[0] == '|' && p[1] == 'C' && p[2] == 'R') { lines++; p += 2; continue; }
+        /* Backslash-n literal in TOML-escaped strings */
+        if (p[0] == '\\' && p[1] == 'n') { lines++; p++; continue; }
+    }
+    return lines;
+}
 
 /**
  * @brief Show a bounded preview popup with full MCI/AVATAR rendering.
  *
  * Uses the shared mci_preview module for MCI expansion, then blits the
- * resulting virtual screen into an ncurses popup dialog.
+ * resulting virtual screen into an ncurses popup dialog.  The preview
+ * height auto-sizes to fit all rendered content (minimum PREVIEW_H_MIN).
  */
 static void le_preview(const char *text)
 {
@@ -563,12 +586,20 @@ static void le_preview(const char *text)
     MciMockData mock;
     mci_mock_load(&mock);
 
-    /* Virtual screen buffer */
-    char vch[PREVIEW_H][PREVIEW_W];
-    uint8_t va[PREVIEW_H][PREVIEW_W];
+    /* Estimate needed rows; clamp to buffer max */
+    int est_rows = le_count_text_lines(text);
+    if (est_rows < PREVIEW_H_MIN) est_rows = PREVIEW_H_MIN;
+    int buf_rows = est_rows + 4; /* headroom for cursor movement / wrapping */
+    if (buf_rows > PREVIEW_H_MAX) buf_rows = PREVIEW_H_MAX;
 
-    MciVScreen vs;
-    MCI_VS_WRAP(&vs, vch, va, PREVIEW_W, PREVIEW_H);
+    /* Dynamically allocate virtual screen buffers */
+    size_t cells = (size_t)buf_rows * PREVIEW_W;
+    char    *vch_buf  = malloc(cells);
+    uint8_t *va_buf   = calloc(cells, sizeof(uint8_t));
+    if (!vch_buf || !va_buf) { free(vch_buf); free(va_buf); return; }
+
+    MciVScreen vs = { .ch = vch_buf, .attr = va_buf,
+                       .cols = PREVIEW_W, .rows = buf_rows };
     mci_vs_clear(&vs);
 
     /* Run the shared MCI interpreter */
@@ -576,30 +607,95 @@ static void le_preview(const char *text)
     mci_state_init(&st);
     mci_preview_expand(&vs, &st, &mock, text);
 
-    /* Draw popup box */
-    int bw = PREVIEW_W + 4, bh = PREVIEW_H + 4;
-    int bx = (COLS - bw) / 2, by = (LINES - bh) / 2;
-    if (bx < 0) bx = 0;
-    if (by < 0) by = 0;
+    /* Find the last row with non-space content */
+    int used_rows = 1;
+    for (int r = buf_rows - 1; r >= 0; r--) {
+        for (int c = 0; c < PREVIEW_W; c++) {
+            if (vch_buf[r * PREVIEW_W + c] != ' ' ||
+                va_buf[r * PREVIEW_W + c] != 0x07) {
+                used_rows = r + 1;
+                goto found_last;
+            }
+        }
+    }
+found_last:
+    /* Also include at least the cursor row (in case text ends on a blank line) */
+    if (st.cy + 1 > used_rows) used_rows = st.cy + 1;
+    if (used_rows < PREVIEW_H_MIN) used_rows = PREVIEW_H_MIN;
 
+    /* Cap to available screen height (leave room for borders) */
+    int max_h = LINES - 4;
+    if (used_rows > max_h) used_rows = max_h;
+
+    /* Determine if we have room for left/right borders (need PREVIEW_W+4).
+     * On narrow terminals (COLS <= PREVIEW_W+3), go edge-to-edge with only
+     * solid horizontal top/bottom lines — no side borders. */
+    bool narrow = (COLS <= PREVIEW_W + 3);
+    int bw, bh, bx, by;
+    int content_x;
+
+    if (narrow) {
+        bw = COLS;
+        bh = used_rows + 2; /* top line + content + bottom line */
+        bx = 0;
+        by = (LINES - bh) / 2;
+        if (by < 0) by = 0;
+        content_x = 0;
+    } else {
+        bw = PREVIEW_W + 4;
+        bh = used_rows + 4;
+        bx = (COLS - bw) / 2;
+        by = (LINES - bh) / 2;
+        if (bx < 0) bx = 0;
+        if (by < 0) by = 0;
+        content_x = bx + 2;
+    }
+
+    /* Clear area */
     attron(COLOR_PAIR(CP_FORM_BG));
     for (int r = by; r < by + bh; r++) {
         move(r, bx);
         for (int c = 0; c < bw; c++) addch(' ');
     }
     attroff(COLOR_PAIR(CP_FORM_BG));
-    draw_box(by, bx, bh, bw, CP_DIALOG_BORDER);
 
-    attron(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
-    mvprintw(by, bx + 2, " Preview ");
-    attroff(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+    if (narrow) {
+        /* Top horizontal line (solid, no corners) */
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        move(by, bx);
+        for (int c = 0; c < bw; c++) addch(ACS_HLINE);
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+
+        attron(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+        mvprintw(by, bx + 1, " Preview ");
+        attroff(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+
+        /* Bottom horizontal line (solid, no corners) */
+        attron(COLOR_PAIR(CP_DIALOG_BORDER));
+        move(by + bh - 1, bx);
+        for (int c = 0; c < bw; c++) addch(ACS_HLINE);
+        attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+
+        attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+        mvprintw(by + bh - 1, bx + 1, " Press any key ");
+        attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+    } else {
+        draw_box(by, bx, bh, bw, CP_DIALOG_BORDER);
+
+        attron(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+        mvprintw(by, bx + 2, " Preview ");
+        attroff(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+    }
 
     /* Blit virtual screen using menu_preview color infrastructure */
     menu_preview_pairs_reset();
 
-    for (int row = 0; row < PREVIEW_H; row++) {
-        for (int col = 0; col < PREVIEW_W && bx + 2 + col < COLS - 2; col++) {
-            uint8_t attr = va[row][col];
+    int content_y = narrow ? by + 1 : by + 2;
+    int max_col = narrow ? COLS : COLS - 2;
+
+    for (int row = 0; row < used_rows; row++) {
+        for (int col = 0; col < PREVIEW_W && content_x + col < max_col; col++) {
+            uint8_t attr = va_buf[row * PREVIEW_W + col];
             int fg = attr & 0x0f;
             int bg = (attr >> 4) & 0x07;
 
@@ -611,26 +707,32 @@ static void le_preview(const char *text)
 
 #if defined(HAVE_WIDE_CURSES)
             {
-                wchar_t wch = cp437_to_unicode((unsigned char)vch[row][col]);
+                wchar_t wch = cp437_to_unicode((unsigned char)vch_buf[row * PREVIEW_W + col]);
                 wchar_t wstr[2] = { wch, 0 };
                 cchar_t cc;
                 setcchar(&cc, wstr, attrs, (short)pair, NULL);
-                mvadd_wch(by + 2 + row, bx + 2 + col, &cc);
+                mvadd_wch(content_y + row, content_x + col, &cc);
             }
 #else
             attron(COLOR_PAIR(pair) | attrs);
-            mvaddch(by + 2 + row, bx + 2 + col, (unsigned char)vch[row][col]);
+            mvaddch(content_y + row, content_x + col,
+                    (unsigned char)vch_buf[row * PREVIEW_W + col]);
             attroff(COLOR_PAIR(pair) | attrs);
 #endif
         }
     }
 
-    attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
-    mvprintw(by + bh - 1, bx + 2, " Press any key ");
-    attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+    if (!narrow) {
+        attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+        mvprintw(by + bh - 1, bx + 2, " Press any key ");
+        attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+    }
 
     refresh();
     getch();
+
+    free(vch_buf);
+    free(va_buf);
 }
 
 /* ========================================================================== */
@@ -670,6 +772,238 @@ static char *le_join_lines(char lines[][ED_MAX_COLS], int lc)
         if (i < lc - 1) strcat(out, "\\n");
     }
     return out;
+}
+
+/* ========================================================================== */
+/* Params metadata extraction                                                  */
+/* ========================================================================== */
+
+#define LE_MAX_PARAMS 15
+
+/** Extracted parameter metadata from the TOML params field */
+typedef struct {
+    char name[64];
+    char type[16];
+    char desc[128];
+} LeParam;
+
+/**
+ * @brief Extract params metadata from a raw TOML line.
+ *
+ * Parses `params = [{name = "...", type = "...", desc = "..."}]` from
+ * the raw line and populates an array of LeParam structs.
+ *
+ * @param raw_line  The full TOML line (e.g. from LbEntry.raw_line).
+ * @param out       Output array of LeParam (must hold LE_MAX_PARAMS).
+ * @return Number of params extracted.
+ */
+static int le_extract_params(const char *raw_line, LeParam out[LE_MAX_PARAMS])
+{
+    if (!raw_line) return 0;
+
+    /* Find "params" key in the line */
+    const char *ps = strstr(raw_line, "params");
+    if (!ps) return 0;
+
+    /* Skip to the '=' */
+    ps = strchr(ps, '=');
+    if (!ps) return 0;
+    ps++;
+    while (*ps == ' ') ps++;
+    if (*ps != '[') return 0;
+    ps++;
+
+    int count = 0;
+    while (*ps && count < LE_MAX_PARAMS) {
+        while (*ps == ' ' || *ps == ',') ps++;
+        if (*ps == ']') break;
+        if (*ps != '{') break;
+        ps++; /* skip '{' */
+
+        LeParam p = {{0}, {0}, {0}};
+
+        /* Parse key = "value" pairs inside the inline table */
+        while (*ps && *ps != '}') {
+            while (*ps == ' ' || *ps == ',') ps++;
+            if (*ps == '}') break;
+
+            /* Read key */
+            const char *ks = ps;
+            while (*ps && *ps != '=' && *ps != ' ') ps++;
+            size_t klen = (size_t)(ps - ks);
+            char key[32] = {0};
+            if (klen >= sizeof(key)) klen = sizeof(key) - 1;
+            memcpy(key, ks, klen);
+
+            /* Skip to value */
+            while (*ps == ' ' || *ps == '=') ps++;
+            if (*ps != '"') break;
+            ps++; /* skip opening quote */
+
+            const char *vs = ps;
+            while (*ps && *ps != '"') ps++;
+            size_t vlen = (size_t)(ps - vs);
+            if (*ps == '"') ps++;
+
+            if (strcmp(key, "name") == 0) {
+                if (vlen >= sizeof(p.name)) vlen = sizeof(p.name) - 1;
+                memcpy(p.name, vs, vlen);
+                p.name[vlen] = '\0';
+            } else if (strcmp(key, "type") == 0) {
+                if (vlen >= sizeof(p.type)) vlen = sizeof(p.type) - 1;
+                memcpy(p.type, vs, vlen);
+                p.type[vlen] = '\0';
+            } else if (strcmp(key, "desc") == 0) {
+                if (vlen >= sizeof(p.desc)) vlen = sizeof(p.desc) - 1;
+                memcpy(p.desc, vs, vlen);
+                p.desc[vlen] = '\0';
+            }
+        }
+        if (*ps == '}') ps++;
+        out[count++] = p;
+    }
+    return count;
+}
+
+/* ========================================================================== */
+/* Params popup                                                                */
+/* ========================================================================== */
+
+/**
+ * @brief Show a scrollable popup listing all parameter metadata.
+ *
+ * Each line is colored:
+ *   yellow [N]  bold-cyan name (cyan type bold-cyan)  grey - desc
+ *
+ * @param meta   Array of extracted LeParam structs.
+ * @param count  Number of params.
+ */
+static void le_show_params_popup(const LeParam *meta, int count)
+{
+    if (count <= 0) return;
+
+    /* Dialog geometry */
+    int pw = 72;
+    if (pw > COLS - 4) pw = COLS - 4;
+    int ph = count + 4; /* border + title + entries + border */
+    if (ph > LINES - 4) ph = LINES - 4;
+    int list_h = ph - 4;
+    int px = (COLS - pw) / 2;
+    int py = (LINES - ph) / 2;
+
+    int scroll = 0;
+    int selected = 0;
+
+    for (;;) {
+        /* Clamp */
+        if (selected < 0) selected = 0;
+        if (selected >= count) selected = count - 1;
+        if (scroll > selected) scroll = selected;
+        if (selected >= scroll + list_h) scroll = selected - list_h + 1;
+
+        /* Clear + border */
+        attron(COLOR_PAIR(CP_FORM_BG));
+        for (int r = py; r < py + ph; r++) {
+            move(r, px);
+            for (int c = 0; c < pw; c++) addch(' ');
+        }
+        attroff(COLOR_PAIR(CP_FORM_BG));
+        draw_box(py, px, ph, pw, CP_DIALOG_BORDER);
+
+        /* Title */
+        attron(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+        mvprintw(py, px + 2, " Parameters (%d) ", count);
+        attroff(COLOR_PAIR(CP_DIALOG_TITLE) | A_BOLD);
+
+        /* Param list */
+        for (int r = 0; r < list_h && (scroll + r) < count; r++) {
+            int idx = scroll + r;
+            int row = py + 2 + r;
+            bool is_sel = (idx == selected);
+
+            /* Slot character: 1-9, A-F */
+            char slot = (idx < 9) ? (char)('1' + idx) : (char)('A' + idx - 9);
+
+            /* [N] in yellow */
+            attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_VALUE) | A_BOLD);
+            mvprintw(row, px + 2, "[%c]", slot);
+            attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_VALUE) | A_BOLD);
+
+            /* name in bold cyan */
+            attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL) | A_BOLD);
+            printw(" %s", meta[idx].name);
+            attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL) | A_BOLD);
+
+            /* (type) in cyan */
+            attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL));
+            printw(" (");
+            attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL));
+            attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_DIALOG_BORDER));
+            printw("%s", meta[idx].type[0] ? meta[idx].type : "string");
+            attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_DIALOG_BORDER));
+            attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL));
+            printw(")");
+            attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_LABEL));
+
+            /* - desc in grey */
+            if (meta[idx].desc[0]) {
+                attron(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_BG));
+                int cx = getcurx(stdscr);
+                int remain = px + pw - 3 - cx;
+                if (remain > 3) {
+                    printw(" - %.*s", remain - 3, meta[idx].desc);
+                }
+                attroff(COLOR_PAIR(is_sel ? CP_MENU_HIGHLIGHT : CP_FORM_BG));
+            }
+        }
+
+        /* Scroll indicators */
+        if (scroll > 0) {
+            attron(COLOR_PAIR(CP_DIALOG_BORDER));
+            mvaddch(py + 2, px + pw - 2, ACS_UARROW);
+            attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        }
+        if (scroll + list_h < count) {
+            attron(COLOR_PAIR(CP_DIALOG_BORDER));
+            mvaddch(py + 2 + list_h - 1, px + pw - 2, ACS_DARROW);
+            attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+        }
+
+        /* Footer */
+        attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+        mvprintw(py + ph - 1, px + 2, " [Esc] Close ");
+        attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+
+        refresh();
+        int ch = getch();
+
+        switch (ch) {
+        case 27: /* Esc */
+        case 'q': case 'Q':
+        case 's': case 'S':
+            return;
+        case KEY_UP:
+            if (selected > 0) selected--;
+            break;
+        case KEY_DOWN:
+            if (selected < count - 1) selected++;
+            break;
+        case KEY_PPAGE:
+            selected -= list_h;
+            break;
+        case KEY_NPAGE:
+            selected += list_h;
+            break;
+        case KEY_HOME:
+            selected = 0; scroll = 0;
+            break;
+        case KEY_END:
+            selected = count - 1;
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 /* ========================================================================== */
@@ -715,8 +1049,8 @@ static void le_update_entry(LbEntry *entry, const char *new_text,
  * @brief Edit a language string in a custom multi-line editor dialog.
  *
  * Shows readonly Heap, Symbol, Flags, Params at top and a bordered
- * multi-line text area below.  Supports P for preview, F2 to save,
- * Esc to cancel.
+ * multi-line text area below.  F4=Preview, F5=Params, F3=MCI insert,
+ * F2/F10=Save, Esc=Cancel.  All single-letter keys go to text input.
  *
  * @param entry      Pointer to the LbEntry being edited.
  * @param toml_path  Path to the TOML file for write-back.
@@ -732,40 +1066,49 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
 
     /* Dialog geometry */
     int dw = COLS - 4;
-    if (dw > 90) dw = 90;
+    if (dw > 100) dw = 100;
     int dh = LINES - 4;
     if (dh > 24) dh = 24;
     int dx = (COLS - dw) / 2;
     int dy = (LINES - dh) / 2;
 
-    /* Text area placement */
-    int info_h = 6; /* 4 info lines + blank + "Text:" label */
-    int ta_y = dy + 1 + info_h;
-    int ta_x = dx + 2;
-    int ta_w = dw - 4;
-    int ta_h = dh - info_h - 4;
-    if (ta_h < 3) ta_h = 3;
+    /* Extract structured params metadata from raw TOML line */
+    LeParam meta_params[LE_MAX_PARAMS];
+    int meta_count = le_extract_params(entry->raw_line, meta_params);
 
-    /* Build params display */
-    char params[256] = "";
-    {
-        int pp = 0;
+    /* If no metadata, scan text for |!N slots and build mock params */
+    if (meta_count == 0) {
         const char *v = entry->full_value ? entry->full_value : "";
         for (const char *s = v; *s; s++) {
             if (s[0] == '|' && s[1] == '!' && s[2]) {
                 int idx = -1;
                 if (s[2] >= '1' && s[2] <= '9') idx = s[2] - '1';
                 else if (s[2] >= 'A' && s[2] <= 'F') idx = s[2] - 'A' + 9;
-                if (idx >= 0 && idx < 15) {
-                    if (pp > 0 && pp < (int)sizeof(params) - 3)
-                        { params[pp++] = ','; params[pp++] = ' '; }
-                    pp += snprintf(params + pp, sizeof(params) - (size_t)pp,
-                                   "|!%c=\"%s\"", s[2], mci_pos_mocks[idx]);
+                if (idx >= 0 && idx < 15 && meta_count < LE_MAX_PARAMS) {
+                    snprintf(meta_params[meta_count].name, sizeof(meta_params[0].name),
+                             "|!%c", s[2]);
+                    snprintf(meta_params[meta_count].type, sizeof(meta_params[0].type),
+                             "string");
+                    snprintf(meta_params[meta_count].desc, sizeof(meta_params[0].desc),
+                             "mock=%s", mci_pos_mocks[idx]);
+                    meta_count++;
                 }
             }
         }
-        if (!pp) strcpy(params, "(none)");
     }
+
+    /* Params display: show up to 2 inline, hint [S] for more */
+    int params_inline = (meta_count > 2) ? 2 : meta_count;
+    int params_extra_rows = params_inline; /* one row per inline param */
+    if (meta_count > 2) params_extra_rows++; /* +1 for the [S] hint line */
+
+    /* Text area placement — dynamic info_h based on param count */
+    int info_h = 6 + params_extra_rows; /* Heap + Symbol + Flags + Params: + inline rows + blank + Text: */
+    int ta_y = dy + 1 + info_h;
+    int ta_x = dx + 2;
+    int ta_w = dw - 4;
+    int ta_h = dh - info_h - 4;
+    if (ta_h < 3) ta_h = 3;
 
     for (;;) {
         /* Clear dialog area */
@@ -811,11 +1154,60 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
 
         iy++;
         attron(COLOR_PAIR(CP_FORM_LABEL));
-        mvprintw(iy, dx + 2, "Params: ");
+        mvprintw(iy, dx + 2, "Params:");
         attroff(COLOR_PAIR(CP_FORM_LABEL));
-        attron(COLOR_PAIR(CP_FORM_VALUE));
-        printw("%.*s", dw - 12, params);
-        attroff(COLOR_PAIR(CP_FORM_VALUE));
+
+        if (meta_count == 0) {
+            attron(COLOR_PAIR(CP_FORM_BG));
+            printw(" (none)");
+            attroff(COLOR_PAIR(CP_FORM_BG));
+        } else {
+            /* Render up to params_inline entries as colored lines */
+            for (int pi = 0; pi < params_inline; pi++) {
+                iy++;
+                char slot = (pi < 9) ? (char)('1' + pi) : (char)('A' + pi - 9);
+
+                /* [N] in yellow */
+                attron(COLOR_PAIR(CP_FORM_VALUE) | A_BOLD);
+                mvprintw(iy, dx + 4, "[%c]", slot);
+                attroff(COLOR_PAIR(CP_FORM_VALUE) | A_BOLD);
+
+                /* name in bold cyan */
+                attron(COLOR_PAIR(CP_FORM_LABEL) | A_BOLD);
+                printw(" %s", meta_params[pi].name);
+                attroff(COLOR_PAIR(CP_FORM_LABEL) | A_BOLD);
+
+                /* (type) in cyan */
+                attron(COLOR_PAIR(CP_FORM_LABEL));
+                printw(" (");
+                attroff(COLOR_PAIR(CP_FORM_LABEL));
+                attron(COLOR_PAIR(CP_DIALOG_BORDER));
+                printw("%s", meta_params[pi].type[0] ? meta_params[pi].type : "string");
+                attroff(COLOR_PAIR(CP_DIALOG_BORDER));
+                attron(COLOR_PAIR(CP_FORM_LABEL));
+                printw(")");
+                attroff(COLOR_PAIR(CP_FORM_LABEL));
+
+                /* - desc in grey */
+                if (meta_params[pi].desc[0]) {
+                    attron(COLOR_PAIR(CP_FORM_BG));
+                    int cx = getcurx(stdscr);
+                    int remain = dx + dw - 3 - cx;
+                    if (remain > 3)
+                        printw(" - %.*s", remain - 3, meta_params[pi].desc);
+                    attroff(COLOR_PAIR(CP_FORM_BG));
+                }
+            }
+
+            /* If more than 2, show overflow hint */
+            if (meta_count > 2) {
+                iy++;
+                attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+                mvprintw(iy, dx + 4, "[.. %d more, press F5 to view all]",
+                         meta_count - params_inline);
+                attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
+            }
+        }
 
         iy += 2;
         attron(COLOR_PAIR(CP_FORM_LABEL));
@@ -847,7 +1239,7 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
         /* Footer */
         attron(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
         mvprintw(dy + dh - 1, dx + 2,
-                 " [F2] Save  [P] Preview  [Esc] Cancel ");
+                 " [F10] Save  [F4] Preview  [F5] Params  [F3] MCI  [Esc] Cancel ");
         attroff(COLOR_PAIR(CP_DIALOG_BTN_TEXT));
         if (modified) {
             attron(COLOR_PAIR(CP_ERROR));
@@ -875,7 +1267,7 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
             curs_set(0);
             return false;
 
-        case KEY_F(2): { /* Save */
+        case KEY_F(2): case KEY_F(10): { /* Save */
             char *joined = le_join_lines(lines, line_count);
             const char *bare = entry->symbol;
             if (lb_write_back(toml_path, entry->line_num, bare,
@@ -891,10 +1283,36 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
             break;
         }
 
-        case 'p': case 'P': {
+        case KEY_F(4): {
             char *joined = le_join_lines(lines, line_count);
             le_preview(joined);
             free(joined);
+            break;
+        }
+
+        case KEY_F(5):
+            /* Show full params popup */
+            if (meta_count > 0) {
+                curs_set(0);
+                le_show_params_popup(meta_params, meta_count);
+            }
+            break;
+
+        case KEY_F(3): {
+            /* MCI code helper — insert selected code at cursor */
+            curs_set(0);
+            const char *code = mci_helper_show();
+            if (code) {
+                int clen = (int)strlen(code);
+                int llen = (int)strlen(lines[cr]);
+                if (llen + clen < ED_MAX_COLS - 1) {
+                    memmove(lines[cr] + cc + clen, lines[cr] + cc,
+                            (size_t)(llen - cc + 1));
+                    memcpy(lines[cr] + cc, code, (size_t)clen);
+                    cc += clen;
+                    modified = true;
+                }
+            }
             break;
         }
 
@@ -1309,7 +1727,13 @@ void action_browse_lang_strings(void *unused)
     } else if (sys_path && lang_rel) {
         snprintf(lang_dir, sizeof(lang_dir), "%s/%s", sys_path, lang_rel);
     } else if (sys_path) {
-        snprintf(lang_dir, sizeof(lang_dir), "%s/etc/lang", sys_path);
+        /* Fallback: derive from config_path TOML key + /lang */
+        const char *cfg_rel = "config";
+        MaxCfgVar cv;
+        if (maxcfg_toml_get(g_maxcfg_toml, "maximus.config_path", &cv) == MAXCFG_OK &&
+            cv.type == MAXCFG_VAR_STRING && cv.v.s && cv.v.s[0])
+            cfg_rel = cv.v.s;
+        snprintf(lang_dir, sizeof(lang_dir), "%s/%s/lang", sys_path, cfg_rel);
     } else {
         dialog_message("Language Browser", "Cannot determine language directory.\n"
                        "Set maximus.sys_path and maximus.lang_path first.");

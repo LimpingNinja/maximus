@@ -35,7 +35,7 @@ typedef struct {
     const char *default_value;  /* Default value if not set */
     const char **toggle_options; /* Options for FIELD_TOGGLE (NULL-terminated array) */
     const char *file_filter;     /* File extension filter for FIELD_FILE (e.g., "*.bbs") */
-    const char *file_base_path;  /* Base path for FIELD_FILE (e.g., "etc/misc") */
+    const char *file_base_path;  /* Base path for FIELD_FILE (e.g., "display/screens") */
     bool can_disable;            /* If true, field can be disabled with F3 (commented out) */
     bool supports_mex;           /* If true, prefix with : for MEX .vm file */
     bool pair_with_next;         /* If true, render on same line as next field (two-column) */

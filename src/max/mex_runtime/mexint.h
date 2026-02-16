@@ -107,6 +107,9 @@
   word EXPENTRY intrin_lang_heap_string(void);
   word EXPENTRY intrin_lang_get(void);
   word EXPENTRY intrin_lang_get_rip(void);
+  word EXPENTRY intrin_lang_load_extension(void);
+  word EXPENTRY intrin_lang_register(void);
+  word EXPENTRY intrin_lang_unregister(void);
   word EXPENTRY intrin_term_width(void);
   word EXPENTRY intrin_term_length(void);
   word EXPENTRY intrin_screen_width(void);
@@ -185,6 +188,7 @@
 
   word EXPENTRY intrin_ui_goto(void);
   word EXPENTRY intrin_ui_make_attr(void);
+  word EXPENTRY intrin_mci2attr(void);
   word EXPENTRY intrin_ui_set_attr(void);
   word EXPENTRY intrin_ui_fill_rect(void);
   word EXPENTRY intrin_ui_write_padded(void);

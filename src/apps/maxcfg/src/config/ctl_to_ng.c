@@ -53,7 +53,7 @@ static int parse_priv_level(const char *sys_path, const char *level_name)
     if (!sys_path || !level_name) return 0;
     
     char access_ctl[512];
-    snprintf(access_ctl, sizeof(access_ctl), "%s/etc/access.ctl", sys_path);
+    snprintf(access_ctl, sizeof(access_ctl), "%s/config/legacy/access.ctl", sys_path);
     
     FILE *fp = fopen(access_ctl, "r");
     if (!fp) return 0;
@@ -202,7 +202,7 @@ bool ctl_to_ng_populate_system(const char *maxctl_path, const char *sys_path, co
     sys->config_path = config_dir ? strdup(config_dir) : NULL;
 
     if (ctl_to_ng_parse_keyword(maxctl_path, "Path Misc", buf, sizeof(buf))) {
-        sys->misc_path = dup_str_or_null(buf);
+        sys->display_path = dup_str_or_null(buf);
     }
     if (ctl_to_ng_parse_keyword(maxctl_path, "Path Language", buf, sizeof(buf))) {
         sys->lang_path = dup_str_or_null(buf);
@@ -214,17 +214,15 @@ bool ctl_to_ng_populate_system(const char *maxctl_path, const char *sys_path, co
         sys->net_info_path = dup_str_or_null(buf);
     }
     if (ctl_to_ng_parse_keyword(maxctl_path, "Path IPC", buf, sizeof(buf))) {
-        sys->ipc_path = dup_str_or_null(buf);
+        sys->node_path = dup_str_or_null(buf);
     }
     if (ctl_to_ng_parse_keyword(maxctl_path, "Path Inbound", buf, sizeof(buf))) {
         sys->inbound_path = dup_str_or_null(buf);
     }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "Path Menu", buf, sizeof(buf))) {
-        sys->menu_path = dup_str_or_null(buf);
-    }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "Path RIP", buf, sizeof(buf))) {
-        sys->rip_path = dup_str_or_null(buf);
-    }
+    /* menu_path and rip_path removed — menus are TOML, RIP derived from display_path */
+    /* Parse and discard legacy Path Menu / Path RIP */
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "Path Menu", buf, sizeof(buf));
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "Path RIP", buf, sizeof(buf));
     if (ctl_to_ng_parse_keyword(maxctl_path, "Path Stage", buf, sizeof(buf))) {
         sys->stage_path = dup_str_or_null(buf);
     }
@@ -247,33 +245,34 @@ bool ctl_to_ng_populate_system(const char *maxctl_path, const char *sys_path, co
     if (ctl_to_ng_parse_keyword(maxctl_path, "File Access", buf, sizeof(buf))) {
         sys->file_access = dup_str_or_null(buf);
     }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "Menu Path", buf, sizeof(buf))) {
-        sys->menu_path = dup_str_or_null(buf);
-    }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "RIP Path", buf, sizeof(buf))) {
-        sys->rip_path = dup_str_or_null(buf);
-    }
+    /* Duplicate Menu Path / RIP Path keywords — also discarded */
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "Menu Path", buf, sizeof(buf));
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "RIP Path", buf, sizeof(buf));
     if (ctl_to_ng_parse_keyword(maxctl_path, "Stage Path", buf, sizeof(buf))) {
         sys->stage_path = dup_str_or_null(buf);
     }
     if (ctl_to_ng_parse_keyword(maxctl_path, "File Callers", buf, sizeof(buf))) {
         sys->file_callers = dup_str_or_null(buf);
     }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "Protocol CTL", buf, sizeof(buf))) {
-        sys->protocol_ctl = dup_str_or_null(buf);
-    }
+    /* protocol_ctl removed — protocol config is in TOML */
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "Protocol CTL", buf, sizeof(buf));
     if (ctl_to_ng_parse_keyword(maxctl_path, "MessageData", buf, sizeof(buf))) {
         sys->message_data = dup_str_or_null(buf);
     }
     if (ctl_to_ng_parse_keyword(maxctl_path, "FileData", buf, sizeof(buf))) {
         sys->file_data = dup_str_or_null(buf);
     }
-    if (ctl_to_ng_parse_keyword(maxctl_path, "MCP Pipe", buf, sizeof(buf))) {
-        sys->mcp_pipe = dup_str_or_null(buf);
-    }
+    /* mcp_pipe removed — Windows named pipe, dead on Unix */
+    (void)ctl_to_ng_parse_keyword(maxctl_path, "MCP Pipe", buf, sizeof(buf));
 
     /* MCP sessions */
     ctl_to_ng_parse_int(maxctl_path, "MCP Sessions", &sys->mcp_sessions);
+
+    /* New fields — set defaults for CTL→TOML migration */
+    if (!sys->mex_path)   sys->mex_path   = strdup("scripts");
+    if (!sys->data_path)  sys->data_path  = strdup("data");
+    if (!sys->run_path)   sys->run_path   = strdup("run");
+    if (!sys->doors_path) sys->doors_path = strdup("doors");
 
     /* Boolean flags */
     ctl_to_ng_parse_boolean(maxctl_path, "Snoop", &sys->snoop);
@@ -805,7 +804,7 @@ bool ctl_to_ng_populate_language(const char *sys_path, MaxCfgNgLanguage *lang)
     if (!sys_path || !lang) return false;
 
     char lang_ctl[512];
-    snprintf(lang_ctl, sizeof(lang_ctl), "%s/etc/language.ctl", sys_path);
+    snprintf(lang_ctl, sizeof(lang_ctl), "%s/config/legacy/language.ctl", sys_path);
 
     /* Parse max_lang */
     ctl_to_ng_parse_int(lang_ctl, "Max Languages", &lang->max_lang);

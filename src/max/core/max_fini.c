@@ -205,7 +205,7 @@ void FinishUp2(int hangup)
 
   if (rst_offset==-1L && !in_wfc)
   {
-    sprintf(temp,activexx_bbs,original_path,task_num);
+    node_file_path(task_num, "active.bbs", temp, sizeof(temp));
     unlink(temp);
   }
 
@@ -300,7 +300,7 @@ static void near ChatOff(void)
   char temp[PATHLEN];
   const char *ipc_base;
 
-  ipc_base = ngcfg_get_path("maximus.ipc_path");
+  ipc_base = ngcfg_get_path("maximus.node_path");
   if (! *ipc_base)
     return;
 
@@ -506,7 +506,7 @@ void TimeLimit(void)   /* User overrran time limit! */
   if (!shut_up)
   {
     Puts(time_up);
-    Display_File(0, NULL, time_file, (char *)ngcfg_get_string_raw("maximus.misc_path"));
+    Display_File(0, NULL, time_file, (char *)ngcfg_get_string_raw("maximus.display_path"));
   }
 
   vbuf_flush();
@@ -522,7 +522,7 @@ void Xpired(int reason)
   Display_File(0, 
                NULL,
                "%sXP%s",
-               (char *)ngcfg_get_string_raw("maximus.misc_path"),
+               (char *)ngcfg_get_string_raw("maximus.display_path"),
                (reason==REASON_TIME) ? "TIME" : "DATE");
   
   xpflag=usr.xp_flag;

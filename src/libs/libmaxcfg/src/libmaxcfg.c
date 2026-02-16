@@ -2471,6 +2471,46 @@ static MaxCfgStatus parse_value(const char **p_io, TomlNode **out)
             return MAXCFG_OK;
         }
 
+        if (*p2 == '{') {
+            /* Array of inline tables: [{key = "val"}, {key = "val"}] */
+            p++;  /* skip '[' */
+            TomlArray *arr = toml_array_new();
+            if (arr == NULL) return MAXCFG_ERR_OOM;
+
+            while (*p) {
+                p = skip_ws(p);
+                if (*p == ']') { p++; break; }
+
+                TomlNode *elem = NULL;
+                MaxCfgStatus st = parse_inline_table(&p, &elem);
+                if (st != MAXCFG_OK) {
+                    toml_array_free(arr);
+                    return st;
+                }
+                /* Re-tag as TABLE_ARRAY element (parse_inline_table returns TABLE) */
+                st = toml_array_add_node(arr, elem);
+                if (st != MAXCFG_OK) {
+                    toml_node_free(elem);
+                    toml_array_free(arr);
+                    return st;
+                }
+
+                p = skip_ws(p);
+                if (*p == ',') { p++; continue; }
+                if (*p == ']') { p++; break; }
+            }
+
+            TomlNode *n = toml_node_new(MAXCFG_VAR_TABLE_ARRAY);
+            if (n == NULL) {
+                toml_array_free(arr);
+                return MAXCFG_ERR_OOM;
+            }
+            n->v.array = arr;
+            *out = n;
+            *p_io = p;
+            return MAXCFG_OK;
+        }
+
         return MAXCFG_ERR_IO;
     }
 
@@ -3982,10 +4022,10 @@ static void toml_kv_bool(FILE *fp, const char *key, bool value)
 
 static void toml_kv_color(FILE *fp, const char *key, const MaxCfgNgColor *c)
 {
-    fprintf(fp, "%s = { fg = %d, bg = %d, blink = %s }\n", key,
-            c ? c->fg : 0,
-            c ? c->bg : 0,
-            (c && c->blink) ? "true" : "false");
+    char mci[32];
+    MaxCfgNgColor zero = {0, 0, false};
+    maxcfg_ng_color_to_mci(c ? c : &zero, mci, sizeof(mci));
+    fprintf(fp, "%s = \"%s\"\n", key, mci);
 }
 
 static void toml_kv_uint(FILE *fp, const char *key, unsigned int value)
@@ -4196,26 +4236,26 @@ void maxcfg_ng_system_free(MaxCfgNgSystem *sys)
     maxcfg_free_and_null(&sys->multitasker);
     maxcfg_free_and_null(&sys->sys_path);
     maxcfg_free_and_null(&sys->config_path);
-    maxcfg_free_and_null(&sys->misc_path);
+    maxcfg_free_and_null(&sys->display_path);
     maxcfg_free_and_null(&sys->lang_path);
     maxcfg_free_and_null(&sys->temp_path);
     maxcfg_free_and_null(&sys->net_info_path);
-    maxcfg_free_and_null(&sys->ipc_path);
+    maxcfg_free_and_null(&sys->node_path);
     maxcfg_free_and_null(&sys->outbound_path);
     maxcfg_free_and_null(&sys->inbound_path);
-    maxcfg_free_and_null(&sys->menu_path);
-    maxcfg_free_and_null(&sys->rip_path);
     maxcfg_free_and_null(&sys->stage_path);
+    maxcfg_free_and_null(&sys->mex_path);
+    maxcfg_free_and_null(&sys->data_path);
+    maxcfg_free_and_null(&sys->run_path);
+    maxcfg_free_and_null(&sys->doors_path);
     maxcfg_free_and_null(&sys->msg_reader_menu);
     maxcfg_free_and_null(&sys->log_file);
     maxcfg_free_and_null(&sys->file_password);
     maxcfg_free_and_null(&sys->file_access);
     maxcfg_free_and_null(&sys->file_callers);
-    maxcfg_free_and_null(&sys->protocol_ctl);
     maxcfg_free_and_null(&sys->message_data);
     maxcfg_free_and_null(&sys->file_data);
     maxcfg_free_and_null(&sys->log_mode);
-    maxcfg_free_and_null(&sys->mcp_pipe);
 
     memset(sys, 0, sizeof(*sys));
 }
@@ -4337,6 +4377,126 @@ MaxCfgStatus maxcfg_ng_general_colors_init(MaxCfgNgGeneralColors *colors)
 
     memset(colors, 0, sizeof(*colors));
     return MAXCFG_OK;
+}
+
+/* ============================================================================
+ * Theme color API
+ * ============================================================================ */
+
+/** @brief Built-in default slot definitions (code, TOML key, default value, description). */
+static const struct {
+    const char *code;
+    const char *key;
+    const char *value;
+    const char *desc;
+} g_theme_defaults[MCI_THEME_SLOT_COUNT] = {
+    { "tx", "text",        "|07",    "Normal body text"               },
+    { "hi", "highlight",   "|15",    "Emphasized text"                },
+    { "pr", "prompt",      "|14",    "User-facing prompts"            },
+    { "in", "input",       "|15",    "User keystroke echo"            },
+    { "tf", "textbox_fg",  "|15",    "Text input field foreground"    },
+    { "tb", "textbox_bg",  "|17",    "Text input field background"    },
+    { "hd", "heading",     "|11",    "Section headings"               },
+    { "lf", "lightbar_fg", "|15",    "Lightbar selected foreground"   },
+    { "lb", "lightbar_bg", "|17",    "Lightbar selected background"   },
+    { "er", "error",       "|12",    "Error messages"                 },
+    { "wn", "warning",     "|14",    "Warnings"                       },
+    { "ok", "success",     "|10",    "Confirmations"                  },
+    { "dm", "dim",         "|08",    "De-emphasized/help text"        },
+    { "fi", "file_info",   "|03",    "File descriptions"              },
+    { "sy", "sysop",       "|13",    "SysOp-only text"               },
+    { "qt", "quote",       "|09",    "Quoted message text"            },
+    { "br", "border",      "|01",    "Box borders, dividers"          },
+    { "hk", "hotkey",      "|14",    "Hotkey characters"              },
+    { "cd", "default",     "|07",    "Reset to default theme color"   },
+};
+
+void maxcfg_theme_init(MaxCfgThemeColors *theme)
+{
+    if (!theme) return;
+    memset(theme, 0, sizeof(*theme));
+    snprintf(theme->name, sizeof(theme->name), "Classic Maximus");
+
+    for (int i = 0; i < MCI_THEME_SLOT_COUNT; i++) {
+        snprintf(theme->slots[i].code,  sizeof(theme->slots[i].code),  "%s", g_theme_defaults[i].code);
+        snprintf(theme->slots[i].key,   sizeof(theme->slots[i].key),   "%s", g_theme_defaults[i].key);
+        snprintf(theme->slots[i].value, sizeof(theme->slots[i].value), "%s", g_theme_defaults[i].value);
+        snprintf(theme->slots[i].desc,  sizeof(theme->slots[i].desc),  "%s", g_theme_defaults[i].desc);
+    }
+}
+
+MaxCfgStatus maxcfg_theme_load_from_toml(MaxCfgThemeColors *theme,
+                                          const MaxCfgToml *toml,
+                                          const char *prefix)
+{
+    if (!theme || !toml || !prefix) return MAXCFG_ERR_INVALID_ARGUMENT;
+
+    /* Start with defaults */
+    maxcfg_theme_init(theme);
+
+    /* Override theme name if present */
+    char path[128];
+    MaxCfgVar v;
+    snprintf(path, sizeof(path), "%s.theme.name", prefix);
+    if (maxcfg_toml_get(toml, path, &v) == MAXCFG_OK
+        && v.type == MAXCFG_VAR_STRING && v.v.s)
+        snprintf(theme->name, sizeof(theme->name), "%s", v.v.s);
+
+    /* Override each slot value from <prefix>.theme.colors.<key> */
+    for (int i = 0; i < MCI_THEME_SLOT_COUNT; i++) {
+        snprintf(path, sizeof(path), "%s.theme.colors.%s", prefix, theme->slots[i].key);
+        if (maxcfg_toml_get(toml, path, &v) == MAXCFG_OK
+            && v.type == MAXCFG_VAR_STRING && v.v.s) {
+            snprintf(theme->slots[i].value, sizeof(theme->slots[i].value), "%s", v.v.s);
+        }
+    }
+
+    return MAXCFG_OK;
+}
+
+const char *maxcfg_theme_lookup(const MaxCfgThemeColors *theme,
+                                 char a, char b)
+{
+    if (!theme) return NULL;
+    for (int i = 0; i < MCI_THEME_SLOT_COUNT; i++) {
+        if (theme->slots[i].code[0] == a && theme->slots[i].code[1] == b)
+            return theme->slots[i].value;
+    }
+    return NULL;
+}
+
+MaxCfgStatus maxcfg_theme_write_toml(FILE *fp, const MaxCfgThemeColors *theme)
+{
+    if (!fp || !theme) return MAXCFG_ERR_INVALID_ARGUMENT;
+
+    fprintf(fp, "[theme]\n");
+    fprintf(fp, "name = \"%s\"\n\n", theme->name);
+    fprintf(fp, "[theme.colors]\n");
+    for (int i = 0; i < MCI_THEME_SLOT_COUNT; i++) {
+        fprintf(fp, "%-12s = \"%s\"%*s# |%s - %s\n",
+                theme->slots[i].key,
+                theme->slots[i].value,
+                (int)(8 - strlen(theme->slots[i].value)), "",
+                theme->slots[i].code,
+                theme->slots[i].desc);
+    }
+
+    return MAXCFG_OK;
+}
+
+void maxcfg_ng_color_to_mci(const MaxCfgNgColor *color, char *out, size_t out_sz)
+{
+    if (!color || !out || out_sz < 4) { if (out && out_sz) out[0] = '\0'; return; }
+
+    int fg = color->fg & 0x0f;
+    int bg = color->bg & 0x07;
+    int pos = snprintf(out, out_sz, "|%02d", fg);
+
+    if (bg > 0 && pos < (int)out_sz)
+        pos += snprintf(out + pos, out_sz - (size_t)pos, "|%02d", 16 + bg);
+
+    if (color->blink && pos < (int)out_sz)
+        snprintf(out + pos, out_sz - (size_t)pos, "|24");
 }
 
 MaxCfgStatus maxcfg_ng_menu_init(MaxCfgNgMenu *menu)
@@ -5245,7 +5405,6 @@ MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys)
     }
 
     toml_kv_int(fp, "config_version", sys->config_version);
-
     toml_kv_string(fp, "system_name", sys->system_name);
     toml_kv_string(fp, "sysop", sys->sysop);
     toml_kv_int(fp, "task_num", sys->task_num);
@@ -5253,34 +5412,45 @@ MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys)
     toml_kv_bool(fp, "has_snow", sys->has_snow);
     toml_kv_string(fp, "multitasker", sys->multitasker);
 
+    fprintf(fp, "\n# === Core Paths ===\n");
+    fprintf(fp, "# sys_path is the ONLY absolute path — all others are relative to it\n");
     toml_kv_string(fp, "sys_path", sys->sys_path);
     toml_kv_string(fp, "config_path", sys->config_path);
-    toml_kv_string(fp, "misc_path", sys->misc_path);
+
+    fprintf(fp, "\n# === Display ===\n");
+    toml_kv_string(fp, "display_path", sys->display_path);
+
+    fprintf(fp, "\n# === Scripts ===\n");
+    toml_kv_string(fp, "mex_path", sys->mex_path);
+
+    fprintf(fp, "\n# === Language ===\n");
     toml_kv_string(fp, "lang_path", sys->lang_path);
-    toml_kv_string(fp, "temp_path", sys->temp_path);
-    toml_kv_string(fp, "net_info_path", sys->net_info_path);
-    toml_kv_string(fp, "ipc_path", sys->ipc_path);
-    toml_kv_string(fp, "outbound_path", sys->outbound_path);
-    toml_kv_string(fp, "inbound_path", sys->inbound_path);
-    toml_kv_string(fp, "menu_path", sys->menu_path);
-    toml_kv_string(fp, "rip_path", sys->rip_path);
-    toml_kv_string(fp, "stage_path", sys->stage_path);
-    toml_kv_string(fp, "msg_reader_menu", sys->msg_reader_menu);
 
-    toml_kv_string(fp, "log_file", sys->log_file);
-    toml_kv_string(fp, "log_mode", sys->log_mode);
+    fprintf(fp, "\n# === Data ===\n");
+    toml_kv_string(fp, "data_path", sys->data_path);
+    toml_kv_string(fp, "file_password", sys->file_password);
     toml_kv_string(fp, "file_callers", sys->file_callers);
-
-    toml_kv_string(fp, "protocol_ctl", sys->protocol_ctl);
+    toml_kv_string(fp, "file_access", sys->file_access);
     toml_kv_string(fp, "message_data", sys->message_data);
     toml_kv_string(fp, "file_data", sys->file_data);
+    toml_kv_string(fp, "net_info_path", sys->net_info_path);
+    toml_kv_string(fp, "outbound_path", sys->outbound_path);
+    toml_kv_string(fp, "inbound_path", sys->inbound_path);
 
-    toml_kv_string(fp, "mcp_pipe", sys->mcp_pipe);
+    fprintf(fp, "\n# === Runtime ===\n");
+    toml_kv_string(fp, "run_path", sys->run_path);
+    toml_kv_string(fp, "node_path", sys->node_path);
+    toml_kv_string(fp, "temp_path", sys->temp_path);
+    toml_kv_string(fp, "stage_path", sys->stage_path);
+    toml_kv_string(fp, "doors_path", sys->doors_path);
+
+    fprintf(fp, "\n# === Logging ===\n");
+    toml_kv_string(fp, "log_file", sys->log_file);
+    toml_kv_string(fp, "log_mode", sys->log_mode);
+
+    fprintf(fp, "\n# === System Settings ===\n");
+    toml_kv_string(fp, "msg_reader_menu", sys->msg_reader_menu);
     toml_kv_int(fp, "mcp_sessions", sys->mcp_sessions);
-
-    toml_kv_string(fp, "file_password", sys->file_password);
-    toml_kv_string(fp, "file_access", sys->file_access);
-
     toml_kv_bool(fp, "snoop", sys->snoop);
     toml_kv_bool(fp, "no_password_encryption", sys->no_password_encryption);
     toml_kv_bool(fp, "no_share", sys->no_share);
@@ -5289,6 +5459,7 @@ MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys)
     toml_kv_bool(fp, "dos_close", sys->dos_close);
     toml_kv_bool(fp, "local_input_timeout", sys->local_input_timeout);
     toml_kv_bool(fp, "status_line", sys->status_line);
+    fprintf(fp, "\n");
     return MAXCFG_OK;
 }
 
@@ -5351,7 +5522,6 @@ MaxCfgStatus maxcfg_ng_write_general_session_toml(FILE *fp, const MaxCfgNgGenera
 
     toml_kv_string(fp, "track_privview", session->track_privview);
     toml_kv_string(fp, "track_privmod", session->track_privmod);
-    toml_kv_string(fp, "track_base", session->track_base);
     toml_kv_string(fp, "track_exclude", session->track_exclude);
     toml_kv_string(fp, "attach_base", session->attach_base);
     toml_kv_string(fp, "attach_path", session->attach_path);
@@ -5705,6 +5875,12 @@ MaxCfgStatus maxcfg_ng_write_general_colors_toml(FILE *fp, const MaxCfgNgGeneral
     toml_kv_color(fp, "static", &colors->fsr_static);
     toml_kv_color(fp, "border", &colors->fsr_border);
     toml_kv_color(fp, "locus", &colors->fsr_locus);
+
+    /* Append default theme color section */
+    fputc('\n', fp);
+    MaxCfgThemeColors theme;
+    maxcfg_theme_init(&theme);
+    maxcfg_theme_write_toml(fp, &theme);
 
     return MAXCFG_OK;
 }

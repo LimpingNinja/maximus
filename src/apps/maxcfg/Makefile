@@ -47,6 +47,7 @@ SOURCES = $(SRCDIR)/main.c \
           $(SRCDIR)/ui/menu_edit.c \
           $(SRCDIR)/ui/menu_preview.c \
           $(SRCDIR)/ui/mci_preview.c \
+          $(SRCDIR)/ui/mci_helper.c \
           $(SRCDIR)/ui/treeview.c \
           $(SRCDIR)/ui/treenode_edit.c \
           $(SRCDIR)/ui/texteditor.c \
@@ -117,6 +118,7 @@ $(OBJDIR)/ui/command_picker.o: $(SRCDIR)/ui/command_picker.c include/maxcfg.h in
 $(OBJDIR)/ui/privilege_picker.o: $(SRCDIR)/ui/privilege_picker.c include/maxcfg.h include/ui.h
 $(OBJDIR)/ui/menu_edit.o: $(SRCDIR)/ui/menu_edit.c include/maxcfg.h include/ui.h include/menu_data.h include/menu_edit.h
 $(OBJDIR)/ui/mci_preview.o: $(SRCDIR)/ui/mci_preview.c include/mci_preview.h
+$(OBJDIR)/ui/mci_helper.o: $(SRCDIR)/ui/mci_helper.c include/maxcfg.h include/ui.h include/menu_preview.h include/mci_helper.h
 $(OBJDIR)/ui/menu_preview.o: $(SRCDIR)/ui/menu_preview.c include/maxcfg.h include/ui.h include/menu_preview.h include/menu_data.h include/mci_preview.h
 $(OBJDIR)/ui/treeview.o: $(SRCDIR)/ui/treeview.c include/maxcfg.h include/ui.h include/treeview.h
 $(OBJDIR)/ui/treenode_edit.o: $(SRCDIR)/ui/treenode_edit.c include/maxcfg.h include/ui.h include/treeview.h
@@ -131,4 +133,4 @@ $(OBJDIR)/config/area_toml.o: $(SRCDIR)/config/area_toml.c include/area_toml.h
 $(OBJDIR)/config/nextgen_export.o: $(SRCDIR)/config/nextgen_export.c include/nextgen_export.h include/menu_data.h include/ctl_to_ng.h
 $(OBJDIR)/config/menu_parse.o: $(SRCDIR)/config/menu_parse.c include/menu_data.h include/ctl_parse.h
 $(OBJDIR)/config/lang_convert.o: $(SRCDIR)/config/lang_convert.c include/lang_convert.h
-$(OBJDIR)/config/lang_browse.o: $(SRCDIR)/config/lang_browse.c include/lang_browse.h include/maxcfg.h include/ui.h include/menu_preview.h include/mci_preview.h
+$(OBJDIR)/config/lang_browse.o: $(SRCDIR)/config/lang_browse.c include/lang_browse.h include/maxcfg.h include/ui.h include/menu_preview.h include/mci_preview.h include/mci_helper.h

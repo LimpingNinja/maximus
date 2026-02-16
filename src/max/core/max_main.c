@@ -247,7 +247,7 @@ static void near Yell(void)
 
     if (!loc_kbhit() && chatreq)
     {
-      sprintf(temp, "%sNOTIN.?BS", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(temp, "%sNOTIN.?BS", (char *)ngcfg_get_path("maximus.display_path"));
 
       if (fexist(temp))
       {
@@ -263,7 +263,7 @@ static void near Yell(void)
   }
   else /* sysop is not available */
   {
-    sprintf(temp, "%sYELL.?BS", (char *)ngcfg_get_path("maximus.misc_path"));
+    sprintf(temp, "%sYELL.?BS", (char *)ngcfg_get_path("maximus.display_path"));
 
     if (fexist(temp))
     {
@@ -761,7 +761,7 @@ static void near Goodbye(void)
   {
     WhiteN();
 
-    sprintf(string, "%swhy_hu", (char *)ngcfg_get_path("maximus.misc_path"));
+    sprintf(string, "%swhy_hu", (char *)ngcfg_get_path("maximus.display_path"));
 
     if (GetListAnswer(CYnq,string,useyforyes,0,disconnect)==NO)
       return;
@@ -777,7 +777,7 @@ static void near Goodbye(void)
         ValidMsgArea(NULL, &ma, VA_VAL | VA_OVRPRIV, &bi) &&
         PushMsgArea(where, &bi))
     {
-      sprintf(string, "%swhy_fb", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(string, "%swhy_fb", (char *)ngcfg_get_path("maximus.display_path"));
 
       if (GetListAnswer(yCNq, string, useyforyes, 0, leave_msg, (char *)ngcfg_get_string_raw("maximus.sysop"))==YES)
         Goodbye_Comment();

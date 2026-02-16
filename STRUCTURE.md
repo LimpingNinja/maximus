@@ -1,176 +1,180 @@
 # Maximus BBS Directory Structure
 
-This document describes the directory layout for a Maximus BBS installation.
-Cross-referenced against source code (`src/max/prm.h`, `resources/m/prm.mh`) and `max.ctl`.
+This document describes the runtime directory layout for a Maximus BBS installation.
+TOML is the sole configuration authority — no compiled `.prm`, `.mnu`, or `.ltf` binaries.
 
 ## Directory Tree
 
 ```
-$PREFIX/                    # Base install directory (Path System)
-├── bin/                    # Executables
-│   ├── max                 # Main BBS executable
-│   ├── maxtel              # Telnet supervisor
-│   ├── mex                 # MEX compiler
-│   ├── mecca               # MECCA compiler
-│   ├── maid                # Language file compiler
-│   ├── squish              # Message tosser/scanner
-│   ├── sqafix              # Echomail processor
-│   ├── install.sh          # Installation script
-│   ├── recompile.sh        # Recompile all config files
-│   └── runbbs.sh           # BBS startup script
+$PREFIX/                              # System root (e.g. /var/max or ~/max)
 │
-├── lib/                    # Shared libraries
-│   └── *.so / *.dylib
+├── runbbs.sh                         # Primary BBS startup script (launches maxtel)
 │
-├── etc/                    # Configuration files
-│   ├── max.ctl             # Main configuration
-│   ├── menus.ctl           # Menu definitions (compiled → *.mnu)
-│   ├── msgarea.ctl         # Message area definitions
-│   ├── filearea.ctl        # File area definitions
-│   ├── areas.bbs           # Echomail areas
-│   ├── compress.cfg        # Archiver definitions
-│   ├── squish.cfg          # Squish tosser config
-│   ├── sqafix.cfg          # SqaFix config
-│   │
-│   ├── help/               # Help display files (.mec → .bbs)
-│   │   ├── *.mec           # MECCA source files
-│   │   └── *.bbs           # Compiled display files
-│   │
-│   ├── lang/               # Language files (Path Language → PRM_LANGPATH)
-│   │   ├── english.mad     # Language source
-│   │   └── english.ltf     # Compiled language translation
-│   │
-│   ├── menus/              # Menu files (Menu Path → PRM_MENUPATH)
-│   │   └── *.mnu           # Compiled menu files
-│   │
-│   ├── misc/               # Display files (Path Misc → PRM_MISCPATH)
-│   │   ├── *.mec           # MECCA source files
-│   │   ├── *.bbs           # Compiled display files
-│   │   ├── logo.*          # Login logo (PRM_LOGO)
-│   │   ├── welcome.*       # Welcome file (PRM_WELCOME)
-│   │   ├── newuser1.*      # New user password prompt (PRM_NEWUSER1)
-│   │   ├── newuser2.*      # New user welcome (PRM_NEWUSER2)
-│   │   ├── applic.*        # New user questionnaire (PRM_APPLIC)
-│   │   ├── byebye.*        # Logoff file (PRM_BYEBYE)
-│   │   └── ...             # Other display files
-│   │
-│   ├── nodelist/           # FidoNet nodelists (Path NetInfo → PRM_NETPATH)
-│   │   └── nodelist.*
-│   │
-│   ├── rip/                # RIP graphics files (PRM_RIPPATH)
-│   │   └── *.rip
-│   │
-│   └── ansi/               # Source ANSI art files (for reference/editing)
-│       └── *.ans           # Raw ANSI files (convert with ansi2bbs → etc/misc/)
+├── bin/                              # Executables + libraries
+│   ├── max                           #   Main BBS executable
+│   ├── maxtel                        #   Telnet supervisor
+│   ├── maxcfg                        #   Configuration editor (TUI)
+│   ├── mex                           #   MEX compiler
+│   ├── mecca                         #   MECCA display file compiler
+│   ├── squish                        #   Message tosser/scanner
+│   ├── sqafix                        #   Echomail area manager
+│   ├── init-userdb.sh                #   User database initialization
+│   ├── recompile.sh                  #   Recompile display/MEX files
+│   └── lib/                          #   Shared libraries
+│       ├── libmax.so / .dylib
+│       ├── libcompat.so / .dylib
+│       └── ...
 │
-├── m/                      # MEX scripts and headers
-│   ├── *.mh                # MEX header files (MEX_INCLUDE points here)
-│   │   ├── max.mh          # Main MEX header
-│   │   ├── prm.mh          # PRM constants
-│   │   ├── input.mh        # Input functions
+├── config/                           # All configuration (TOML is sole authority)
+│   ├── maximus.toml                  #   Core system config (paths, system name, logging)
+│   ├── matrix.toml                   #   FidoNet / echomail network config
+│   ├── compress.cfg                  #   Archiver definitions
+│   ├── squish.cfg                    #   Squish tosser config
+│   ├── sqafix.cfg                    #   SqaFix config
+│   ├── general/                      #   General BBS settings
+│   │   ├── session.toml              #     Session / login behavior
+│   │   ├── equipment.toml            #     Modem / port / comm settings
+│   │   ├── display_files.toml        #     Display file path mappings
+│   │   ├── colors.toml               #     Color scheme
+│   │   ├── protocol.toml             #     Transfer protocol definitions
+│   │   └── reader.toml               #     Offline reader settings
+│   ├── lang/                         #   Language files (TOML only)
+│   │   ├── english.toml
+│   │   ├── delta_english.toml
+│   │   └── colors.lh
+│   ├── menus/                        #   Menu definitions (TOML only)
+│   │   ├── main.toml
 │   │   └── ...
-│   ├── *.mex               # MEX source files
-│   └── *.vm                # Compiled MEX bytecode
+│   ├── areas/                        #   Area definitions
+│   │   ├── msg/areas.toml
+│   │   └── file/areas.toml
+│   ├── security/                     #   Access control
+│   │   ├── access_levels.toml
+│   │   ├── access.dat
+│   │   └── baduser.bbs
+│   └── legacy/                       #   Legacy config (read-only reference)
+│       ├── max.ctl
+│       ├── areas.bbs
+│       ├── access.ctl
+│       └── ...
 │
-├── ipc/                    # Inter-process communication (Path IPC → PRM_IPCPATH)
-│   └── *.ipc               # IPC files for multi-node
+├── display/                          # All user-facing display content
+│   ├── screens/                      #   System screens (.bbs/.ans/.mec)
+│   │   ├── logo.*                    #     Login logo
+│   │   ├── welcome.*                 #     Welcome screen
+│   │   ├── byebye.*                  #     Logoff screen
+│   │   └── ...
+│   ├── menus/                        #   Menu display art
+│   │   ├── menu_main.*
+│   │   └── ...
+│   ├── help/                         #   Context-sensitive help screens
+│   │   └── *.mec / *.bbs
+│   ├── rip/                          #   RIP graphics files
+│   │   └── *.rip
+│   └── tunes/                        #   Tune/music files
+│       └── tunes.bbs
 │
-├── log/                    # Log files (Log File → PRM_LOGNAME)
-│   └── max.log
+├── scripts/                          # MEX scripts (replaces m/)
+│   ├── include/                      #   MEX headers (.mh, .lh)
+│   │   ├── max.mh
+│   │   ├── prm.mh
+│   │   └── ...
+│   ├── *.mex                         #   MEX source files
+│   └── *.vm                          #   Compiled MEX bytecode
 │
-├── tmp/                    # Temporary files (Path Temp → PRM_TEMPPATH)
+├── data/                             # Persistent mutable runtime data
+│   ├── users/                        #   User database
+│   │   ├── user.db                   #     SQLite user database
+│   │   └── callers.bbs               #     Caller log
+│   ├── msgbase/                      #   Message bases (Squish format)
+│   ├── filebase/                     #   File transfer area storage
+│   ├── nodelist/                     #   FidoNet nodelists
+│   ├── mail/                         #   Network mail transit
+│   │   ├── inbound/
+│   │   ├── outbound/
+│   │   ├── netmail/
+│   │   ├── attach/
+│   │   ├── bad/
+│   │   └── dupes/
+│   ├── db/                           #   Database schemas
+│   │   └── userdb_schema.sql
+│   └── olr/                          #   Offline reader packets
 │
-├── spool/                  # Mail and file spools
-│   ├── attach/             # Local file attaches (PRM_ATTCHPATH)
-│   ├── bad/                # Bad/corrupt messages
-│   ├── dupes/              # Duplicate messages
-│   ├── file/               # File areas
-│   │   ├── max/            # Default file area
-│   │   ├── newup/          # New uploads (unchecked)
-│   │   ├── uncheck/        # Unchecked uploads
-│   │   └── util/           # Utilities area
-│   ├── inbound/            # FTS-1 inbound (PRM_INBOUND)
-│   │   ├── incomplete/     # Partial transfers
-│   │   └── unknown/        # Unknown files
-│   ├── msgbase/            # Message bases (Squish format)
-│   ├── netmail/            # FidoNet netmail
-│   ├── olr/                # Offline reader packets (PRM_OLRPATH)
-│   ├── outbound/           # FTS-1 outbound
-│   ├── outbound.sq/        # Squish outbound
-│   └── staged_xfer/        # CD-ROM staged transfers (PRM_STAGEPATH)
+├── run/                              # Ephemeral runtime state
+│   ├── tmp/                          #   General temp files
+│   ├── node/                         #   Per-node workspace + IPC
+│   │   ├── 01/                       #     Node 1
+│   │   │   ├── ipc.bbs
+│   │   │   ├── lastus.bbs
+│   │   │   ├── bbstat.bbs
+│   │   │   ├── termcap.dat
+│   │   │   ├── restar.bbs
+│   │   │   └── maxipc* / maxipc.lck
+│   │   └── ...
+│   └── stage/                        #   Staged file transfers
 │
-├── docs/                   # Documentation
-│   └── *.md, *.txt
+├── log/                              # Log files
+│   ├── max.log
+│   └── echotoss.log
 │
-└── man/                    # Man pages
-    └── *.1
+├── doors/                            # External door game programs
+│
+└── docs/                             # Documentation
 ```
 
-## Path Keywords in max.ctl
+## TOML Config Keys (`maximus.toml`)
 
-| Keyword | PRM Constant | Default | Description |
-|---------|--------------|---------|-------------|
-| `Path System` | `PRM_SYSPATH` | `/var/max` | Base system path, CWD for Maximus |
-| `Path Misc` | `PRM_MISCPATH` | `etc/misc` | Display files, F-key files |
-| `Path Language` | `PRM_LANGPATH` | `etc/lang` | Language translation files |
-| `Path Temp` | `PRM_TEMPPATH` | `tmp` | Temporary files |
-| `Path IPC` | `PRM_IPCPATH` | `ipc` | Inter-process communication |
-| `Path NetInfo` | `PRM_NETPATH` | `etc/nodelist` | FidoNet nodelists |
-| `Menu Path` | `PRM_MENUPATH` | `etc/menus` | Compiled menu files |
+All paths except `sys_path` are **relative** — resolved against `sys_path` by `ngcfg_get_path()`.
 
-## MEX Path Resolution
-
-MEX scripts use `prm_string(PRM_*)` to get configured paths:
-
-```mex
-// Write to misc path (recommended)
-fd := open(prm_string(PRM_MISCPATH) + "myfile.dat", IOPEN_RW | IOPEN_CREATE);
-
-// Write to system path
-fd := open(prm_string(PRM_SYSPATH) + "data/myfile.dat", IOPEN_RW | IOPEN_CREATE);
-```
-
-**Relative paths** in MEX resolve to `Path System` (the CWD when Maximus runs).
+| Key | Default | Description |
+|-----|---------|-------------|
+| `sys_path` | `$PREFIX` | **Absolute** system root — anchor for all relative paths |
+| `config_path` | `config` | TOML configuration files |
+| `display_path` | `display/screens` | System display screens |
+| `mex_path` | `scripts` | MEX scripts directory |
+| `lang_path` | `config/lang` | TOML language files |
+| `data_path` | `data` | Persistent mutable data root |
+| `file_password` | `data/users/user` | User database |
+| `file_callers` | `data/users/callers` | Caller log |
+| `file_access` | `config/security/access` | Access level definitions |
+| `message_data` | `data/msgbase/marea` | Message area index |
+| `file_data` | `data/msgbase/farea` | File area index |
+| `net_info_path` | `data/nodelist` | FidoNet nodelists |
+| `outbound_path` | `data/mail/outbound` | FTS-1 outbound |
+| `inbound_path` | `data/mail/inbound` | FTS-1 inbound |
+| `run_path` | `run` | Ephemeral runtime state root |
+| `node_path` | `run/node` | Per-node directories |
+| `temp_path` | `run/tmp` | Temp files |
+| `stage_path` | `run/stage` | Staged file transfers |
+| `doors_path` | `doors` | External door programs |
+| `log_file` | `log/max.log` | System log |
 
 ## Compilation Workflow
 
 ```
 Source              Compiler    Output              Location
 ────────────────────────────────────────────────────────────────
-*.mec               mecca       *.bbs               etc/misc/, etc/help/
-*.mad               maid        *.ltf               etc/lang/
-*.mex               mex         *.vm                m/
+*.mec               mecca       *.bbs               display/screens/, display/help/
+*.mex               mex         *.vm                scripts/
 ```
 
-## Files Referenced by PRM Constants
-
-| Constant | Field in prm.h | Configured via | Typical Value |
-|----------|----------------|----------------|---------------|
-| `PRM_USERBBS` | `user_file` | `User File` | `etc/user.bbs` |
-| `PRM_LOGNAME` | `log_name` | `Log File` | `log/max.log` |
-| `PRM_LOGO` | `logo` | `Uses Logo` | `etc/misc/logo` |
-| `PRM_WELCOME` | `welcome` | `Uses Welcome` | `etc/misc/welcome` |
-| `PRM_NEWUSER1` | `newuser1` | `Uses NewUser1` | `etc/misc/newuser1` |
-| `PRM_NEWUSER2` | `newuser2` | `Uses NewUser2` | `etc/misc/newuser2` |
-| `PRM_ROOKIE` | `rookie` | `Uses Rookie` | `etc/misc/rookie` |
-| `PRM_APPLIC` | `application` | `Uses Application` | `etc/misc/applic` |
-| `PRM_BYEBYE` | `byebye` | `Uses Goodbye` | `etc/misc/byebye` |
-| `PRM_NOMAIL` | `nomail` | `Uses NoMail` | `etc/misc/nomail` |
+Language files are **TOML only** — no compilation step.
 
 ## Environment Variables
 
-| Variable | Purpose | Set by |
-|----------|---------|--------|
-| `MEX_INCLUDE` | MEX header search path | `recompile.sh`, should point to `$PREFIX/m` |
-| `LD_LIBRARY_PATH` | Shared library path | `runbbs.sh`, includes `$PREFIX/lib` |
-| `DYLD_LIBRARY_PATH` | macOS library path | `runbbs.sh`, includes `$PREFIX/lib` |
+| Variable | Value | Set by |
+|----------|-------|--------|
+| `MEX_INCLUDE` | `$PREFIX/scripts/include` | `runbbs.sh` |
+| `LD_LIBRARY_PATH` | `$PREFIX/bin/lib` | `runbbs.sh` |
+| `DYLD_LIBRARY_PATH` | `$PREFIX/bin/lib` | `runbbs.sh` |
+| `MAX_INSTALL_PATH` | `$PREFIX` | `runbbs.sh` |
 
 ## Notes
 
-1. **No `etc/m/` directory** - MEX files live only in `m/`. The `.vm` files are compiled and run from there.
+1. **`sys_path` is CWD** — `runbbs.sh` does `cd $PREFIX` before running maxtel, so relative paths resolve correctly.
 
-2. **Path System is CWD** - `runbbs.sh` does `cd $PREFIX` before running `max`, so relative paths resolve there.
+2. **Display files** — Can be `.bbs` (compiled MECCA) or plain text. Maximus tries both extensions.
 
-3. **Display files** - Can be `.bbs` (compiled MECCA) or plain text. Maximus tries both extensions.
+3. **Menu references to MEX** — Use `scripts/scriptname` (without `.vm` extension). Example: `MEX scripts/oneliner`
 
-4. **Menu references to MEX** - Use `m/scriptname` (without `.vm` extension). Example: `MEX m/oneliner`
+4. **Per-node isolation** — Each node gets its own directory under `run/node/XX/` containing IPC, lastuser, bbstat, termcap, and restart files.

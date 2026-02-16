@@ -203,9 +203,9 @@ static int near MsgAreaMenu(PMAH pmah, BARINFO *pbi, char *group)
         return did_valid;
     }
     else if (*input=='\'' || *input=='`' || *input=='"')
-      Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.misc_path"), quotes_misunderstood);
+      Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.display_path"), quotes_misunderstood);
     else if (*input=='#')              /* Maybe the user misunderstood? */
-      Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.misc_path"), numsign_misunderstood);
+      Display_File(0, NULL, ss, (char *)ngcfg_get_string_raw("maximus.display_path"), numsign_misunderstood);
     else if (*input=='/' || *input=='\\')
     {
       *group=0;

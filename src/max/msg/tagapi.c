@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
  */
 
 #ifndef __GNUC__
@@ -46,6 +48,22 @@ static char rcs_id[]="$Id: tagapi.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 
 static char szTagSuffix[]="\x01%s\x01";
 static char szEmptyList[]="\x01";
+
+/**
+ * @brief Return the resolved base directory for mtag files.
+ *
+ * Derives the path from data_path + "msgbase/mtag/".  The result
+ * always has a trailing '/' so it can be used directly as a sprintf
+ * prefix with the mtag_dat / mtag_idx / mtag_fre format strings.
+ */
+static const char *mtag_base_path(void)
+{
+  static char path[PATHLEN];
+  strcpy(path, ngcfg_get_path("maximus.data_path"));
+  Add_Trailing(path, '/');
+  strcat(path, "msgbase/mtag/");
+  return path;
+}
 
 /****************************************************************************/
 /********************* ENTRYPOINT: TagReadTagFile ***************************/
@@ -91,8 +109,8 @@ int TagWriteTagFile(struct _mtagmem *pmtm)
   struct _mtagidx mti;
   long ofs;
 
-  sprintf(fnamei, mtag_idx, ngcfg_get_path("maximus.sys_path"));
-  sprintf(fnamed, mtag_dat, ngcfg_get_path("maximus.sys_path"));
+  sprintf(fnamei, mtag_idx, mtag_base_path());
+  sprintf(fnamed, mtag_dat, mtag_base_path());
 
   /* Read the existing index */
 
@@ -296,7 +314,7 @@ static int _TagGetMtagMem(struct _mtagidx *pmti, struct _mtagmem *pmtm)
   char fname[PATHLEN];
   FILE *fp;
 
-  sprintf(fname, mtag_dat, ngcfg_get_path("maximus.sys_path"));
+  sprintf(fname, mtag_dat, mtag_base_path());
 
   /* If the data file was too short, just create a new record */
 
@@ -441,11 +459,11 @@ static int near _TagRepackMtag(int recnum)
 
   int rc;
 
-  sprintf(ifnamei, mtag_idx, ngcfg_get_path("maximus.sys_path"));
-  sprintf(ifnamed, mtag_dat, ngcfg_get_path("maximus.sys_path"));
+  sprintf(ifnamei, mtag_idx, mtag_base_path());
+  sprintf(ifnamed, mtag_dat, mtag_base_path());
 
-  sprintf(ofnamed, "%smtagdat.$$$", ngcfg_get_path("maximus.sys_path"));
-  sprintf(ofnamei, "%smtagidx.$$$", ngcfg_get_path("maximus.sys_path"));
+  sprintf(ofnamed, "%smtagdat.$$$", mtag_base_path());
+  sprintf(ofnamei, "%smtagidx.$$$", mtag_base_path());
 
   /* Open all of the input files necessary to do the pack */
 
@@ -520,7 +538,7 @@ static int near _TagAddToFree(struct _mtagidx *pmti, int recnum)
   if (!pmti->dwLen)
     return TRUE;
 
-  sprintf(fname, mtag_fre, ngcfg_get_path("maximus.sys_path"));
+  sprintf(fname, mtag_fre, mtag_base_path());
 
   if ((fd=shopen(fname, O_WRONLY | O_BINARY))==-1)
     fd=sopen(fname, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, SH_DENYNO,
@@ -580,7 +598,7 @@ static int near _TagReadIdx(struct _mtagidx *pmti)
   long lOfs;
   int fd;
 
-  sprintf(fname, mtag_idx, ngcfg_get_path("maximus.sys_path"));
+  sprintf(fname, mtag_idx, mtag_base_path());
 
   if ((fd=shopen(fname, O_RDONLY | O_BINARY))==-1)
     fd=sopen(fname, O_WRONLY | O_BINARY, SH_DENYNO, S_IREAD | S_IWRITE);

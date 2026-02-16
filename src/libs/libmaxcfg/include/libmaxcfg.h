@@ -56,7 +56,8 @@ typedef enum MaxCfgStatus {
     MAXCFG_ERR_NOT_FOUND,
     MAXCFG_ERR_NOT_DIR,
     MAXCFG_ERR_IO,
-    MAXCFG_ERR_PATH_TOO_LONG
+    MAXCFG_ERR_PATH_TOO_LONG,
+    MAXCFG_ERR_DUPLICATE           /**< Key/namespace already exists */
 } MaxCfgStatus;
 
 MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count);
@@ -75,26 +76,26 @@ typedef struct {
     char *multitasker;
     char *sys_path;
     char *config_path;
-    char *misc_path;
+    char *display_path;      /**< Was misc_path — display/screens base */
     char *lang_path;
     char *temp_path;
     char *net_info_path;
-    char *ipc_path;
+    char *node_path;         /**< Was ipc_path — per-node runtime dirs */
     char *outbound_path;
     char *inbound_path;
-    char *menu_path;
-    char *rip_path;
     char *stage_path;
+    char *mex_path;          /**< MEX scripts directory */
+    char *data_path;         /**< Persistent mutable data root */
+    char *run_path;          /**< Ephemeral runtime state root */
+    char *doors_path;        /**< External door programs */
     char *msg_reader_menu;
     char *log_file;
     char *file_password;
     char *file_access;
     char *file_callers;
-    char *protocol_ctl;
     char *message_data;
     char *file_data;
     char *log_mode;
-    char *mcp_pipe;
     int mcp_sessions;
     bool snoop;
     bool no_password_encryption;
@@ -373,6 +374,66 @@ typedef struct {
     MaxCfgNgColor fsr_border;
     MaxCfgNgColor fsr_locus;
 } MaxCfgNgGeneralColors;
+
+/* ============================================================================
+ * Semantic theme color slots (|xx lowercase pipe codes)
+ * ============================================================================ */
+
+/** @brief Number of defined semantic theme color slots. */
+#define MCI_THEME_SLOT_COUNT 19
+
+/** @brief A single theme color slot mapping a 2-char code to an MCI pipe string. */
+typedef struct {
+    char code[4];        /**< 2-letter lowercase MCI code, e.g. "tx" */
+    char key[32];        /**< TOML key name, e.g. "text" */
+    char value[64];      /**< MCI pipe code string, e.g. "|07" or "|15|17" */
+    char desc[64];       /**< Human-readable description */
+} MaxCfgThemeSlot;
+
+/** @brief Full theme color table with a name and all slots. */
+typedef struct {
+    char name[128];
+    MaxCfgThemeSlot slots[MCI_THEME_SLOT_COUNT];
+} MaxCfgThemeColors;
+
+/** @brief Initialize a theme color table with built-in defaults. */
+void maxcfg_theme_init(MaxCfgThemeColors *theme);
+
+/**
+ * @brief Load theme colors from a TOML handle.
+ *
+ * Reads @c <prefix>.theme.name and @c <prefix>.theme.colors.<slot> from the
+ * given TOML handle.  For example, if @p prefix is @c "colors", the lookup
+ * paths are @c "colors.theme.name" and @c "colors.theme.colors.text", etc.
+ *
+ * @param theme   Output theme table (initialized to defaults first).
+ * @param toml    TOML handle to read from.
+ * @param prefix  Dot-separated TOML path prefix (e.g. "colors" or
+ *                "general.colors").
+ */
+MaxCfgStatus maxcfg_theme_load_from_toml(MaxCfgThemeColors *theme,
+                                          const MaxCfgToml *toml,
+                                          const char *prefix);
+
+/**
+ * @brief Look up a theme slot by its 2-char lowercase code.
+ * @return Pointer to the MCI pipe string, or NULL if not found.
+ */
+const char *maxcfg_theme_lookup(const MaxCfgThemeColors *theme,
+                                 char a, char b);
+
+/** @brief Write the [theme] section to a TOML file. */
+MaxCfgStatus maxcfg_theme_write_toml(FILE *fp, const MaxCfgThemeColors *theme);
+
+/**
+ * @brief Convert a MaxCfgNgColor to an MCI pipe code string.
+ *
+ * Emits |fg, optionally |16+bg if bg > 0, and |24 if blink is set.
+ * @param color  Source color.
+ * @param out    Output buffer (must be >= 16 bytes).
+ * @param out_sz Size of output buffer.
+ */
+void maxcfg_ng_color_to_mci(const MaxCfgNgColor *color, char *out, size_t out_sz);
 
 typedef struct {
     char *command;

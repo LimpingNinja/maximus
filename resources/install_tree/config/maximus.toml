@@ -1,0 +1,50 @@
+config_version = 2
+system_name = "MaximusNG BBS"
+sysop = "Sysop"
+task_num = 1
+video = "IBM"
+has_snow = false
+multitasker = "UNIX"
+
+# === Core Paths ===
+sys_path = "/Users/limpingninja/CascadeProjects/maximus/build"
+config_path = "config"
+
+# === Display ===
+display_path = "display/screens"
+rip_path = "display/rip"
+
+# === Language ===
+lang_path = "config/lang"
+
+# === Data ===
+data_path = "data"
+file_password = "data/users/user"
+file_callers = "data/users/callers"
+file_access = "config/security/access"
+message_data = "data/msgbase/marea"
+file_data = "data/msgbase/farea"
+net_info_path = "data/nodelist"
+outbound_path = "data/mail/outbound"
+inbound_path = "data/mail/inbound"
+
+# === Runtime ===
+node_path = "run/node"
+temp_path = "run/tmp"
+stage_path = "run/stage"
+
+# === Logging ===
+log_file = "log/max.log"
+log_mode = "Trace"
+
+# === System Settings ===
+msg_reader_menu = "MSGREAD"
+mcp_sessions = 16
+snoop = true
+no_password_encryption = false
+no_share = false
+reboot = false
+swap = false
+dos_close = true
+local_input_timeout = false
+status_line = false

@@ -942,7 +942,7 @@ MenuDefinition **parse_menus_ctl(const char *sys_path, int *menu_count, char *er
     *menu_count = 0;
     
     char path[512];
-    snprintf(path, sizeof(path), "%s/etc/menus.ctl", sys_path);
+    snprintf(path, sizeof(path), "%s/config/legacy/menus.ctl", sys_path);
     
     FILE *f = fopen(path, "r");
     if (!f) {
@@ -1197,7 +1197,7 @@ bool save_menus_ctl(const char *sys_path, MenuDefinition **menus, int menu_count
     }
     
     char path[512];
-    snprintf(path, sizeof(path), "%s/etc/menus.ctl", sys_path);
+    snprintf(path, sizeof(path), "%s/config/legacy/menus.ctl", sys_path);
     
     char backup_path[512];
     snprintf(backup_path, sizeof(backup_path), "%s.bak", path);

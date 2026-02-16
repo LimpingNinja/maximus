@@ -22,6 +22,7 @@
 
 #define MAX_LANG_m_area
 #include "mexall.h"
+#include "mci.h"
 #include "ui_field.h"
 #include "ui_lightbar.h"
 #include "ui_form.h"
@@ -433,6 +434,26 @@ word EXPENTRY intrin_ui_make_attr(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: mci2attr(string mci_str) -> int attr
+ *
+ * Converts an MCI pipe color string (e.g. "|15", "|15|17", "|pr") to a
+ * single DOS attribute byte.  Starts from default attribute 0x07.
+ */
+word EXPENTRY intrin_mci2attr(void)
+{
+  MA ma;
+  IADDR ia;
+  word wLen;
+  char *mci_str;
+
+  MexArgBegin(&ma);
+  mci_str = MexArgGetNonRefString(&ma, &ia, &wLen);
+
+  regs_2[0] = (word)Mci2Attr(mci_str, 0x07);
+  return MexArgEnd(&ma);
+}
+
 /* ui_fill_rect(row, col, width, height, ch, attr) - Fill rectangle */
 word EXPENTRY intrin_ui_fill_rect(void)
 {
@@ -634,8 +655,8 @@ word EXPENTRY intrin_ui_edit_field_style_default(void)
   
   if (style)
   {
-    style->normal_attr = 0x07;  /* gray on black */
-    style->focus_attr = 0x1e;   /* yellow on blue */
+    style->normal_attr = Mci2Attr("|tf|tb", 0x07);  /* theme textbox fg+bg */
+    style->focus_attr = Mci2Attr("|tf|tb", 0x07);    /* theme textbox fg+bg (focused) */
     style->fill_ch = ' ';
     style->flags = 0;
     memset(&style->format_mask, 0, sizeof(style->format_mask));
@@ -655,8 +676,8 @@ word EXPENTRY intrin_ui_prompt_field_style_default(void)
   
   if (style)
   {
-    style->prompt_attr = 0x0e;  /* yellow */
-    style->field_attr = 0x1e;   /* yellow on blue */
+    style->prompt_attr = Mci2Attr("|pr", 0x07);    /* theme prompt */
+    style->field_attr = Mci2Attr("|tf|tb", 0x07);   /* theme textbox fg+bg */
     style->fill_ch = ' ';
     style->flags = 0;
     style->start_mode = 0;      /* UI_PROMPT_START_HERE */
@@ -860,9 +881,9 @@ word EXPENTRY intrin_ui_lightbar_style_default(void)
     style->wrap = 1;
     style->enable_hotkeys = 1;
     style->show_brackets = 1;     /* UI_BRACKET_SQUARE */
-    style->normal_attr = 0x07;    /* UI_GRAY */
-    style->selected_attr = 0x1e;  /* UI_YELLOWONBLUE */
-    style->hotkey_attr = 0;       /* use selected_attr */
+    style->normal_attr = Mci2Attr("|tx", 0x07);    /* theme text */
+    style->selected_attr = Mci2Attr("|lf|lb", 0x07); /* theme lightbar fg+bg */
+    style->hotkey_attr = Mci2Attr("|hk", 0x07);      /* theme hotkey */
     style->hotkey_highlight_attr = 0;
     style->margin = 0;
     style->out_hotkey = 0;
@@ -882,10 +903,10 @@ word EXPENTRY intrin_ui_select_prompt_style_default(void)
   
   if (style)
   {
-    style->prompt_attr = 0x0e;    /* UI_YELLOW */
-    style->normal_attr = 0x03;    /* UI_CYAN */
-    style->selected_attr = 0x1e;  /* UI_YELLOWONBLUE */
-    style->hotkey_attr = 0;       /* use selected_attr */
+    style->prompt_attr = Mci2Attr("|pr", 0x07);    /* theme prompt */
+    style->normal_attr = Mci2Attr("|tx", 0x07);     /* theme text */
+    style->selected_attr = Mci2Attr("|lf|lb", 0x07); /* theme lightbar fg+bg */
+    style->hotkey_attr = Mci2Attr("|hk", 0x07);      /* theme hotkey */
     style->show_brackets = 1;     /* UI_BRACKET_SQUARE */
     style->margin = 0;
     memset(&style->separator, 0, sizeof(style->separator));
@@ -908,15 +929,15 @@ word EXPENTRY intrin_ui_form_style_default(void)
   
   if (style)
   {
-    style->label_attr = 0x0e;      /* yellow */
-    style->normal_attr = 0x07;     /* white */
-    style->focus_attr = 0x1e;      /* yellow on blue */
+    style->label_attr = Mci2Attr("|pr", 0x07);     /* theme prompt for labels */
+    style->normal_attr = Mci2Attr("|tf|tb", 0x07);  /* theme textbox fg+bg */
+    style->focus_attr = Mci2Attr("|hi|tb", 0x07);   /* theme highlight fg + textbox bg */
     style->save_mode = 0;          /* UI_FORM_SAVE_CTRL_S */
     style->wrap = 1;
     memset(&style->required_msg, 0, sizeof(style->required_msg));
     style->required_x = 1;
     style->required_y = 24;
-    style->required_attr = 0x0c;   /* light red */
+    style->required_attr = Mci2Attr("|er", 0x07);  /* theme error */
   }
   
   return MexArgEnd(&ma);

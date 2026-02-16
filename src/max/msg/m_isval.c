@@ -111,10 +111,26 @@ static int near _ValidMsgArea(PMAH pmah, unsigned flags, BARINFO *pbi)
 
   if ((flags & VA_VAL) && !MsgValidate(pmah->ma.type, PMAS(pmah, path)))
   {
-    if (debuglog)
-      debug_log("ValidMsgArea: reject MsgValidate name='%s' type=0x%x path='%s' flags=0x%x",
-                PMAS(pmah, name), (unsigned)pmah->ma.type, PMAS(pmah, path), (unsigned)flags);
-    return FALSE;
+    /* Base files don't exist yet — try to create them.  In legacy Maximus,
+     * SILT would create empty bases during config compile.  With TOML configs
+     * there is no compile step, so we create on first validation instead. */
+    HAREA ha_tmp = MsgOpenArea(PMAS(pmah, path), MSGAREA_CRIFNEC,
+                               pmah->ma.type |
+                               ((pmah->ma.type & MA_ECHO) ? MSGTYPE_ECHO : 0));
+    if (ha_tmp)
+    {
+      MsgCloseArea(ha_tmp);
+      if (debuglog)
+        debug_log("ValidMsgArea: auto-created base name='%s' path='%s'",
+                  PMAS(pmah, name), PMAS(pmah, path));
+    }
+    else
+    {
+      if (debuglog)
+        debug_log("ValidMsgArea: reject MsgValidate name='%s' type=0x%x path='%s' flags=0x%x (create also failed)",
+                  PMAS(pmah, name), (unsigned)pmah->ma.type, PMAS(pmah, path), (unsigned)flags);
+      return FALSE;
+    }
   }
 
   if ((flags & VA_OVRPRIV)==0 &&

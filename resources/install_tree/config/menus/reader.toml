@@ -1,0 +1,89 @@
+name = "READER"
+title = "READER (%t mins)"
+header_file = "display/screens/olr_hdr"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "Msg_Tag"
+arguments = ""
+priv_level = "Demoted"
+description = "Tag area"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Browse"
+arguments = ""
+priv_level = "Demoted"
+description = "Download new msgs"
+key_poke = "tnp"
+modifiers = []
+
+[[option]]
+command = "Msg_Upload_QWK"
+arguments = ""
+priv_level = "Demoted"
+description = "Upload replies"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Protocol"
+arguments = ""
+priv_level = "Demoted"
+description = "Protocol default"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Archiver"
+arguments = ""
+priv_level = "Demoted"
+description = "Archiver default"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Restrict"
+arguments = ""
+priv_level = "Demoted"
+description = "Restrict date"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "Main menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Transient"
+description = "Goodbye (log off)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/olr"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "|"
+key_poke = ""
+modifiers = ["NoDsp"]

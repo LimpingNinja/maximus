@@ -119,7 +119,7 @@ const FieldDef system_paths_fields[] = {
                 "function keys.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "/var/max/etc/misc"
+        .default_value = "/var/max/display/screens"
     },
     {
         .keyword = "Path Language",
@@ -129,7 +129,7 @@ const FieldDef system_paths_fields[] = {
                 "language. The .MAD, .LTH and .H files are not required.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "/var/max/etc/lang"
+        .default_value = "/var/max/config/lang"
     },
     {
         .keyword = "Path Temp",
@@ -158,7 +158,7 @@ const FieldDef system_paths_fields[] = {
                 "passwords, and user information. Relative to System Path.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/user"
+        .default_value = "data/users/user"
     },
     {
         .keyword = "File Access",
@@ -167,7 +167,7 @@ const FieldDef system_paths_fields[] = {
                 "in access.ctl and describe attributes of user classes.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/access"
+        .default_value = "config/security/access"
     },
     {
         .keyword = "Log File",
@@ -195,7 +195,7 @@ const FieldDef logging_options_fields[] = {
         .help = "Path and filename for the main system log file. Maximus will record all caller activity, errors, and system events to this file based on the log level setting.",
         .type = FIELD_TEXT,
         .max_length = 80,
-        .default_value = "etc/log/max.log"
+        .default_value = "log/max.log"
     },
     {
         .keyword = "Log Mode",
@@ -448,9 +448,9 @@ const FieldDef display_files_fields[] = {
         .help = "First file shown to a caller immediately after Maximus connects. Should contain a small amount of information describing your BBS such as the sysop name and system info. This file must NOT contain ANSI or AVATAR graphics since terminal type is unknown at this point.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/logo",
+        .default_value = "display/screens/logo",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -460,9 +460,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to a new user after their name is entered but before the 'First Last [Y,n]?' confirmation prompt. Use this to welcome potential new users and explain what happens next in the registration process.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/notfound",
+        .default_value = "display/screens/notfound",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -472,9 +472,9 @@ const FieldDef display_files_fields[] = {
         .help = "New user questionnaire displayed after the user confirms their name with 'Y' to 'Firstname Lastname [Y,n]?' but before prompting for city and phone number. Use this to explain system rules or gather additional registration info.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/applic",
+        .default_value = "display/screens/applic",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -484,9 +484,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to normal users who have called more than eight times. This file is shown immediately after the user enters their log-on password. This is your main welcome screen for regular callers.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/welcome",
+        .default_value = "display/screens/welcome",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -496,9 +496,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to a new user right before Maximus asks them to enter a password. Use this to explain password requirements such as maximum length, no spaces allowed, and the importance of choosing a secure password.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/newuser1",
+        .default_value = "display/screens/newuser1",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -508,9 +508,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to a new user in lieu of the Welcome file. Often contains the same content as Welcome or similar to Application. This allows you to show different content to brand new users versus returning callers.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/newuser2",
+        .default_value = "display/screens/newuser2",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -522,7 +522,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -534,7 +534,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -545,9 +545,9 @@ const FieldDef display_files_fields[] = {
         .help = "ASCII text file containing quotes and random pieces of wisdom. Each quote should be separated by a single blank line. Access quotes in your .bbs files using the MECCA [quote] token which displays a random selection.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/quotes",
+        .default_value = "display/screens/quotes",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -557,9 +557,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users who try to log on after having exceeded their daily time limits. Should inform the user they have used all their time for today and when they can call back.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/daylimit",
+        .default_value = "display/screens/daylimit",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -569,9 +569,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users just before the main menu as long as they have made more than one call on the current day. Use this to warn users about remaining time or upcoming system events.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/timewarn",
+        .default_value = "display/screens/timewarn",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -581,9 +581,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users whose connection speed is lower than the minimum required in Min Logon Baud, or if their speed is less than the LogonBaud keyword for their user class in the access control file.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/tooslow",
+        .default_value = "display/screens/tooslow",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -593,9 +593,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users after they select the Goodbye menu option. This is your farewell screen - use it to thank users for calling and remind them of upcoming events or new files.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/byebye",
+        .default_value = "display/screens/byebye",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -605,9 +605,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users who failed their last log-on attempt due to an invalid password. Use this to warn about security, explain password recovery options, or inform about lockout policies.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/badlogon",
+        .default_value = "display/screens/badlogon",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -617,9 +617,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users after they enter a barricaded message or file area but before they are prompted for the access password. Explain what the area contains and how to obtain access if needed.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/barricad",
+        .default_value = "display/screens/barricad",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -629,9 +629,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed when the amount of free space on the upload drive is less than the value specified by the 'Upload Space Free' keyword. Informs users that uploads are temporarily disabled due to disk space.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/nospace",
+        .default_value = "display/screens/nospace",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -641,9 +641,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users after the [msg_checkmail] MECCA token determines there is no mail waiting for them. Can suggest they check message areas or explain mail forwarding options.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/nomail",
+        .default_value = "display/screens/nomail",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -655,7 +655,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -666,9 +666,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user when the SysOp enters CHAT mode. This is a good place for a greeting like 'Hi [user], this is the SysOp speaking.' Default message if not set is 'CHAT: start'.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/begchat",
+        .default_value = "display/screens/begchat",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -678,9 +678,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user when the SysOp exits chat mode. Use this to indicate the chat session has ended and normal BBS operation is resuming. Default message if not set is 'END CHAT'.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/endchat",
+        .default_value = "display/screens/endchat",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -690,9 +690,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed just before Maximus exits to run an external program invoked from a menu option. Use this to inform users they are about to enter a door or external application.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/leaving",
+        .default_value = "display/screens/leaving",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -702,9 +702,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user upon returning from an external program invoked by a menu option. Welcome users back to the BBS and remind them where they were before the door.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/return",
+        .default_value = "display/screens/return",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -714,9 +714,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user immediately after the SysOp presses Alt-J on the local console to shell to the operating system. Inform users the SysOp is temporarily away from the keyboard.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/shleave",
+        .default_value = "display/screens/shleave",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -726,9 +726,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user after the SysOp returns from an Alt-J shell to the operating system. Let users know the SysOp is back and normal operation has resumed.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/shreturn",
+        .default_value = "display/screens/shreturn",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -739,9 +739,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users who request help using the File_Locate command. Explain how to search for files by name, date, or description and what wildcards are supported.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/lochelp",
+        .default_value = "display/screens/lochelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -751,9 +751,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users who request help for the File_Contents command. Explain how to view file descriptions, what information is shown, and how to navigate the listing.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/conthelp",
+        .default_value = "display/screens/conthelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -763,9 +763,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users who ask for help by pressing Ctrl-K ? from within the MaxEd full-screen editor. Document all editor commands, cursor movement, and text manipulation keys.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/maxedhlp",
+        .default_value = "display/screens/maxedhlp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -775,9 +775,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to first-time callers who enter the BORED line editor when their help level is set to novice. Provide a gentle introduction to the editor commands and how to save or abort.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/borehelp",
+        .default_value = "display/screens/borehelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -787,9 +787,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users just after selecting the Edit_Edit option on the editor menu. Describe the search and replace feature of the line editor including pattern syntax.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/replhelp",
+        .default_value = "display/screens/replhelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -799,9 +799,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users requesting help with the Message Inquire command. Explain how to view and modify message attributes such as private, crash, file attach, and kill/sent flags.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/inqhelp",
+        .default_value = "display/screens/inqhelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -811,9 +811,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users requesting help with the message Scan command. Explain how to scan for new messages, personal mail, and how to set scan pointers and filters.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/scanhelp",
+        .default_value = "display/screens/scanhelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -823,9 +823,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users requesting help with the file List command. Document listing options, sorting methods, and how to navigate through large file listings efficiently.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/listhelp",
+        .default_value = "display/screens/listhelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -835,9 +835,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users just before the message header entry screen. Provide information regarding message attributes, using aliases, anonymous posting areas, and addressing options.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/hdrhelp",
+        .default_value = "display/screens/hdrhelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -847,9 +847,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to the user just before entering the message editor, for both full-screen and line editor. Can offer additional help or set up screen display for RIPscrip callers.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/enthelp",
+        .default_value = "display/screens/enthelp",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -860,9 +860,9 @@ const FieldDef display_files_fields[] = {
         .help = "Displayed to users whose connection speed is less than the speed required for the XferBaud setting for their user class in the access control file. Explain why file transfers are restricted at lower speeds.",
         .type = FIELD_FILE,
         .max_length = 80,
-        .default_value = "etc/misc/xferbaud",
+        .default_value = "display/screens/xferbaud",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = false,
         .supports_mex = true
     },
@@ -874,7 +874,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -886,7 +886,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -898,7 +898,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -910,7 +910,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -922,7 +922,7 @@ const FieldDef display_files_fields[] = {
         .max_length = 80,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = false
     },
@@ -982,7 +982,7 @@ const FieldDef msg_division_fields[] = {
         .max_length = 80,
         .default_value = ".",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -1050,7 +1050,7 @@ const FieldDef msg_area_fields[] = {
         .keyword = "Path",
         .label = "Mail path/file",
         .help = "Squish: path+basename (no .SQD). *.MSG: directory path with trailing slash. "
-                "Example: spool/msgbase/public or /var/max/msg/cars.lexus",
+                "Example: data/msgbase/public or /var/max/data/msgbase/cars.lexus",
         .type = FIELD_PATH,
         .max_length = 80,
         .default_value = ""
@@ -1408,7 +1408,7 @@ const FieldDef file_division_fields[] = {
         .max_length = 80,
         .default_value = ".",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -1835,7 +1835,7 @@ const FieldDef access_level_fields[] = {
         .max_length = 60,
         .default_value = "",
         .file_filter = "*.bbs",
-        .file_base_path = "etc/misc",
+        .file_base_path = "display/screens",
         .can_disable = true,
         .supports_mex = true
     },
@@ -2105,7 +2105,7 @@ const FieldDef matrix_netmail_fields[] = {
         .help = "Path to the fidouser.lst file mapping FidoNet addresses to local usernames for NetMail routing.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/fidouser.lst"
+        .default_value = "data/nodelist/fidouser.lst"
     },
     {
         .keyword = "ctla_priv",
@@ -2260,7 +2260,7 @@ const FieldDef language_settings_fields[] = {
         .help = "Directory containing language files (.LTF, .MAD, .LTH). Must contain at minimum an .LTF file for each declared language.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/lang"
+        .default_value = "config/lang"
     },
 };
 
@@ -2460,7 +2460,7 @@ const FieldDef reader_settings_fields[] = {
         .help = "Path to compress.cfg which defines archiving/unarchiving programs for QWK bundles. Maximus and Squish use compatible formats.",
         .type = FIELD_PATH,
         .max_length = 80,
-        .default_value = "etc/compress.cfg"
+        .default_value = "config/compress.cfg"
     },
     {
         .keyword = "packet_name",

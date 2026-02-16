@@ -43,6 +43,18 @@ typedef struct {
 extern MciLangParams *g_lang_params;
 
 /**
+ * @brief Active theme color table for |xx (lowercase) semantic color expansion.
+ *
+ * When non-NULL, MciExpand() replaces |xx codes with the configured MCI
+ * pipe string from this table.  Set at startup from the loaded colors.toml.
+ *
+ * The actual type is MaxCfgThemeColors from libmaxcfg.h; declared as void*
+ * here to avoid pulling that header into every translation unit that
+ * includes mci.h.
+ */
+extern void *g_mci_theme;
+
+/**
  * @brief Set the MCI parse flags.
  *
  * @param flags New flags value.
@@ -94,5 +106,23 @@ size_t MciExpand(const char *in, char *out, size_t out_size);
  * @return Number of bytes written to @p out (excluding terminating NUL).
  */
 size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_flags);
+
+/**
+ * @brief Convert an MCI pipe color string to a single DOS attribute byte.
+ *
+ * Parses a string containing one or more @c |## pipe color codes and/or
+ * @c |xx semantic theme codes, building up a DOS text attribute byte.
+ *
+ * - @c |00..@c |15 set the foreground (low nibble), preserving background.
+ * - @c |16..@c |23 set the background (bits 4-6), preserving foreground.
+ * - @c |24..@c |31 set the background + blink bit.
+ * - @c |xx (lowercase) are resolved via the active theme table (@c g_mci_theme).
+ *
+ * @param mci  Pipe color string, e.g. @c "|15", @c "|15|17", or @c "|pr".
+ *             May be NULL (returns @p base unchanged).
+ * @param base Starting attribute to modify (typically 0x07 for light gray).
+ * @return     Resulting DOS attribute byte.
+ */
+byte Mci2Attr(const char *mci, byte base);
 
 #endif /* __MAX_MCI_H_DEFINED */

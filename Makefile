@@ -91,8 +91,8 @@ clean: buildclean
 # buildclean: Clean the build folder for fresh install
 buildclean:
 	@echo "Cleaning build folder $(PREFIX)..."
-	-rm -rf $(PREFIX)/bin $(PREFIX)/lib $(PREFIX)/libexec
-	-rm -rf $(PREFIX)/etc $(PREFIX)/m $(PREFIX)/docs
+	-rm -rf $(PREFIX)/bin $(PREFIX)/libexec
+	-rm -rf $(PREFIX)/config $(PREFIX)/display $(PREFIX)/scripts $(PREFIX)/data $(PREFIX)/run $(PREFIX)/doors $(PREFIX)/docs $(PREFIX)/log
 	@echo "Build folder cleaned. Next 'make build' will be fresh."
 
 # archclean: Also clean build/lib for cross-architecture builds
@@ -164,30 +164,31 @@ config_install:
  
 	@$(MAKE) reconfig
  
-	@[ -d ${PREFIX}/etc/lang ] || mkdir -p ${PREFIX}/etc/lang
-	@cp -f build/etc/lang/english.toml ${PREFIX}/etc/lang/english.toml
-	@cp -f resources/lang/delta_english.toml ${PREFIX}/etc/lang/delta_english.toml
+	@[ -d ${PREFIX}/config/lang ] || mkdir -p ${PREFIX}/config/lang
+	@cp -f build/config/lang/english.toml ${PREFIX}/config/lang/english.toml 2>/dev/null || true
+	@cp -f resources/lang/delta_english.toml ${PREFIX}/config/lang/delta_english.toml 2>/dev/null || true
 
-	@[ -d ${PREFIX}/etc/db ] || mkdir -p ${PREFIX}/etc/db
-	@cp -f scripts/db/userdb_schema.sql ${PREFIX}/etc/db/userdb_schema.sql
+	@[ -d ${PREFIX}/data/db ] || mkdir -p ${PREFIX}/data/db
+	@[ -d ${PREFIX}/data/users ] || mkdir -p ${PREFIX}/data/users
+	@cp -f scripts/db/userdb_schema.sql ${PREFIX}/data/db/userdb_schema.sql
 	@cp -f scripts/db/init-userdb.sh ${PREFIX}/bin/init-userdb.sh
 	@chmod +x ${PREFIX}/bin/init-userdb.sh
 
-	@[ ! -f ${PREFIX}/etc/user.db ] || echo "This is not a fresh install -- not creating new user.db"
-	@[ -f ${PREFIX}/etc/user.db ] || echo "Creating user.db"
-	@[ -f ${PREFIX}/etc/user.db ] || (cd ${PREFIX} && bin/init-userdb.sh ${PREFIX} || true)
+	@[ ! -f ${PREFIX}/data/users/user.db ] || echo "This is not a fresh install -- not creating new user.db"
+	@[ -f ${PREFIX}/data/users/user.db ] || echo "Creating user.db"
+	@[ -f ${PREFIX}/data/users/user.db ] || (cd ${PREFIX} && bin/init-userdb.sh ${PREFIX} || true)
 	@echo
 	@echo "Configuration complete."
 
 reconfig:
 	@echo " - Compiling MECCA help files"
-	@(cd $(PREFIX)/etc/help && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
+	@(cd $(PREFIX)/display/help && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
 	@echo " - Compiling misc MECCA files"
-	@(cd $(PREFIX)/etc/misc && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
+	@(cd $(PREFIX)/display/screens && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
 	@echo " - Compiling MEX files"
-	@(cd $(PREFIX)/m && export MEX_INCLUDE=$(PREFIX)/m && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
+	@(cd $(PREFIX)/scripts && export MEX_INCLUDE=$(PREFIX)/scripts/include && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
 
 	@echo
 	@echo "reconfig complete (MAID removed — language strings now via TOML)"
@@ -195,6 +196,11 @@ reconfig:
 install: mkdirs squish_install sqafix_install max_install maxtel_install config_install
 
 build:	mkdirs install_libs squish sqafix max maxtel install_binaries
+	@[ -d "$(BIN)/lib" ] && cp -f $(LIB)/*.so $(BIN)/lib/ 2>/dev/null || true
+ifeq ($(PLATFORM),darwin)
+	@for f in $(LIB)/*.so; do codesign -f -s - "$$f" 2>/dev/null || true; done
+	@for f in $(BIN)/*; do [ -f "$$f" ] && codesign -f -s - "$$f" 2>/dev/null || true; done
+endif
 	@echo "Build Complete; edit your control files and 'make install'"
 
 GPL gpl license::

@@ -479,8 +479,9 @@ static void lc_printf_to_positional(const char *input, char *output, size_t out_
         }
 
         /* Parse length modifier: hh h ll l L z j t */
+        bool len_long = false;
         if (*s == 'h') { s++; if (*s == 'h') s++; }
-        else if (*s == 'l') { s++; if (*s == 'l') s++; }
+        else if (*s == 'l') { len_long = true; s++; if (*s == 'l') s++; }
         else if (*s == 'L' || *s == 'z' || *s == 'j' || *s == 't') s++;
 
         /* Parse conversion type */
@@ -521,6 +522,34 @@ static void lc_printf_to_positional(const char *input, char *output, size_t out_
                 *d++ = '|';
                 *d++ = '!';
                 *d++ = slot;
+
+                /* Emit type suffix for LangVsprintf so it reads the
+                 * correct va_arg type.  Callers that have been migrated
+                 * to pass pre-formatted const char * strings do NOT need
+                 * a suffix (string is the default).  Those strings must
+                 * have their suffix manually removed after conversion.
+                 *
+                 * Mapping from printf type to suffix:
+                 *   %s        → (none, string is default)
+                 *   %d/%i     → 'd'  (int)
+                 *   %ld/%li   → 'l'  (long)
+                 *   %u        → 'u'  (unsigned int)
+                 *   %lu       → 'u'  (unsigned)
+                 *   %c        → 'c'  (char via int promotion)
+                 *   %o/%x/%X  → 'u'  (integer format variants)
+                 */
+                char suffix = 0;
+                if (type_ch == 'c')
+                    suffix = 'c';
+                else if (type_ch == 'u' || type_ch == 'o' ||
+                         type_ch == 'x' || type_ch == 'X')
+                    suffix = 'u';
+                else if (strchr("di", type_ch))
+                    suffix = len_long ? 'l' : 'd';
+                /* %s, %n, %p, %e/%f/%g — no suffix (string default) */
+                if (suffix && d < end)
+                    *d++ = suffix;
+
                 param_idx++;
             }
         } else {
@@ -670,22 +699,24 @@ static void lc_avatar_to_mci(const unsigned char *raw, size_t raw_len,
         } else if (*s == 0x19 && s + 2 < s_end) {
             /* Standalone AVATAR RLE: 0x19 <char> <count>
              * If the count byte is '%' (0x25), the count is a printf format
-             * specifier (e.g. %c) — emit $D<fmt><char> so the subsequent
-             * printf-to-positional pass converts <fmt> to |!N.
+             * specifier — emit $D%s<char> so the subsequent printf-to-
+             * positional pass converts %s to |!N (string type).
+             *
+             * The legacy .mad source used %c here (raw byte count), but the
+             * MCI $D##C operator expects two ASCII decimal digits.  All C
+             * callers already snprintf the count as "%02d" into a char[]
+             * buffer and pass a char* — so %s is the correct type.
+             *
              * At runtime: LangPrintf Pass 1 expands |!N→"37", then
              * MCI Pass 2 processes $D37─ correctly. */
             unsigned char rle_ch = s[1];
             if (s[2] == '%') {
-                /* Emit $D prefix, let %c/%d pass through for positional
-                 * conversion, then emit the TOML-safe RLE character */
+                /* Emit $D prefix then %s (always string — the caller
+                 * pre-formats the count as a zero-padded 2-digit string) */
                 d += snprintf(d, (size_t)(end - d), "$D");
                 s += 2; /* skip 0x19 + char; leave %spec for passthrough */
-                /* Emit the rle_ch after the format spec will be placed.
-                 * We need to emit it AFTER the % spec, but the % spec
-                 * hasn't been consumed yet.  So stash the char and let
-                 * the main loop copy the %spec bytes through, then we
-                 * need to append the char AFTER.  This is tricky — instead,
-                 * scan past the format spec here and emit it + the char. */
+                /* Scan past the original format spec so we can skip it,
+                 * then emit %s in its place. */
                 const unsigned char *fs = s; /* points at '%' */
                 fs++; /* skip '%' */
                 /* Skip flags */
@@ -699,10 +730,11 @@ static void lc_avatar_to_mci(const unsigned char *raw, size_t raw_len,
                 if (*fs == 'h') { fs++; if (*fs == 'h') fs++; }
                 else if (*fs == 'l') { fs++; if (*fs == 'l') fs++; }
                 else if (*fs == 'L' || *fs == 'z') fs++;
-                /* Copy the format spec (e.g. "%c") verbatim */
+                /* Replace the original format spec (e.g. "%c") with "%s" */
                 if (*fs && strchr("diouxXcsnp", *fs)) {
-                    fs++; /* include type char */
-                    while (s < fs && d < end) *d++ = *s++;
+                    fs++; /* skip past type char */
+                    s = fs; /* advance past the original spec */
+                    if (d + 2 <= end) { *d++ = '%'; *d++ = 's'; }
                 }
                 /* Now emit the RLE character (TOML-safe) */
                 if (rle_ch >= 0x20 && rle_ch != '"' && rle_ch != '\\')
@@ -1112,11 +1144,425 @@ static void lc_cleanup(LcState *st)
 }
 
 /* ========================================================================== */
+/* Delta merge helpers                                                         */
+/* ========================================================================== */
+
+/**
+ * @brief Skip past a TOML value (string, array, inline table) respecting nesting.
+ *
+ * @param s  Pointer to start of value.
+ * @return Pointer to character after the value.
+ */
+static const char *lc_skip_toml_value(const char *s)
+{
+    while (*s == ' ' || *s == '\t') s++;
+
+    if (*s == '"') {
+        /* Quoted string — skip to closing quote, handling escapes */
+        s++;
+        while (*s) {
+            if (*s == '\\') { s++; if (*s) s++; continue; }
+            if (*s == '"') { s++; return s; }
+            s++;
+        }
+    } else if (*s == '[' || *s == '{') {
+        /* Array or inline table — track nesting */
+        char open = *s, close = (*s == '[') ? ']' : '}';
+        int depth = 1;
+        s++;
+        while (*s && depth > 0) {
+            if (*s == '"') {
+                s++;
+                while (*s && *s != '"') {
+                    if (*s == '\\') { s++; if (*s) s++; continue; }
+                    s++;
+                }
+                if (*s == '"') s++;
+            } else {
+                if (*s == open) depth++;
+                else if (*s == close) depth--;
+                if (depth > 0) s++;
+                else { s++; return s; }
+            }
+        }
+    } else {
+        /* Number, boolean, etc — skip to comma, }, or end */
+        while (*s && *s != ',' && *s != '}' && *s != ']') s++;
+    }
+    return s;
+}
+
+/**
+ * @brief Merge a delta inline table into a base TOML line (shallow field merge).
+ *
+ * When the delta value is an inline table `{ ... }`, merges its fields into
+ * the base line rather than replacing it entirely:
+ *   - Base is `"..."` → wraps as `{ text = <string>, <delta_fields> }`
+ *   - Base is `{ ... }` → appends new delta fields, replaces existing ones
+ *
+ * @param base_line   The existing base TOML line (e.g. `key = "hello"`).
+ * @param delta_line  The delta TOML line (e.g. `key = { params = [...] }`).
+ * @return malloc'd merged line, or NULL if merge not possible.
+ */
+static char *lc_delta_merge_line(const char *base_line, const char *delta_line)
+{
+    /* Locate value portion of delta line — must be inline table */
+    const char *deq = strchr(delta_line, '=');
+    if (!deq) return NULL;
+    const char *dv = deq + 1;
+    while (*dv == ' ' || *dv == '\t') dv++;
+    if (*dv != '{') return NULL;
+
+    /* Extract delta inner content (between { and last }) */
+    const char *d_open = dv + 1;
+    while (*d_open == ' ' || *d_open == '\t') d_open++;
+    const char *d_close = strrchr(dv, '}');
+    if (!d_close || d_close <= d_open) return NULL;
+    const char *d_end = d_close;
+    while (d_end > d_open && (d_end[-1] == ' ' || d_end[-1] == '\t' || d_end[-1] == ','))
+        d_end--;
+    size_t d_inner_len = (size_t)(d_end - d_open);
+
+    /* Extract key from base line */
+    const char *bp = base_line;
+    while (*bp == ' ' || *bp == '\t') bp++;
+    const char *beq = strchr(bp, '=');
+    if (!beq) return NULL;
+    const char *key_end = beq;
+    while (key_end > bp && (key_end[-1] == ' ' || key_end[-1] == '\t')) key_end--;
+    size_t key_len = (size_t)(key_end - bp);
+
+    /* Locate base value */
+    const char *bv = beq + 1;
+    while (*bv == ' ' || *bv == '\t') bv++;
+
+    char result[LC_MAX_CONTENT];
+
+    if (*bv == '{') {
+        /* Base is already an inline table.
+         * Extract base inner, then for each delta field check if it exists
+         * in base: replace if so, append if not. */
+        const char *b_close = strrchr(bv, '}');
+        if (!b_close) return NULL;
+
+        /* Copy base inner into working buffer */
+        const char *b_inner = bv + 1;
+        while (*b_inner == ' ' || *b_inner == '\t') b_inner++;
+        size_t b_inner_len = (size_t)(b_close - b_inner);
+        char base_inner[LC_MAX_CONTENT];
+        if (b_inner_len >= sizeof(base_inner)) return NULL;
+        memcpy(base_inner, b_inner, b_inner_len);
+        base_inner[b_inner_len] = '\0';
+        /* Trim trailing whitespace/commas */
+        while (b_inner_len > 0 &&
+               (base_inner[b_inner_len-1] == ' ' || base_inner[b_inner_len-1] == '\t' ||
+                base_inner[b_inner_len-1] == ','))
+            base_inner[--b_inner_len] = '\0';
+
+        /* Walk delta fields; collect fields to append */
+        char append_buf[LC_MAX_CONTENT] = "";
+        size_t append_len = 0;
+        const char *dp = d_open;
+
+        while (dp < d_end) {
+            while (dp < d_end && (*dp == ' ' || *dp == '\t' || *dp == ',')) dp++;
+            if (dp >= d_end) break;
+
+            /* Extract field name */
+            const char *fname = dp;
+            while (dp < d_end && *dp != '=' && *dp != ' ' && *dp != '\t') dp++;
+            size_t fname_len = (size_t)(dp - fname);
+
+            /* Skip to value */
+            while (dp < d_end && (*dp == ' ' || *dp == '\t')) dp++;
+            if (dp < d_end && *dp == '=') dp++;
+            while (dp < d_end && (*dp == ' ' || *dp == '\t')) dp++;
+
+            /* Capture the full value */
+            const char *fval = dp;
+            dp = lc_skip_toml_value(dp);
+            size_t fval_len = (size_t)(dp - fval);
+
+            /* Build "name = value" string for this field */
+            char field_str[2048];
+            int fs_len = snprintf(field_str, sizeof(field_str), "%.*s = %.*s",
+                                  (int)fname_len, fname, (int)fval_len, fval);
+            if (fs_len < 0 || (size_t)fs_len >= sizeof(field_str)) continue;
+
+            /* Check if this field name exists in base inner.
+             * Simple check: find "fname =" or "fname=" in base_inner. */
+            bool found_in_base = false;
+            char needle[256];
+            snprintf(needle, sizeof(needle), "%.*s", (int)fname_len, fname);
+            const char *bp2 = base_inner;
+            while (*bp2) {
+                while (*bp2 == ' ' || *bp2 == '\t' || *bp2 == ',') bp2++;
+                if (!*bp2) break;
+                /* Check if current field matches */
+                if (strncmp(bp2, needle, fname_len) == 0) {
+                    const char *after = bp2 + fname_len;
+                    while (*after == ' ' || *after == '\t') after++;
+                    if (*after == '=') { found_in_base = true; break; }
+                }
+                /* Skip this field's value to move to next */
+                while (*bp2 && *bp2 != '=') bp2++;
+                if (*bp2 == '=') bp2++;
+                while (*bp2 == ' ' || *bp2 == '\t') bp2++;
+                bp2 = lc_skip_toml_value(bp2);
+            }
+
+            if (!found_in_base) {
+                /* Append this field */
+                if (append_len > 0 && append_len + 2 < sizeof(append_buf)) {
+                    append_buf[append_len++] = ',';
+                    append_buf[append_len++] = ' ';
+                }
+                if (append_len + (size_t)fs_len < sizeof(append_buf) - 1) {
+                    memcpy(append_buf + append_len, field_str, (size_t)fs_len);
+                    append_len += (size_t)fs_len;
+                    append_buf[append_len] = '\0';
+                }
+            }
+            /* Note: field replacement in base_inner is not implemented here.
+             * For now, delta fields that already exist in base are skipped
+             * (base value preserved). Full field replacement can be added if needed. */
+        }
+
+        if (append_len > 0)
+            snprintf(result, sizeof(result), "%.*s = { %s, %s }",
+                     (int)key_len, bp, base_inner, append_buf);
+        else
+            snprintf(result, sizeof(result), "%.*s = { %s }",
+                     (int)key_len, bp, base_inner);
+
+    } else if (*bv == '"') {
+        /* Base is a simple string — wrap as { text = <string>, <delta_fields> } */
+        const char *str_end = lc_skip_toml_value(bv);
+        size_t str_len = (size_t)(str_end - bv);
+
+        snprintf(result, sizeof(result), "%.*s = { text = %.*s, %.*s }",
+                 (int)key_len, bp,
+                 (int)str_len, bv,
+                 (int)d_inner_len, d_open);
+    } else {
+        return NULL;
+    }
+
+    return strdup(result);
+}
+
+/* ========================================================================== */
 /* Public API                                                                  */
 /* ========================================================================== */
 
+/**
+ * @brief Apply a delta overlay to an existing TOML language file.
+ *
+ * Reads the base .toml and applies changes from the delta file according to
+ * the specified mode.  Delta lines before any [maximusng-*] section are Tier 1
+ * (@merge param metadata).  Lines inside [maximusng-*] sections are Tier 2
+ * (theme color overrides).
+ *
+ * - LANG_DELTA_FULL:       Apply both tiers.
+ * - LANG_DELTA_MERGE_ONLY: Apply Tier 1 only (preserves user colors).
+ * - LANG_DELTA_NG_ONLY:    Apply Tier 2 only (theme on enriched file).
+ */
+bool lang_apply_delta(const char *toml_path,
+                      const char *delta_path,
+                      LangDeltaMode mode,
+                      char *err,
+                      size_t err_len)
+{
+    if (!toml_path || !*toml_path) {
+        set_err(err, err_len, "No TOML file path specified for delta apply");
+        return false;
+    }
+
+    /* Resolve delta path if not provided explicitly */
+    char resolved_delta[LC_MAX_PATH];
+    if (delta_path && *delta_path) {
+        strncpy(resolved_delta, delta_path, sizeof(resolved_delta) - 1);
+        resolved_delta[sizeof(resolved_delta) - 1] = '\0';
+    } else {
+        /* Auto-detect: delta_<basename>.toml in same directory as toml_path */
+        char tmp[LC_MAX_PATH];
+        strncpy(tmp, toml_path, sizeof(tmp) - 1);
+        tmp[sizeof(tmp) - 1] = '\0';
+
+        char *base = basename(tmp);
+        char name_only[LC_MAX_VARNAME];
+        char *dot = strrchr(base, '.');
+        if (dot) {
+            size_t nlen = (size_t)(dot - base);
+            if (nlen >= sizeof(name_only)) nlen = sizeof(name_only) - 1;
+            memcpy(name_only, base, nlen);
+            name_only[nlen] = '\0';
+        } else {
+            strncpy(name_only, base, sizeof(name_only) - 1);
+            name_only[sizeof(name_only) - 1] = '\0';
+        }
+
+        char dir_buf[LC_MAX_PATH];
+        strncpy(dir_buf, toml_path, sizeof(dir_buf) - 1);
+        dir_buf[sizeof(dir_buf) - 1] = '\0';
+        char *dir = dirname(dir_buf);
+        snprintf(resolved_delta, sizeof(resolved_delta),
+                 "%s/delta_%s.toml", dir, name_only);
+    }
+
+    FILE *df = fopen(resolved_delta, "r");
+    if (!df) {
+        /* No delta file is not an error — nothing to apply */
+        return true;
+    }
+
+    /* Read the base TOML into memory */
+    FILE *bf = fopen(toml_path, "r");
+    if (!bf) {
+        fclose(df);
+        set_err(err, err_len, "Cannot open base file: %s", toml_path);
+        return false;
+    }
+
+    char **lines = NULL;
+    int line_count = 0, line_cap = 0;
+    char lbuf[4096];
+
+    while (fgets(lbuf, (int)sizeof(lbuf), bf)) {
+        size_t ln = strlen(lbuf);
+        if (ln > 0 && lbuf[ln - 1] == '\n') lbuf[--ln] = '\0';
+        if (ln > 0 && lbuf[ln - 1] == '\r') lbuf[--ln] = '\0';
+
+        if (line_count >= line_cap) {
+            line_cap = line_cap ? line_cap * 2 : 256;
+            lines = realloc(lines, (size_t)line_cap * sizeof(char *));
+        }
+        lines[line_count++] = strdup(lbuf);
+    }
+    fclose(bf);
+
+    /* Process each delta line with section-aware tier tracking.
+     *   - Lines before any [maximusng-*] section = Tier 1
+     *   - Lines inside [maximusng-*] sections    = Tier 2 */
+    bool merge_next = false;
+    bool in_ng_section = false;
+
+    while (fgets(lbuf, (int)sizeof(lbuf), df)) {
+        size_t ln = strlen(lbuf);
+        if (ln > 0 && lbuf[ln - 1] == '\n') lbuf[--ln] = '\0';
+        if (ln > 0 && lbuf[ln - 1] == '\r') lbuf[--ln] = '\0';
+
+        const char *p = lbuf;
+        while (*p == ' ' || *p == '\t') p++;
+
+        /* Blank lines reset nothing, just skip */
+        if (*p == '\0')
+            continue;
+
+        /* Section headers: track whether we're in a [maximusng-*] tier */
+        if (*p == '[') {
+            in_ng_section = (strncmp(p, "[maximusng-", 11) == 0);
+            merge_next = false;
+            continue;
+        }
+
+        /* Comments: check for @merge directive */
+        if (*p == '#') {
+            if (strstr(p, "@merge"))
+                merge_next = true;
+            continue;
+        }
+
+        /* Tier filtering based on mode */
+        if (in_ng_section && mode == LANG_DELTA_MERGE_ONLY) {
+            merge_next = false;
+            continue;   /* Skip Tier 2 entries in merge-only mode */
+        }
+        if (!in_ng_section && mode == LANG_DELTA_NG_ONLY) {
+            merge_next = false;
+            continue;   /* Skip Tier 1 entries in ng-only mode */
+        }
+
+        /* Extract key: everything before '=' */
+        const char *eq = strstr(p, " =");
+        if (!eq) eq = strchr(p, '=');
+        if (!eq) { merge_next = false; continue; }
+
+        size_t key_len = (size_t)(eq - p);
+        while (key_len > 0 && (p[key_len - 1] == ' ' || p[key_len - 1] == '\t'))
+            key_len--;
+
+        /* Search for existing key in base lines */
+        int found = -1;
+        for (int i = 0; i < line_count; i++) {
+            const char *bl = lines[i];
+            while (*bl == ' ' || *bl == '\t') bl++;
+            if (strncmp(bl, p, key_len) == 0) {
+                const char *after = bl + key_len;
+                while (*after == ' ' || *after == '\t') after++;
+                if (*after == '=') {
+                    found = i;
+                    break;
+                }
+            }
+        }
+
+        if (found >= 0) {
+            if (merge_next) {
+                /* Shallow merge: append delta fields to base */
+                char *merged = lc_delta_merge_line(lines[found], lbuf);
+                if (merged) {
+                    free(lines[found]);
+                    lines[found] = merged;
+                }
+                /* If merge fails, base line is preserved unchanged */
+            } else {
+                /* Full replacement */
+                free(lines[found]);
+                lines[found] = strdup(lbuf);
+            }
+        } else {
+            /* Insert before [_legacy_map] or at end */
+            int insert_at = line_count;
+            for (int i = 0; i < line_count; i++) {
+                if (strncmp(lines[i], "[_legacy_map]", 13) == 0) {
+                    insert_at = i;
+                    break;
+                }
+            }
+            if (line_count >= line_cap) {
+                line_cap = line_cap ? line_cap * 2 : 256;
+                lines = realloc(lines, (size_t)line_cap * sizeof(char *));
+            }
+            memmove(&lines[insert_at + 1], &lines[insert_at],
+                    (size_t)(line_count - insert_at) * sizeof(char *));
+            lines[insert_at] = strdup(lbuf);
+            line_count++;
+        }
+        merge_next = false;
+    }
+    fclose(df);
+
+    /* Write merged result back */
+    FILE *of = fopen(toml_path, "w");
+    if (!of) {
+        for (int i = 0; i < line_count; i++) free(lines[i]);
+        free(lines);
+        set_err(err, err_len, "Cannot write to: %s", toml_path);
+        return false;
+    }
+    for (int i = 0; i < line_count; i++)
+        fprintf(of, "%s\n", lines[i]);
+    fclose(of);
+
+    for (int i = 0; i < line_count; i++) free(lines[i]);
+    free(lines);
+    return true;
+}
+
 bool lang_convert_mad_to_toml(const char *mad_path,
                               const char *out_dir,
+                              LangDeltaMode mode,
                               char *err,
                               size_t err_len)
 {
@@ -1179,117 +1625,46 @@ bool lang_convert_mad_to_toml(const char *mad_path,
         return false;
     }
 
-    /* Apply delta overlay if delta_<name>.toml exists next to the .mad input.
-     * Keys in the delta replace existing keys in the output; new keys are
-     * inserted before the [_legacy_map] section. */
+    /* Apply delta overlay if delta_<name>.toml exists.
+     * Search order: output directory first, then .mad input directory.
+     * The delta apply function handles all tier filtering via mode. */
     {
         char delta_path[LC_MAX_PATH];
-        char dir_buf[LC_MAX_PATH];
-        strncpy(dir_buf, mad_path, sizeof(dir_buf) - 1);
-        dir_buf[sizeof(dir_buf) - 1] = '\0';
-        char *dir = dirname(dir_buf);
-        snprintf(delta_path, sizeof(delta_path), "%s/delta_%s.toml", dir, name_only);
+        bool found_delta = false;
 
-        FILE *df = fopen(delta_path, "r");
-        if (df) {
-            /* Read the base output TOML into memory */
-            FILE *bf = fopen(out_path, "r");
-            if (bf) {
-                /* Collect base lines */
-                char **lines = NULL;
-                int line_count = 0, line_cap = 0;
-                char lbuf[4096];
+        /* Try output directory first (co-located with the .toml result) */
+        char out_dir_buf[LC_MAX_PATH];
+        strncpy(out_dir_buf, out_path, sizeof(out_dir_buf) - 1);
+        out_dir_buf[sizeof(out_dir_buf) - 1] = '\0';
+        char *odir = dirname(out_dir_buf);
+        snprintf(delta_path, sizeof(delta_path), "%s/delta_%s.toml", odir, name_only);
 
-                while (fgets(lbuf, (int)sizeof(lbuf), bf)) {
-                    /* Strip trailing newline */
-                    size_t ln = strlen(lbuf);
-                    if (ln > 0 && lbuf[ln-1] == '\n') lbuf[--ln] = '\0';
-                    if (ln > 0 && lbuf[ln-1] == '\r') lbuf[--ln] = '\0';
+        FILE *test = fopen(delta_path, "r");
+        if (test) {
+            fclose(test);
+            found_delta = true;
+        } else {
+            /* Fall back to .mad input directory */
+            char dir_buf[LC_MAX_PATH];
+            strncpy(dir_buf, mad_path, sizeof(dir_buf) - 1);
+            dir_buf[sizeof(dir_buf) - 1] = '\0';
+            char *dir = dirname(dir_buf);
+            snprintf(delta_path, sizeof(delta_path), "%s/delta_%s.toml", dir, name_only);
+            test = fopen(delta_path, "r");
+            if (test) {
+                fclose(test);
+                found_delta = true;
+            }
+        }
 
-                    if (line_count >= line_cap) {
-                        line_cap = line_cap ? line_cap * 2 : 256;
-                        lines = realloc(lines, (size_t)line_cap * sizeof(char *));
-                    }
-                    lines[line_count++] = strdup(lbuf);
-                }
-                fclose(bf);
-
-                /* Process each delta line */
-                while (fgets(lbuf, (int)sizeof(lbuf), df)) {
-                    size_t ln = strlen(lbuf);
-                    if (ln > 0 && lbuf[ln-1] == '\n') lbuf[--ln] = '\0';
-                    if (ln > 0 && lbuf[ln-1] == '\r') lbuf[--ln] = '\0';
-
-                    /* Skip comments and blank lines */
-                    const char *p = lbuf;
-                    while (*p == ' ' || *p == '\t') p++;
-                    if (*p == '#' || *p == '\0' || *p == '[')
-                        continue;
-
-                    /* Extract key: everything before ' =' */
-                    const char *eq = strstr(p, " =");
-                    if (!eq) eq = strchr(p, '=');
-                    if (!eq) continue;
-
-                    size_t key_len = (size_t)(eq - p);
-                    while (key_len > 0 && (p[key_len-1] == ' ' || p[key_len-1] == '\t'))
-                        key_len--;
-
-                    /* Search for existing key in base lines */
-                    int found = -1;
-                    for (int i = 0; i < line_count; i++) {
-                        const char *bl = lines[i];
-                        while (*bl == ' ' || *bl == '\t') bl++;
-                        if (strncmp(bl, p, key_len) == 0) {
-                            const char *after = bl + key_len;
-                            while (*after == ' ' || *after == '\t') after++;
-                            if (*after == '=') {
-                                found = i;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (found >= 0) {
-                        /* Replace existing line */
-                        free(lines[found]);
-                        lines[found] = strdup(lbuf);
-                    } else {
-                        /* Insert before [_legacy_map] or at end */
-                        int insert_at = line_count;
-                        for (int i = 0; i < line_count; i++) {
-                            if (strncmp(lines[i], "[_legacy_map]", 13) == 0) {
-                                insert_at = i;
-                                break;
-                            }
-                        }
-                        /* Grow array */
-                        if (line_count >= line_cap) {
-                            line_cap = line_cap ? line_cap * 2 : 256;
-                            lines = realloc(lines, (size_t)line_cap * sizeof(char *));
-                        }
-                        /* Shift lines down */
-                        memmove(&lines[insert_at + 1], &lines[insert_at],
-                                (size_t)(line_count - insert_at) * sizeof(char *));
-                        lines[insert_at] = strdup(lbuf);
-                        line_count++;
-                    }
-                }
-                fclose(df);
-
-                /* Write merged result back */
-                FILE *of = fopen(out_path, "w");
-                if (of) {
-                    for (int i = 0; i < line_count; i++)
-                        fprintf(of, "%s\n", lines[i]);
-                    fclose(of);
-                }
-
-                for (int i = 0; i < line_count; i++)
-                    free(lines[i]);
-                free(lines);
-            } else {
-                fclose(df);
+        if (found_delta) {
+            char delta_err[512] = {0};
+            if (!lang_apply_delta(out_path, delta_path, mode,
+                                  delta_err, sizeof(delta_err))) {
+                /* Delta failure is non-fatal for conversion — warn but continue */
+                if (err && err_len > 0)
+                    set_err(err, err_len, "Warning: delta apply failed: %s",
+                            delta_err);
             }
         }
     }
@@ -1301,6 +1676,7 @@ bool lang_convert_mad_to_toml(const char *mad_path,
 
 int lang_convert_all_mad(const char *lang_dir,
                          const char *out_dir,
+                         LangDeltaMode mode,
                          char *err,
                          size_t err_len)
 {
@@ -1331,7 +1707,7 @@ int lang_convert_all_mad(const char *lang_dir,
         char file_err[512] = {0};
         if (lang_convert_mad_to_toml(full_path,
                                      out_dir ? out_dir : lang_dir,
-                                     file_err, sizeof(file_err))) {
+                                     mode, file_err, sizeof(file_err))) {
             converted++;
         } else {
             /* Report the first error but continue with other files */

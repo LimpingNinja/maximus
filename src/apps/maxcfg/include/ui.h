@@ -189,10 +189,10 @@ extern int g_form_last_action_key;
  * ============================================================================ */
 
 /* Show file picker dialog, returns selected filename (without extension) or NULL if cancelled
- * base_path: directory to list files from (e.g., "etc/misc")
+ * base_path: directory to list files from (e.g., "display/screens")
  * filter: extension filter (e.g., "*.bbs")
  * current: current value to highlight, or NULL
- * Returns: malloc'd string with full path (e.g., "etc/misc/logo") or NULL
+ * Returns: malloc'd string with full path (e.g., "display/screens/logo") or NULL
  */
 char *filepicker_select(const char *base_path, const char *filter, const char *current);
 

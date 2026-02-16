@@ -54,7 +54,7 @@ int Read_Stats(struct _bbs_stats *bstats)
 
   char temp[PATHLEN];
 
-  sprintf(temp,bbs_stats, ngcfg_get_path("maximus.sys_path"), task_num);
+  node_file_path(task_num, "bbstat.bbs", temp, sizeof(temp));
 
   if ((bfile=shopen(temp, O_RDONLY | O_BINARY)) != -1)
   {
@@ -92,7 +92,7 @@ void Write_Stats(struct _bbs_stats *bstats)
 
   char temp[PATHLEN];
 
-  sprintf(temp,bbs_stats, ngcfg_get_path("maximus.sys_path"), task_num);
+  node_file_path(task_num, "bbstat.bbs", temp, sizeof(temp));
 
   if ((bfile=sopen(temp, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                    SH_DENYNONE, S_IREAD | S_IWRITE))==-1)

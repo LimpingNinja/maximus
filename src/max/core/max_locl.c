@@ -803,7 +803,7 @@ void Parse_FKey(int c)
 
   snprintf(fkname, sizeof(fkname), "%sF%d", prefix, num);
 
-  if (safe_path_join((char *)ngcfg_get_path("maximus.misc_path"), fkname, fkfile, sizeof(fkfile)) != 0)
+  if (safe_path_join((char *)ngcfg_get_path("maximus.display_path"), fkname, fkfile, sizeof(fkfile)) != 0)
   {
     fkfile[0] = '\0';
     return;

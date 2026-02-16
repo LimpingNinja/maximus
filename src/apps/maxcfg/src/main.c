@@ -37,6 +37,11 @@ static char g_cli_export_dir[MAX_PATH_LEN] = { 0 };
 static bool g_cli_convert_lang = false;
 static bool g_cli_convert_lang_all = false;
 static char g_cli_convert_lang_path[MAX_PATH_LEN] = { 0 };
+static char g_cli_lang_out_dir[MAX_PATH_LEN] = { 0 };
+static bool g_cli_apply_delta = false;
+static char g_cli_apply_delta_path[MAX_PATH_LEN] = { 0 };
+static char g_cli_delta_file[MAX_PATH_LEN] = { 0 };
+static LangDeltaMode g_cli_delta_mode = LANG_DELTA_FULL;
 
 /* Request terminal to resize (xterm-compatible) */
 static void request_terminal_size(int cols, int rows)
@@ -79,6 +84,7 @@ AppState g_state = {
 
 MaxCfg *g_maxcfg = NULL;
 MaxCfgToml *g_maxcfg_toml = NULL;
+MaxCfgThemeColors g_theme_colors;
 
 static void maxcfg_toml_cleanup(void)
 {
@@ -118,6 +124,7 @@ static int load_toml_config(const char *sys_path)
     char equipment_path[MAX_PATH_LEN];
     char language_path[MAX_PATH_LEN];
     char protocol_path[MAX_PATH_LEN];
+    char colors_path[MAX_PATH_LEN];
 
     if (maxcfg_join_path(g_maxcfg, "config/maximus.toml", maximus_path, sizeof(maximus_path)) != MAXCFG_OK) {
         fprintf(stderr, "Error: failed to resolve config/maximus.toml under: %s\n", sys_path);
@@ -157,6 +164,11 @@ static int load_toml_config(const char *sys_path)
     }
     if (maxcfg_join_path(g_maxcfg, "config/general/protocol.toml", protocol_path, sizeof(protocol_path)) != MAXCFG_OK) {
         fprintf(stderr, "Error: failed to resolve config/general/protocol.toml under: %s\n", sys_path);
+        maxcfg_toml_cleanup();
+        return 0;
+    }
+    if (maxcfg_join_path(g_maxcfg, "config/general/colors.toml", colors_path, sizeof(colors_path)) != MAXCFG_OK) {
+        fprintf(stderr, "Error: failed to resolve config/general/colors.toml under: %s\n", sys_path);
         maxcfg_toml_cleanup();
         return 0;
     }
@@ -212,6 +224,15 @@ static int load_toml_config(const char *sys_path)
         maxcfg_toml_cleanup();
         return 0;
     }
+    st = maxcfg_toml_load_file(g_maxcfg_toml, colors_path, "colors");
+    if (st != MAXCFG_OK) {
+        fprintf(stderr, "Warning: failed to load colors TOML: %s (%s) - using defaults\n",
+                colors_path, maxcfg_status_string(st));
+        /* Non-fatal: fall through with defaults */
+    }
+
+    /* Populate theme colors from loaded TOML (falls back to defaults) */
+    maxcfg_theme_load_from_toml(&g_theme_colors, g_maxcfg_toml, "colors");
 
     return 1;
 }
@@ -222,10 +243,20 @@ static void print_usage(const char *prog)
     fprintf(stderr, "\nOptions:\n");
     fprintf(stderr, "  -h, --help     Show this help message\n");
     fprintf(stderr, "  -v, --version  Show version information\n");
+    fprintf(stderr, "\nConfig Export:\n");
     fprintf(stderr, "  --export-nextgen <path/to/max.ctl>  Export legacy CTL to next-gen TOML and exit\n");
     fprintf(stderr, "  --export-dir <path>  Override next-gen export directory (implies --export-nextgen)\n");
+    fprintf(stderr, "\nLanguage Conversion:\n");
     fprintf(stderr, "  --convert-lang <file.mad>  Convert a single .MAD language file to TOML and exit\n");
-    fprintf(stderr, "  --convert-lang-all         Convert all .MAD files in <sys_path>/etc/lang/ and exit\n");
+    fprintf(stderr, "  --lang-out-dir <path>      Output directory for --convert-lang (default: same as input)\n");
+    fprintf(stderr, "  --convert-lang-all         Convert all .MAD files in <sys_path>/config/lang/ and exit\n");
+    fprintf(stderr, "\nDelta Overlay:\n");
+    fprintf(stderr, "  --apply-delta <file.toml>  Apply delta overlay to an existing .toml language file\n");
+    fprintf(stderr, "  --delta <delta.toml>       Explicit delta file path (default: auto-detect)\n");
+    fprintf(stderr, "\nDelta Mode (applies to --convert-lang, --convert-lang-all, --apply-delta):\n");
+    fprintf(stderr, "  --full         Apply all delta tiers: params + theme (default)\n");
+    fprintf(stderr, "  --merge-only   Apply Tier 1 only: @merge param metadata (preserves user colors)\n");
+    fprintf(stderr, "  --ng-only      Apply Tier 2 only: [maximusng-*] theme color overrides\n");
     fprintf(stderr, "\nIf sys_path is not specified, it will be derived from argv[0] or the first positional argument.\n");
 }
 
@@ -278,8 +309,45 @@ static void parse_args(int argc, char *argv[])
             g_cli_convert_lang_path[MAX_PATH_LEN - 1] = '\0';
             i++;
         }
+        else if (strcmp(argv[i], "--lang-out-dir") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Missing value for %s\n", argv[i]);
+                exit(1);
+            }
+            strncpy(g_cli_lang_out_dir, argv[i + 1], MAX_PATH_LEN - 1);
+            g_cli_lang_out_dir[MAX_PATH_LEN - 1] = '\0';
+            i++;
+        }
         else if (strcmp(argv[i], "--convert-lang-all") == 0) {
             g_cli_convert_lang_all = true;
+        }
+        else if (strcmp(argv[i], "--apply-delta") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Missing value for %s\n", argv[i]);
+                exit(1);
+            }
+            g_cli_apply_delta = true;
+            strncpy(g_cli_apply_delta_path, argv[i + 1], MAX_PATH_LEN - 1);
+            g_cli_apply_delta_path[MAX_PATH_LEN - 1] = '\0';
+            i++;
+        }
+        else if (strcmp(argv[i], "--delta") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Missing value for %s\n", argv[i]);
+                exit(1);
+            }
+            strncpy(g_cli_delta_file, argv[i + 1], MAX_PATH_LEN - 1);
+            g_cli_delta_file[MAX_PATH_LEN - 1] = '\0';
+            i++;
+        }
+        else if (strcmp(argv[i], "--full") == 0) {
+            g_cli_delta_mode = LANG_DELTA_FULL;
+        }
+        else if (strcmp(argv[i], "--merge-only") == 0) {
+            g_cli_delta_mode = LANG_DELTA_MERGE_ONLY;
+        }
+        else if (strcmp(argv[i], "--ng-only") == 0) {
+            g_cli_delta_mode = LANG_DELTA_NG_ONLY;
         }
         else if (argv[i][0] != '-') {
             /* Assume it's the sys_path */
@@ -445,11 +513,30 @@ int main(int argc, char *argv[])
     /* Handle --convert-lang (single file, no TUI needed) */
     if (g_cli_convert_lang) {
         char err[512] = {0};
-        if (lang_convert_mad_to_toml(g_cli_convert_lang_path, NULL, err, sizeof(err))) {
+        const char *out_dir = g_cli_lang_out_dir[0] ? g_cli_lang_out_dir : NULL;
+        if (lang_convert_mad_to_toml(g_cli_convert_lang_path, out_dir,
+                                     g_cli_delta_mode, err, sizeof(err))) {
             printf("Converted: %s\n", g_cli_convert_lang_path);
             return 0;
         } else {
             fprintf(stderr, "Error: %s\n", err[0] ? err : "conversion failed");
+            return 1;
+        }
+    }
+
+    /* Handle --apply-delta (standalone delta overlay, no TUI needed) */
+    if (g_cli_apply_delta) {
+        char err[512] = {0};
+        const char *dp = g_cli_delta_file[0] ? g_cli_delta_file : NULL;
+        if (lang_apply_delta(g_cli_apply_delta_path, dp,
+                             g_cli_delta_mode, err, sizeof(err))) {
+            const char *mode_str = "full";
+            if (g_cli_delta_mode == LANG_DELTA_MERGE_ONLY) mode_str = "merge-only";
+            else if (g_cli_delta_mode == LANG_DELTA_NG_ONLY) mode_str = "ng-only";
+            printf("Delta applied (%s): %s\n", mode_str, g_cli_apply_delta_path);
+            return 0;
+        } else {
+            fprintf(stderr, "Error: %s\n", err[0] ? err : "delta apply failed");
             return 1;
         }
     }
@@ -468,10 +555,11 @@ int main(int argc, char *argv[])
         }
 
         char lang_dir[MAX_PATH_LEN];
-        snprintf(lang_dir, sizeof(lang_dir), "%s/etc/lang", sp);
+        snprintf(lang_dir, sizeof(lang_dir), "%s/config/lang", sp);
 
         char err[512] = {0};
-        int count = lang_convert_all_mad(lang_dir, NULL, err, sizeof(err));
+        int count = lang_convert_all_mad(lang_dir, NULL, g_cli_delta_mode,
+                                            err, sizeof(err));
         if (count < 0) {
             fprintf(stderr, "Error: %s\n", err[0] ? err : "conversion failed");
             return 1;

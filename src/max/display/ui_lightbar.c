@@ -34,6 +34,7 @@
 
 #include "ui_field.h"
 #include "ui_lightbar.h"
+#include "mci.h"
 
 typedef struct {
   char *disp;
@@ -573,6 +574,7 @@ int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key)
           free(items[i].it.orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return selected;
 
@@ -583,6 +585,7 @@ int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key)
           free(items[i].it.orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 
@@ -620,6 +623,7 @@ int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key)
                 free(items[j].it.orig);
               }
               free(items);
+              ui_set_attr(Mci2Attr("|tx", 0x07));
               ui_lb_show_cursor(did_hide_cursor);
               return i;
             }
@@ -824,6 +828,7 @@ int ui_lightbar_run(ui_lightbar_menu_t *m)
           free(items[i].orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return selected;
 
@@ -834,6 +839,7 @@ int ui_lightbar_run(ui_lightbar_menu_t *m)
           free(items[i].orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 
@@ -889,6 +895,7 @@ int ui_lightbar_run(ui_lightbar_menu_t *m)
                 free(items[ch].orig);
               }
               free(items);
+              ui_set_attr(Mci2Attr("|tx", 0x07));
               ui_lb_show_cursor(did_hide_cursor);
               return i;
             }
@@ -979,6 +986,7 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
           free(items[i].orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return selected;
 
@@ -989,6 +997,7 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
           free(items[i].orig);
         }
         free(items);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 
@@ -1046,6 +1055,7 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
                 free(items[ch].orig);
               }
               free(items);
+              ui_set_attr(Mci2Attr("|tx", 0x07));
               ui_lb_show_cursor(did_hide_cursor);
               return i;
             }
@@ -1251,6 +1261,7 @@ int ui_select_prompt(
         free(opts);
         free(start_col);
         free(opt_width);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return selected;
 
@@ -1263,6 +1274,7 @@ int ui_select_prompt(
         free(opts);
         free(start_col);
         free(opt_width);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 
@@ -1331,6 +1343,7 @@ int ui_select_prompt(
               free(opts);
               free(start_col);
               free(opt_width);
+              ui_set_attr(Mci2Attr("|tx", 0x07));
               ui_lb_show_cursor(did_hide_cursor);
               return match;
             }
@@ -1434,11 +1447,13 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
     {
       case K_RETURN:
         free(row_buffer);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return selected_index;
 
       case 27: /* ESC */
         free(row_buffer);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 

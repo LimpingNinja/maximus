@@ -298,13 +298,9 @@ int Outside(char *leaving,char *returning,int method,char *parm,
       if ((p=firstchar(parm, ctl_delim, 2)) != NULL && *p)
       {
 #ifndef UNIX
-        if (task_num)
-          sprintf(temp, "%sERRORL%02x.BAT", original_path, task_num);
-        else sprintf(temp, "%sERRORLVL.BAT", original_path);
+        node_file_path(task_num, "errorlvl.bat", temp, sizeof(temp));
 #else
-        if (task_num)
-          sprintf(temp, "%serrorl%02x.sh", original_path, task_num);
-        else sprintf(temp, "%serrorl.sh", original_path);
+        node_file_path(task_num, "errorlvl.sh", temp, sizeof(temp));
 #endif
 
         if ((bat=shfopen(temp, fopen_write, O_WRONLY | O_CREAT | O_TRUNC))==NULL)
@@ -837,9 +833,7 @@ static void near Outside_Reread(int tr, int tonline)
   char temp[PATHLEN];
   int ffile;
 
-  if (task_num)
-    sprintf(temp, lastusxx_bbs, original_path, task_num);
-  else sprintf(temp, lastuser_bbs, original_path);
+  node_file_path(task_num, "lastus.bbs", temp, sizeof(temp));
 
   if ((ffile=shopen(temp, O_RDONLY | O_BINARY))==-1)
   {

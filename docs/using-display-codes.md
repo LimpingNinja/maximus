@@ -47,22 +47,22 @@ These set the text (foreground) color without changing the background.
 
 | Code   | Color          |
 |--------|----------------|
-| `|00`  | Black          |
-| `|01`  | Blue           |
-| `|02`  | Green          |
-| `|03`  | Cyan           |
-| `|04`  | Red            |
-| `|05`  | Magenta        |
-| `|06`  | Brown          |
-| `|07`  | Light Gray     |
-| `|08`  | Dark Gray      |
-| `|09`  | Light Blue     |
-| `|10`  | Light Green    |
-| `|11`  | Light Cyan     |
-| `|12`  | Light Red      |
-| `|13`  | Light Magenta  |
-| `|14`  | Yellow         |
-| `|15`  | White          |
+| `\|00`  | Black          |
+| `\|01`  | Blue           |
+| `\|02`  | Green          |
+| `\|03`  | Cyan           |
+| `\|04`  | Red            |
+| `\|05`  | Magenta        |
+| `\|06`  | Brown          |
+| `\|07`  | Light Gray     |
+| `\|08`  | Dark Gray      |
+| `\|09`  | Light Blue     |
+| `\|10`  | Light Green    |
+| `\|11`  | Light Cyan     |
+| `\|12`  | Light Red      |
+| `\|13`  | Light Magenta  |
+| `\|14`  | Yellow         |
+| `\|15`  | White          |
 
 ### Background Colors (`|16` – `|23`)
 
@@ -70,14 +70,14 @@ These set the background color without changing the foreground.
 
 | Code   | Background     |
 |--------|----------------|
-| `|16`  | Black          |
-| `|17`  | Blue           |
-| `|18`  | Green          |
-| `|19`  | Cyan           |
-| `|20`  | Red            |
-| `|21`  | Magenta        |
-| `|22`  | Brown          |
-| `|23`  | Light Gray     |
+| `\|16`  | Black          |
+| `\|17`  | Blue           |
+| `\|18`  | Green          |
+| `\|19`  | Cyan           |
+| `\|20`  | Red            |
+| `\|21`  | Magenta        |
+| `\|22`  | Brown          |
+| `\|23`  | Light Gray     |
 
 ### Blink + Background (`|24` – `|31`)
 
@@ -86,14 +86,14 @@ that support ICE colors instead of blinking, these produce bright backgrounds.
 
 | Code   | Background + Blink |
 |--------|--------------------|
-| `|24`  | Black + blink      |
-| `|25`  | Blue + blink       |
-| `|26`  | Green + blink      |
-| `|27`  | Cyan + blink       |
-| `|28`  | Red + blink        |
-| `|29`  | Magenta + blink    |
-| `|30`  | Brown + blink      |
-| `|31`  | Light Gray + blink |
+| `\|24`  | Black + blink      |
+| `\|25`  | Blue + blink       |
+| `\|26`  | Green + blink      |
+| `\|27`  | Cyan + blink       |
+| `\|28`  | Red + blink        |
+| `\|29`  | Magenta + blink    |
+| `\|30`  | Brown + blink      |
+| `\|31`  | Light Gray + blink |
 
 ### Examples
 
@@ -116,6 +116,92 @@ Displays: `Type | to see a pipe symbol.`
 
 ---
 
+## Theme Color Codes (`|xx`)
+
+Theme color codes are **two lowercase letters** that refer to a named semantic
+color slot defined in `colors.toml`. Instead of hard-coding numeric color
+values throughout your display files and prompts, you can use theme codes and
+change the entire BBS color scheme from one file.
+
+When Maximus encounters a theme code like `|pr`, it looks up the slot in the
+loaded theme and substitutes the configured pipe color string (e.g., `|14`
+for yellow, or `|15|17` for white on blue). The substituted codes then flow
+through normal color processing.
+
+### Slot Reference
+
+| Code   | Slot Name     | Purpose                              | Default  |
+|--------|---------------|--------------------------------------|----------|
+| `\|tx`  | text          | Normal body text                     | `\|07`    |
+| `\|hi`  | highlight     | Emphasized / important text          | `\|15`    |
+| `\|pr`  | prompt        | User-facing prompts                  | `\|14`    |
+| `\|in`  | input         | User keystroke echo                  | `\|15`    |
+| `\|tf`  | textbox_fg    | Text input field foreground          | `\|15`    |
+| `\|tb`  | textbox_bg    | Text input field background          | `\|17`    |
+| `\|hd`  | heading       | Section headings                     | `\|11`    |
+| `\|lf`  | lightbar_fg   | Lightbar selected item foreground    | `\|15`    |
+| `\|lb`  | lightbar_bg   | Lightbar selected item background    | `\|17`    |
+| `\|er`  | error         | Error messages                       | `\|12`    |
+| `\|wn`  | warning       | Warning messages                     | `\|14`    |
+| `\|ok`  | success       | Confirmations / success messages     | `\|10`    |
+| `\|dm`  | dim           | De-emphasized text, help text        | `\|08`    |
+| `\|fi`  | file_info     | File area descriptions               | `\|03`    |
+| `\|sy`  | sysop         | SysOp-only text                      | `\|13`    |
+| `\|qt`  | quote         | Quoted message text                  | `\|09`    |
+| `\|br`  | border        | Box borders, dividers                | `\|01`    |
+| `\|hk`  | hotkey        | Hotkey characters                    | `\|14`    |
+| `\|cd`  | default       | Reset to the theme's default color   | `\|07`    |
+
+### Configuration
+
+Theme colors are defined in `colors.toml` under the `[theme.colors]` section:
+
+```toml
+[theme.colors]
+text         = "|07"
+highlight    = "|15"
+prompt       = "|14"
+input        = "|15"
+heading      = "|11"
+lightbar_fg  = "|15"
+lightbar_bg  = "|17"
+error        = "|12"
+warning      = "|14"
+success      = "|10"
+```
+
+Values can be any valid pipe color string, including compound codes:
+
+```toml
+lightbar_fg = "|15|17"   # White text on blue background
+```
+
+Theme colors can also be edited interactively in **maxcfg** under
+**Setup → Global → Default Colors → Theme Colors**.
+
+### Examples
+
+```
+|pr Enter your name: |in
+```
+
+Displays the prompt in the theme's prompt color, then switches to the input
+color for the user's typed response.
+
+```
+|hd=== Message Area List ===|tx
+```
+
+Displays the heading in the heading color, then returns to normal text color.
+
+```
+|er ERROR: |tx File not found.
+```
+
+Displays "ERROR:" in the error color, then the description in normal text.
+
+---
+
 ## Information Codes (`|XY`)
 
 Information codes are two **uppercase letters** (or special characters) that
@@ -125,53 +211,53 @@ are replaced with live data about the BBS, the current user, or the system.
 
 | Code   | Description                    |
 |--------|--------------------------------|
-| `|UN`  | User name                      |
-| `|UH`  | User handle (alias)            |
-| `|UR`  | User real name                 |
-| `|UC`  | User city / state              |
-| `|UP`  | User home phone                |
-| `|UD`  | User data phone                |
-| `|U#`  | User number (account ID)       |
-| `|US`  | User screen length (lines)     |
-| `|TE`  | Terminal emulation (TTY, ANSI, AVATAR) |
+| `\|UN`  | User name                      |
+| `\|UH`  | User handle (alias)            |
+| `\|UR`  | User real name                 |
+| `\|UC`  | User city / state              |
+| `\|UP`  | User home phone                |
+| `\|UD`  | User data phone                |
+| `\|U#`  | User number (account ID)       |
+| `\|US`  | User screen length (lines)     |
+| `\|TE`  | Terminal emulation (TTY, ANSI, AVATAR) |
 
 ### Call & Activity Statistics
 
 | Code   | Description                    |
 |--------|--------------------------------|
-| `|CS`  | Total calls (lifetime)         |
-| `|CT`  | Calls today                    |
-| `|MP`  | Total messages posted          |
-| `|DK`  | Total download KB              |
-| `|FK`  | Total upload KB                |
-| `|DL`  | Total downloaded files         |
-| `|FU`  | Total uploaded files           |
-| `|DT`  | Downloaded KB today            |
-| `|TL`  | Time left (minutes)            |
+| `\|CS`  | Total calls (lifetime)         |
+| `\|CT`  | Calls today                    |
+| `\|MP`  | Total messages posted          |
+| `\|DK`  | Total download KB              |
+| `\|FK`  | Total upload KB                |
+| `\|DL`  | Total downloaded files         |
+| `\|FU`  | Total uploaded files           |
+| `\|DT`  | Downloaded KB today            |
+| `\|TL`  | Time left (minutes)            |
 
 ### System Information
 
 | Code   | Description                    |
 |--------|--------------------------------|
-| `|BN`  | BBS / system name              |
-| `|SN`  | Sysop name                     |
+| `\|BN`  | BBS / system name              |
+| `\|SN`  | Sysop name                     |
 
 ### Area Information
 
 | Code   | Description                    |
 |--------|--------------------------------|
-| `|MB`  | Current message area name      |
-| `|MD`  | Current message area description |
-| `|FB`  | Current file area name         |
-| `|FD`  | Current file area description  |
+| `\|MB`  | Current message area name      |
+| `\|MD`  | Current message area description |
+| `\|FB`  | Current file area name         |
+| `\|FD`  | Current file area description  |
 
 ### Date & Time
 
 | Code   | Description                    |
 |--------|--------------------------------|
-| `|DA`  | Current date (DD Mon YY)       |
-| `|TM`  | Current time (HH:MM)          |
-| `|TS`  | Current time (HH:MM:SS)       |
+| `\|DA`  | Current date (DD Mon YY)       |
+| `\|TM`  | Current time (HH:MM)          |
+| `\|TS`  | Current time (HH:MM:SS)       |
 
 ### Example
 
@@ -212,7 +298,7 @@ These operators affect the next `|XY` code that follows them:
 | `$c##C`   | Center within `##` columns using character `C`     |
 | `$l##C`   | Left-pad to `##` columns using character `C`       |
 | `$r##C`   | Right-pad to `##` columns using character `C`      |
-| `|PD`     | Prepend a single space to the next value           |
+| `\|PD`     | Prepend a single space to the next value           |
 
 ### Immediate Output
 
@@ -264,10 +350,10 @@ require an ANSI-capable terminal (most modern terminals support these).
 
 | Code   | Description                              |
 |--------|------------------------------------------|
-| `|CL`  | Clear the screen                         |
-| `|CD`  | Reset color to default (ANSI reset)      |
-| `|CR`  | Carriage return + line feed (new line)   |
-| `|BS`  | Destructive backspace                    |
+| `\|CL`  | Clear the screen                         |
+| `\|CD`  | Reset color to default (ANSI reset)      |
+| `\|CR`  | Carriage return + line feed (new line)   |
+| `\|BS`  | Destructive backspace                    |
 
 ### Cursor Movement
 
@@ -289,10 +375,10 @@ require an ANSI-capable terminal (most modern terminals support these).
 
 | Code   | Description                              |
 |--------|------------------------------------------|
-| `|SA`  | Save cursor position and attributes      |
-| `|RA`  | Restore cursor position and attributes   |
-| `|SS`  | Save entire screen                       |
-| `|RS`  | Restore entire screen                    |
+| `\|SA`  | Save cursor position and attributes      |
+| `\|RA`  | Restore cursor position and attributes   |
+| `\|SS`  | Save entire screen                       |
+| `\|RS`  | Restore entire screen                    |
 
 ### Example
 
@@ -313,8 +399,8 @@ by a single character identifying the parameter slot:
 
 | Code        | Parameter   |
 |-------------|-------------|
-| `|!1`–`|!9` | Parameters 1 through 9 |
-| `|!A`–`|!F` | Parameters 10 through 15 |
+| `\|!1`–`\|!9` | Parameters 1 through 9 |
+| `\|!A`–`\|!F` | Parameters 10 through 15 |
 
 Positional parameters work with formatting operators. For example, a language
 string might contain:
@@ -353,6 +439,7 @@ all display codes normally.
 |----------------|--------------|------------------|---------------------------|
 | Foreground     | `\|##`       | `\|14`           | Yellow text               |
 | Background     | `\|##`       | `\|17`           | Blue background           |
+| Theme color    | `\|xx`       | `\|pr`           | Theme prompt color        |
 | User info      | `\|XY`       | `\|UN`           | User's name               |
 | System info    | `\|XY`       | `\|BN`           | BBS name                  |
 | Right-pad      | `$R##`       | `$R20\|UN`       | Name padded to 20 chars   |

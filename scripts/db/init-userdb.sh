@@ -29,12 +29,12 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCHEMA_SQL="${SCRIPT_DIR}/userdb_schema.sql"
 
-if [ -f "${PREFIX}/etc/db/userdb_schema.sql" ]; then
-  SCHEMA_SQL="${PREFIX}/etc/db/userdb_schema.sql"
+if [ -f "${PREFIX}/data/db/userdb_schema.sql" ]; then
+  SCHEMA_SQL="${PREFIX}/data/db/userdb_schema.sql"
 fi
 
 if [ -z "$DB_PATH" ]; then
-  DB_PATH="${PREFIX}/etc/user.db"
+  DB_PATH="${PREFIX}/data/users/user.db"
 fi
 
 if [ ! -f "$SCHEMA_SQL" ]; then

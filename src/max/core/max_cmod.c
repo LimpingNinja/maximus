@@ -537,7 +537,7 @@ static int near Open_Chatlog(void)
   char p2[50];
 
 
-  sprintf(temp,"%sCHATLOG.%03x",original_path,task_num);
+  node_file_path(task_num, "chatlog.bbs", temp, sizeof(temp));
 
   if (fexist(temp))
     chatlog=sfopen(temp, "r+", O_RDWR | O_NOINHERIT, SH_DENYWR);

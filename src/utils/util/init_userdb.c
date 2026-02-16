@@ -240,13 +240,13 @@ int main(int argc, char **argv)
 
   if (!db_path)
   {
-    snprintf(default_db, sizeof(default_db), "etc/user.db");
+    snprintf(default_db, sizeof(default_db), "data/users/user.db");
     db_path = default_db;
   }
 
   if (!schema_path)
   {
-    snprintf(default_schema, sizeof(default_schema), "etc/db/userdb_schema.sql");
+    snprintf(default_schema, sizeof(default_schema), "data/db/userdb_schema.sql");
     schema_path = default_schema;
   }
 

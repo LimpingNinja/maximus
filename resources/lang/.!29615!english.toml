@@ -1,0 +1,108 @@
+# Language file converted from .MAD format by maxcfg
+# Do not edit the [_legacy_map] section manually.
+
+[meta]
+name = "english"
+version = 1
+
+[global]
+left_x = { text = "\x16\x19\x02[D01|!1", flags = ["mex"] }
+located = "|15\nLocated |!1 match|!2.\n"
+pl_match = "es"
+wrong_pwd = "\aWrong! (Try #|!1)\n"
+end_prompt = { text = "]: ", flags = ["mex"] }
+bed_lu = { text = "|03Type \"|15?|03\" by itself to list users.\n", flags = ["mex"] }
+dot_slash_n = { text = ".\n", flags = ["mex"] }
+r_cleol = { text = "\r[K", flags = ["mex"] }
+paddr = " (|!1/|!2)"
+bs_sn = "\\\n"
+max_tear = { text = "--- Maximus", flags = ["mex"] }
+cleol = { text = "[K", flags = ["mex"] }
+cantkill = { text = "|12\nCan't kill msg.\n|15", flags = ["mex"] }
+addrfmt = "|!1|!2    |!3$T34|!4 (|!5) $T30|!6\n"
+orig_addr = { text = "Orig:", flags = ["mex"] }
+dest_addr = { text = "Dest:", flags = ["mex"] }
+endavailmsg = { text = "|CLEnd of available messages in this area|!1.\n", flags = ["mex"] }
+remain_pvt = { text = ", or remaining messages are private", flags = ["mex"] }
+msgnotavail = { text = "|15\nThat message isn't available.\n", flags = ["mex"] }
+abortmsg = { text = "[KThrow message away", flags = ["mex"] }
+toomanylines = { text = "Too many lines.\n", flags = ["mex"] }
+tryagain = { text = "Try again: ", flags = ["mex"] }
+znnp = "|!1:|!2/|!3.|!4"
+xferaborted = "|15\n\nTransfer aborted.\n"
+xfercomplete = "|15\n\nTransfer completed."
+cps_rating = "|14  (CPS=|!1, $l020|!2%%)\n"
+unlisteddest = { text = "|15\n\nUnlisted destination address.\n", flags = ["mex"] }
+baudtoolowforxfer = "|15You must call at |!1 bps to send or receive files.\n"
+xtrn_caller = "|!1|!2 |!3 -p%%p -b%%b -t%%k -m%%d -f%%D -r%%t"
+iseenoxhere = "|12I see no \"|!1\" here.\n|15"
+dontunderstand = "|15\nI don't understand \"|!1\".\n\n"
+no_undrstnd = "I don't understand \"|!1\".  "
+printfstringtoolong = "Err!  |!1rintf string too long!\n"
+err999_1 = { text = "|15\nError!  Files cannot be uploaded in local mode.\n", flags = ["mex"] }
+err999_2 = { text = "Press ENTER to continue ", flags = ["mex"] }
+searchingfor = "|15\nSearching for \"|!1\".\n|!2"
+errwriting = " \a\aError writing message! (disk full?)\n"
+idxnode = "|!1nodelist.idx"
+datnode = "|!1nodelist.dat"
+sysnode = "|!1nodelist.sys"
+pressentertoskip = { text = "Press ENTER to skip item.", flags = ["mex"] }
+sp_public = { text = " public", flags = ["mex"] }
+sp_private = { text = " private", flags = ["mex"] }
+cantskip = { text = "\n\nYou can't skip this question.\n", flags = ["mex"] }
+asctime_format = "%H:%M:%S |!1 %b |!2 %Y\n"
+useyforyes = { text = "Use \"Y\" for YES and \"N\" for NO.  ", flags = ["mex"] }
+useyforyesns = { text = "Use \"Y\" for YES, \"N\" for NO, and \"=\" for non-stop.  ", flags = ["mex"] }
+useyforyesnst = { text = "Use \"Y\" for YES, \"N\" for NO, and \"T\" to tag file.  ", flags = ["mex"] }
+unlisted_system = { text = "|03|!1:    |02Unlisted system (|!2)\n", flags = ["mex"] }
+unlisted_node = { text = "Unlisted node", flags = ["mex"] }
+more_prompt = { text = "More", flags = ["mex"] }
+Tag = { text = "T", flags = ["mex"] }
+MoreYnTag = { text = "[Y]es,[n]o,[t]ag,[=]help", flags = ["mex"] }
+CYn = { text = "[Y]es,[n]o", flags = ["mex"] }
+yCN = { text = "[y]es,[N]o", flags = ["mex"] }
+Yne = { text = "[Y]es,[n]o,[=]help", flags = ["mex"] }
+CYnq = { text = "[Y]es,[n]o,[?]help", flags = ["mex"] }
+yCNq = { text = "[y]es,[N]o,[?]help", flags = ["mex"] }
+Yes = { text = "Y", flags = ["mex"] }
+No = { text = "N", flags = ["mex"] }
+M_nonstop = { text = "=", flags = ["mex"] }
+quote_format = "[Y37[X99\x01|!1[K |!2> |!3"
+norm_format = "[Y37[X99\x01|!1[K|!2"
+areadoesntexist = { text = "|15\nThat area doesn't exist!\n", flags = ["mex"] }
+done_ex = { text = "Done!\n", flags = ["mex"] }
+tnx4ul = { text = "|15\nThanks for the upload, |!1.\n", flags = ["mex"] }
+press_enter_s = { text = "Press ENTER to continue ", flags = ["mex"], rip = "\r!|1\x1b0000$SMF$\n!|1K|Y00000100|1BHN0A0207PE0200000F080700020F07000000\n!|1U019000002700<>Press OK to continue<>^M|#|#\n" }
+usr_pwd = { text = "Password: ", flags = ["mex"] }
+unavailable = { text = "|15Sorry!  That option is not available at the present time.\n", flags = ["mex"] }
+e_save = { text = " Save ", flags = ["mex"] }
+e_quit = { text = " Quit ", flags = ["mex"] }
+select_p = { text = "Select: ", flags = ["mex"] }
+userdoesntexist = { text = "|15That user doesn't exist!\n", flags = ["mex"] }
+ck_for_help = "|14|17Press Control-N for help."
+l_invalid_pwd = { text = " INVALID PASSWORD", flags = ["mex"] }
+invalid_pwd = { text = "|24\n\aINVALID PASSWORD\a\n|03", flags = ["mex"] }
+time_added_for_ul = "|10\n|!1:$l020|!2|14 minutes added for upload.\n\n"
+yes = { text = "YES", flags = ["mex"] }
+no = { text = "NO", flags = ["mex"] }
+s_ansi = { text = "ANSI", flags = ["mex"] }
+s_avatar = { text = "AVATAR", flags = ["mex"] }
+s_tty = { text = "TTY", flags = ["mex"] }
+enter_city = { text = "Please enter your city and state/province: ", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your city and state/province: " }
+enter_phone = { text = "Please enter your phone number [(xxx) yyy-zzzz]: ", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your phone number [(xxx) yyy-zzzz]: " }
+enter_name = { text = "Please enter your alias: ", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your alias: " }
+msg_aborted = { text = "|CL|15[K\n[K\n[KMessage aborted.\n[K\n[K", flags = ["mex"] }
+node_listing = " $L05|!1,|03 |!2, |!3\n"
+pad_zone = { text = "|14ZONE  ", flags = ["mex"] }
+pad_region = { text = "|14REGION", flags = ["mex"] }
+pad_net = { text = "|14NET   ", flags = ["mex"] }
+pad_none = { text = "|14      ", flags = ["mex"] }
+ordinal_th = { text = "th", flags = ["mex"] }
+ordinal_st = { text = "st", flags = ["mex"] }
+ordinal_nd = { text = "nd", flags = ["mex"] }
+ordinal_rd = { text = "rd", flags = ["mex"] }
+file_ar_name = "|10File area |13|!1|07 ... |03|!2"
+message_name = "|10|!1area |13|!2|07 ... |03|!3\n"
+space_over = { text = "\r[K                          \r", flags = ["mex"] }
+s_on = { text = "ON", flags = ["mex"] }
+s_off = { text = "OFF", flags = ["mex"] }

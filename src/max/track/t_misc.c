@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
  */
 
 #ifndef __GNUC__
@@ -33,7 +35,7 @@ static char rcs_id[]="$Id: t_misc.c,v 1.5 2004/01/28 06:38:11 paltas Exp $";
 
 #ifdef MAX_TRACKER /* only process this file if doing the tracking system */
 
-static char *szTrk;
+static char szTrk[PATHLEN];
 static TRKLIST tl=NULL;   /* Instance of our alias list */
 static EXCLIST el=NULL;
 
@@ -176,16 +178,13 @@ static void near GetExcludeList(void)
 
 void InitTracker(void)
 {
-  const char *szNewTrack = ngcfg_get_string_raw("general.session.track_base");
   TRK t;
 
-  /* If the user has specified a different name for the tracking system,    *
-   * use it instead of just "TRK".                                          */
+  /* Build the tracker base path: data_path + msgbase/tracking/trk */
 
-  if (*szNewTrack)
-    szTrk = szNewTrack;
-  else
-    szTrk = "trk";
+  strcpy(szTrk, ngcfg_get_path("maximus.data_path"));
+  Add_Trailing(szTrk, '/');
+  strcat(szTrk, "msgbase/tracking/trk");
 
   if ((t=TrkOpen(szTrk, TRUE))==NULL)
   {

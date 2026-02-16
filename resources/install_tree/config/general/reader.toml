@@ -1,0 +1,5 @@
+max_pack = 1200
+archivers_ctl = "config/legacy/compress.cfg"
+packet_name = "TVK"
+work_directory = "data/olr"
+phone = "(123) 456-7890"

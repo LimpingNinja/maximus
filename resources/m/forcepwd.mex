@@ -14,8 +14,7 @@
 #include <max.mh>
 #include <max_menu.mh>
 
-#define INCL_max_chng
-#include <language.mh>
+string lang_get(string: key);
 
 #define FORCED_CHANGE_DAYS 30       // Force user to change pwd every 30 days
 
@@ -53,14 +52,14 @@ int main()
 
         old_pwd := usr.pwd;
 
-        print(str_force_pwd_chg);
+        print(lang_get("max_chng.force_pwd_chg"));
 
         while (old_pwd = usr.pwd)
         {
             menu_cmd(MNU_CHG_PASSWORD, "");
 
             if (old_pwd = usr.pwd)
-                print(str_new_pwd_error);
+                print(lang_get("max_chng.new_pwd_error"));
         }
     }
 }

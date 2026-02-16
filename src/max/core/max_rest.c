@@ -57,9 +57,7 @@ int System_Restart(char *restart_name)
 
   /* Read the LASTUSER info */
 
-  if (task_num)
-    sprintf(temp, lastusxx_bbs, original_path, task_num);
-  else sprintf(temp, lastuser_bbs, original_path);
+  node_file_path(task_num, "lastus.bbs", temp, sizeof(temp));
 
   if ((userfile=shopen(temp, O_RDONLY | O_BINARY))==-1)
   {
@@ -81,7 +79,7 @@ int System_Restart(char *restart_name)
 
   /* And now read the system restart info */
 
-  sprintf(temp, restarxx_bbs, original_path, task_num);
+  node_file_path(task_num, "restar.bbs", temp, sizeof(temp));
 
   if ((userfile=shopen(temp, O_RDONLY | O_BINARY))==-1)
   {
@@ -338,7 +336,7 @@ void Write_Restart(char restart_type, char *restart_name, long restart_offset, i
   if (rst_offset==-1L)
     rst_offset=0L;
 
-  sprintf(temp,restarxx_bbs,original_path,task_num);
+  node_file_path(task_num, "restar.bbs", temp, sizeof(temp));
 
   if ((file=sopen(temp, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                   SH_DENYNONE, S_IREAD | S_IWRITE))==-1)

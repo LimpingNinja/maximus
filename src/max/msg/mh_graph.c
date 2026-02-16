@@ -261,7 +261,7 @@ int near GetAttributes(PMAH pmah, XMSG *msg)
 
       case '?':
         Puts(CLS);
-        Display_File(DISPLAY_NONE, NULL, "%sattrib", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+        Display_File(DISPLAY_NONE, NULL, "%sattrib", (char *)ngcfg_get_string_raw("maximus.display_path"));
         RedrawAll(pmah, msg, FALSE);
         GotoLocAttr();
         vbuf_flush();
@@ -456,7 +456,7 @@ int near GetToField(PMAH pmah, XMSG *msg)
       /* Try 'misc\userlist' first, since it might simply contain
          help, menu, other information or even [menu_cmd userlist].. */
 
-      sprintf(temp, "%suserlist", (char *)ngcfg_get_path("maximus.misc_path"));
+      sprintf(temp, "%suserlist", (char *)ngcfg_get_path("maximus.display_path"));
       if (Display_File(DISPLAY_NONE, NULL, temp)!=0 && !ngcfg_get_bool("general.session.disable_userlist"))
       {
 

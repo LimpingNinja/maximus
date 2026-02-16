@@ -917,7 +917,7 @@ void Apply_Term_Caps(struct _usr *user)
   int width = 80, height = 24;
   char line[128];
   
-  sprintf(path, "%stermcap%02d.dat", original_path, task_num);
+  node_file_path(task_num, "termcap.dat", path, sizeof(path));
   
   fp = fopen(path, "r");
   if (fp) {
@@ -1466,3 +1466,16 @@ char * _fast stristr_nochin(char *string,char *search)
 }
 
 
+/**
+ * @brief Build a per-node file path: <node_path>/<NN>/<filename>
+ *
+ * Reads "maximus.node_path" from TOML config and constructs the full
+ * path to a file within a node's runtime directory.
+ *
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ */
+void node_file_path(byte task, const char *file, char *out, size_t outsz)
+{
+  const char *base = ngcfg_get_path("maximus.node_path");
+  snprintf(out, outsz, "%s/%02x/%s", base, (unsigned)task, file);
+}

@@ -287,7 +287,7 @@ static word near FileIsBad(char *name)
 
     if (ret && carrier())
     {
-      sprintf(badname, ss, (char *)ngcfg_get_string_raw("maximus.misc_path"), "bad_upld.bbs");
+      sprintf(badname, ss, (char *)ngcfg_get_string_raw("maximus.display_path"), "bad_upld.bbs");
 
       if (fexist(badname))
         Display_File(0, NULL, badname);

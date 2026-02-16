@@ -1,0 +1,182 @@
+name = "MAIN"
+title = "Main menu (%t mins)"
+header_file = ""
+header_types = []
+menu_file = "display/screens/max_main"
+menu_types = ["Novice"]
+menu_length = 0
+menu_color = -1
+option_width = 14
+
+[[option]]
+command = "Display_Menu"
+arguments = "MESSAGE"
+priv_level = "Demoted"
+description = "Message areas"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "FILE"
+priv_level = "Demoted"
+description = "File areas"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "CHANGE"
+priv_level = "Demoted"
+description = "Change setup"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Transient"
+description = "Goodbye (log off)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/stats"
+priv_level = "Demoted"
+description = "Statistics"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Press_Enter"
+arguments = ""
+priv_level = "Demoted"
+description = "S"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Userlist"
+arguments = ""
+priv_level = "Demoted"
+description = "UserList"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Press_Enter"
+arguments = "U"
+priv_level = "Demoted"
+description = ""
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Version"
+arguments = ""
+priv_level = "Demoted"
+description = "Version of BBS"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/screens/yellreq"
+priv_level = "Demoted"
+description = "Yell for SysOp"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Yell"
+arguments = ""
+priv_level = "Demoted"
+description = "Y"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_File"
+arguments = "display/screens/bulletin"
+priv_level = "Demoted"
+description = "Bulletins"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "READER"
+priv_level = "Demoted"
+description = "Off-line reader"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "SYSOP"
+priv_level = "Sysop"
+description = "#Sysop menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MEX"
+priv_level = "Sysop"
+description = "$MEX Samples"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Who_Is_On"
+arguments = ""
+priv_level = "Demoted"
+description = "Who is On"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Press_Enter"
+arguments = ""
+priv_level = "Demoted"
+description = "W"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_Menu"
+arguments = "CHAT"
+priv_level = "Demoted"
+description = "/Chat menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/main"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []
+
+
+[custom_menu]
+skip_canned_menu = false
+show_title = true
+lightbar_menu = true
+lightbar_margin = 1
+top_boundary = [8, 8]
+bottom_boundary = [20, 61]
+title_location = [22, 32]
+prompt_location = [23, 1]
+option_spacing = false
+option_justify = "left"
+boundary_justify = "center center"
+boundary_layout = "spread"
+
+[custom_menu.lightbar_color]
+normal = ["Light Gray", "Black"]
+high = ["Yellow", "Black"]
+selected = ["White", "Blue"]
+high_selected = ["Yellow", "Blue"]

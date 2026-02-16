@@ -5,6 +5,7 @@
  #include <string.h>
  #include <time.h>
  
+ #include "libmaxcfg.h"
  #include "prog.h"
  #include "mm.h"
  #include "max_area.h"
@@ -17,6 +18,10 @@ unsigned long g_mci_parse_flags = MCI_PARSE_PIPE_COLORS | MCI_PARSE_MCI_CODES | 
 
 /** @brief Active positional parameter bindings for |!N expansion (NULL = no params). */
 MciLangParams *g_lang_params = NULL;
+
+/** @brief Active theme color table (set at startup from colors.toml).
+ *  Typed as void* in mci.h; actually a MaxCfgThemeColors*. */
+void *g_mci_theme = NULL;
 
 enum { MCI_FLAG_STACK_MAX = 16 };
 
@@ -542,6 +547,22 @@ literal_dollar:
       continue;
     }
 
+    /* |xx lowercase semantic theme color codes — expand to configured pipe string */
+    if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) && g_mci_theme &&
+        in[i]=='|' && in[i+1] >= 'a' && in[i+1] <= 'z' &&
+        in[i+2] >= 'a' && in[i+2] <= 'z')
+    {
+      const char *expansion = maxcfg_theme_lookup((const MaxCfgThemeColors *)g_mci_theme, in[i+1], in[i+2]);
+      if (expansion)
+      {
+        /* Emit the stored pipe code string (e.g. "|07" or "|15|17") */
+        mci_out_append_str(out, out_size, &out_len, expansion);
+        i += 3;
+        continue;
+      }
+      /* Unknown slot — fall through to literal output */
+    }
+
     /* |XY terminal control codes — emit ANSI/AVATAR sequences directly */
     if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' &&
         in[i+1] >= 'A' && in[i+1] <= 'Z' &&
@@ -765,4 +786,83 @@ size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_
   }
 
   return out_len;
+}
+
+/**
+ * @brief Convert an MCI pipe color string to a single DOS attribute byte.
+ *
+ * Walks the string looking for |## numeric color codes and |xx theme codes.
+ * Each code modifies the running attribute:
+ *   |00..|15 set foreground (low nibble)
+ *   |16..|23 set background (bits 4-6)
+ *   |24..|31 set background + blink (bit 7)
+ *   |xx      resolve via g_mci_theme, then parse the expansion recursively
+ *
+ * Non-pipe characters are silently skipped.
+ */
+byte Mci2Attr(const char *mci, byte base)
+{
+  byte attr = base;
+  const char *p;
+
+  if (!mci)
+    return attr;
+
+  for (p = mci; *p; )
+  {
+    if (p[0] == '|' && p[1])
+    {
+      /* |## numeric color code */
+      if (p[1] >= '0' && p[1] <= '9' && p[2] >= '0' && p[2] <= '9')
+      {
+        int code = (p[1] - '0') * 10 + (p[2] - '0');
+
+        if (code <= 15)
+        {
+          /* Set foreground, preserve background + blink */
+          attr = (byte)((attr & 0xf0) | (code & 0x0f));
+        }
+        else if (code <= 23)
+        {
+          /* Set background, preserve foreground + blink */
+          attr = (byte)((attr & 0x8f) | (((code - 16) & 0x07) << 4));
+        }
+        else if (code <= 31)
+        {
+          /* Set background + blink, preserve foreground */
+          attr = (byte)((attr & 0x0f) | (((code - 24) & 0x07) << 4) | 0x80);
+        }
+        /* codes 32+ ignored */
+
+        p += 3;
+        continue;
+      }
+
+      /* |xx lowercase theme code */
+      if (g_mci_theme &&
+          p[1] >= 'a' && p[1] <= 'z' &&
+          p[2] >= 'a' && p[2] <= 'z')
+      {
+        const char *expansion = maxcfg_theme_lookup(
+            (const MaxCfgThemeColors *)g_mci_theme, p[1], p[2]);
+        if (expansion)
+        {
+          /* Recurse into the expansion string */
+          attr = Mci2Attr(expansion, attr);
+          p += 3;
+          continue;
+        }
+      }
+
+      /* Unknown pipe sequence — skip the pipe and move on */
+      p++;
+    }
+    else
+    {
+      /* Non-pipe character — skip */
+      p++;
+    }
+  }
+
+  return attr;
 }

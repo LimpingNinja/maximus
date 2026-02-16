@@ -442,7 +442,7 @@ long scan_time=NORM_SCAN_TIME;
     int flag,
         fd;
 
-    ipc_base = ngcfg_get_path("maximus.ipc_path");
+    ipc_base = ngcfg_get_path("maximus.node_path");
     if (! *ipc_base)
       return;
 
@@ -603,7 +603,7 @@ long scan_time=NORM_SCAN_TIME;
 
     const char *ipc_base;
 
-    ipc_base = ngcfg_get_path("maximus.ipc_path");
+    ipc_base = ngcfg_get_path("maximus.node_path");
     if (! *ipc_base)
     {
       #ifdef DEBUG
@@ -652,7 +652,7 @@ long scan_time=NORM_SCAN_TIME;
 
   void ChatCloseIPC(int fd)
   {
-    if (! *ngcfg_get_path("maximus.ipc_path"))
+    if (! *ngcfg_get_path("maximus.node_path"))
       return;
 
     if (!ngcfg_get_bool("maximus.no_share"))
@@ -669,7 +669,7 @@ long scan_time=NORM_SCAN_TIME;
 void ChatSaveStatus(struct _css *css)
 {
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
 
@@ -682,7 +682,7 @@ void ChatSaveStatus(struct _css *css)
 void ChatRestoreStatus(struct _css *css)
 {
 #ifndef MCP
-  if (! *ngcfg_get_path("maximus.ipc_path"))
+  if (! *ngcfg_get_path("maximus.node_path"))
     return;
 #endif
 
@@ -709,7 +709,7 @@ void Check_For_Message(char *s1,char *s2)
 #ifdef MCP
   hpMCP &&
 #else
-  *ngcfg_get_path("maximus.ipc_path") &&
+  *ngcfg_get_path("maximus.node_path") &&
 #endif
       fLoggedOn && task_num &&
       (now >= last_check+scan_time

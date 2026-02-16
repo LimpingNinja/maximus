@@ -343,7 +343,7 @@ word LookForVirus(char *path, char *name)
   sprintf(cmd, "%s %s %s %s %s %d",
           (char *)ngcfg_get_path("general.session.virus_check"),
           path, stem, ext,
-          (char *)ngcfg_get_string_raw("maximus.misc_path"),
+          (char *)ngcfg_get_string_raw("maximus.display_path"),
           task_num);
   
 
@@ -363,7 +363,7 @@ word LookForVirus(char *path, char *name)
   foundvir=!fexist(fname);
   
   Display_File(0, NULL, foundvir ? "%sfile_bad" : "%sfile_ok",
-               (char *)ngcfg_get_string_raw("maximus.misc_path"));
+               (char *)ngcfg_get_string_raw("maximus.display_path"));
              
   return foundvir;
 }

@@ -13,42 +13,40 @@
 #include <max.mh>
 #include <intpad.mh>
 
-#define INCL_global
-#define INCL_max_chng
-#include <language.mh>
+string lang_get(string: key);
 
 string Bool(int: i)
 {
     if (i <> 0)
-        return str_yes;
-    return str_no;
+        return lang_get("global.yes");
+    return lang_get("global.no");
 }
 
 string HelpLevel(int: help)
 {
     if (help=HELP_NOVICE)
-        return str_novic;
+        return lang_get("global.novic");
     else if (help=HELP_REGULAR)
-        return str_regul;
-    return str_exper;
+        return lang_get("global.regul");
+    return lang_get("global.exper");
 }
 
 string UserSex(int: sex)
 {
     if (sex=SEX_UNKNOWN)
-        return str_sex_unknown;
+        return lang_get("global.sex_unknown");
     else if (sex=SEX_MALE)
-        return str_sex_male;
-    return str_sex_female;
+        return lang_get("global.sex_male");
+    return lang_get("global.sex_female");
 }
 
 string VideoMode(int: vid)
 {
     if (vid=VIDEO_TTY)
-        return str_s_tty;
+        return lang_get("global.s_tty");
     else if (vid=VIDEO_ANSI)
-        return str_s_ansi;
-    return str_s_avatar;
+        return lang_get("global.s_ansi");
+    return lang_get("global.s_avatar");
 }
 
 int main(string: argv)
@@ -66,49 +64,49 @@ int main(string: argv)
 
     id.instant_video:=0;
 
-    newline:=str_chg_newline;
-    col_info:=str_chg_col_info;
-    col_data1:=str_chg_col_data1;
-    col_data2:=str_chg_col_data2;
+    newline:=lang_get("max_chng.chg_newline");
+    col_info:=lang_get("max_chng.chg_col_info");
+    col_data1:=lang_get("max_chng.chg_col_data1");
+    col_data2:=lang_get("max_chng.chg_col_data2");
 
-    print(str_chg1);
+    print(lang_get("max_chng.chg1"));
 
     if (usr.alias <> "")
-    print(col_info, str_Chg_alias,   col_data1, usr.alias, newline);
+    print(col_info, lang_get("max_chng.Chg_alias"),   col_data1, usr.alias, newline);
 
-    print(col_info, str_Chg_phone,   col_data1, usr.phone, newline);
+    print(col_info, lang_get("max_chng.Chg_phone"),   col_data1, usr.phone, newline);
 
     if (usr.dataphone <> "")
-        print(col_info, str_Chg_dataphone,col_data1, usr.dataphone, newline);
+        print(col_info, lang_get("max_chng.Chg_dataphone"),col_data1, usr.dataphone, newline);
 
-    print(col_info, str_Chg_city,    col_data1, usr.city, newline,
-          col_info, str_Chg_dob,     col_data1, usr.dob, newline, str_chg_separator);
+    print(col_info, lang_get("max_chng.Chg_city"),    col_data1, usr.city, newline,
+          col_info, lang_get("max_chng.Chg_dob"),     col_data1, usr.dob, newline, lang_get("max_chng.chg_separator"));
 
-    print(col_info, str_Chg_help,    col_data2, strpad(HelpLevel(usr.help), 14, ' '),
-          col_info, str_Chg_nulls,   col_data2, intpad(usr.nulls, 14),
-          col_info, str_Chg_userlist,col_data2, Bool(usr.noulist = 0), newline);
+    print(col_info, lang_get("max_chng.Chg_help"),    col_data2, strpad(HelpLevel(usr.help), 14, ' '),
+          col_info, lang_get("max_chng.Chg_nulls"),   col_data2, intpad(usr.nulls, 14),
+          col_info, lang_get("max_chng.Chg_userlist"),col_data2, Bool(usr.noulist = 0), newline);
 
-    print(col_info, str_Chg_width,   col_data2, intpad(usr.width, 14),
-          col_info, str_Chg_length,  col_data2, intpad(usr.len, 14),
-          col_info, str_Chg_tabs,    col_data2, Bool(usr.tabs), newline);
+    print(col_info, lang_get("max_chng.Chg_width"),   col_data2, intpad(usr.width, 14),
+          col_info, lang_get("max_chng.Chg_length"),  col_data2, intpad(usr.len, 14),
+          col_info, lang_get("max_chng.Chg_tabs"),    col_data2, Bool(usr.tabs), newline);
 
-    print(col_info, str_Chg_video,   col_data2, strpad(VideoMode(usr.video),14,' '),
-          col_info, str_Chg_more,    col_data2, strpad(Bool(usr.more), 14, ' '),
-          col_info, str_Chg_cls,     col_data2, Bool(usr.cls), newline);
+    print(col_info, lang_get("max_chng.Chg_video"),   col_data2, strpad(VideoMode(usr.video),14,' '),
+          col_info, lang_get("max_chng.Chg_more"),    col_data2, strpad(Bool(usr.more), 14, ' '),
+          col_info, lang_get("max_chng.Chg_cls"),     col_data2, Bool(usr.cls), newline);
 
-    print(col_info, str_Chg_fse,     col_data2, strpad(Bool(usr.bored = 0),14,' '),
-          col_info, str_Chg_ibm,     col_data2, strpad(Bool(usr.ibmchars),14, ' '),
-          col_info, str_Chg_hotkeys, col_data2, Bool(usr.hotkeys), newline);
+    print(col_info, lang_get("max_chng.Chg_fse"),     col_data2, strpad(Bool(usr.bored = 0),14,' '),
+          col_info, lang_get("max_chng.Chg_ibm"),     col_data2, strpad(Bool(usr.ibmchars),14, ' '),
+          col_info, lang_get("max_chng.Chg_hotkeys"), col_data2, Bool(usr.hotkeys), newline);
 
-    print(col_info, str_Chg_protocol,col_data2, strpad(protocol_num_to_name(usr.def_proto), 14, ' '),
-          col_info, str_Chg_language,col_data2, strpad(language_num_to_name(usr.lang), 14, ' '),
-          col_info, str_Chg_fsr,     col_data2, Bool(usr.fsr), newline);
+    print(col_info, lang_get("max_chng.Chg_protocol"),col_data2, strpad(protocol_num_to_name(usr.def_proto), 14, ' '),
+          col_info, lang_get("max_chng.Chg_language"),col_data2, strpad(language_num_to_name(usr.lang), 14, ' '),
+          col_info, lang_get("max_chng.Chg_fsr"),     col_data2, Bool(usr.fsr), newline);
 
-    print(col_info, str_Chg_archiver,col_data2, strpad(compressor_num_to_name(usr.compress), 14, ' '),
-          col_info, str_Chg_gender,  col_data2, strpad(UserSex(usr.sex), 14, ' '),
-          col_info, str_Chg_rip,     col_data2, Bool(usr.rip), newline, newline);
+    print(col_info, lang_get("max_chng.Chg_archiver"),col_data2, strpad(compressor_num_to_name(usr.compress), 14, ' '),
+          col_info, lang_get("max_chng.Chg_gender"),  col_data2, strpad(UserSex(usr.sex), 14, ' '),
+          col_info, lang_get("max_chng.Chg_rip"),     col_data2, Bool(usr.rip), newline, newline);
 
-    print(str_chg_end);
+    print(lang_get("max_chng.chg_end"));
 
     return 0;
 }

@@ -37,7 +37,7 @@
 #define MAXCFG_TITLE   "MAXCFG v" MAXCFG_VERSION
 
 /* Default paths */
-#define DEFAULT_CONFIG_PATH "etc/max"
+#define DEFAULT_CONFIG_PATH "config"
 
 /* Screen layout constants */
 #define TITLE_ROW       0
@@ -64,6 +64,7 @@ extern AppState g_state;
 
 extern MaxCfg *g_maxcfg;
 extern MaxCfgToml *g_maxcfg_toml;
+extern MaxCfgThemeColors g_theme_colors;
 
 /* Color pair definitions */
 enum ColorPairs {

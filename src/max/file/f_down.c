@@ -1484,7 +1484,7 @@ static int near FileLimitsOkay(unsigned long ulSize, int flags, sword protocol,
       ci_dlexceed();
       logit(log_dllim);
       Puts(exc_daily_lim);
-      Display_File(0, NULL, "%sexcbytes", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, "%sexcbytes", (char *)ngcfg_get_string_raw("maximus.display_path"));
       return FALSE;
     }
 
@@ -1498,7 +1498,7 @@ static int near FileLimitsOkay(unsigned long ulSize, int flags, sword protocol,
       logit(log_exc_ratio);
       { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", ClassGetInfo(cls,CIT_RATIO));
         LangPrintf(exc_ratio, _ib); }
-      Display_File(0, NULL, "%sexcratio", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, "%sexcratio", (char *)ngcfg_get_string_raw("maximus.display_path"));
       return FALSE;
     }
   }
@@ -1517,7 +1517,7 @@ static int near FileLimitsOkay(unsigned long ulSize, int flags, sword protocol,
        * these files (virtual or not), give an error message.                 */
 
       Puts(exc_time_limit);
-      Display_File(0, NULL, "%sexctime", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+      Display_File(0, NULL, "%sexctime", (char *)ngcfg_get_string_raw("maximus.display_path"));
       return FALSE;
     }
   }

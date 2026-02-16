@@ -502,9 +502,9 @@ static int spawn_node(int node_num)
     
     /* Build paths */
     snprintf(node->socket_path, sizeof(node->socket_path), 
-             "%s/%s%d", base_path, SOCKET_PREFIX, node_num + 1);
+             "%s/run/node/%02x/%s", base_path, node_num + 1, SOCKET_PREFIX);
     snprintf(node->lock_path, sizeof(node->lock_path),
-             "%s/%s%d%s", base_path, SOCKET_PREFIX, node_num + 1, LOCK_SUFFIX);
+             "%s/run/node/%02x/%s%s", base_path, node_num + 1, SOCKET_PREFIX, LOCK_SUFFIX);
     
     /* Remove stale socket/lock */
     unlink(node->socket_path);
@@ -541,8 +541,8 @@ static int spawn_node(int node_num)
         
         /* Set up environment variables */
         char maximus_env[1024];
-        snprintf(lib_path, sizeof(lib_path), "%s/lib", full_base);
-        snprintf(mex_path, sizeof(mex_path), "%s/m", full_base);
+        snprintf(lib_path, sizeof(lib_path), "%s/bin/lib", full_base);
+        snprintf(mex_path, sizeof(mex_path), "%s/scripts/include", full_base);
         snprintf(maximus_env, sizeof(maximus_env), "%s", full_base);
         
 #ifdef DARWIN
@@ -1289,7 +1289,7 @@ static void write_term_caps(int node_num, int telnet_mode, int ansi_mode, int wi
     char path[256];
     FILE *fp;
     
-    snprintf(path, sizeof(path), "%s/termcap%02d.dat", base_path, node_num + 1);
+    snprintf(path, sizeof(path), "%s/run/node/%02x/termcap.dat", base_path, node_num + 1);
     
     fp = fopen(path, "w");
     if (fp) {
@@ -1581,8 +1581,8 @@ static void update_node_status(void)
             char useralias[21];
             char display_name[64];
             struct stat st;
-            snprintf(lastus_path, sizeof(lastus_path), "%s/%s%02d.bbs", 
-                     base_path, LASTUS_PREFIX, i + 1);
+            snprintf(lastus_path, sizeof(lastus_path), "%s/run/node/%02x/lastus.bbs", 
+                     base_path, i + 1);
             
             /* Only read if file was modified after connection started */
             if (stat(lastus_path, &st) == 0 && st.st_mtime >= node->connect_time) {
@@ -1640,10 +1640,10 @@ static void load_bbs_stats(void)
     char path[256];
     int fd;
     
-    snprintf(path, sizeof(path), "%s/%s00.bbs", base_path, STATUS_PREFIX);
+    snprintf(path, sizeof(path), "%s/run/node/00/bbstat.bbs", base_path);
     fd = open(path, O_RDONLY);
     if (fd < 0) {
-        snprintf(path, sizeof(path), "%s/%s01.bbs", base_path, STATUS_PREFIX);
+        snprintf(path, sizeof(path), "%s/run/node/01/bbstat.bbs", base_path);
         fd = open(path, O_RDONLY);
     }
     
@@ -1665,7 +1665,7 @@ static void load_current_user(int node_num)
     if (node->state != NODE_CONNECTED || !node->username[0])
         return;
     
-    snprintf(path, sizeof(path), "%s/%s%02d.bbs", base_path, LASTUS_PREFIX, node_num + 1);
+    snprintf(path, sizeof(path), "%s/run/node/%02x/lastus.bbs", base_path, node_num + 1);
     fd = open(path, O_RDONLY);
     if (fd >= 0) {
         if (read(fd, &current_user, sizeof(current_user)) == sizeof(current_user)) {
@@ -2467,7 +2467,7 @@ static void handle_input(int ch)
                     
                     /* Set environment */
                     char lib_path[1024];
-                    snprintf(lib_path, sizeof(lib_path), "%s/lib", full_base);
+                    snprintf(lib_path, sizeof(lib_path), "%s/bin/lib", full_base);
 #ifdef DARWIN
                     setenv("DYLD_LIBRARY_PATH", lib_path, 1);
 #else

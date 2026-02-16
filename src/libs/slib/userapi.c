@@ -918,10 +918,18 @@ int _fast UserFileUpdate(HUF huf, char *name, char *alias, struct _usr *pusr)
     else if (alias && *alias)
       dbuser = maxdb_user_find_by_alias((MaxDB*)huf->db, alias);
     else
+    {
+      logit("!UserFileUpdate: no name or alias provided");
       return FALSE;
+    }
     
     if (!dbuser)
+    {
+      logit("!UserFileUpdate: user not found (name='%s' alias='%s')",
+            name ? (char*)name : "(null)",
+            alias ? (char*)alias : "(null)");
       return FALSE;
+    }
     
     /* Convert updated struct _usr to MaxDBUser, preserving ID */
     _convert_usr_to_maxdbuser(pusr, &update_user, dbuser->id);
@@ -929,6 +937,11 @@ int _fast UserFileUpdate(HUF huf, char *name, char *alias, struct _usr *pusr)
     
     /* Update in database */
     result = maxdb_user_update((MaxDB*)huf->db, &update_user);
+    if (result != MAXDB_OK)
+    {
+      logit("!UserFileUpdate: SQLite update failed (rc=%d): %s",
+            result, maxdb_error((MaxDB*)huf->db));
+    }
     return (result == MAXDB_OK) ? TRUE : FALSE;
   }
 

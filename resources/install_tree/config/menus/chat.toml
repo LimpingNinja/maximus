@@ -1,0 +1,65 @@
+name = "CHAT"
+title = "CHAT (%t mins)"
+header_file = ":scripts/headchat"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "Chat_CB"
+arguments = ""
+priv_level = "Demoted"
+description = "CB chat"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chat_Page"
+arguments = ""
+priv_level = "Demoted"
+description = "Page user"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chat_Pvt"
+arguments = ""
+priv_level = "Demoted"
+description = "Answer page"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chat_Toggle"
+arguments = ""
+priv_level = "Demoted"
+description = "Toggle status"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Demoted"
+description = "Main menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Demoted"
+description = "Goodbye (log off)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/screens/chathelp"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []

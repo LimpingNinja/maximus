@@ -1221,8 +1221,8 @@ bool form_edit(const char *title, const FieldDef *fields, int field_count, char 
                             /* Use *.vm filter and m/ path for MEX mode */
                             const char *filter = mex_mode[state.selected] ? "*.vm" : 
                                 (field->file_filter ? field->file_filter : "*.bbs");
-                            const char *base_path = mex_mode[state.selected] ? "m" :
-                                (field->file_base_path ? field->file_base_path : "etc/misc");
+                            const char *base_path = mex_mode[state.selected] ? "scripts" :
+                                (field->file_base_path ? field->file_base_path : "display/screens");
                             char *selected = filepicker_select(
                                 base_path,
                                 filter,

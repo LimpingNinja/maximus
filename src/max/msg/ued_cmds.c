@@ -909,7 +909,7 @@ void UedGetPriv(void)
 
 void UedShowHelp(void)
 {
-  Display_File(0, NULL, "%suedhelp", (char *)ngcfg_get_string_raw("maximus.misc_path"));
+  Display_File(0, NULL, "%suedhelp", (char *)ngcfg_get_string_raw("maximus.display_path"));
   DrawUserScreen();
 }
 

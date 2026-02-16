@@ -1,0 +1,121 @@
+name = "EDIT"
+title = "EDIT (%t mins)"
+header_file = ""
+header_types = []
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "Edit_Save"
+arguments = ""
+priv_level = "Transient"
+description = "Save message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Abort"
+arguments = ""
+priv_level = "Transient"
+description = "Abort message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_List"
+arguments = ""
+priv_level = "Transient"
+description = "List message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Edit"
+arguments = ""
+priv_level = "Transient"
+description = "Edit line"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Insert"
+arguments = ""
+priv_level = "Transient"
+description = "Insert line"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Delete"
+arguments = ""
+priv_level = "Transient"
+description = "Delete line"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Quote"
+arguments = ""
+priv_level = "Transient"
+description = "Quote message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Continue"
+arguments = ""
+priv_level = "Transient"
+description = "Continue"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_To"
+arguments = ""
+priv_level = "Transient"
+description = "To"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Subj"
+arguments = ""
+priv_level = "Transient"
+description = "JsubJect"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_From"
+arguments = ""
+priv_level = "Sysop"
+description = "From"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Edit_Handling"
+arguments = ""
+priv_level = "Sysop"
+description = "Handling"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Read_DiskFile"
+arguments = ""
+priv_level = "Sysop"
+description = "Read from disk"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/editor"
+priv_level = "Transient"
+description = "?help"
+key_poke = ""
+modifiers = []

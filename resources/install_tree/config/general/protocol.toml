@@ -1,0 +1,178 @@
+protoexit = 9
+protocol_max_path = "config/legacy/protocol.max"
+protocol_max_exists = false
+protocol_ctl_path = "config/legacy/protocol.ctl"
+protocol_ctl_exists = true
+
+# Legacy PROTOCOL.CTL reference (commented) and TOML equivalents.
+#
+# Note: These examples are commented-out and do not affect runtime unless you
+# uncomment them.
+#
+# ---------------------------------------------------------------------------
+# % Protocol ASCII
+# %         Type            Opus
+# %         LogFile         Ascii%K.Log
+# %         ControlFile     Ascii%K.Ctl
+# %         DownloadCmd     Ascii.Exe Ascii%K.Ctl -p%p -b%W -t%k -m%d -f%D -r%t
+# %         UploadCmd       Ascii.Exe Ascii%K.Ctl -p%p -b%W -t%k -m%d -f%D -r%t
+# %         DownloadString  Send %s
+# %         UploadString    Get %s
+# %         DownloadKeyword Sent
+# %         UploadKeyword   Got
+# %         FilenameWord    1
+# %         DescriptWord    4
+# % End Protocol
+#
+# [[protocol]]
+# index = 0
+# name = "ASCII"
+# program = "Ascii.Exe"
+# batch = true
+# exitlevel = false
+# opus = true
+# bi = false
+# log_file = "Ascii%K.Log"
+# control_file = "Ascii%K.Ctl"
+# download_cmd = "Ascii.Exe Ascii%K.Ctl -p%p -b%W -t%k -m%d -f%D -r%t"
+# upload_cmd = "Ascii.Exe Ascii%K.Ctl -p%p -b%W -t%k -m%d -f%D -r%t"
+# download_string = "Send %s"
+# upload_string = "Get %s"
+# download_keyword = "Sent"
+# upload_keyword = "Got"
+# filename_word = 1
+# descript_word = 4
+# ---------------------------------------------------------------------------
+# % Protocol Kermit
+# %         Type            Batch
+# %         Type            Opus
+# %         LogFile         Kermit%K.Log
+# %         ControlFile     Kermit%K.Ctl
+# %         DownloadCmd     Kermit.Exe -p%p -b%W -t%k -m%d -f%D -r%t Kermit%K.Ctl
+# %         UploadCmd       Kermit.Exe -p%p -b%W -t%k -m%d -f%D -r%t Kermit%K.Ctl
+# %         DownloadString  Send %s
+# %         UploadString    Get %s
+# %         DownloadKeyword Sent
+# %         UploadKeyword   Got
+# %         FilenameWord    1
+# %         DescriptWord    4
+# % End Protocol
+#
+# [[protocol]]
+# index = 1
+# name = "Kermit"
+# program = "Kermit.Exe"
+# batch = true
+# exitlevel = false
+# opus = true
+# bi = false
+# log_file = "Kermit%K.Log"
+# control_file = "Kermit%K.Ctl"
+# download_cmd = "Kermit.Exe -p%p -b%W -t%k -m%d -f%D -r%t Kermit%K.Ctl"
+# upload_cmd = "Kermit.Exe -p%p -b%W -t%k -m%d -f%D -r%t Kermit%K.Ctl"
+# download_string = "Send %s"
+# upload_string = "Get %s"
+# download_keyword = "Sent"
+# upload_keyword = "Got"
+# filename_word = 1
+# descript_word = 4
+# ---------------------------------------------------------------------------
+# % Protocol MPt
+# %         Type            Batch
+# %         LogFile         Mpt.Log
+# %         ControlFile     Mpt.Ctl
+# %         DownloadCmd     mpt A+ B- D+ F+ N+ P%P S0 M- W- HF Lmpt.log s @mpt.ctl
+# %         UploadCmd       mpt A+ B- D+ F+ N+ P%P S0 M- W- HF Lmpt.log r %v
+# %         DownloadString  %s
+# %         UploadString
+# %         DownloadKeyword S
+# %         UploadKeyword   R
+# %         FilenameWord    10
+# %         DescriptWord    0
+# % End Protocol
+#
+# [[protocol]]
+# index = 2
+# name = "MPt"
+# program = "mpt"
+# batch = true
+# exitlevel = false
+# opus = false
+# bi = false
+# log_file = "Mpt.Log"
+# control_file = "Mpt.Ctl"
+# download_cmd = "mpt A+ B- D+ F+ N+ P%P S0 M- W- HF Lmpt.log s @mpt.ctl"
+# upload_cmd = "mpt A+ B- D+ F+ N+ P%P S0 M- W- HF Lmpt.log r %v"
+# download_string = "%s"
+# upload_string = ""
+# download_keyword = "S"
+# upload_keyword = "R"
+# filename_word = 10
+# descript_word = 0
+# ---------------------------------------------------------------------------
+# % Protocol DSZ/Moby
+# %         Type            Batch
+# %         LogFile         DSZ%K.Log
+# %         ControlFile     DSZ%K.Ctl
+# %         DownloadCmd     command.com /c rdsz DSZ%K.Log %P %W ha both sz -m -Z @%x:DSZ%K.Ctl
+# %         UploadCmd       command.com /c rdsz DSZ%K.Log %P %W ha both rz %v
+# %         DownloadString  %s
+# %         UploadString
+# %         DownloadKeyword z
+# %         UploadKeyword   Z
+# %         FilenameWord    10
+# %         DescriptWord    0
+# % End Protocol
+#
+# [[protocol]]
+# index = 3
+# name = "DSZ/Moby"
+# program = "command.com"
+# batch = true
+# exitlevel = false
+# opus = false
+# bi = false
+# log_file = "DSZ%K.Log"
+# control_file = "DSZ%K.Ctl"
+# download_cmd = "command.com /c rdsz DSZ%K.Log %P %W ha both sz -m -Z @%x:DSZ%K.Ctl"
+# upload_cmd = "command.com /c rdsz DSZ%K.Log %P %W ha both rz %v"
+# download_string = "%s"
+# upload_string = ""
+# download_keyword = "z"
+# upload_keyword = "Z"
+# filename_word = 10
+# descript_word = 0
+# ---------------------------------------------------------------------------
+# % Protocol BiModem
+# %         Type            Batch
+# %         Type            Bi
+# %         LogFile         Bimodem.Log
+# %         ControlFile     Bimodem.Ctl
+# %         DownloadCmd     bimodem /B %W /L %P /T %t /R %V /U @Bimodem.Ctl
+# %         UploadCmd       bimodem /B %W /L %P /T %t /R %V
+# %         DownloadString  %s
+# %         UploadString
+# %         DownloadKeyword " S "
+# %         UploadKeyword   " R "
+# %         FilenameWord    5
+# %         DescriptWord    0
+# % End Protocol
+#
+# [[protocol]]
+# index = 4
+# name = "BiModem"
+# program = "bimodem"
+# batch = true
+# exitlevel = false
+# opus = false
+# bi = true
+# log_file = "Bimodem.Log"
+# control_file = "Bimodem.Ctl"
+# download_cmd = "bimodem /B %W /L %P /T %t /R %V /U @Bimodem.Ctl"
+# upload_cmd = "bimodem /B %W /L %P /T %t /R %V"
+# download_string = "%s"
+# upload_string = ""
+# download_keyword = " S "
+# upload_keyword = " R "
+# filename_word = 5
+# descript_word = 0

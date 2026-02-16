@@ -80,8 +80,7 @@ word Write_LastUser(void)
   else
     user.delflag=(unsigned int)baud;
 
-  sprintf(temp, task_num ? lastusxx_bbs : lastuser_bbs, 
-          original_path, task_num);
+  node_file_path(task_num, "lastus.bbs", temp, sizeof(temp));
 
   file=sopen(temp, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY | O_NOINHERIT,
              SH_DENYWR, S_IREAD | S_IWRITE);

@@ -49,6 +49,9 @@ static char rcs_id[]="$Id: log.c,v 1.3 2004/01/27 21:00:30 paltas Exp $";
   #include "mcp.h"
 #endif
 
+/* From max_out.c — expands |!N positional params (all args const char *) */
+extern int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap);
+
 extern char log_name[];
 
 static FILE *logfile=NULL;
@@ -211,7 +214,28 @@ void cdecl logit(char *format,...)
   }
   
   va_start(var_args,format);
-  size=vsprintf(string, format, var_args);
+
+  /* Detect |!N positional parameters from TOML lang strings.
+   * When found, expand via LangVsprintf (all args are const char *).
+   * Otherwise, fall through to legacy vsprintf for hardcoded formats. */
+  {
+    int has_positional = 0;
+    for (const char *p = format; *p; p++)
+    {
+      if (p[0] == '|' && p[1] == '!' &&
+          ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+      {
+        has_positional = 1;
+        break;
+      }
+    }
+
+    if (has_positional)
+      size = LangVsprintf(string, LOGIT_SIZE, format, var_args);
+    else
+      size = vsprintf(string, format, var_args);
+  }
+
   va_end(var_args);
 
   /* Did we booboo? */
