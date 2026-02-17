@@ -443,33 +443,33 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
             }
         }
 
-        /* ---- Cursor codes ---- */
+        /* ---- Cursor codes (|[X##, |[Y##, |[K, |[0, |[1, etc.) ---- */
 
-        if (p[0] == '[' && p[1] == 'X') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cx = n - 1; if (st->cx < 0) st->cx = 0; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'X') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cx = n - 1; if (st->cx < 0) st->cx = 0; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'Y') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cy = n - 1; if (st->cy < 0) st->cy = 0; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'Y') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cy = n - 1; if (st->cy < 0) st->cy = 0; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'A') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cy -= n; if (st->cy < 0) st->cy = 0; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'A') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cy -= n; if (st->cy < 0) st->cy = 0; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'B') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cy += n; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'B') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cy += n; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'C') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cx += n; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'C') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cx += n; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'D') {
-            int n = parse_2dig(p + 2);
-            if (n >= 0) { st->cx -= n; if (st->cx < 0) st->cx = 0; p += 4; continue; }
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'D') {
+            int n = parse_2dig(p + 3);
+            if (n >= 0) { st->cx -= n; if (st->cx < 0) st->cx = 0; p += 5; continue; }
         }
-        if (p[0] == '[' && p[1] == 'K') {
+        if (p[0] == '|' && p[1] == '[' && p[2] == 'K') {
             if (st->cy >= 0 && st->cy < vs->rows) {
                 for (int c = st->cx; c < vs->cols; c++) {
                     int off = st->cy * vs->cols + c;
@@ -477,10 +477,10 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
                     vs->attr[off] = st->ca;
                 }
             }
-            p += 2; continue;
+            p += 3; continue;
         }
-        if (p[0] == '[' && (p[1] == '0' || p[1] == '1')) {
-            p += 2; continue; /* hide/show cursor — no-op */
+        if (p[0] == '|' && p[1] == '[' && (p[2] == '0' || p[2] == '1')) {
+            p += 3; continue; /* hide/show cursor — no-op */
         }
 
         /* ---- Pipe codes ---- */

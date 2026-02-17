@@ -6,14 +6,12 @@
 //
 // Copyright 1995 by Lanius Corporation.  All rights reserved.
 //
-// $Id: CHGSEX.MEX 1.7 1995/08/16 14:39:24 sjd Exp $
+// $Id: chgsex.mex,v 1.1 2002/10/01 17:50:30 sdudley Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#define INCL_max_chng
-#define INCL_global
 #include <max.mh>
-#include <language.mh>
+string lang_get(string: key);
 
 int main(string: argv)
 {
@@ -21,13 +19,13 @@ int main(string: argv)
     string: skeys;
     int: done;
 
-    skeys := str_sex_keys;
+    skeys := lang_get("max_chng.sex_keys");
 
     do
     {
-        print(str_ask_sex);
+        print(lang_get("max_chng.ask_sex"));
 
-        ch := input_ch(CINPUT_DISPLAY | CINPUT_PROMPT, COL_WHITE + str_select_p);
+        ch := input_ch(CINPUT_DISPLAY | CINPUT_PROMPT, COL_WHITE + lang_get("global.select_p"));
 
         if (ch >= 'a' and ch <= 'z')    // Uppercase it
             ch:=ch + 'A' - (ch - 'a');
@@ -47,7 +45,7 @@ int main(string: argv)
             if (ch >= 0 and ch < ' ')
               ch := ' ';
 
-            print("\n'", ch, "'", str_invalid_sex, '\n');
+            print("\n'", ch, "'", lang_get("max_chng.invalid_sex"), '\n');
             done := FALSE;
         }
     }

@@ -375,8 +375,11 @@ static int near Parse_Local_Normal(int ch)
           timeoff += (c==K_UP) ? 60 : 300;
           sent_time_almostup=FALSE;
           sent_time_5left=FALSE;
-          LocalMsg(min_add,c==K_UP ? 1 : 5,
-                   c==K_UP ? blank_str : "s",timeleft());
+          { char _ma[8], _mt[16];
+            snprintf(_ma, sizeof(_ma), "%d", c==K_UP ? 1 : 5);
+            snprintf(_mt, sizeof(_mt), "%d", timeleft());
+            LocalMsg(min_add, _ma,
+                     c==K_UP ? blank_str : "s", _mt); }
           break;
 
 #ifndef UNIX
@@ -390,8 +393,11 @@ static int near Parse_Local_Normal(int ch)
           timeoff -= (c==K_DOWN) ? 60 : 300;
           sent_time_almostup=FALSE;
           sent_time_5left=FALSE;
-          LocalMsg(min_less,c==K_DOWN ? 1 : 5,
-                   c==K_DOWN ? blank_str : "s",timeleft());
+          { char _ma[8], _mt[16];
+            snprintf(_ma, sizeof(_ma), "%d", c==K_DOWN ? 1 : 5);
+            snprintf(_mt, sizeof(_mt), "%d", timeleft());
+            LocalMsg(min_less, _ma,
+                     c==K_DOWN ? blank_str : "s", _mt); }
           break;
 #ifdef UNIX
 	}
@@ -520,7 +526,9 @@ static int near Parse_Local_Normal(int ch)
         UserKeyOff(key);
       else UserKeyOn(key);
 
-      LocalMsg(togkey, ch, UserHasKey(key) ? sys_on : sys_off);
+      { char _tk[4];
+        snprintf(_tk, sizeof(_tk), "%c", ch);
+        LocalMsg(togkey, _tk, UserHasKey(key) ? sys_on : sys_off); }
       break;
     }
 
@@ -655,20 +663,35 @@ DL today: 12345678  DL total: 12345  UL total: 12345    Hotkeys: NO
     (*prfunc)(stat_0);
 #endif
 
-  (*prfunc)(stat_1, usr.name, usr.alias, baud);
-  (*prfunc)(stat_2, temp, usr.phone, usr.dob_year, usr.dob_month, usr.dob_day);
-  (*prfunc)(stat_3, (displaymode==VIDEO_IBM) ? col.pop_text : curattr,
+  { char _a[16], _b[16], _c[16], _d[16]; /* typed→string temps */
+
+  snprintf(_a, sizeof(_a), "%lu", (unsigned long)baud);
+  (*prfunc)(stat_1, usr.name, usr.alias, _a);
+  snprintf(_a, sizeof(_a), "%u", (unsigned)usr.dob_year);
+  snprintf(_b, sizeof(_b), "%u", (unsigned)usr.dob_month);
+  snprintf(_c, sizeof(_c), "%u", (unsigned)usr.dob_day);
+  (*prfunc)(stat_2, temp, usr.phone, _a, _b, _c);
+  snprintf(_a, sizeof(_a), "%c",
+           (int)((displaymode==VIDEO_IBM) ? col.pop_text : curattr));
+  (*prfunc)(stat_3, _a,
                     sc_time(&usr.ludate, temp), usr.city,
                     chatreq ? ch_req : blank_str);
   (*prfunc)(stat_0);
-  (*prfunc)(stat_4, TermWidth(), TermLength(), timeonline(), timeleft());
+  snprintf(_a, sizeof(_a), "%d", TermWidth());
+  snprintf(_b, sizeof(_b), "%d", TermLength());
+  snprintf(_c, sizeof(_c), "%d", timeonline());
+  snprintf(_d, sizeof(_d), "%d", timeleft());
+  (*prfunc)(stat_4, _a, _b, _c, _d);
   (*prfunc)(stat_5, usr.msg);
-  (*prfunc)(stat_6, usr.files, usr.times, usr.time);
+  snprintf(_a, sizeof(_a), "%u", (unsigned)usr.times);
+  snprintf(_b, sizeof(_b), "%u", (unsigned)usr.time);
+  (*prfunc)(stat_6, usr.files, _a, _b);
 
+  snprintf(_a, sizeof(_a), "%u", (unsigned)usr.nulls);
   (*prfunc)(stat_7,
             Help_Level(usr.help),
             Sysop_Yes_or_No(usr.bits & BITS_TABS),
-            usr.nulls,
+            _a,
             Sysop_Yes_or_No(usr.bits2 & BITS2_IBMCHARS));
 
   (*prfunc)(stat_8,
@@ -677,10 +700,13 @@ DL today: 12345678  DL total: 12345  UL total: 12345    Hotkeys: NO
             Sysop_Yes_or_No(usr.bits2 & BITS2_MORE),
             Sysop_Yes_or_No(usr.bits2 & BITS2_CLS));
 
+  snprintf(_a, sizeof(_a), "%ld", (long)usr.downtoday);
+  snprintf(_b, sizeof(_b), "%lu", (unsigned long)usr.down);
+  snprintf(_c, sizeof(_c), "%lu", (unsigned long)usr.up);
   (*prfunc)(stat_9,
-            usr.downtoday,
-            usr.down,
-            usr.up,
+            _a,
+            _b,
+            _c,
             Sysop_Yes_or_No(usr.bits & BITS_HOTKEYS));
 
   if (usr.xp_flag & XFLAG_EXPDATE)
@@ -690,12 +716,15 @@ DL today: 12345678  DL total: 12345  UL total: 12345    Hotkeys: NO
       LangSprintf(temp, sizeof(temp), stat_mins, _xm); }
   else strcpy(temp, proto_none);
   
+  snprintf(_a, sizeof(_a), "%u", (unsigned)usr.credit);
+  snprintf(_b, sizeof(_b), "%u", (unsigned)usr.debit);
   (*prfunc)(stat_10,
-            usr.credit, usr.debit, 
+            _a, _b, 
             (usr.xp_flag & XFLAG_AXE)       ? stat_hangup
             : ((usr.xp_flag & XFLAG_DEMOTE) ? stat_demote
             :                                 proto_none),
             temp);
+  } /* end typed→string temp scope */
 
   (*prfunc)(stat_11,
             Sysop_Yes_or_No(usr.bits & BITS_RIP));
@@ -733,7 +762,28 @@ void cdecl LocalMsg(char *fmt,...)
     return;
 
   va_start(var_args,fmt);
-  vsprintf(out,fmt,var_args);
+
+  /* Detect |!N positional parameters from TOML lang strings.
+   * When found, expand via LangVsprintf (all args are const char *).
+   * Otherwise, fall through to legacy vsprintf for hardcoded formats. */
+  {
+    int has_positional = 0;
+    for (const char *p = fmt; *p; p++)
+    {
+      if (p[0] == '|' && p[1] == '!' &&
+          ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+      {
+        has_positional = 1;
+        break;
+      }
+    }
+
+    if (has_positional)
+      LangVsprintf(out, PATHLEN, fmt, var_args);
+    else
+      vsprintf(out, fmt, var_args);
+  }
+
   va_end(var_args);
 
 #ifdef TTYVIDEO

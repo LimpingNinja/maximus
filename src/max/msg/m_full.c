@@ -60,6 +60,7 @@ void DisplayMessageHeader(XMSG *msg, word *msgoffset, long msgnum, long highmsg,
   DisplayMessageTo(msg);
   DisplayMessageSubj(msg, pmah);
   Puts(reader_msg_init);
+  Puts("|cd");             /* Reset to default color after header chrome */
 
   if (msgoffset)
     *msgoffset=(hasRIP()) ? 1 : 7;

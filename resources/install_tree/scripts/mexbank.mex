@@ -6,7 +6,7 @@
 //
 // Copyright 1995 by Lanius Corporation.  All rights reserved.
 //
-// $Id: MEXBANK.MEX 1.8 1995/08/22 14:52:48 sjd Exp $
+// $Id: mexbank.mex,v 1.1 2002/10/01 17:50:37 sdudley Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -38,13 +38,12 @@
 #define LEN_VALUE       8
 #define LEN_RECORD      96
 
-#define INCL_mexbank
-
 #include <max.mh>
 #include <prm.mh>
 #include <max_menu.mh>
 #include <intpad.mh>
-#include <language.mh>
+
+string lang_get(string: key);
 
 #define MB_CFGFILE    "mexbank.ctl"
 
@@ -224,7 +223,7 @@ int writedata()
     fd:=open(datafilename(),IOPEN_RW|IOPEN_CREATE);
     if (fd=-1)
     {
-      print(str_mb_fatal);
+      print(lang_get("mexbank.mb_fatal"));
       menu_cmd(MNU_PRESS_ENTER,"");
       return False;
     }
@@ -255,8 +254,8 @@ int readcfg(string: argv)
   fd:=open(config,IOPEN_READ);
   if (fd=-1)
   {
-    log(str_mb_log_configfile+config);
-    print(str_mexbank_hdr, str_mb_cfgfile);
+    log(lang_get("mexbank.mb_log_configfile")+config);
+    print(lang_get("mexbank.mexbank_hdr"), lang_get("mexbank.mb_cfgfile"));
     menu_cmd(MNU_PRESS_ENTER,"");
     return False;
   }
@@ -332,8 +331,8 @@ int readcfg(string: argv)
         else
         {
           close(fd);
-          log(str_mb_log_configerr+itostr(linenum));
-          print(str_mexbank_hdr, str_mb_cfgerr);
+          log(lang_get("mexbank.mb_log_configerr")+itostr(linenum));
+          print(lang_get("mexbank.mexbank_hdr"), lang_get("mexbank.mb_cfgerr"));
           menu_cmd(MNU_PRESS_ENTER,"");
           return False;
         }
@@ -413,16 +412,16 @@ string lpad(long: v, int: len)
 
 void display_stats()
 {
-  print(str_mexbank_hdr);
-  print(str_mb_balance_kb,    lpad(mb_balance_kb(),6),        str_mb_kb,   newline);
-  print(str_mb_balance_time,  lpad(mb_balance(),6),           str_mb_mins, newline, newline);
-  print(str_mb_left_time,     lpad(mb_lefttoday(),6),         str_mb_mins, newline);
-  print(str_mb_left_call,     lpad(mb_timeleft(),6),          str_mb_mins, newline);
-  print(str_mb_left_kb,       lpad(mb_lefttodaykb(),6),       str_mb_kb,   newline, newline);
-  print(str_mb_max_dep_kb,    lpad(mb_maxdepositkb(),6),      str_mb_kb,   newline);
-  print(str_mb_max_wdraw_kb,  lpad(mb_maxwithdrawkb(),6),     str_mb_kb,   newline);
-  print(str_mb_max_dep_time,  lpad(mb_maxdeposit(),6),        str_mb_mins, newline);
-  print(str_mb_max_wdraw_time,lpad(mb_maxwithdraw(),6),       str_mb_mins, newline, newline);
+  print(lang_get("mexbank.mexbank_hdr"));
+  print(lang_get("mexbank.mb_balance_kb"),    lpad(mb_balance_kb(),6),        lang_get("mexbank.mb_kb"),   newline);
+  print(lang_get("mexbank.mb_balance_time"),  lpad(mb_balance(),6),           lang_get("mexbank.mb_mins"), newline, newline);
+  print(lang_get("mexbank.mb_left_time"),     lpad(mb_lefttoday(),6),         lang_get("mexbank.mb_mins"), newline);
+  print(lang_get("mexbank.mb_left_call"),     lpad(mb_timeleft(),6),          lang_get("mexbank.mb_mins"), newline);
+  print(lang_get("mexbank.mb_left_kb"),       lpad(mb_lefttodaykb(),6),       lang_get("mexbank.mb_kb"),   newline, newline);
+  print(lang_get("mexbank.mb_max_dep_kb"),    lpad(mb_maxdepositkb(),6),      lang_get("mexbank.mb_kb"),   newline);
+  print(lang_get("mexbank.mb_max_wdraw_kb"),  lpad(mb_maxwithdrawkb(),6),     lang_get("mexbank.mb_kb"),   newline);
+  print(lang_get("mexbank.mb_max_dep_time"),  lpad(mb_maxdeposit(),6),        lang_get("mexbank.mb_mins"), newline);
+  print(lang_get("mexbank.mb_max_wdraw_time"),lpad(mb_maxwithdraw(),6),       lang_get("mexbank.mb_mins"), newline, newline);
 }
 
 #define RES_DEPOSIT   0
@@ -434,9 +433,9 @@ int get_response()
   int:  ch;
   string: keys;
 
-  keys:="|"+str_mb_keys;
+  keys:="|"+lang_get("mexbank.mb_keys");
   ch:= input_list(keys, CINPUT_PROMPT | CINPUT_RTNHELP, helpfilename(),
-                 str_mb_invalid, str_mb_prompt);
+                 lang_get("mexbank.mb_invalid"), lang_get("mexbank.mb_prompt"));
   keys:=strupper(keys);
   return stridx(keys, 1, ch) - 2;
 }
@@ -449,9 +448,9 @@ int trx_type(string: dorw)
   int: ch;
   string: keys;
 
-  keys:="|"+str_mb_torbkeys;
+  keys:="|"+lang_get("mexbank.mb_torbkeys");
   ch:= input_list(keys, CINPUT_PROMPT, "",
-                 str_mb_nottorb, dorw+str_mb_time_or_kb);
+                 lang_get("mexbank.mb_nottorb"), dorw+lang_get("mexbank.mb_time_or_kb"));
   keys:=strupper(keys);
   return stridx(keys, 1, ch) - 2;
 }
@@ -461,7 +460,7 @@ long get_amount(string: dorw)
   int:    len;
   string: samount;
 
-  len:=input_str(samount, INPUT_WORD, 0, 10, dorw+str_mb_howmuch);
+  len:=input_str(samount, INPUT_WORD, 0, 10, dorw+lang_get("mexbank.mb_howmuch"));
   return strtol(samount);
 }
 
@@ -472,9 +471,9 @@ void transaction(int: type)
   string: which;
 
   if (type=RES_DEPOSIT)
-    which:=str_mb_deposit;
+    which:=lang_get("mexbank.mb_deposit");
   else
-    which:=str_mb_withdraw;
+    which:=lang_get("mexbank.mb_withdraw");
 
   torb:=trx_type(which);
   if (torb<>-1)
@@ -528,9 +527,9 @@ void transaction(int: type)
         }
       }
       if (adjust=False)
-        print(str_mb_toomuch);
+        print(lang_get("mexbank.mb_toomuch"));
       else
-        print(str_mb_trxok);
+        print(lang_get("mexbank.mb_trxok"));
       menu_cmd(MNU_PRESS_ENTER,"");
     }
   }
@@ -544,11 +543,10 @@ int main(string: argv)
 {
   id.instant_video:=0;
 
-  init_lang_mexbank();
-  newline:=str_mb_newline;
+  newline:=lang_get("mexbank.mb_newline");
 
   if (id.local=0 and usr.rip)
-    log(str_mb_log_enter);
+    log(lang_get("mexbank.mb_log_enter"));
 
   if (readcfg(argv))
   {
@@ -567,7 +565,7 @@ int main(string: argv)
     }
   }
 
-  print(str_mb_goodbye);
+  print(lang_get("mexbank.mb_goodbye"));
 
   if (timeAdjust OR kbAdjust)
   {
@@ -579,16 +577,16 @@ int main(string: argv)
       // Adjust download limits
       usr.downtoday:=usr.downtoday-kbAdjust;
       usr.time:=usr.time-timeAdjust;
-      log(str_mb_log_account +
-          ltostr(0-timeAdjust) + str_mb_log_account_mins +
-          ltostr(0-kbAdjust) + str_mb_log_account_kbs);
-      log(str_mb_log_balance +
-          ltostr(BalanceTime) + str_mb_log_account_mins +
-          ltostr(BalanceKb) + str_mb_log_account_kbs);
+      log(lang_get("mexbank.mb_log_account") +
+          ltostr(0-timeAdjust) + lang_get("mexbank.mb_log_account_mins") +
+          ltostr(0-kbAdjust) + lang_get("mexbank.mb_log_account_kbs"));
+      log(lang_get("mexbank.mb_log_balance") +
+          ltostr(BalanceTime) + lang_get("mexbank.mb_log_account_mins") +
+          ltostr(BalanceKb) + lang_get("mexbank.mb_log_account_kbs"));
     }
     else
     {
-      log(str_mb_log_writerr+Bankdata);
+      log(lang_get("mexbank.mb_log_writerr")+Bankdata);
     }
   }
 

@@ -209,7 +209,6 @@
 #define COL_REDONGREEN          "\x16\x01\x2c"
 #define COL_WHITEONGREEN        "\x16\x01\x2f"
 
-
 #define AVATAR_ATTR             "\x16\x01"
 #define AVATAR_BLINK            "\x16\x02"
 #define AVATAR_UP               "\x16\x03"

@@ -94,7 +94,8 @@ int Exec_Main(int type, char **result)
       break;
 
     default:
-      logit(bad_menu_opt, type);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
+        logit(bad_menu_opt, _ib); }
       return 0;
   }
 

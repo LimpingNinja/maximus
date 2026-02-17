@@ -230,7 +230,8 @@ void Msg_Hurl(void)
   if (*MAS(mah, echo_tag))
     AddToEchoToss(MAS(mah, echo_tag));
 
-  logit(log_hurl, MAS(mah, name), UIDnum(msgnum), aname);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)UIDnum(msgnum));
+    logit(log_hurl, MAS(mah, name), _ib, aname); }
   return;
 }
   

@@ -523,32 +523,10 @@ static void lc_printf_to_positional(const char *input, char *output, size_t out_
                 *d++ = '!';
                 *d++ = slot;
 
-                /* Emit type suffix for LangVsprintf so it reads the
-                 * correct va_arg type.  Callers that have been migrated
-                 * to pass pre-formatted const char * strings do NOT need
-                 * a suffix (string is the default).  Those strings must
-                 * have their suffix manually removed after conversion.
-                 *
-                 * Mapping from printf type to suffix:
-                 *   %s        → (none, string is default)
-                 *   %d/%i     → 'd'  (int)
-                 *   %ld/%li   → 'l'  (long)
-                 *   %u        → 'u'  (unsigned int)
-                 *   %lu       → 'u'  (unsigned)
-                 *   %c        → 'c'  (char via int promotion)
-                 *   %o/%x/%X  → 'u'  (integer format variants)
-                 */
-                char suffix = 0;
-                if (type_ch == 'c')
-                    suffix = 'c';
-                else if (type_ch == 'u' || type_ch == 'o' ||
-                         type_ch == 'x' || type_ch == 'X')
-                    suffix = 'u';
-                else if (strchr("di", type_ch))
-                    suffix = len_long ? 'l' : 'd';
-                /* %s, %n, %p, %e/%f/%g — no suffix (string default) */
-                if (suffix && d < end)
-                    *d++ = suffix;
+                /* No type suffix emitted — all callers standardized on
+                 * pre-formatted const char * strings.  LangVsprintf
+                 * defaults to va_arg(ap, const char *) when no suffix
+                 * is present, which is the correct behavior. */
 
                 param_idx++;
             }
@@ -571,12 +549,12 @@ static void lc_printf_to_positional(const char *input, char *output, size_t out_
  * Scans for AVATAR control sequences (0x16 prefix) and converts:
  * - Color attrs (0x16 0x01 NN) → |00–|23 pipe color codes
  * - Blink       (0x16 0x02)    → |24
- * - Cursor up   (0x16 0x03)    → [A01
- * - Cursor down (0x16 0x04)    → [B01
- * - Cursor left (0x16 0x05)    → [D01
- * - Cursor right(0x16 0x06)    → [C01
- * - Clear EOL   (0x16 0x07)    → [K
- * - Goto(r,c)   (0x16 0x08 R C)→ [Y##[X##
+ * - Cursor up   (0x16 0x03)    → |[A01
+ * - Cursor down (0x16 0x04)    → |[B01
+ * - Cursor left (0x16 0x05)    → |[D01
+ * - Cursor right(0x16 0x06)    → |[C01
+ * - Clear EOL   (0x16 0x07)    → |[K
+ * - Goto(r,c)   (0x16 0x08 R C)→ |[Y##|[X##
  * - CLS         (0x0c)         → |CL
  * - Repeat char (0x19 ch count) → $D##C (MCI duplicate)
  *
@@ -649,27 +627,27 @@ static void lc_avatar_to_mci(const unsigned char *raw, size_t raw_len,
                 break;
 
             case 0x03: /* Cursor up */
-                d += snprintf(d, (size_t)(end - d), "[A01");
+                d += snprintf(d, (size_t)(end - d), "|[A01");
                 s += 2;
                 break;
 
             case 0x04: /* Cursor down */
-                d += snprintf(d, (size_t)(end - d), "[B01");
+                d += snprintf(d, (size_t)(end - d), "|[B01");
                 s += 2;
                 break;
 
             case 0x05: /* Cursor left */
-                d += snprintf(d, (size_t)(end - d), "[D01");
+                d += snprintf(d, (size_t)(end - d), "|[D01");
                 s += 2;
                 break;
 
             case 0x06: /* Cursor right */
-                d += snprintf(d, (size_t)(end - d), "[C01");
+                d += snprintf(d, (size_t)(end - d), "|[C01");
                 s += 2;
                 break;
 
             case 0x07: /* Clear to EOL */
-                d += snprintf(d, (size_t)(end - d), "[K");
+                d += snprintf(d, (size_t)(end - d), "|[K");
                 s += 2;
                 break;
 
@@ -677,7 +655,7 @@ static void lc_avatar_to_mci(const unsigned char *raw, size_t raw_len,
                 if (s + 3 < s_end) {
                     unsigned char row = s[2];
                     unsigned char col = s[3];
-                    d += snprintf(d, (size_t)(end - d), "[Y%02d[X%02d",
+                    d += snprintf(d, (size_t)(end - d), "|[Y%02d|[X%02d",
                                   (int)row, (int)col);
                     s += 4;
                 } else {

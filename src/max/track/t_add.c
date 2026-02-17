@@ -307,10 +307,12 @@ static int near TrackInsertDB(char *actrack, char *name, TRK_OWNER to, dword uid
       TrackValidOwner(t, pxmsg->to, tmn.to, FALSE);
 
     if ((rc=TrkAddMsg(t, &tmn)) != 0)
-      logit(log_tracking, name, uid, actrack);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)uid);
+        logit(log_tracking, name, _ib, actrack); }
     else
     {
-      logit(log_track_cantadd1, name, uid);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)uid);
+        logit(log_track_cantadd1, name, _ib); }
       logit(log_track_cantadd2);
     }
 

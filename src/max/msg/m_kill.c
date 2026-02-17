@@ -158,7 +158,8 @@ void Msg_Kill(long n)
   if (last_msg > MsgHighMsg(sq))
     last_msg=MsgHighMsg(sq);
 
-  logit(log_kill, uidnum, usr.msg);
+  { char _kb[16]; snprintf(_kb, sizeof(_kb), "%ld", (long)uidnum);
+    logit(log_kill, _kb, usr.msg); }
   { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", uidnum);
     LangPrintf(kill_done, _ib); }
 }

@@ -6,15 +6,14 @@
 //
 // Copyright 1990, 1994 by Lanius Corporation.  All rights reserved.
 //
-// $Id: HEADCHAT.MEX 1.9 1995/06/19 19:26:52 sjd Exp $
+// $Id: headchat.mex,v 1.1 2002/10/01 17:50:31 sdudley Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 
 #include <max.mh>
 #include <max_menu.mh>
 
-#define INCL_max_chat
-#include <language.mh>
+string lang_get(string: key);
 
 int main(string: argv)
 {
@@ -29,7 +28,7 @@ int main(string: argv)
 
     // Display chat section banner
 
-    print(str_ch_chat_sect);
+    print(lang_get("max_chat.ch_chat_sect"));
 
     // Display list of active nodes
 
@@ -43,12 +42,12 @@ int main(string: argv)
 
     if (chat_querystatus(cstat) <> 0)
     {
-        print(str_ch_youare);
+        print(lang_get("max_chat.ch_youare"));
 
         if (cstat.avail = 0)
-            print(str_ch_us_noavail);
+            print(lang_get("max_chat.ch_us_noavail"));
 
-        print(str_ch_availforchat);
+        print(lang_get("max_chat.ch_availforchat"));
     }
 
     print("\n");

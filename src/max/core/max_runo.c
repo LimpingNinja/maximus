@@ -123,8 +123,9 @@ char * RunOption(struct _amenu *menu, struct _opt *thisopt, int ch, XMSG *msg, u
     Exec_Edit(type, &result, msg, puiFlag);
   else if (type >= CHAT_BLOCK && type < END_BLOCK)
     Exec_Chat(type, &result);
-  else 
-    logit(bad_menu_opt, type);
+  else
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
+      logit(bad_menu_opt, _ib); }
 
   return result;
 }
@@ -223,7 +224,8 @@ static int near Exec_Misc(PAMENU pam, struct _opt *thisopt, char *arg,
       break;
 
     default:
-      logit(bad_menu_opt, thisopt->type);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", thisopt->type);
+        logit(bad_menu_opt, _ib); }
   }
   
   return 0;

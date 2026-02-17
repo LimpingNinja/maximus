@@ -179,8 +179,9 @@ int File_Get_Download_Names(int do_tag,sword protocol)
 
     if (do_tag)
     {
-      Inputf(namebuf,(((do_tag==TAG_ONELINE && usr.video) ? INPUT_NOLF : 0) |
-                  INPUT_LB_LINE), 0, NAMEBUFLEN-1,file_enter_tag,FileEntries()+1);
+      { char _fe[12]; snprintf(_fe, sizeof(_fe), "%d", FileEntries()+1);
+        Inputf(namebuf,(((do_tag==TAG_ONELINE && usr.video) ? INPUT_NOLF : 0) |
+                    INPUT_LB_LINE), 0, NAMEBUFLEN-1,file_enter_tag, _fe); }
 
       if (do_tag==TAG_ONELINE)
       {
@@ -717,7 +718,8 @@ void MaxSentFile(word fn, word log_it, long max_time)
     if (max_time != -1L)
       to_add=min(to_add, max_time);
 
-    logit(log_free_time_dl, Add_To_Time(to_add));
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", Add_To_Time(to_add));
+      logit(log_free_time_dl, _ib); }
   }
 
   /* Use array for slow file areas */
@@ -728,7 +730,8 @@ void MaxSentFile(word fn, word log_it, long max_time)
     fsz=fsize(fent.szName) / 1024L;
 
   if (fent.fFlags & FFLAG_NOBYTES)
-    logit(log_free_bytes_dl, fsz);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)fsz);
+      logit(log_free_bytes_dl, _ib); }
   else
   {
     usr.down += fsz;
@@ -743,7 +746,8 @@ void MaxSentFile(word fn, word log_it, long max_time)
   /* If we were supposed to log it, make a statement in the log. */
 
   if (log_it)
-    logit(log_dl, protocol_letter, fent.szName);
+    { char _ib[4]; snprintf(_ib, sizeof(_ib), "%c", protocol_letter);
+      logit(log_dl, _ib, fent.szName); }
 }
 
 
@@ -898,7 +902,8 @@ word File_Send_Files_Sub(sword protocol, char *mname, char *newuppath, long real
   last_bps=0;
 
   if (flag)
-    logit(log_sending_to, usr.name, baud);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%lu", (unsigned long)baud);
+      logit(log_sending_to, usr.name, _ib); }
 
   /* Turn off ^S/^Q flow control and ^C/^K checking, so it doesn't screw  *
    * up the transfers!                                                    */
@@ -1188,7 +1193,8 @@ word File_Send_Files_Sub(sword protocol, char *mname, char *newuppath, long real
           if (flag && result && result != SPEC_COND)
           {
             ThruLog(fent.ulSize);
-            logit(log_dl, 'Z', fent.szName);
+            { char _ib[4]; snprintf(_ib, sizeof(_ib), "%c", 'Z');
+              logit(log_dl, _ib, fent.szName); }
           }
 
           XferWinClear();

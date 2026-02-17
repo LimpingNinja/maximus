@@ -6,14 +6,13 @@
 //
 // Copyright 1990, 1995 by Lanius Corporation.  All rights reserved.
 //
-// $Id: HEADFILE.MEX 1.7 1995/04/30 19:02:16 sjd Exp $
+// $Id: headfile.mex,v 1.1 2002/10/01 17:50:31 sdudley Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 
 #include <max.mh>
 
-#define INCL_f_area
-#include <language.mh>
+string lang_get(string: key);
 
 int main(string: argv)
 {
@@ -35,7 +34,7 @@ int main(string: argv)
     // areas, then redisplay the appropriate header.
 
     if (argv="1" or farea.name <> last_area)
-        print(str_file_sect_hdr);
+        print(lang_get("f_area.file_sect_hdr"));
 
     // Store the name of the new file area
 
@@ -43,7 +42,7 @@ int main(string: argv)
 
     // Now display info about this area
 
-    print(str_file_menu_hdr, farea.name, str_file_menu_sep, farea.descript, str_file_hdr_end);
+    print(lang_get("f_area.file_menu_hdr"), farea.name, lang_get("f_area.file_menu_sep"), farea.descript, lang_get("f_area.file_hdr_end"));
 
     return 0;
 }

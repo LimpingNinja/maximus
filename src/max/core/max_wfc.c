@@ -102,7 +102,8 @@ void Wait_For_Caller(void)
       logit(log_wfc_exit_keyb);
 
     if (do_next_event)
-      logit(log_wfc_exit_erl,next_event.erl);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", next_event.erl);
+        logit(log_wfc_exit_erl, _ib); }
 
     Update_Status(wfc_hanging_up);
   }
@@ -215,7 +216,8 @@ static void near WFC_Init(void)
   
   Get_Next_Event();
 
-  logit(log_wfc_waiting, (next_event_time-time(NULL))/60L);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (next_event_time-time(NULL))/60L);
+    logit(log_wfc_waiting, _ib); }
 
   WFC_Init_Modem();
 }
@@ -416,11 +418,12 @@ static int near Process_Modem_Response(char *rsp)
     mdm_baud(current_baud=Decimal_Baud_To_Mask((unsigned int)baud));
     local=FALSE;
 
-    logit(log_wfc_connect,
-          baud,
-          *arq_info ? " (" : blank_str,
-          arq_info,
-          *arq_info ? ")" : blank_str);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%lu", (unsigned long)baud);
+      logit(log_wfc_connect,
+            _ib,
+            *arq_info ? " (" : blank_str,
+            arq_info,
+            *arq_info ? ")" : blank_str); }
 
     Update_Status(wfc_connected);
 

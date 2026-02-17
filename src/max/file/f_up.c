@@ -335,7 +335,8 @@ word File_Get_Files(sword protocol, char *mname, char *path)
   if (IsBatch(protocol))
     Free_Filenames_Buffer(0);
 
-  logit(log_getting_from, usr.name, baud);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%lu", (unsigned long)baud);
+    logit(log_getting_from, usr.name, _ib); }
 
   /* Turn off ^S/^Q flow control and ^C/^K checking, so it doesn't screw    *
    * up the transfers!                                                      */

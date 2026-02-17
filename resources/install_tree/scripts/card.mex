@@ -267,7 +267,7 @@ void card_top(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "ÚÄÄÄÄ¿" COL_GRAY " ");
+    print(COL_WHITEONGREEN "\xDA\xC4\xC4\xC4\xC4\xBF" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -282,7 +282,7 @@ void card_bot(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "ÀÄÄÄÄÙ" COL_GRAY " ");
+    print(COL_WHITEONGREEN "\xC0\xC4\xC4\xC4\xC4\xD9" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -297,7 +297,7 @@ void card_mid(int: n_card)
   
   while (i <= n_card)
   {
-    print(COL_WHITEONGREEN "³    ³" COL_GRAY " ");
+    print(COL_WHITEONGREEN "\xB3    \xB3" COL_GRAY " ");
     i:=i+1;
   }
 
@@ -321,19 +321,19 @@ void display_cards(ref struct hand: hnd, int: hide_card)
   while (i <= hnd.n_cards)
   {
     if (i <= hide_card)
-      print(COL_WHITEONGREEN "³ úú ³" COL_GRAY " ");
+      print(COL_WHITEONGREEN "\xB3 \xFA\xFA \xB3" COL_GRAY " ");
     else
     {
       // Pad the card's name to three characters
 
-      print(COL_WHITEONGREEN "³ ");
+      print(COL_WHITEONGREEN "\xB3 ");
 
       if (hnd.cards[i].suit=5 or hnd.cards[i].suit=6)
         print(COL_BLACKONGREEN);
       else
         print(COL_REDONGREEN);
 
-      print(hnd.cards[i], COL_WHITEONGREEN "³" COL_GRAY " ");
+      print(hnd.cards[i], COL_WHITEONGREEN "\xB3" COL_GRAY " ");
     }
 
     i:=i+1;
@@ -540,7 +540,7 @@ int main()
   id.instant_video:=0;
 
   print(AVATAR_CLS COL_LGREEN "Max21 - \"BlackJack\" to the Max!\n");
-  print("ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n\n");
+  print("\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n\n");
 
   print(COL_WHITE "This game was written entirely in " COL_YELLOW "MEX" COL_WHITE ","
         " the " COL_YELLOW "M" COL_WHITE "aximus " COL_YELLOW "EX" COL_WHITE

@@ -31,6 +31,7 @@ static char rcs_id[]="$Id: med_quot.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #define MAX_LANG_max_bor
 #include "maxed.h"
 #include "m_reply.h"
+#include "mci.h"
 
 static int near Quote_Read(void);
 
@@ -201,8 +202,8 @@ static int near Quote_Read(void)
       
       { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", len);
         if (QuoteThisLine(s2))
-          LangPrintf(quote_format, _ib, msg_quote_col, initials, s2);
-        else LangPrintf(norm_format, _ib, msg_quote_col, s2); }
+          LangPrintfForce(quote_format, _ib, msg_quote_col, initials, s2);
+        else LangPrintfForce(norm_format, _ib, msg_quote_col, s2); }
 
       if (temp > lines_displayed)
         strcpy(quotebuf+(lines_displayed*MAX_LINELEN),s2);
@@ -213,7 +214,7 @@ static int near Quote_Read(void)
       {
         while (lines_displayed < QUOTELINES)
         { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", usrlen+1+lines_displayed++);
-          LangPrintf(norm_format, _ib, msg_quote_col, blank_str); }
+          LangPrintfForce(norm_format, _ib, msg_quote_col, blank_str); }
 
         /* Break out of loop */
 
@@ -223,7 +224,7 @@ static int near Quote_Read(void)
     }
   }
 
-  Printf(msg_text_col);
+  PrintfForce(msg_text_col);
 
   Goto(cursor_x,cursor_y);  /* Restore original cursor position */
   vbuf_flush();

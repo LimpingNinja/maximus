@@ -61,7 +61,7 @@ struct _maxcol
   byte fsr_date;          /* white on blue */
   byte fsr_addr;          /* yellow on blue */
   byte fsr_static;        /* white on blue */
-  byte fsr_border;        /* lightcyan on blue */
+  byte fsr_border;        /* cyan on blue */
 
 #endif
 

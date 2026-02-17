@@ -95,7 +95,8 @@ void Login(char *key_info)
   }
   
   if (! local && !waitforcaller)
-    logit(log_caller_bps, baud);
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%lu", (unsigned long)baud);
+      logit(log_caller_bps, _ib); }
 
   caller_online=TRUE;
 
@@ -114,7 +115,10 @@ void Login(char *key_info)
     int min_baud = ngcfg_get_int("general.session.min_logon_baud");
     if (baud < min_baud)
     {
-      logit(ltooslow, baud, min_baud);
+      { char _a[16], _b[16];
+        snprintf(_a, sizeof(_a), "%lu", (unsigned long)baud);
+        snprintf(_b, sizeof(_b), "%d", min_baud);
+        logit(ltooslow, _a, _b); }
 
       Display_File(0, NULL, ngcfg_get_path("general.display_files.too_slow"));
       mdm_hangup();
@@ -130,7 +134,9 @@ void Login(char *key_info)
 
   Validate_Runtime_Settings();
   Set_OnOffTime();
-  logit(log_given, left=timeleft());
+  { char _ib[16]; left=timeleft();
+    snprintf(_ib, sizeof(_ib), "%d", left);
+    logit(log_given, _ib); }
 
 
 #ifdef MAX_TRACKER
@@ -970,7 +976,10 @@ void Validate_Runtime_Settings(void)
 
   if (!local && baud < (dword)ClassGetInfo(cls,CIT_MIN_BAUD))
   {
-    logit(ltooslow, baud, ClassGetInfo(cls,CIT_MIN_BAUD));
+    { char _a[16], _b[16];
+      snprintf(_a, sizeof(_a), "%lu", (unsigned long)baud);
+      snprintf(_b, sizeof(_b), "%lu", (unsigned long)ClassGetInfo(cls,CIT_MIN_BAUD));
+      logit(ltooslow, _a, _b); }
 
     Display_File(0, NULL, ngcfg_get_path("general.display_files.too_slow"));
     mdm_hangup();

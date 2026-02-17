@@ -84,8 +84,6 @@ int Bored(XMSG *msg,HMSG msgh,struct _replyp *pr)
   }
   else                /* Things look A-OK! */
   {
-    MciPushParseFlags(MCI_PARSE_ALL, 0);
-
     if (setjmp(jumpto)==0) /* Really ugly, but the best way to handle errs */
     {
       int rc;
@@ -104,13 +102,11 @@ int Bored(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
       in_msghibit--;
 
-      MciPopParseFlags();
       return rc;
     }
     else
     {
       Free_All();
-      MciPopParseFlags();
       return ABORT;
     }
   }
@@ -867,7 +863,8 @@ int Exec_Edit(int type, char **result, XMSG *msg, unsigned *puiFlag)
     case edit_handling: Bored_Handling(msg);break;
     case read_diskfile: Read_DiskFile();    break;
     case edit_quote:    Bored_Quote();      break;
-    default:            logit(bad_menu_opt, type);  return 0;
+    default:            { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
+                          logit(bad_menu_opt, _ib); }  return 0;
   }
   
   return 0;

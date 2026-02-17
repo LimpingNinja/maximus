@@ -432,7 +432,8 @@ int Outside(char *leaving,char *returning,int method,char *parm,
           break;
 
         default:
-          logit(log_badee, errno);
+          { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+            logit(log_badee, _ib); }
           break;
       }
     }
@@ -446,7 +447,8 @@ Skip:
     strcpy(temp, parm);
 
     if (!in_wfc)
-      logit(return_prog, parm, erl);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", erl);
+        logit(return_prog, parm, _ib); }
   }
   else if (method==OUTSIDE_DOS)
   {

@@ -637,7 +637,8 @@ int Exec_Change(int type, char **result)
     case chg_fsr:       Chg_FSR();      break;
     case chg_archiver:  Chg_Archiver(); break;
     case chg_rip:       Chg_RIP();      break;
-    default:            logit(bad_menu_opt, type);  return 0;
+    default:            { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
+                          logit(bad_menu_opt, _ib); }  return 0;
   }
   
   return 0;

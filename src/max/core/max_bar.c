@@ -260,7 +260,8 @@ int GetBarPriv(char *barfile, int is_msg, PMAH pmah, PFAH pfah, BARINFO *pbi, in
 
   if ((fp=shfopen(barfile, fopen_read, O_RDONLY | O_NOINHERIT))==NULL)
   {
-    logit(cantopen, barfile, errno);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+      logit(cantopen, barfile, _ib); }
     return FALSE;
   }
 

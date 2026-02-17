@@ -73,7 +73,8 @@ void Msg_Xport(void)
       (out=shfopen(temp, fopen_append, O_WRONLY | O_APPEND | O_NOINHERIT))==NULL)
   {
     if (*temp)
-      Printf(cantopen+1, temp, errno);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+        LangPrintf(cantopen+1, temp, _ib); }
 
     MsgCloseMsg(hmsg);
     return;

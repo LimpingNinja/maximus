@@ -326,7 +326,8 @@ int RIP_HasFile(char *pszFile, long *plFilesize)
 
           /* Fallthru */
       default:
-        logit(log_err_ripsend,retries+1);
+        { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", retries+1);
+          logit(log_err_ripsend, _ib); }
         Delay(50);
         break;
     }

@@ -6,15 +6,13 @@
 //
 // Copyright 1990, 1995 by Lanius Corporation.  All rights reserved.
 //
-// $Id: HEADMSG.MEX 1.9 1995/05/22 13:06:39 sjd Exp $
+// $Id: headmsg.mex,v 1.1 2002/10/01 17:50:32 sdudley Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 
 #include <max.mh>
 
-#define INCL_global
-#define INCL_m_area
-#include <language.mh>
+string lang_get(string: key);
 
 string padleft(string: s, int: len, int: ch)
 {
@@ -53,28 +51,28 @@ int main(string: argv)
 
     if (argv="1" or marea.name <> last_area)
     {
-        print(str_msg_sect);
+        print(lang_get("m_area.msg_sect"));
 
         if (msg.num=0)
-            print(str_msg_nomsgs);
+            print(lang_get("m_area.msg_nomsgs"));
         else
         {
-            print(str_msg_thereare1, msg.num, str_msg_thereare2,
-                  str_msg_highest, msg.high, "\n" COL_WHITE);
+            print(lang_get("m_area.msg_thereare1"), msg.num, lang_get("m_area.msg_thereare2"),
+                  lang_get("m_area.msg_highest"), msg.high, "\n" COL_WHITE);
 
             if (msg.current=0)
-              print(str_msg_haventread);
+              print(lang_get("m_area.msg_haventread"));
             else if (msg.current=msg.high)
-              print(str_msg_nonew);
+              print(lang_get("m_area.msg_nonew"));
             else
-              print(str_msg_lastread, msg.current, str_msg_lastread_end);
+              print(lang_get("m_area.msg_lastread"), msg.current, lang_get("m_area.msg_lastread_end"));
         }
 
         if (usr.rip and id.local=False)
           print("\n\n\n\n\n\n\n\n\n");
     }
 
-    print(str_msg_menu_intro);
+    print(lang_get("m_area.msg_menu_intro"));
 
     // If the user changed to another area, display the rules file
     // and/or the area description.
@@ -126,9 +124,9 @@ int main(string: argv)
 
         set_output(DISABLE_REMOTE);
 
-        print( "\n" COL_LGREEN, str_lbracket, COL_LRED, ltos_current,
+        print( "\n" COL_LGREEN, lang_get("global.lbracket"), COL_LRED, ltos_current,
                     " / " COL_LRED, ltos_high,
-                    COL_LGREEN, str_rbracket, "  "
+                    COL_LGREEN, lang_get("global.rbracket"), "  "
                     COL_LMAGENTA, marea.name, COL_GRAY " ... "
                     COL_LCYAN, marea.descript, COL_GRAY "\n");
 
@@ -136,39 +134,39 @@ int main(string: argv)
 
         // Now, output the RIP version from the language file
 
-        brackets := str_msg_lbracket + padleft(ltos_current,5,' ') +
-                   str_msg_separator + strpad(ltos_high,5,' ') +
-                   str_msg_rbracket;
+        brackets := lang_get("m_area.msg_lbracket") + padleft(ltos_current,5,' ') +
+                   lang_get("m_area.msg_separator") + strpad(ltos_high,5,' ') +
+                   lang_get("m_area.msg_rbracket");
 
-        print(brackets, str_msg_menu_hdr, marea.name,
-              str_msg_menu_sep, marea.descript,
+        print(brackets, lang_get("m_area.msg_menu_hdr"), marea.name,
+              lang_get("m_area.msg_menu_sep"), marea.descript,
               "|#|#|#\n" );
 
     }
     else
     {
-        brackets := str_msg_lbracket + ltos_current +
-                   str_msg_separator + ltos_high +
-                   str_msg_rbracket + "  ";
+        brackets := lang_get("m_area.msg_lbracket") + ltos_current +
+                   lang_get("m_area.msg_separator") + ltos_high +
+                   lang_get("m_area.msg_rbracket") + "  ";
 
         // Display the name of the current area
 
-        print("\r" COL_LGREEN, str_msg_lbracket, COL_LRED, ltos_current,
-                   str_msg_separator, COL_LRED, ltos_high,
-                   COL_LGREEN, str_msg_rbracket, "  ",
-                   str_msg_menu_hdr, marea.name,
-                   str_msg_menu_sep, marea.descript, '\n');
+        print("\r" COL_LGREEN, lang_get("m_area.msg_lbracket"), COL_LRED, ltos_current,
+                   lang_get("m_area.msg_separator"), COL_LRED, ltos_high,
+                   COL_LGREEN, lang_get("m_area.msg_rbracket"), "  ",
+                   lang_get("m_area.msg_menu_hdr"), marea.name,
+                   lang_get("m_area.msg_menu_sep"), marea.descript, '\n');
 
         // Don't need this for RIP callers
 
-        print(strpad("", strlen(brackets), ' '), str_msg_enter_prompt1);
+        print(strpad("", strlen(brackets), ' '), lang_get("m_area.msg_enter_prompt1"));
 
         if (msg.direction = 1)
-            print(str_msg_dir_next);
+            print(lang_get("m_area.msg_dir_next"));
         else
-            print(str_msg_dir_prev);
+            print(lang_get("m_area.msg_dir_prev"));
 
-        print(str_msg_enter_prompt2);
+        print(lang_get("m_area.msg_enter_prompt2"));
     }
 
     return 0;

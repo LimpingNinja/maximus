@@ -4408,7 +4408,7 @@ static const struct {
     { "qt", "quote",       "|09",    "Quoted message text"            },
     { "br", "border",      "|01",    "Box borders, dividers"          },
     { "hk", "hotkey",      "|14",    "Hotkey characters"              },
-    { "cd", "default",     "|07",    "Reset to default theme color"   },
+    { "cd", "default",     "|16|07", "Reset to default theme color"   },
 };
 
 void maxcfg_theme_init(MaxCfgThemeColors *theme)

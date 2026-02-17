@@ -545,7 +545,8 @@ static void near ReadCallerInfo(char *path)
   
   if ((fd=shopen(path, O_RDONLY | O_BINARY | O_NOINHERIT))==-1)
   {
-    Lprintf(cantopen+1, path, errno);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+      Lprintf(cantopen+1, path, _ib); }
     quit(ERROR_PARAM);
   }
   

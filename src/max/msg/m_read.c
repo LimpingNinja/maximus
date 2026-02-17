@@ -535,8 +535,6 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
 {
   int this;
 
-  MciPushParseFlags(MCI_PARSE_ALL, 0);
-
   for (this=0; this < got; this++)
   {
     /* If we're near the end of the message, strip excess blank lines */
@@ -549,7 +547,7 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
 
     Puts(CLEOL);
 
-    Puts(outline[this]);
+    PutsRaw(outline[this]);
 
     if (lt[this] & MSGLINE_KLUDGE)
       Puts(msg_text_col);
@@ -557,22 +555,15 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
     Putc('\n');
 
     if (halt())
-    {
-      MciPopParseFlags();
       return -1;
-    }
 
     if (display_line >= TermLength() && pause && ! *nonstop)
     {
       if (! DoTheMoreThing(nonstop, paged, msgoffset, inbrowse))
-      {
-        MciPopParseFlags();
         return -2;
-      }
     }
   }
 
-  MciPopParseFlags();
   return 0;
 }
 
@@ -651,7 +642,8 @@ int Msg_Display(HMSG msgh,
   TrackShowInfo(sq, &mah, msg, msgnum, ctrl, msgoffset-1, track_ofs, track_col);
 #endif
 
-  logit(log_read_msg, msgnum, areano);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)msgnum);
+    logit(log_read_msg, _ib, areano); }
   
   /* Display the message kludge lines to the user */
 

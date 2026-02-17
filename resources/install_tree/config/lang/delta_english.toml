@@ -1010,7 +1010,7 @@ bytes_for_ul = { text = "|hi\nThere are |pr|!1|hi bytes available for uploads in
 file_menu_hdr = { text = "|ok\n\nFile area |sy", flags = ["mex"], rip = "\r!|w0002271210|c08|R0101HR0C\n!|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TFile Area |c05|T" }
 
 # --- Batch 6: Section headers (|14|17 â†’ |hd|tb) ---
-file_sect_hdr = { text = "|CL|hd|tb[KThe FILES Section|tx", flags = ["mex"], rip = "\r!|*|Y00000100|c08|R010HHR0S\n!|c09|R000GHQ0R|S0101|B010HHQ0R\n!|c0E|@040JThe FILES Section|#|#\n" }
+file_sect_hdr = { text = "|CL|hd|tb|[KThe FILES Section|tx", flags = ["mex"], rip = "\r!|*|Y00000100|c08|R010HHR0S\n!|c09|R000GHQ0R|S0101|B010HHQ0R\n!|c0E|@040JThe FILES Section|#|#\n" }
 
 # --- Batch 7: Info / body text (|07 â†’ |tx, |03 â†’ |fi) ---
 file_menu_sep = { text = "|tx ... |fi", flags = ["mex"], rip = "|c00|T: |c01|T" }
@@ -1040,10 +1040,10 @@ edlist_quit = "|prQ|tx)uit\n\n|hi"
 e_numch = { text = "|okYou can put as many as |!1 characters\nhere.\n\n|hi", params = [{name = "max_chars", type = "string", desc = "Maximum characters allowed in editor", default = "4000"}] }
 
 # --- Batch 6: Section headers / status bars (|14|17 â†’ |pr|tb) ---
-max_status = { text = "|pr|tb[K^Z=save|hi|tb  To: $T20|!1, Re: $T27|!2", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}] }
+max_status = { text = "|pr|tb|[K^Z=save|hi|tb  To: $T20|!1, Re: $T27|!2", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}] }
 status_insert = "|sy|tb Insert"
-max_not_reply = "|pr|tb[K\aNot a reply"
-max_no_understand = { text = "|hi|tb[K\aI don't understand.  |!1", flags = ["mex"], params = [{name = "ck_for_help", type = "string", desc = "Help hint text", default = "Type ? for help"}] }
+max_not_reply = "|pr|tb|[K\aNot a reply"
+max_no_understand = { text = "|hi|tb|[K\aI don't understand.  |!1", flags = ["mex"], params = [{name = "ck_for_help", type = "string", desc = "Help hint text", default = "Type ? for help"}] }
 
 # --- Batch 7: Info / body text (|07 â†’ |tx) ---
 bed_to = { text = "|tx\nTo: |pr|!1\n\n|cd", params = [{name = "recipient", type = "string", desc = "Message recipient (plain)", default = "All"}] }
@@ -1087,11 +1087,13 @@ msg_menu_hdr = { text = "|okMsg.area |sy", flags = ["mex"], rip = "\r!|m0404|c02
 msg_thereare1 = { text = "|okThere are ", flags = ["mex"], rip = "\r!|c0A|@0414There are " }
 
 # --- Batch 6: Section headers (|14|17 â†’ |hd|tb) ---
-msg_sect = { text = "|CL|hd|tb[KThe MESSAGE Section|tx\n", flags = ["mex"], rip = "\r!|1K|*|Y00000100|c08|R010HHR0S\n!|c09|R000GHQ0R|S0101|B010HHQ0R\n!|c0E|@040JThe MESSAGE Section|#|#\n" }
+msg_sect = { text = "|CL|hd|tb|[KThe MESSAGE Section|tx\n", flags = ["mex"], rip = "\r!|1K|*|Y00000100|c08|R010HHR0S\n!|c09|R000GHQ0R|S0101|B010HHQ0R\n!|c0E|@040JThe MESSAGE Section|#|#\n" }
 
 # --- Batch 7: Info / body text (|07 â†’ |tx, |03 â†’ |fi) ---
 msg_menu_sep = { text = "|tx ... |fi", flags = ["mex"], rip = "|c00|T: |c01|T" }
-reader_pos_text = { text = "[Y07[X01|fi|fi[K", rip = "\r!|H|w0007271410|#|#\n|03[K" }
+reader_pos_text = { text = "|[Y07|[X01|fi|fi|[K", rip = "\r!|H|w0007271410|#|#\n|03|[K" }
+
+# --- FSR CLS fix: prepend |CL so FSR+ANSI direct reads clear the screen ---
 
 # --- Batch 13: Message prompts (add |pr prefix, |in suffix) ---
 msg_prmpt = { text = "|prMessage area [Area, \"|!1\"=Prior, \"|!2\"=Next, \"|!3\"=List]: |in", params = [{name = "hotkey1", type = "string", desc = "First menu hotkey character", default = "N"}, {name = "hotkey2", type = "string", desc = "Second menu hotkey character", default = "P"}, {name = "hotkey3", type = "string", desc = "Third menu hotkey character", default = "?"}] }
@@ -1140,7 +1142,7 @@ check_pwd2 = "|prPlease re-enter your password for verification: |in"
 [maximusng-max_chat]
 
 # --- Batch 2: Error messages (|12 â†’ |er) ---
-ch_off_abnormally = { text = "|er|!1's|sy session was terminated abnormally.  (Ran out of time?)\n[K|cd", params = [{name = "user_name", type = "string", desc = "Caller's display name", default = "Kevin Morgan"}] }
+ch_off_abnormally = { text = "|er|!1's|sy session was terminated abnormally.  (Ran out of time?)\n|[K|cd", params = [{name = "user_name", type = "string", desc = "Caller's display name", default = "Kevin Morgan"}] }
 
 # --- Batch 4: Highlighted text (|15 â†’ |hi) ---
 ch_enter_chat = { text = "|hi\nEntering chat mode.  |cd", flags = ["mex"] }
@@ -1164,7 +1166,7 @@ cant_change_field = { text = "|erYou cannot change that field.\n|cd", flags = ["
 ued_find_who = "|prType the name of the user you wish to find: |in"
 ued_sex_prompt = "|prM)ale, F)emale, or N)ot Given? |in"
 ued_group_prompt = "|prGroup number: |in"
-ued_getpriv = "[K|prNew priv level (# or priv key): |in"
+ued_getpriv = "|[K|prNew priv level (# or priv key): |in"
 
 [maximusng-m_browse]
 
@@ -1193,21 +1195,22 @@ tossing_rep_packet = { text = "|pr\nTossing .REP packet |!1...\n\n|cd", params =
 wait_compr_attach = "\r|prCompressing file(s).  Please wait...\n|cd"
 wait_decompr_attach = "\r|prDecompressing file(s).  Please wait...\n|cd"
 qwk_max_area = { text = "|prMaxArea: |!1\n|cd", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}] }
-qwk_pack_start = "|pr\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n|hi$D09\xc4  $D27\xc4  $D10\xc4  $D11\xc4  $D11\xc4\n"
+qwk_pack_start = "|pr\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n|hi$D09Ä  $D27Ä  $D10Ä  $D11Ä  $D11Ä\n"
 
 # --- Batch 4: Highlighted text (|15 â†’ |hi) ---
 rep_to_send = { text = "|hi\nPlease begin uploading |!1 now.\n|cd", params = [{name = "packet_name", type = "string", desc = "QWK .REP packet filename", default = "MYBBS.REP"}] }
 really_abort_attach = "|hiDo you want to abort the file attach"
 
 # --- Batch 6: Section headers (|11|17 â†’ |br|tb) ---
-browse_rbox_top = { text = "|CL[Y01[X01|br|tb[K\xc4 |pr|tb|!1: |!2 |br|tb$D|!3\xc4", rip = "\r!|1K|S0100|B008GHR9P|w0007271110|Y00000100\n!|c08|R0101HR0C|c0F|R0000HQ0B\n!|S0107|B0101HQ0B|m0403|c02|TMsg Area \n!|c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I\n!|S0107|B010EHQ1I|c08|L041EHL1E\n!|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
+browse_rbox_top = { text = "|CL|[Y01|[X01|CD|br|tb|[KÄ |pr|tb|!1: |!2 |br|tb$D|!3Ä", rip = "\r!|1K|S0100|B008GHR9P|w0007271110|Y00000100\n!|c08|R0101HR0C|c0F|R0000HQ0B\n!|S0107|B0101HQ0B|m0403|c02|TMsg Area \n!|c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I\n!|S0107|B010EHQ1I|c08|L041EHL1E\n!|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
+reader_box_bottom = { text = "|[Y06|[X01|CD|br|tb|[K$D|!1Ä", rip = "", params = [{name = "fill_width", type = "string", desc = "Box-drawing bottom border repeat count (zero-padded)", default = "75"}] }
 
 # --- Batch 13: Browse/search prompts (add |pr prefix, |in suffix) ---
 browse_select_s = "|prSelect: |in"
 br_text_to_search = "|prText to search for: |in"
 br_ty_from = "\n|prStart displaying at which msg# (\"=\" for current): |in"
 qwk_local_rep = "|prEnter path/name of .REP file: |in"
-br_which_areas = { text = "|prSearch which areas (use \"*\" as wildcard): |in", rip = "\r!|1K|c01|@1C66Which areas (use * as wildcard):\n!|c08|R196LEY6Y|c0F|R186KEX6X\n!|c07|R196LEX6X|w060U1U0U00|#|#\n[Y01[X01|01|23[K" }
+br_which_areas = { text = "|prSearch which areas (use \"*\" as wildcard): |in", rip = "\r!|1K|c01|@1C66Which areas (use * as wildcard):\n!|c08|R196LEY6Y|c0F|R186KEX6X\n!|c07|R196LEX6X|w060U1U0U00|#|#\n|[Y01|[X01|01|23|[K" }
 
 # --- Batch 14: Highlighted prompts ---
 recv_attach_local = "|prEnter destination directory for attached file(s): |in"
@@ -1223,7 +1226,7 @@ mb_nottorb = { text = "|erUse 'T' for T)ime, 'B' for B)ytes or ENTER to quit.\n|
 mb_toomuch = { text = "\n|erSorry, the amount you entered exceeds the preset limits or exceeds\nyour current allowance of time or download bytes.\n\n|cd", flags = ["mex"], rip = "\r!|S0107|B025CHO6U|c00|R1L4XFJ5J|c0F|R1M4YFK5K|S0104|B1N4ZFI5I|c0F\n!|@2851Sorry, the amount you entered exceeds the preset limits or\n!|@285Aexceeds your current allowance of time or download bytes.\n" }
 
 # --- Batch 6: Section headers (|14|17 â†’ |hd|tb) ---
-mexbank_hdr = { text = "|CL|hd|tb[KMEXBank: |hi|tbThe Maximus Time/Kilobyte Bank|tx\n\n\n", flags = ["mex"], rip = "|07\r!|w0000000010|Y00000100|*|S0107|B0202HO6U|c08|R0101HR6X|c08|R0101HQ6W|c0F|R0000HP6V|c0F|R0X0XGM4O|c00\n!|R0Y0YGN4P|S0107|B0Y0YGM4O|S0101|B0202HO0C|c0F|L010DHP0D|c08|L020EHO0E\n!|c0E|@0804MEXBank:|c0F|@2404The Maximus Time/Kilobyte Bank\n" }
+mexbank_hdr = { text = "|CL|hd|tb|[KMEXBank: |hi|tbThe Maximus Time/Kilobyte Bank|tx\n\n\n", flags = ["mex"], rip = "|07\r!|w0000000010|Y00000100|*|S0107|B0202HO6U|c08|R0101HR6X|c08|R0101HQ6W|c0F|R0000HP6V|c0F|R0X0XGM4O|c00\n!|R0Y0YGN4P|S0107|B0Y0YGM4O|S0101|B0202HO0C|c0F|L010DHP0D|c08|L020EHO0E\n!|c0E|@0804MEXBank:|c0F|@2404The Maximus Time/Kilobyte Bank\n" }
 
 # --- Batch 9: MEXBank label/value pattern (|14....|07...|10 : |11 â†’ |pr...|tx...|ok : |hd) ---
 mb_balance_kb = { text = "|pr  Current balance (kb) |tx.........|ok : |hd", flags = ["mex"], rip = "\r!|c01|@2G18Current balance (kb)|c00|@7818.........|c02|@9G18:|c04|mA018|T" }
@@ -1253,8 +1256,8 @@ chat_needremote = { text = "|er\nMEXChat can only be used with a remote user.\n|
 [maximusng-track]
 
 # --- Batch 11: Tracking headers (|15 â†’ |hi, |14 â†’ |pr) ---
-trk_rep_hdr_graph = "|CL|hiID               Date     Owner Priority     Status  Message\n\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\n|pr"
-trk_list_hdr = "|hi\nID   Owner\n\xc4\xc4\xc4\xc4 \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\n|pr"
+trk_rep_hdr_graph = "|CL|hiID               Date     Owner Priority     Status  Message\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|pr"
+trk_list_hdr = "|hi\nID   Owner\nÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|pr"
 
 # --- Batch 12: Error messages (|12 â†’ |er) ---
 trk_admin_noaccess = "|erYou do not have access to this command.\n|cd"

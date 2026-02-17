@@ -55,7 +55,8 @@ void Read_DiskFile(void)
 
   if ((infile=shfopen(temp, fopen_read, O_RDONLY))==NULL)
   {
-    Printf(cantopen+1, temp, errno);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+      LangPrintf(cantopen+1, temp, _ib); }
     return;
   }
 

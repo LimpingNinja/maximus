@@ -290,7 +290,8 @@ long scan_time=NORM_SCAN_TIME;
 
           if (rc)
           {
-            logit(log_mcp_err_2, rc);
+            { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", rc);
+              logit(log_mcp_err_2, _ib); }
             break;
           }
         }

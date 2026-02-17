@@ -133,11 +133,13 @@ void FinishUp2(int hangup)
 
 
     if (fLoggedOn && rst_offset==-1L)
-      logit(log_user_off_line,
-            *usrname ? usrname : user_text,
-            usr.times,
-            (long)wasonfor,
-            (long)usr.time+wasonfor);
+      { char _a[16], _b[16], _c[16];
+        snprintf(_a, sizeof(_a), "%u", (unsigned)usr.times);
+        snprintf(_b, sizeof(_b), "%ld", (long)wasonfor);
+        snprintf(_c, sizeof(_c), "%ld", (long)usr.time+wasonfor);
+        logit(log_user_off_line,
+              *usrname ? usrname : user_text,
+              _a, _b, _c); }
   }
 
   ExitMsgAreaBarricade();
@@ -216,7 +218,8 @@ void FinishUp2(int hangup)
 
   if (hangup && rst_offset==-1L)
   {
-    logit(log_max_end, version, (word)(byte)erl);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", (int)(word)(byte)erl);
+      logit(log_max_end, version, _ib); }
 /*    LogWrite("\n");*/
   }
 

@@ -289,54 +289,27 @@ int LangSprintf(char *buf, size_t bufsz, const char *format, ...)
 
 
 /**
- * @brief Helper: detect if character after |!N digit is a type suffix.
- *
- * Recognized suffixes (case-insensitive):
- *   c — char         (va_arg as int,          formatted with %c)
- *   d — int          (va_arg as int,          formatted with %d)
- *   l — long         (va_arg as long,         formatted with %ld)
- *   u — unsigned int (va_arg as unsigned int, formatted with %u)
- *   (none) — const char * (default, backward compatible)
- *
- * @return 'c', 'd', 'l', 'u', or 0 for string (no suffix).
- */
-static inline char lang_type_suffix(char c)
-{
-  if (c == 'c' || c == 'C') return 'c';
-  if (c == 'd' || c == 'D') return 'd';
-  if (c == 'l' || c == 'L') return 'l';
-  if (c == 'u' || c == 'U') return 'u';
-  return 0;
-}
-
-/**
  * @brief Expand |!N positional parameters into a buffer (va_list variant).
  *
  * Core expansion engine used by LangSprintf, LangPrintf, and logit().
- * Supports optional type suffixes on |!N tokens so callers can pass
- * typed varargs (int, long, unsigned) without pre-formatting.
+ * All varargs are const char * — callers pre-format any numeric values
+ * before passing them.
  *
  * Format tokens:
- *   |!1      — const char * (default, backward compatible)
- *   |!2c     — char (single character, va_arg as int)
- *   |!3d     — int
- *   |!4l     — long
- *   |!5u     — unsigned int
+ *   |!1..|!9  — positional parameter 1–9  (const char *)
+ *   |!A..|!F  — positional parameter 10–15 (const char *)
  *
  * @param buf    Destination buffer.
  * @param bufsz  Size of destination buffer.
  * @param format Language string containing |!N placeholders.
- * @param ap     va_list of values (types determined by suffixes).
+ * @param ap     va_list of const char * values, one per slot.
  * @return Number of characters written (excluding NUL).
  */
 int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
 {
-  /* Per-slot type info and pre-formatted string storage */
-  char types[15] = {0};      /* 0=string, 'd'=int, 'l'=long, 'u'=uint */
-  char numbuf[15][24];       /* scratch buffers for formatted integers  */
   const char *vals[15] = {0};
 
-  /* Pass 1: scan for max slot and record type suffix per slot */
+  /* Pass 1: scan for highest slot index */
   int max_slot = 0;
   for (const char *p = format; *p; p++)
   {
@@ -348,42 +321,15 @@ int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
                    : p[2] - 'A' + 10;
       if (slot > max_slot)
         max_slot = slot;
-      char ts = lang_type_suffix(p[3]);
-      if (ts)
-        types[slot - 1] = ts;
     }
   }
 
-  /* Pass 2: bind varargs into slots, using type info */
+  /* Pass 2: bind varargs into slots (all const char *) */
   int count = (max_slot > 15) ? 15 : max_slot;
   for (int i = 0; i < count; i++)
-  {
-    switch (types[i])
-    {
-    case 'c':
-      numbuf[i][0] = (char)va_arg(ap, int);
-      numbuf[i][1] = '\0';
-      vals[i] = numbuf[i];
-      break;
-    case 'd':
-      snprintf(numbuf[i], sizeof(numbuf[i]), "%d", va_arg(ap, int));
-      vals[i] = numbuf[i];
-      break;
-    case 'l':
-      snprintf(numbuf[i], sizeof(numbuf[i]), "%ld", va_arg(ap, long));
-      vals[i] = numbuf[i];
-      break;
-    case 'u':
-      snprintf(numbuf[i], sizeof(numbuf[i]), "%u", va_arg(ap, unsigned int));
-      vals[i] = numbuf[i];
-      break;
-    default:
-      vals[i] = va_arg(ap, const char *);
-      break;
-    }
-  }
+    vals[i] = va_arg(ap, const char *);
 
-  /* Pass 3: walk format, expanding |!N[suffix] inline */
+  /* Pass 3: walk format, expanding |!N inline */
   size_t di = 0;
   for (const char *p = format; *p && di + 1 < bufsz; p++)
   {
@@ -394,8 +340,6 @@ int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
                    ? p[2] - '1'
                    : p[2] - 'A' + 9;
       p += 2; /* skip past |!N */
-      if (lang_type_suffix(p[1]))
-        p++; /* skip type suffix character */
       if (slot < count && vals[slot])
       {
         for (const char *v = vals[slot]; *v && di + 1 < bufsz; v++)
@@ -428,7 +372,28 @@ int _stdc Lprintf(char *format,...)
   }
 
   va_start(var_args,format);
-  x=vsprintf(string,format,var_args);
+
+  /* Detect |!N positional parameters from TOML lang strings.
+   * When found, expand via LangVsprintf (all args are const char *).
+   * Otherwise, fall through to legacy vsprintf for hardcoded formats. */
+  {
+    int has_positional = 0;
+    for (const char *p = format; *p; p++)
+    {
+      if (p[0] == '|' && p[1] == '!' &&
+          ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+      {
+        has_positional = 1;
+        break;
+      }
+    }
+
+    if (has_positional)
+      x = LangVsprintf(string, sizeof(string), format, var_args);
+    else
+      x = vsprintf(string, format, var_args);
+  }
+
   va_end(var_args);
 
   Lputs(string);

@@ -259,7 +259,8 @@ word MaxReadLog(struct _proto *pro, word doing_ul)
 
     if (ul)
     {
-      logit(log_ul, *pro->desc, FAS(fah, uppath), fent.szName);
+      { char _ib[4]; snprintf(_ib, sizeof(_ib), "%c", *pro->desc);
+        logit(log_ul, _ib, FAS(fah, uppath), fent.szName); }
       fent.fFlags |= FFLAG_GOT;
     }
     else

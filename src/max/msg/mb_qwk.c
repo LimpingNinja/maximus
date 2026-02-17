@@ -1433,7 +1433,8 @@ static int near QWK_Compress_Mail(BROWSE *b)
   
   if (ret != 0 || !fexist(qwkname))
   {
-    logit(log_err_compr, ret);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", ret);
+      logit(log_err_compr, _ib); }
     Puts(err_compr_mail);
     Press_ENTER();
     return -1;

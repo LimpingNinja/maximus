@@ -1225,7 +1225,8 @@ char * Startup(void)
     extern int _stdc main();
 
     if (task_num)
-      logit(log_begin_mt, version, task_num);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", task_num);
+        logit(log_begin_mt, version, _ib); }
     else
       logit(log_begin_1t, version);
   }
@@ -1275,7 +1276,8 @@ char * Startup(void)
         read(fd,(char *)&user, sizeof(struct _usr));
         close(fd);
 
-        logit(log_syscrash1, task_num);
+        { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", task_num);
+          logit(log_syscrash1, _ib); }
         logit(log_syscrash2, user.name);
       }
     }

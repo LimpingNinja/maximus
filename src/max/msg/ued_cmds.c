@@ -1465,7 +1465,8 @@ void FindLR_AddOne(int lr_ptr, char *pszName)
   /* If user's lastread pointer is cross-linked, warn SysOp */
 
   if (IsBit(lastread_used, lr_ptr))
-    logit(log_lread_xlink, pszName, lr_ptr);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", lr_ptr);
+      logit(log_lread_xlink, pszName, _ib); }
   else
     BitOn(lastread_used, lr_ptr);
 }

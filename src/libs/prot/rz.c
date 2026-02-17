@@ -248,7 +248,8 @@ putsec(char *buf, int n)
   {
     if (fwrite(buf, 1, n, fout) != n)
     {
-      logit(log_no_space, errno);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+        logit(log_no_space, _ib); }
       return ERROR;
     }
   }
@@ -272,7 +273,8 @@ putsec(char *buf, int n)
 
       if (putc(*p, fout)==EOF)
       {
-        logit(log_no_space, errno);
+        { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+          logit(log_no_space, _ib); }
         return ERROR;
       }
     }

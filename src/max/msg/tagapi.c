@@ -415,13 +415,15 @@ static int near _TagPackMessages(FILE *in_i, FILE *in_d, FILE *out_i, FILE *out_
 
         if (fread(pbBuf, len, 1, in_d) != 1)
         {
-          logit(log_error_pack, 2);
+          { char _ib[4]; snprintf(_ib, sizeof(_ib), "%d", 2);
+            logit(log_error_pack, _ib); }
           break;
         }
         else
         {
           if (fwrite(pbBuf, len, 1, out_d) != 1)
-            logit(log_error_pack, 3);
+            { char _ib[4]; snprintf(_ib, sizeof(_ib), "%d", 3);
+              logit(log_error_pack, _ib); }
 
           mti_in.dwLen -= len;
         }
@@ -430,7 +432,8 @@ static int near _TagPackMessages(FILE *in_i, FILE *in_d, FILE *out_i, FILE *out_
 
     if (fwrite(&mti_out, sizeof mti_out, 1, out_i) != 0)
     {
-      logit(log_error_pack, 1);
+      { char _ib[4]; snprintf(_ib, sizeof(_ib), "%d", 1);
+        logit(log_error_pack, _ib); }
       break;
     }
   }

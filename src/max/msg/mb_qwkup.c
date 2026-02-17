@@ -342,7 +342,8 @@ static int near Decompress_REP(char *rep_name)
 
   if (ret != 0 || !fexist(msg_name))
   {
-    logit(log_err_compr, ret);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", ret);
+      logit(log_err_compr, _ib); }
     unlink(msg_name);
     ret=-1;
   }
@@ -1106,7 +1107,8 @@ static int near Toss_QWK_Message(struct _qmhdr *qh, XMSG *msg, int qfd, char *bl
 
   if (!fUpdateStatus)
   {
-    logit(log_qwk_msg_to, msg->to, MAS(mah, name), (long)MsgGetHighMsg(sq));
+    { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)MsgGetHighMsg(sq));
+      logit(log_qwk_msg_to, msg->to, MAS(mah, name), _ib); }
 
     /* If we couldn't write the message (not enough credit), kill it! */
 

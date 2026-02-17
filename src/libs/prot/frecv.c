@@ -425,7 +425,8 @@ static unsigned near XmRxValidateBlock(struct _xmrx *px, unsigned block_size)
 
     if (crc != hdr_crc)
     {
-      logit(log_crc_error_block, px->block);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)px->block);
+        logit(log_crc_error_block, _ib); }
       dlogit(("@XmRxValidateBlock - actual crc %04x, but header says %04x (blocksize=%d)",
             crc, hdr_crc, block_size));
 
@@ -439,7 +440,8 @@ static unsigned near XmRxValidateBlock(struct _xmrx *px, unsigned block_size)
 
     if (sum != hdr_sum)
     {
-      logit(log_checksum_err_block, px->block);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", (long)px->block);
+        logit(log_checksum_err_block, _ib); }
       dlogit(("@XmRxGetBlockData - actual sum %02x, but header says %02x (blocksize=%d)",
             sum, hdr_sum, block_size));
 

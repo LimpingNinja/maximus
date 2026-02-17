@@ -125,4 +125,50 @@ size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_
  */
 byte Mci2Attr(const char *mci, byte base);
 
+/**
+ * @brief Output user/data content with all MCI processing suppressed.
+ *
+ * Use this when the surrounding context has MCI enabled (the default)
+ * and you want to protect one specific output from MCI expansion —
+ * typically message body text or file description content.
+ */
+#define PutsRaw(s) do { \
+    MciPushParseFlags(MCI_PARSE_ALL, 0); \
+    Puts(s); \
+    MciPopParseFlags(); \
+} while (0)
+
+/**
+ * @brief Output BBS chrome with full MCI forced, ignoring current suppression.
+ *
+ * Use this when the surrounding context has MCI disabled (e.g. inside an
+ * editor session) and you need to punch through with system-originated
+ * output such as lang strings, status lines, or color resets.
+ */
+#define PutsForce(s) do { \
+    MciPushParseFlags(MCI_PARSE_ALL, MCI_PARSE_ALL); \
+    Puts(s); \
+    MciPopParseFlags(); \
+} while (0)
+
+/**
+ * @brief Printf BBS chrome with full MCI forced, ignoring current suppression.
+ * @see PutsForce
+ */
+#define PrintfForce(...) do { \
+    MciPushParseFlags(MCI_PARSE_ALL, MCI_PARSE_ALL); \
+    Printf(__VA_ARGS__); \
+    MciPopParseFlags(); \
+} while (0)
+
+/**
+ * @brief LangPrintf BBS chrome with full MCI forced, ignoring current suppression.
+ * @see PutsForce
+ */
+#define LangPrintfForce(...) do { \
+    MciPushParseFlags(MCI_PARSE_ALL, MCI_PARSE_ALL); \
+    LangPrintf(__VA_ARGS__); \
+    MciPopParseFlags(); \
+} while (0)
+
 #endif /* __MAX_MCI_H_DEFINED */

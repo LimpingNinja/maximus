@@ -1,0 +1,1100 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: ui_test.mex
+//
+// Desc: Comprehensive test suite for UI MEX intrinsics
+//
+// Copyright 2025 by Kevin Morgan (Limping Ninja). All rights reserved.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+#include <max.mh>
+#include <maxui.mh>
+
+void press_any_key()
+{
+  print("\nPress any key...");
+  getch();
+}
+
+void run_form_test()
+{
+  string: name;
+  string: pwd;
+  struct ui_edit_field_style: ef_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("UI Form Test\n");
+  print("============\n\n");
+
+  ui_fill_rect(4, 1, 80, 1, ' ', UI_CYAN);
+  ui_write_padded(4, 1, 80, "[ Form Test ]", UI_CYAN);
+
+  ui_goto(6, 1);
+  ui_set_attr(UI_YELLOW);
+  print("Name: ");
+  ui_edit_field_style_default(ef_style);
+  ef_style.normal_attr := UI_GRAY;
+  ef_style.focus_attr := UI_YELLOWONBLUE;
+  name := ui_edit_field(6, 7, 20, 30, "", ef_style);
+
+  ui_goto(8, 1);
+  ui_set_attr(UI_YELLOW);
+  print("Pass: ");
+  ui_edit_field_style_default(ef_style);
+  ef_style.normal_attr := UI_GRAY;
+  ef_style.focus_attr := UI_YELLOWONBLUE;
+  ef_style.fill_ch := '*';
+  ef_style.flags := UI_EDIT_FLAG_MASK;
+  pwd := ui_edit_field(8, 7, 20, 20, "", ef_style);
+
+  ui_goto(12, 1);
+  ui_set_attr(UI_LGREEN);
+  print("\nResults:\n");
+  print("--------\n");
+  print("Name:  '", name, "'\n");
+  print("Pass:  ", strlen(pwd), " chars\n");
+
+  press_any_key();
+}
+
+void run_prompt_start_mode_test()
+{
+  struct ui_prompt_field_style: pf_style;
+  string: a;
+  string: b;
+  string: c;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("ui_prompt_field start_mode test\n");
+  print("=============================\n\n");
+  ui_set_attr(UI_GRAY);
+  print("This is an interactive layout test. Enter values and observe where prompts appear.\n\n");
+
+  ui_prompt_field_style_default(pf_style);
+  pf_style.prompt_attr := UI_YELLOW;
+  pf_style.field_attr := UI_YELLOWONBLUE;
+  pf_style.flags := UI_EDIT_FLAG_ALLOW_CANCEL;
+
+  ui_goto(6, 1);
+  print("1) UI_PROMPT_START_HERE (prompt starts at current cursor)\n");
+  ui_goto(7, 1);
+  pf_style.start_mode := UI_PROMPT_START_HERE;
+  a := ui_prompt_field("HERE: ", 24, 24, "", pf_style);
+
+  ui_goto(9, 1);
+  print("2) UI_PROMPT_START_CR (prompt starts on next line)\n");
+  ui_goto(10, 1);
+  print("(cursor here)");
+  pf_style.start_mode := UI_PROMPT_START_CR;
+  b := ui_prompt_field("CR: ", 24, 24, "", pf_style);
+
+  ui_goto(12, 1);
+  print("3) UI_PROMPT_START_CLBOL (prompt clears to BOL first)\n");
+  ui_goto(13, 20);
+  print("(cursor at col 20)");
+  pf_style.start_mode := UI_PROMPT_START_CLBOL;
+  c := ui_prompt_field("CLBOL: ", 24, 24, "", pf_style);
+
+  ui_set_attr(UI_LGREEN);
+  print("\n\nResults:\n");
+  print("HERE:  '", a, "'\n");
+  print("CR:    '", b, "'\n");
+  print("CLBOL: '", c, "'\n");
+
+  press_any_key();
+}
+
+void run_format_mask_cancel_test()
+{
+  struct ui_edit_field_style: ef_style;
+  struct ui_prompt_field_style: pf_style;
+  string: raw1;
+  string: raw2;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("format_mask + cancel behavior test\n");
+  print("===============================\n\n");
+  ui_set_attr(UI_GRAY);
+  print("Try editing, then press Esc to cancel.\n");
+  print("(Whether cancel restores the original contents is implementation-defined.)\n\n");
+
+  ui_edit_field_style_default(ef_style);
+  ef_style.normal_attr := UI_GRAY;
+  ef_style.focus_attr := UI_YELLOWONBLUE;
+  ef_style.flags := UI_EDIT_FLAG_ALLOW_CANCEL;
+  ef_style.format_mask := "(000) 000-0000";
+
+  ui_goto(8, 1);
+  ui_set_attr(UI_YELLOW);
+  print("Edit field (mask), initial raw='1234567': ");
+  raw1 := ui_edit_field(8, 44, 14, 10, "1234567", ef_style);
+
+  ui_prompt_field_style_default(pf_style);
+  pf_style.prompt_attr := UI_YELLOW;
+  pf_style.field_attr := UI_YELLOWONBLUE;
+  pf_style.flags := UI_EDIT_FLAG_ALLOW_CANCEL;
+  pf_style.format_mask := "(000) 000-0000";
+  pf_style.start_mode := UI_PROMPT_START_HERE;
+
+  ui_goto(10, 1);
+  raw2 := ui_prompt_field("Prompt field (mask), initial raw='5551234': ", 14, 10, "5551234", pf_style);
+
+  ui_set_attr(UI_LGREEN);
+  print("\n\nReturned raw values:\n");
+  print("Edit field:   '", raw1, "'\n");
+  print("Prompt field: '", raw2, "'\n");
+  press_any_key();
+}
+
+void run_field_prompt_tests()
+{
+  array [1..3] of string: menu_items;
+  int: menu_choice;
+  char: menu_hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  while (1)
+  {
+    print(AVATAR_CLS);
+    ui_set_attr(UI_YELLOW);
+    print("Field/Prompt Tests\n");
+    print("==================\n\n");
+
+    menu_items[1] := "[1] Prompt start_mode";
+    menu_items[2] := "[2] format_mask + cancel";
+    menu_items[3] := "E[x]it";
+
+    ui_lightbar_style_default(lb_style);
+    lb_style.normal_attr := UI_CYAN;
+    lb_style.selected_attr := UI_YELLOWONBLUE;
+    lb_style.hotkey_attr := UI_WHITE;
+    lb_style.show_brackets := UI_BRACKET_NONE;
+    lb_style.justify := UI_JUSTIFY_LEFT;
+    lb_style.wrap := 1;
+    lb_style.enable_hotkeys := 1;
+
+    menu_choice := ui_lightbar(menu_items, 3, 2, 5, 0, lb_style);
+    menu_hotkey_ch := lb_style.out_hotkey;
+
+    if (menu_choice < 1)
+      return;
+
+    if (menu_hotkey_ch = 'x')
+      return;
+
+    if (menu_choice = 1)
+      run_prompt_start_mode_test();
+    else if (menu_choice = 2)
+      run_format_mask_cancel_test();
+    else
+      return;
+  }
+}
+
+// Validate Renegade/Mystic-style `|##` pipe color parsing in the output path.
+void run_mci_pipe_color_test()
+{
+  int: i;
+  int: col;
+  string: code;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("MCI Pipe Color Code Test (|##)\n");
+  print("===========================\n\n");
+
+  ui_set_attr(UI_GRAY);
+  print("Literal pipe escape: '||' should render as a single '|':\n");
+  print("  ||  ->  |\n\n");
+
+  print("Invalid sequences should remain literal:\n");
+  print("  |AA (non-digits)\n");
+  print("  |9X (second non-digit)\n\n");
+
+  print("Trailing/incomplete sequences should remain literal:\n");
+  print("  Trailing pipe: |");
+  print("\n  Trailing digit: |1");
+  print("\n\n");
+
+  print("Sweep 00..31 (each token should change attributes, digits in [..] are a label):\n\n");
+  col := 0;
+  for (i := 0; i <= 31; i := i + 1)
+  {
+    code := itostr(i);
+    if (i < 10)
+      code := "0" + code;
+
+    print("|" + code + "[" + code + "] ");
+    col := col + 1;
+    if ((col % 8) = 0)
+      print("\n");
+  }
+
+  print("\n\n");
+  ui_set_attr(UI_GRAY);
+  print("Mixed sample: ");
+  print("|04[RED] ");
+  print("|02[GREEN] ");
+  print("|01[BLUE] ");
+  print("|07[RESET]\n");
+
+  press_any_key();
+}
+
+void run_mci_pipe_validity_test()
+{
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("MCI Pipe Validity Test\n");
+  print("======================\n\n");
+
+  ui_set_attr(UI_GRAY);
+  print("Escaping / partials:\n");
+  print("  || should render as a single |:  ||\n");
+  print("  Trailing pipe should remain: |\n");
+  print("  Trailing digit should remain: |1\n\n");
+
+  print("Invalid / out-of-range color codes should remain literal:\n");
+  print("  |AA\n");
+  print("  |9X\n");
+  print("  |32\n");
+  print("  |99\n\n");
+
+  print("MCI info codes should expand (not be treated as colors):\n");
+  print("  |BN\n");
+  print("  |SN\n");
+  print("  |UN\n");
+  print("  |UR\n");
+  print("  |UH\n\n");
+
+  press_any_key();
+}
+
+void run_mci_pipe_formatting_test()
+{
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("MCI Pipe Formatting Test\n");
+  print("========================\n\n");
+
+  ui_set_attr(UI_GRAY);
+  print("Ruler:\n");
+  print("12345678901234567890123456789012345678901234567890\n\n");
+
+  print("$C##, $L##, $R## (applies to next expanded MCI code):\n");
+  print("$C20|UN\n");
+  print("$L20|UN\n");
+  print("$R20|UN\n\n");
+
+  print("$T## trim (applies to next expanded MCI code):\n");
+  print("$T05|UN\n\n");
+
+  print("$D##C repeat char, $X##C column fill:\n");
+  print("$D10-\n");
+  print("$X40.|UN\n\n");
+
+  print("|PD pad-space (prefix a space onto next expanded MCI code):\n");
+  print("->'|PD|UN'<-\n");
+  print("->'|PD|BN'<-\n\n");
+
+  press_any_key();
+}
+
+int mci_more_line(ref char: nonstop, string: line)
+{
+  print(line, "\n");
+  if (do_more(nonstop, COL_CYAN) = 0)
+    return 0;
+  return 1;
+}
+
+int mci_more_kv(ref char: nonstop, int: idx, string: code, string: label)
+{
+  string: idxs;
+  string: literal_code;
+  string: expanded_code;
+
+  idxs := itostr(idx);
+  if (idx < 10)
+    idxs := "0" + idxs;
+
+  literal_code := "||" + code;
+  expanded_code := "|" + code;
+
+  print(COL_YELLOW, idxs,
+        COL_WHITE, "  ", literal_code, "  ", label, ": ",
+        COL_GRAY, expanded_code, "\n");
+
+  if (do_more(nonstop, COL_CYAN) = 0)
+    return 0;
+  return 1;
+}
+
+int mci_more_example(ref char: nonstop, int: idx, string: shown, string: expanded)
+{
+  string: idxs;
+
+  idxs := itostr(idx);
+  if (idx < 10)
+    idxs := "0" + idxs;
+
+  print(COL_YELLOW, idxs,
+        COL_WHITE, "  ", shown, "  =>  ",
+        COL_GRAY, expanded, "\n");
+
+  if (do_more(nonstop, COL_CYAN) = 0)
+    return 0;
+  return 1;
+}
+
+void run_mci_pipe_user_info_test()
+{
+  char: nonstop;
+  int: idx;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("MCI Pipe User Info\n");
+  print("==================\n\n");
+
+  ui_set_attr(UI_GRAY);
+  print("This prints all currently-implemented MCI info codes.\n");
+  print("If output exceeds the screen, it should page.\n\n");
+
+  nonstop := False;
+  reset_more(nonstop);
+
+  idx := 1;
+  if (mci_more_kv(nonstop, idx, "BN", "System name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "SN", "Sysop name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UN", "User name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UH", "User handle") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UR", "Real name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UC", "City/State") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UP", "Home phone") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "UD", "Data phone") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "CS", "Total calls") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "CT", "Calls today") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "MP", "Msg posts") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "DK", "Downloaded KB (total)") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "FK", "Uploaded KB (total)") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "DL", "Downloaded files") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "FU", "Uploaded files") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "DT", "Downloaded KB (today)") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "TL", "Time left") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "US", "Screen lines") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "TE", "Terminal emulation") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "DA", "Current date") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "U#", "User number") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "TM", "Time (HH:MM)") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "TS", "Time (HH:MM:SS)") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "MB", "Msg area name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "MD", "Msg area desc") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "FB", "File area name") = 0) goto done; idx := idx + 1;
+  if (mci_more_kv(nonstop, idx, "FD", "File area desc") = 0) goto done;
+
+  if (mci_more_line(nonstop, "") = 0) goto done;
+  if (mci_more_line(nonstop, "Formatting examples (left shows literal, right shows expanded output):") = 0) goto done;
+  if (mci_more_example(nonstop, 1, "$$C20||UN", "$C20|UN") = 0) goto done;
+  if (mci_more_example(nonstop, 2, "$$R20||BN", "$R20|BN") = 0) goto done;
+  if (mci_more_example(nonstop, 3, "$$T05||UN", "$T05|UN") = 0) goto done;
+  if (mci_more_example(nonstop, 4, "$$X40.||UN", "$X40.|UN") = 0) goto done;
+
+done:
+  press_any_key();
+}
+
+void run_mci_tests()
+{
+  array [1..5] of string: menu_items;
+  int: menu_choice;
+  char: menu_hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  while (1)
+  {
+    print(AVATAR_CLS);
+    ui_set_attr(UI_YELLOW);
+    print("MCI Tests\n");
+    print("=========\n\n");
+
+    menu_items[1] := "[1] Pipe Color Code Tests";
+    menu_items[2] := "[2] Pipe Validity Test";
+    menu_items[3] := "[3] Pipe Formatting Test";
+    menu_items[4] := "[4] Pipe User Info";
+    menu_items[5] := "E[x]it";
+
+    ui_lightbar_style_default(lb_style);
+    lb_style.normal_attr := UI_CYAN;
+    lb_style.selected_attr := UI_YELLOWONBLUE;
+    lb_style.hotkey_attr := UI_WHITE;
+    lb_style.show_brackets := UI_BRACKET_SQUARE;
+    lb_style.wrap := 1;
+    lb_style.enable_hotkeys := 1;
+
+    menu_choice := ui_lightbar(menu_items, 5, 5, 8, 0, lb_style);
+    menu_hotkey_ch := lb_style.out_hotkey;
+
+    if (menu_choice < 1)
+      return;
+
+    if (menu_hotkey_ch = 'x')
+      return;
+
+    if (menu_choice = 1)
+      run_mci_pipe_color_test();
+    else if (menu_choice = 2)
+      run_mci_pipe_validity_test();
+    else if (menu_choice = 3)
+      run_mci_pipe_formatting_test();
+    else if (menu_choice = 4)
+      run_mci_pipe_user_info_test();
+    else
+      return;
+  }
+}
+
+void run_scrolling_viewer_test()
+{
+  struct ui_scroll_region_style: sr_style;
+  struct ui_text_viewer_style: tv_style;
+  int: rc;
+  string: text;
+  int: focus;
+  int: k;
+  int: line_no;
+  int: done;
+  int: i;
+
+  print(AVATAR_CLS);
+
+  ui_fill_rect(1, 1, 80, 1, ' ', UI_CYAN);
+  ui_write_padded(1, 1, 80, "Scrolling / Viewer Test", UI_CYAN);
+
+  ui_set_attr(UI_GRAY);
+  ui_goto(2, 1);
+  print("Tab/T switches focus. Esc/Q exits. N appends a new line to the region.");
+
+  ui_scroll_region_style_default(sr_style);
+  sr_style.attr := UI_GRAY;
+  sr_style.scrollbar_attr := UI_CYAN;
+  sr_style.flags := 0x0001 | 0x0002;
+
+  rc := ui_scroll_region_create("sr", 2, 4, 76, 8, 200, sr_style);
+  if (rc <> 0)
+  {
+    press_any_key();
+    return;
+  }
+
+  ui_text_viewer_style_default(tv_style);
+  tv_style.attr := UI_GRAY;
+  tv_style.status_attr := UI_CYAN;
+  tv_style.scrollbar_attr := UI_CYAN;
+  tv_style.flags := 0x0001 | 0x0002;
+
+  rc := ui_text_viewer_create("tv", 2, 13, 76, 11, tv_style);
+  if (rc <> 0)
+  {
+    ui_scroll_region_destroy("sr");
+    press_any_key();
+    return;
+  }
+
+  ui_scroll_region_append("sr", "Region initialized.", UI_SCROLL_APPEND_FOLLOW);
+  ui_scroll_region_append("sr", "Arrow keys / PgUp / PgDn / Home / End should work.", UI_SCROLL_APPEND_FOLLOW);
+  ui_scroll_region_append("sr", COL_LGREEN + "This line is green (AVATAR attr)." + COL_GRAY, UI_SCROLL_APPEND_FOLLOW);
+  ui_scroll_region_append("sr", "ANSI colors: \x1b[31mRed\x1b[0m then \x1b[33mYellow\x1b[0m.", UI_SCROLL_APPEND_FOLLOW);
+  ui_scroll_region_append("sr", "Fill lines so region can scroll:", UI_SCROLL_APPEND_FOLLOW);
+  for (i := 1; i <= 15; i := i + 1)
+    ui_scroll_region_append("sr", "  Region line #" + itostr(i), UI_SCROLL_APPEND_FOLLOW);
+
+  text := "Viewer text (normalized into cells):\n\n";
+  text := text + "- ANSI: \x1b[31mRED\x1b[0m then \x1b[33mYELLOW\x1b[0m\n";
+  text := text + "- AVATAR: " + COL_LRED + "Light Red" + COL_GRAY + " then " + COL_LBLUE + "Light Blue" + COL_GRAY + "\n\n";
+  text := text + "Long wrapping line: 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789\n";
+  text := text + "\nViewer scrolling lines:\n";
+  for (i := 1; i <= 40; i := i + 1)
+  {
+    if ((i % 2) = 0)
+      text := text + COL_LGREEN + "Line " + itostr(i) + ": green" + COL_GRAY + "\n";
+    else
+      text := text + "Line " + itostr(i) + ": plain\n";
+  }
+  text := text + "\nEnd.\n";
+
+  ui_text_viewer_set_text("tv", text);
+
+  ui_scroll_region_render("sr");
+  ui_text_viewer_render("tv");
+
+  focus := 0;
+  line_no := 0;
+  done := 0;
+
+  ui_set_attr(UI_CYAN);
+  ui_goto(3, 2);
+  print("Focus: Region");
+
+  while (done = 0)
+  {
+    k := ui_read_key();
+
+    if (k = 27)
+      done := 1;
+
+    else if (k = 'q' or k = 'Q')
+      done := 1;
+    else if (k = 9 or k = 't' or k = 'T')
+    {
+      focus := 1 - focus;
+
+      ui_set_attr(UI_CYAN);
+      ui_goto(3, 2);
+      if (focus = 0)
+        print("Focus: Region");
+      else
+        print("Focus: Viewer");
+    }
+    else if (k = 'n' or k = 'N')
+    {
+      line_no := line_no + 1;
+      ui_scroll_region_append("sr", "New line appended #" + itostr(line_no), UI_SCROLL_APPEND_FOLLOW);
+      ui_scroll_region_render("sr");
+    }
+    else if (focus = 0)
+    {
+      if (ui_scroll_region_handle_key("sr", k))
+        ui_scroll_region_render("sr");
+    }
+    else
+    {
+      if (ui_text_viewer_handle_key("tv", k))
+        ui_text_viewer_render("tv");
+    }
+  }
+
+  ui_text_viewer_destroy("tv");
+  ui_scroll_region_destroy("sr");
+}
+
+void run_form_runner_test()
+{
+  array [1..3] of struct ui_form_field: fields;
+  struct ui_form_style: fs;
+  int: rc;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("UI Form Runner Test\n");
+  print("===================\n\n");
+  ui_set_attr(UI_GRAY);
+  print("Arrows move between fields. Enter edits. Tab/Shift-Tab also move.\n");
+  print("Ctrl+S saves, Esc cancels.\n\n");
+
+  ui_form_style_default(fs);
+  fs.label_attr := UI_YELLOW;
+  fs.normal_attr := UI_GRAY;
+  fs.focus_attr := UI_YELLOWONBLUE;
+  fs.wrap := 1;
+  fs.required_msg := "Required field is empty";
+  fs.required_x := 1;
+  fs.required_y := 24;
+  fs.required_attr := UI_LRED;
+
+  fields[1].name := "name";
+  fields[1].label := "Name";
+  fields[1].x := 20;
+  fields[1].y := 10;
+  fields[1].width := 24;
+  fields[1].max_len := 40;
+  fields[1].field_type := UI_FIELD_TEXT;
+  fields[1].hotkey := 'n';
+  fields[1].required := 1;
+  fields[1].value := "";
+
+  fields[2].name := "email";
+  fields[2].label := "Email";
+  fields[2].x := 20;
+  fields[2].y := 12;
+  fields[2].width := 30;
+  fields[2].max_len := 60;
+  fields[2].field_type := UI_FIELD_TEXT;
+  fields[2].hotkey := 'e';
+  fields[2].required := 1;
+  fields[2].value := "";
+
+  fields[3].name := "phone";
+  fields[3].label := "Phone";
+  fields[3].x := 20;
+  fields[3].y := 14;
+  fields[3].width := 14;
+  fields[3].max_len := 10;
+  fields[3].field_type := UI_FIELD_FORMAT;
+  fields[3].format_mask := "(000) 000-0000";
+  fields[3].hotkey := 'p';
+  fields[3].required := 0;
+  fields[3].value := "";
+
+  rc := ui_form_run(fields, 3, fs);
+
+  ui_set_attr(UI_LGREEN);
+  print("\n\n");
+  if (rc = 1)
+  {
+    print("Saved\n");
+    print("Name:  '", fields[1].value, "'\n");
+    print("Email: '", fields[2].value, "'\n");
+    print("Phone: '", fields[3].value, "' (raw digits)\n");
+  }
+  else if (rc = 0)
+  {
+    print("Cancelled\n");
+  }
+  else
+  {
+    print("Error\n");
+  }
+
+  press_any_key();
+}
+
+void run_lightbar_test_d2_adv()
+{
+  array [1..12] of struct ui_lightbar_item: items;
+  int: choice;
+  char: hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("Lightbar Tests - D2 Advanced Positioned\n\n");
+  ui_set_attr(UI_GRAY);
+  print("Irregular layout: mixed widths/justify, gaps, and 2D navigation.\n");
+  print("Use arrows, Enter, hotkeys, or Esc to cancel.\n\n");
+
+  items[1].text := "[H]ome";
+  items[1].x := 5;
+  items[1].y := 8;
+  items[1].width := 14;
+  items[1].justify := UI_JUSTIFY_LEFT;
+
+  items[2].text := "[M]essages";
+  items[2].x := 5;
+  items[2].y := 10;
+  items[2].width := 14;
+  items[2].justify := UI_JUSTIFY_LEFT;
+
+  items[3].text := "[F]iles";
+  items[3].x := 5;
+  items[3].y := 14;
+  items[3].width := 14;
+  items[3].justify := UI_JUSTIFY_LEFT;
+
+  items[4].text := "[U]sers";
+  items[4].x := 22;
+  items[4].y := 9;
+  items[4].width := 20;
+  items[4].justify := UI_JUSTIFY_CENTER;
+
+  items[5].text := "[C]onfig";
+  items[5].x := 22;
+  items[5].y := 11;
+  items[5].width := 20;
+  items[5].justify := UI_JUSTIFY_CENTER;
+
+  items[6].text := "[S]ysop Tools";
+  items[6].x := 22;
+  items[6].y := 13;
+  items[6].width := 20;
+  items[6].justify := UI_JUSTIFY_CENTER;
+
+  items[7].text := "[A]ccount";
+  items[7].x := 46;
+  items[7].y := 8;
+  items[7].width := 24;
+  items[7].justify := UI_JUSTIFY_RIGHT;
+
+  items[8].text := "[P]references";
+  items[8].x := 46;
+  items[8].y := 10;
+  items[8].width := 24;
+  items[8].justify := UI_JUSTIFY_RIGHT;
+
+  items[9].text := "[T]heme";
+  items[9].x := 46;
+  items[9].y := 12;
+  items[9].width := 24;
+  items[9].justify := UI_JUSTIFY_RIGHT;
+
+  items[10].text := "[L]ogs";
+  items[10].x := 46;
+  items[10].y := 14;
+  items[10].width := 24;
+  items[10].justify := UI_JUSTIFY_RIGHT;
+
+  items[11].text := "[?] Help";
+  items[11].x := 22;
+  items[11].y := 17;
+  items[11].width := 20;
+  items[11].justify := UI_JUSTIFY_CENTER;
+
+  items[12].text := "E[x]it";
+  items[12].x := 46;
+  items[12].y := 17;
+  items[12].width := 24;
+  items[12].justify := UI_JUSTIFY_RIGHT;
+
+  ui_lightbar_style_default(lb_style);
+  lb_style.normal_attr := UI_CYAN;
+  lb_style.selected_attr := UI_YELLOWONBLUE;
+  lb_style.hotkey_attr := UI_WHITE;
+  lb_style.show_brackets := UI_BRACKET_SQUARE;
+  lb_style.wrap := 1;
+  lb_style.enable_hotkeys := 1;
+
+  choice := ui_lightbar_pos(items, 12, lb_style);
+  hotkey_ch := lb_style.out_hotkey;
+
+  ui_goto(22, 1);
+  ui_set_attr(UI_LGREEN);
+  if (choice >= 1)
+    print("You selected item #", choice, " (keyno=", lb_style.out_hotkey, ", character: '", hotkey_ch, "')\n");
+  else
+    print("Menu cancelled\n");
+
+  press_any_key();
+}
+
+void run_advanced_form_test()
+{
+  string: name;
+  string: pwd;
+  string: email;
+  string: phone;
+  struct ui_edit_field_style: ef_style;
+  struct ui_prompt_field_style: pf_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("UI Advanced Form Test\n");
+  print("=====================\n\n");
+
+  ui_fill_rect(4, 1, 80, 1, ' ', UI_CYAN);
+  ui_write_padded(4, 1, 80, "[ Advanced Form Test ]", UI_CYAN);
+
+  ui_goto(6, 1);
+  ui_set_attr(UI_YELLOW);
+  print("Name: ");
+  ui_edit_field_style_default(ef_style);
+  ef_style.normal_attr := UI_GRAY;
+  ef_style.focus_attr := UI_YELLOWONBLUE;
+  name := ui_edit_field(6, 7, 20, 30, "", ef_style);
+
+  ui_goto(8, 1);
+  ui_set_attr(UI_YELLOW);
+  print("Pass: ");
+  ui_edit_field_style_default(ef_style);
+  ef_style.normal_attr := UI_GRAY;
+  ef_style.focus_attr := UI_YELLOWONBLUE;
+  ef_style.fill_ch := '*';
+  ef_style.flags := UI_EDIT_FLAG_MASK;
+  pwd := ui_edit_field(8, 7, 20, 20, "", ef_style);
+
+  ui_prompt_field_style_default(pf_style);
+  pf_style.prompt_attr := UI_YELLOW;
+  pf_style.field_attr := UI_YELLOWONBLUE;
+  email := ui_prompt_field("Email: ", 30, 50, "", pf_style);
+
+  ui_prompt_field_style_default(pf_style);
+  pf_style.prompt_attr := UI_YELLOW;
+  pf_style.field_attr := UI_YELLOWONBLUE;
+  pf_style.format_mask := "(000) 000-0000";
+  phone := ui_prompt_field("Phone: ", 14, 10, "", pf_style);
+
+  ui_set_attr(UI_LGREEN);
+  print("\nResults:\n");
+  print("--------\n");
+  print("Name:  '", name, "'\n");
+  print("Pass:  ", strlen(pwd), " chars\n");
+  print("Email: '", email, "'\n");
+  print("Phone: '", phone, "' (raw digits)\n");
+
+  press_any_key();
+}
+
+void run_lightbar_test_d1()
+{
+  array [1..5] of string: menu_items;
+  int: menu_choice;
+  char: menu_hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("Lightbar Tests - D1\n\n");
+  print("Select a main menu option:\n\n");
+
+  menu_items[1] := "[F]ile Area";
+  menu_items[2] := "[M]essage Area";
+  menu_items[3] := "[U]ser Editor";
+  menu_items[4] := "[C]onfiguration";
+  menu_items[5] := "[Q]uit";
+
+  ui_lightbar_style_default(lb_style);
+  lb_style.normal_attr := UI_CYAN;
+  lb_style.selected_attr := UI_YELLOWONBLUE;
+  lb_style.show_brackets := UI_BRACKET_SQUARE;
+
+  menu_choice := ui_lightbar(menu_items, 5, 5, 8, 0, lb_style);
+  menu_hotkey_ch := lb_style.out_hotkey;
+
+  ui_goto(20, 1);
+  ui_set_attr(UI_LGREEN);
+  if (menu_choice >= 1)
+    print("You selected menu item #", menu_choice, " (keyno=", lb_style.out_hotkey, ", character: '", menu_hotkey_ch, "')\n");
+  else
+    print("Menu cancelled\n");
+
+  press_any_key();
+}
+
+void run_lightbar_test_d2()
+{
+  array [1..6] of struct ui_lightbar_item: items;
+  int: choice;
+  char: hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("Lightbar Tests - D2 Positioned\n\n");
+
+  items[1].text := "[A]lpha";
+  items[1].x := 5;
+  items[1].y := 8;
+  items[1].width := 18;
+  items[1].justify := UI_JUSTIFY_LEFT;
+
+  items[2].text := "[B]ravo";
+  items[2].x := 5;
+  items[2].y := 10;
+  items[2].width := 18;
+  items[2].justify := UI_JUSTIFY_LEFT;
+
+  items[3].text := "[C]harlie";
+  items[3].x := 5;
+  items[3].y := 12;
+  items[3].width := 18;
+  items[3].justify := UI_JUSTIFY_LEFT;
+
+  items[4].text := "[D]elta";
+  items[4].x := 28;
+  items[4].y := 8;
+  items[4].width := 18;
+  items[4].justify := UI_JUSTIFY_LEFT;
+
+  items[5].text := "[E]cho";
+  items[5].x := 28;
+  items[5].y := 10;
+  items[5].width := 18;
+  items[5].justify := UI_JUSTIFY_LEFT;
+
+  items[6].text := "[F]oxtrot";
+  items[6].x := 28;
+  items[6].y := 12;
+  items[6].width := 18;
+  items[6].justify := UI_JUSTIFY_LEFT;
+
+  ui_lightbar_style_default(lb_style);
+  lb_style.normal_attr := UI_CYAN;
+  lb_style.selected_attr := ui_make_attr(UI_YELLOW, UI_RED);
+  lb_style.hotkey_attr := UI_WHITE;
+  lb_style.hotkey_highlight_attr := ui_make_attr(UI_WHITE, UI_RED);
+  lb_style.show_brackets := UI_BRACKET_SQUARE;
+  lb_style.wrap := 1;
+  lb_style.enable_hotkeys := 1;
+
+  choice := ui_lightbar_pos(items, 6, lb_style);
+  hotkey_ch := lb_style.out_hotkey;
+
+  ui_goto(20, 1);
+  ui_set_attr(UI_LGREEN);
+  if (choice >= 1)
+    print("You selected item #", choice, " (keyno=", lb_style.out_hotkey, ", character: '", hotkey_ch, "')\n");
+  else
+    print("Menu cancelled\n");
+
+  press_any_key();
+}
+
+void run_lightbar_test_d3()
+{
+  array [1..3] of string: prompt_opts;
+  array [1..2] of string: yesno;
+  int: prompt_result;
+  char: prompt_hotkey_ch;
+  struct ui_select_prompt_style: sp_style;
+
+  print(AVATAR_CLS);
+  ui_set_attr(UI_YELLOW);
+  print("Lightbar Tests - D3 Inline Select Prompt\n\n");
+
+  prompt_opts[1] := "[Y]es";
+  prompt_opts[2] := "[N]o";
+  prompt_opts[3] := "[M]aybe";
+
+  ui_select_prompt_style_default(sp_style);
+  sp_style.margin := 1;
+  sp_style.prompt_attr := UI_YELLOW;
+  sp_style.normal_attr := UI_CYAN;
+  sp_style.selected_attr := UI_YELLOWONBLUE;
+  sp_style.show_brackets := UI_BRACKET_NONE;
+  sp_style.hotkey_attr := UI_WHITE;
+
+  print("Continue with operation? ");
+  prompt_result := ui_select_prompt("", prompt_opts, 3, sp_style);
+  prompt_hotkey_ch := sp_style.out_hotkey;
+
+  ui_set_attr(UI_LGREEN);
+  print("\n");
+  if (prompt_result >= 1)
+    print("Selection accepted (index=", prompt_result, ", keyno=", sp_style.out_hotkey, ", character: '", prompt_hotkey_ch, "')\n");
+  else
+    print("Selection cancelled\n");
+
+  sp_style.selected_attr := ui_make_attr(UI_WHITE, UI_CYAN);
+  sp_style.prompt_attr := UI_WHITE;
+  sp_style.normal_attr := UI_LCYAN;
+  sp_style.margin := 0;
+  sp_style.separator := " or ";
+  yesno[1] := "[y]ES";
+  yesno[2] := "[n]O";
+
+  ui_set_attr(UI_LCYAN);
+  prompt_result := ui_select_prompt("Leave a message: ", yesno, 2, sp_style);
+  prompt_hotkey_ch := sp_style.out_hotkey;
+
+  ui_set_attr(UI_LGREEN);
+  print("\n\n");
+  if (prompt_result >= 1)
+    print("Selection accepted (index=", prompt_result, ", keyno=", sp_style.out_hotkey, ", character: '", prompt_hotkey_ch, "')\n");
+  else
+    print("Selection cancelled\n");
+  press_any_key();
+}
+
+void run_lightbar_tests()
+{
+  array [1..5] of string: menu_items;
+  int: menu_choice;
+  char: menu_hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  while (1)
+  {
+    print(AVATAR_CLS);
+    ui_set_attr(UI_YELLOW);
+    print("Lightbar Tests\n");
+    print("=============\n\n");
+
+    menu_items[1] := "[1] Vertical Lightbar (D1)";
+    menu_items[2] := "[2] Positioned Lightbar (D2)";
+    menu_items[3] := "[3] Advanced Positioned Lightbar (D2)";
+    menu_items[4] := "[4] Inline Select Prompt (D3)";
+    menu_items[5] := "E[x]it";
+
+    ui_lightbar_style_default(lb_style);
+    lb_style.normal_attr := UI_CYAN;
+    lb_style.selected_attr := UI_YELLOWONBLUE;
+    lb_style.hotkey_attr := UI_WHITE;
+    lb_style.show_brackets := UI_BRACKET_SQUARE;
+    lb_style.wrap := 1;
+    lb_style.enable_hotkeys := 1;
+
+    menu_choice := ui_lightbar(menu_items, 5, 5, 8, 0, lb_style);
+    menu_hotkey_ch := lb_style.out_hotkey;
+
+    if (menu_choice < 1)
+      return;
+
+    if (menu_hotkey_ch = 'x')
+      return;
+
+    if (menu_choice = 1)
+      run_lightbar_test_d1();
+    else if (menu_choice = 2)
+      run_lightbar_test_d2();
+    else if (menu_choice = 3)
+      run_lightbar_test_d2_adv();
+    else if (menu_choice = 4)
+      run_lightbar_test_d3();
+    else
+      return;
+  }
+}
+
+void main()
+{
+  array [1..8] of string: menu_items;
+  int: menu_choice;
+  char: menu_hotkey_ch;
+  struct ui_lightbar_style: lb_style;
+
+  while (1)
+  {
+    print(AVATAR_CLS);
+    ui_set_attr(UI_YELLOW);
+    print("UI intrinsic test suite\n");
+    print("========================\n\n");
+
+    menu_items[1] := "Form Test";
+    menu_items[2] := "Advanced Form Test";
+    menu_items[3] := "Form Runner Test";
+    menu_items[4] := "Field/Prompt Tests";
+    menu_items[5] := "Lightbar Tests";
+    menu_items[6] := "Scrolling/Viewer Tests";
+    menu_items[7] := "MCI Tests";
+    menu_items[8] := "E[x]it";
+
+    ui_lightbar_style_default(lb_style);
+    lb_style.normal_attr := UI_CYAN;
+    lb_style.selected_attr := UI_YELLOWONBLUE;
+    lb_style.hotkey_attr := UI_WHITE;
+    lb_style.show_brackets := UI_BRACKET_NONE;
+    lb_style.justify := UI_JUSTIFY_CENTER;
+    lb_style.wrap := 1;
+    lb_style.enable_hotkeys := 1;
+
+    menu_choice := ui_lightbar(menu_items, 8, 2, 3, 22, lb_style);
+    menu_hotkey_ch := lb_style.out_hotkey;
+
+    if (menu_choice < 1)
+      return;
+
+    if (menu_hotkey_ch = 'x')
+      return;
+
+    if (menu_choice = 1)
+      run_form_test();
+    else if (menu_choice = 2)
+      run_advanced_form_test();
+    else if (menu_choice = 3)
+      run_form_runner_test();
+    else if (menu_choice = 4)
+      run_field_prompt_tests();
+    else if (menu_choice = 5)
+      run_lightbar_tests();
+    else if (menu_choice = 6)
+      run_scrolling_viewer_test();
+    else if (menu_choice = 7)
+      run_mci_tests();
+    else
+      return;
+  }
+}

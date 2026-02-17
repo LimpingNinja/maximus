@@ -547,8 +547,6 @@ sword ShowFileEntry(word *type,
   /* Now go through the description, copying out each word for          *
    * wordwrapping.                                                      */
 
-  MciPushParseFlags(MCI_PARSE_ALL, 0);
-
   while (*desc)
   {
     dw=descwork;
@@ -573,10 +571,7 @@ sword ShowFileEntry(word *type,
       Putc('\n');
 
       if (DispMoreYnBreak(nstop, NULL, *type))
-      {
-        MciPopParseFlags();
         return DRET_BREAK;
-      }
 
       Printf(file_desc_col);
 
@@ -601,10 +596,8 @@ sword ShowFileEntry(word *type,
 
     /* Output the word */
 
-    Puts(dw);
+    PutsRaw(dw);
   }
-
-  MciPopParseFlags();
 
   /* Done the description */
 

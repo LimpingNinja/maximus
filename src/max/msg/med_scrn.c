@@ -32,6 +32,7 @@ static char rcs_id[]="$Id: med_scrn.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #define MAX_LANG_m_area
 #define MAX_LANG_max_bor
 #include "maxed.h"
+#include "mci.h"
 
 void Redraw_Text(void)
 {
@@ -39,7 +40,7 @@ void Redraw_Text(void)
 
   /* Make the entire refresh buffer "dirty" */
   
-  Puts(msg_text_col);
+  PutsForce(msg_text_col);
 
   if (update_table)
     for (x=0; x < UPDATEBUF_LEN; x++)
@@ -52,7 +53,7 @@ void Redraw_StatusLine(void)
 {
   Goto(usrlen, 1);
 
-  LangPrintf(max_status,
+  LangPrintfForce(max_status,
              mmsg->to,
              mmsg->subj+(strnicmp(mmsg->subj, "Re:", 3)==0 ? 4 : 0));
 
@@ -60,13 +61,13 @@ void Redraw_StatusLine(void)
   {
     Goto(usrlen, usrwidth-13);
 
-    Puts(status_insert);
+    PutsForce(status_insert);
   }
 
   Update_Position();
 
   Puts(CLEOL);
-  Puts(msg_text_col);
+  PutsForce(msg_text_col);
 
   Goto(cursor_x, cursor_y);
 }
@@ -82,13 +83,13 @@ void Redraw_Quote(void)
 
     for (temp=0;temp < QUOTELINES;temp++)
     { char _ib[16]; snprintf(_ib, sizeof(_ib), "%02d", usrlen+1+temp);
-      LangPrintf(quote_format, _ib, msg_quote_col, 
+      LangPrintfForce(quote_format, _ib, msg_quote_col, 
                  initials, quotebuf+(temp*MAX_LINELEN)); }
 
     Puts(CLEOL);
   }
 
-  Puts(msg_text_col);
+  PutsForce(msg_text_col);
   Goto(cursor_x,cursor_y);
 }
 
@@ -116,7 +117,7 @@ void Update_Line(word cx, word cy, word inc, word update_cursor)
         }
         else Printf("%0.*s",usrwidth-cy,screen[cx]+cy);
       }
-      else LangPrintf(end_widget, msg_text_col);
+      else LangPrintfForce(end_widget, msg_text_col);
 
       if (cx >= max_lines || screen[cx]==NULL ||
           (cy+strlen(screen[cx]+cy) <= usrwidth))
@@ -365,10 +366,10 @@ void Toggle_Insert(void)
 
   Goto(usrlen,usrwidth-13);
 
-  Puts(insert ? status_insert : insrt_ovrwrt);
+  PutsForce(insert ? status_insert : insrt_ovrwrt);
 
   Goto(cursor_x, cursor_y);
-  Puts(msg_text_col);
+  PutsForce(msg_text_col);
 }
 
 
@@ -412,7 +413,7 @@ void NoFF_CLS(void)
 
 void Fix_MagnEt(void)
 {
-  Puts(maxed_init);
+  PutsForce(maxed_init);
 
   if (!(usr.bits2 & BITS2_CLS))
     NoFF_CLS();

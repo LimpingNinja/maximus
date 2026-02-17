@@ -322,7 +322,8 @@ Next:
           break;
 
         default:
-          logit(inv_ccmd, *in);
+          { char _ib[4]; snprintf(_ib, sizeof(_ib), "%c", *in);
+            logit(inv_ccmd, _ib); }
           break;
       }
       
@@ -534,7 +535,8 @@ Next:
           break;
 
         default:
-          logit(inv_ccmd, *in);
+          { char _ib[4]; snprintf(_ib, sizeof(_ib), "%c", *in);
+            logit(inv_ccmd, _ib); }
           break;
       }
       

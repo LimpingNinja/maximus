@@ -187,6 +187,10 @@ reconfig:
 	@echo " - Compiling misc MECCA files"
 	@(cd $(PREFIX)/display/screens && for f in *.mec; do ../../bin/mecca "$$f" 2>&1 || true; done)
 
+	@echo " - Syncing MEX sources and includes"
+	@cp -f resources/m/*.mex $(PREFIX)/scripts/ 2>/dev/null || true
+	@cp -f resources/m/*.mh resources/m/*.lh $(PREFIX)/scripts/include/ 2>/dev/null || true
+
 	@echo " - Compiling MEX files"
 	@(cd $(PREFIX)/scripts && export MEX_INCLUDE=$(PREFIX)/scripts/include && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
 

@@ -384,20 +384,23 @@ These are processed in `MciExpand()` before the info code handler.
 |---|---|---|
 | `\|&&` | Cursor Position Report (DSR) | `ESC[6n` |
 
-### Cursor control codes (bracket prefix)
+### Cursor control codes (pipe-bracket prefix)
+
+All cursor codes use the `|[` prefix to stay within the pipe-code namespace
+and allow Maximus to track cursor position internally.
 
 | Code | Meaning | Emits |
 |---|---|---|
-| `[0` | Hide cursor | `ESC[?25l` |
-| `[1` | Show cursor | `ESC[?25h` |
-| `[A##` | Cursor up ## rows | `ESC[##A` |
-| `[B##` | Cursor down ## rows | `ESC[##B` |
-| `[C##` | Cursor forward ## cols | `ESC[##C` |
-| `[D##` | Cursor back ## cols | `ESC[##D` |
-| `[K` | Clear to end of line | `ESC[K` |
-| `[L##` | Move to column ## and erase to EOL | `ESC[##G` + `ESC[K` |
-| `[X##` | Move cursor to column ## | `ESC[##G` |
-| `[Y##` | Move cursor to row ## | `ESC[##d` |
+| `\|[0` | Hide cursor | `ESC[?25l` |
+| `\|[1` | Show cursor | `ESC[?25h` |
+| `\|[A##` | Cursor up ## rows | `ESC[##A` |
+| `\|[B##` | Cursor down ## rows | `ESC[##B` |
+| `\|[C##` | Cursor forward ## cols | `ESC[##C` |
+| `\|[D##` | Cursor back ## cols | `ESC[##D` |
+| `\|[K` | Clear to end of line | `ESC[K` |
+| `\|[L##` | Move to column ## and erase to EOL | `ESC[##G` + `ESC[K` |
+| `\|[X##` | Move cursor to column ## | `ESC[##G` |
+| `\|[Y##` | Move cursor to row ## | `ESC[##d` (also updates internal line counter) |
 
 ### Language string positional parameters
 
@@ -408,7 +411,7 @@ These are processed in `MciExpand()` before the info code handler.
 
 Expanded by `LangPrintf()` pass 1 before MCI format ops run.
 Callers must zero-pad numeric values with `%02d` when the expanded
-value feeds into `$D##C`, `[Y##`, `[X##`, or similar 2-digit fields.
+value feeds into `$D##C`, `|[Y##`, `|[X##`, or similar 2-digit fields.
 
 ## TOML Language File Rules
 
@@ -416,9 +419,9 @@ value feeds into `$D##C`, `[Y##`, `[X##`, or similar 2-digit fields.
 - **`\a` bell escape** — libmaxcfg's TOML parser handles `\a` (0x07 bell byte)
 - All AVATAR constants converted to MCI by `lang_convert.c`:
   - `CLS` (0x0c) → `|CL`
-  - `CLEOL` (0x16 0x07) → `[K`
+  - `CLEOL` (0x16 0x07) → `|[K`
   - Colors (0x16 0x01 NN) → `|##` pipe codes
-  - Positions (0x16 0x08 R C) → `[Y##[X##`
+  - Positions (0x16 0x08 R C) → `|[Y##|[X##`
   - RLE repeat (0x19 ch count) → `$D##C`
   - DSR (ESC[6n) → `|&&`
 

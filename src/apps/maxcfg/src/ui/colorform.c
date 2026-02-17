@@ -77,7 +77,7 @@ static ColorFieldDef fsr_colors[] = {
     { "Date",             "COL_FSR_DATE",    "Color for date display", 15, 1 },
     { "Address",          "COL_FSR_ADDR",    "Color for network addresses", 14, 1 },
     { "Static text",      "COL_FSR_STATIC",  "Color for static labels", 15, 1 },
-    { "Border",           "COL_FSR_BORDER",  "Color for window borders", 11, 1 },
+    { "Border",           "COL_FSR_BORDER",  "Color for window borders", 3, 1 },
     { "Locus",            "COL_FSR_LOCUS",   "Color for locus display", 15, 0 },
 };
 #define NUM_FSR_COLORS (sizeof(fsr_colors) / sizeof(fsr_colors[0]))

@@ -48,6 +48,10 @@ static char rcs_id[]="$Id: zm.c,v 1.5 2005/10/19 10:57:10 paltas Exp $";
 #include "pdata.h"
 #include "keys.h"
 
+/* LangSprintf is defined in max core (max_out.c) and linked at link time.
+ * Needed here for |!N positional expansion of TOML lang strings. */
+extern int LangSprintf(char *buf, size_t bufsz, const char *format, ...);
+
 int ngcfg_get_bool(const char *toml_path);
 
 #ifdef DEBUGZ
@@ -451,10 +455,33 @@ zperr(char *s, ...)
   char out[PATHLEN*2];
   va_list va;
 
-  sprintf(out, log_retry_num, ++z_errors);
+  { char _ib[16];
+    snprintf(_ib, sizeof(_ib), "%d", ++z_errors);
+    LangSprintf(out, sizeof(out), log_retry_num, _ib); }
 
   va_start(va, s);
-  vsprintf(out+strlen(out), s, va);
+
+  /* Detect |!N positional parameters from TOML lang strings.
+   * When found, expand via LangVsprintf (all args are const char *).
+   * Otherwise, fall through to legacy vsprintf for hardcoded formats. */
+  {
+    int has_positional = 0;
+    for (const char *p = s; *p; p++)
+    {
+      if (p[0] == '|' && p[1] == '!' &&
+          ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+      {
+        has_positional = 1;
+        break;
+      }
+    }
+
+    if (has_positional)
+      LangVsprintf(out+strlen(out), sizeof(out)-strlen(out), s, va);
+    else
+      vsprintf(out+strlen(out), s, va);
+  }
+
   va_end(va);
 
   logit(out);
@@ -790,7 +817,8 @@ again2:
 #ifdef DEBUGZ
   dlogit(("@4! got bad escape (%ld)", lInvoke));
 #endif
-  zperr(bad_escape_seq, c);
+  { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", c);
+    zperr(bad_escape_seq, _ib); }
 
   return ERROR;
 }
@@ -850,7 +878,8 @@ zrdat32(char *buf, int length)
 
           if (crc != 0xDEBB20E3)
           {
-            zperr(bad_crc_at, Rxbytes);
+            { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", Rxbytes);
+              zperr(bad_crc_at, _ib); }
             return ERROR;
           }
 
@@ -931,7 +960,8 @@ zrdata(char *buf, int length)
 
 	  if (crc & 0xFFFF)
 	  {
-            zperr(bad_crc_at, Rxbytes);
+            { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", Rxbytes);
+              zperr(bad_crc_at, _ib); }
             return ERROR;
 	  }
 

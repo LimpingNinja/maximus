@@ -80,7 +80,8 @@ int Exec_Chat(int type, char **result)
     case o_chat_cb:   Chat(TRUE, FALSE);break;
     case o_chat_pvt:  Chat(FALSE, TRUE);break;
     case chat_toggle: Chat_Toggle();    break;
-    default:          logit(bad_menu_opt, type); return 0;
+    default:          { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
+                        logit(bad_menu_opt, _ib); } return 0;
   }
   
   return 0;
@@ -349,8 +350,9 @@ void Who_Is_On(void)
     if (! tid)
       continue;
 
-    LangPrintf(hu_is_on_3, username, tid, status,
-               eqstri(username, usrname) ? ch_you : blank_str);
+    { char _tid[8]; snprintf(_tid, sizeof(_tid), "%d", tid);
+      LangPrintf(hu_is_on_3, username, _tid, status,
+                 eqstri(username, usrname) ? ch_you : blank_str); }
 
     if (MoreYnBreak(&nonstop, CYAN))
       break;
@@ -420,7 +422,8 @@ static void near Chat(int use_cb, int doing_answer)
 
     { char _cc[8]; snprintf(_cc, sizeof(_cc), "%d", cc);
       LangSprintf(stat, sizeof(stat), ch_chat_cb, _cc); }
-    logit(log_cb_start, cc);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", cc);
+      logit(log_cb_start, _ib); }
   }
   else
   {
@@ -463,7 +466,8 @@ static void near Chat(int use_cb, int doing_answer)
 
     { char _xb[8]; snprintf(_xb, sizeof(_xb), "%d", x);
       LangSprintf(stat, sizeof(stat), ch_chat_pvt, _xb); }
-    logit(log_pvt_start, temp, x);
+    { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", x);
+      logit(log_pvt_start, temp, _ib); }
   }
 
   if (*temp && cc)

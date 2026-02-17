@@ -76,8 +76,11 @@ void Add_To_Upload_Log(char *path,char *fname,long bytes)
       Timestamp_Format((char *)ngcfg_get_string_raw("general.display_files.time_format"), &stamp, p2);
 
 
-      fprintf(ullog, ullog_format,
-              usr.name, path, fname, bytes, p1, p2);
+      { char _ib[32], _buf[512];
+        snprintf(_ib, sizeof(_ib), "%ld", bytes);
+        LangSprintf(_buf, sizeof(_buf), ullog_format,
+                    usr.name, path, fname, _ib, p1, p2);
+        fprintf(ullog, "%s", _buf); }
 
       fclose(ullog);
     }

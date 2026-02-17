@@ -400,7 +400,8 @@ void Giveaway_Slice(void)
       (*pstrip_ansi)(strlen(s), s, &rc, &got);
 
       if (got && area && msgnum != 0)
-        logit(log_got_ansi, area, msgnum);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", msgnum);
+        logit(log_got_ansi, area, _ib); }
 
       return rc;
     }
@@ -418,7 +419,8 @@ void Giveaway_Slice(void)
         if (*s=='\x1b')
         {
           if (area && msgnum != 0)
-            logit(log_got_ansi, area, msgnum);
+          { char _ib[16]; snprintf(_ib, sizeof(_ib), "%ld", msgnum);
+            logit(log_got_ansi, area, _ib); }
 
           *s='<';
         }
@@ -1028,7 +1030,10 @@ void Find_Class_Number(void)
 
   if (!local && (baud < (dword)ClassGetInfo(cls,CIT_MIN_BAUD)))
   {
-    logit(ltooslow,baud,ClassGetInfo(cls,CIT_MIN_BAUD));
+    { char _a[16], _b[16];
+      snprintf(_a, sizeof(_a), "%lu", (unsigned long)baud);
+      snprintf(_b, sizeof(_b), "%lu", (unsigned long)ClassGetInfo(cls,CIT_MIN_BAUD));
+      logit(ltooslow, _a, _b); }
 
     Display_File(0, NULL, (char *)ngcfg_get_path("general.display_files.too_slow"));
     mdm_hangup();
@@ -1287,7 +1292,8 @@ word AreaTagged(char *name)
 
 void cant_open(char *fname)
 {
-  logit(cantopen, fname, errno);
+  { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", errno);
+    logit(cantopen, fname, _ib); }
 }
 
 

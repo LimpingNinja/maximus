@@ -131,7 +131,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
   if (max_lines==0)   /* Something's really wrong here! */
   {
     logit(mem_nmsgb);
-    Puts(mem_nmsgb);
+    PutsForce(mem_nmsgb);
 
     Press_ENTER();
   }
@@ -156,7 +156,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
     Init_Vars();
 
-    Puts(maxed_init);
+    PutsForce(maxed_init);
 
     if (!(usr.bits2 & BITS2_CLS))
       NoFF_CLS();
@@ -182,9 +182,9 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
       redo_status=TRUE;
 
       Goto(usrlen, 1);
-      Puts(ck_for_help);
+      PutsForce(ck_for_help);
       Puts(CLEOL);
-      Printf(msg_text_col);
+      PrintfForce(msg_text_col);
       Goto(cursor_x, cursor_y);
     }
     else
@@ -419,8 +419,8 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
                   Goto(usrlen,10);
 
                   /* Tell this deadbeat to lighten up! */
-                  Puts(happy);
-                  Printf(msg_text_col);
+                  PutsForce(happy);
+                  PrintfForce(msg_text_col);
 
 
                   Goto(cursor_x,cursor_y);
@@ -656,7 +656,7 @@ static void near Process_Control_Q(void)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "^Q");
   Goto(cursor_x,cursor_y);
-  Printf(msg_text_col);
+  PrintfForce(msg_text_col);
   vbuf_flush();
 
   ch=Mdm_getcwcc();
@@ -691,7 +691,7 @@ static void near Process_Control_Q(void)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "  ");
   Goto(cursor_x,cursor_y);
-  Printf(msg_text_col);
+  PrintfForce(msg_text_col);
   vbuf_flush();
 }
 
@@ -704,7 +704,7 @@ static word near Process_Control_K(struct _replyp *pr)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "^K");
   Goto(cursor_x,cursor_y);
-  Printf(msg_text_col);
+  PrintfForce(msg_text_col);
   vbuf_flush();
 
   ret=NOTHING;
@@ -764,7 +764,7 @@ static word near Process_Control_K(struct _replyp *pr)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "  ");
   Goto(cursor_x,cursor_y);
-  Printf(msg_text_col);
+  PrintfForce(msg_text_col);
   vbuf_flush();
 
   return ret;
@@ -801,7 +801,7 @@ static void near Init_Vars(void)
 void EdMemOvfl(void)
 {
   logit(mem_nmsgb);
-  Puts(mem_nmsgb+1);
+  PutsForce(mem_nmsgb+1);
 
   Press_ENTER();
 

@@ -122,20 +122,20 @@ static int mci_visible_len(const char *s)
       continue;
     }
 
-    /* MCI cursor codes [X##, [Y##, etc. — zero visible width */
-    if (*s=='[')
+    /* MCI cursor codes |[X##, |[Y##, etc. — zero visible width */
+    if (*s=='|' && s[1]=='[')
     {
-      char cc = s[1];
+      char cc = s[2];
       if (cc=='0' || cc=='1' || cc=='K')
       {
-        s += 2;
+        s += 3;
         continue;
       }
       if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
            cc=='L' || cc=='X' || cc=='Y') &&
-          isdigit((unsigned char)s[2]) && isdigit((unsigned char)s[3]))
+          isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]))
       {
-        s += 4;
+        s += 5;
         continue;
       }
     }
@@ -466,53 +466,55 @@ literal_dollar:
       continue;
     }
 
-    /* MCI cursor codes: [0, [1, [K, [A##, [B##, [C##, [D##, [L##, [X##, [Y## */
-    if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='[')
+    /* MCI cursor codes: |[0, |[1, |[K, |[A##, |[B##, |[C##, |[D##, |[L##, |[X##, |[Y## */
+    if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' && in[i+1]=='[')
     {
-      char cc=in[i+1];
+      char cc=in[i+2];
 
-      /* [0 — hide cursor */
+      /* |[0 — hide cursor */
       if (cc=='0')
       {
         mci_out_append_str(out, out_size, &out_len, "\x1b[?25l");
-        i += 2;
+        i += 3;
         continue;
       }
-      /* [1 — show cursor */
+      /* |[1 — show cursor */
       if (cc=='1')
       {
         mci_out_append_str(out, out_size, &out_len, "\x1b[?25h");
-        i += 2;
+        i += 3;
         continue;
       }
-      /* [K — clear to end of line */
+      /* |[K — clear to end of line */
       if (cc=='K')
       {
         mci_out_append_str(out, out_size, &out_len, "\x1b[K");
-        i += 2;
+        i += 3;
         continue;
       }
 
-      /* [A## through [Y## — cursor movement with 2-digit parameter */
+      /* |[A## through |[Y## — cursor movement with 2-digit parameter */
       int nn=0;
       if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
            cc=='L' || cc=='X' || cc=='Y') &&
-          mci_parse_2dig(in + i + 2, &nn))
+          mci_parse_2dig(in + i + 3, &nn))
       {
         char csi[32];
         switch (cc)
         {
-          case 'A': snprintf(csi, sizeof(csi), "\x1b[%dA", nn); break; /* up */
-          case 'B': snprintf(csi, sizeof(csi), "\x1b[%dB", nn); break; /* down */
-          case 'C': snprintf(csi, sizeof(csi), "\x1b[%dC", nn); break; /* forward */
-          case 'D': snprintf(csi, sizeof(csi), "\x1b[%dD", nn); break; /* back */
+          case 'A': snprintf(csi, sizeof(csi), "\x1b[%dA", nn); break;            /* up */
+          case 'B': snprintf(csi, sizeof(csi), "\x1b[%dB", nn); break;            /* down */
+          case 'C': snprintf(csi, sizeof(csi), "\x1b[%dC", nn); break;            /* forward */
+          case 'D': snprintf(csi, sizeof(csi), "\x1b[%dD", nn); break;            /* back */
           case 'X': snprintf(csi, sizeof(csi), "\x1b[%dG", nn); cur_col=nn; break; /* column absolute */
-          case 'Y': snprintf(csi, sizeof(csi), "\x1b[%dd", nn); break; /* row absolute */
+          case 'Y': snprintf(csi, sizeof(csi), "\x1b[%dd", nn);                    /* row absolute */
+                    current_line=(byte)nn; display_line=(byte)nn;
+                    break;
           case 'L': snprintf(csi, sizeof(csi), "\x1b[%dG\x1b[K", nn); cur_col=nn; break; /* move+erase */
           default: csi[0]='\0'; break;
         }
         mci_out_append_str(out, out_size, &out_len, csi);
-        i += 4;
+        i += 5;
         continue;
       }
     }
@@ -742,21 +744,21 @@ size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_
       continue;
     }
 
-    /* Strip MCI cursor codes */
-    if ((strip_flags & MCI_STRIP_INFO) && in[i]=='[')
+    /* Strip MCI cursor codes |[X##, |[Y##, |[K, |[0, |[1, etc. */
+    if ((strip_flags & MCI_STRIP_INFO) && in[i]=='|' && in[i+1]=='[')
     {
-      char cc=in[i+1];
+      char cc=in[i+2];
       if (cc=='0' || cc=='1' || cc=='K')
       {
-        i += 2;
+        i += 3;
         continue;
       }
       int nn=0;
       if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
            cc=='L' || cc=='X' || cc=='Y') &&
-          mci_parse_2dig(in + i + 2, &nn))
+          mci_parse_2dig(in + i + 3, &nn))
       {
-        i += 4;
+        i += 5;
         continue;
       }
     }

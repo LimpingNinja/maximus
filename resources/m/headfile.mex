@@ -34,16 +34,23 @@ int main(string: argv)
     // areas, then redisplay the appropriate header.
 
     if (argv="1" or farea.name <> last_area)
-        print(lang_get("f_area.file_sect_hdr"));
-
+    {
+        print("|[Y23|[X01");
+        print(lang_get("f_area.file_sect_hdr"), "\n", lang_get("f_area.file_menu_hdr"), farea.name, lang_get("f_area.file_menu_sep"), farea.descript, lang_get("f_area.file_hdr_end"));
+        print("|CD");
+        set_static_string(last_area_id, farea.name);
+        return 0;
+    }
+   
     // Store the name of the new file area
 
     set_static_string(last_area_id, farea.name);
 
     // Now display info about this area
 
+    print("|[Y23|[X01");
     print(lang_get("f_area.file_menu_hdr"), farea.name, lang_get("f_area.file_menu_sep"), farea.descript, lang_get("f_area.file_hdr_end"));
-
+    print("|CD");
     return 0;
 }
 

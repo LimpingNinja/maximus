@@ -96,10 +96,11 @@ void ThruLog(long lTotalBytes)
   lCPS = lBytesSent / lTimeElapsed;
   last_bps = lCPS * 10L;
 
-  logit(log_dl_speed,
-        lCPS,
-        lBytesSent,
-        lCPS*1000L/(long)baud);
+  { char _a[16], _b[16], _c[16];
+    snprintf(_a, sizeof(_a), "%lu", (unsigned long)lCPS);
+    snprintf(_b, sizeof(_b), "%lu", (unsigned long)lBytesSent);
+    snprintf(_c, sizeof(_c), "%lu", (unsigned long)(lCPS*1000L/(long)baud));
+    logit(log_dl_speed, _a, _b, _c); }
 }
 
 

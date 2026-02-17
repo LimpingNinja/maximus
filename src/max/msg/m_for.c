@@ -494,12 +494,13 @@ static void near Forward_One(struct _fwdp *f,struct _fwdp *fp)
   MsgCloseMsg(th);
 
   to_id=UIDnum(MsgHighMsg(f->tosq));
-  logit(log_fwd, f->tmsg.to, f->toname, to_id);
+  { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", to_id);
+    logit(log_fwd, f->tmsg.to, f->toname, _ib);
 
   if (!f->bomb && !fp)
     Puts("\n\n");
 
-  LangPrintf(fwd_to, f->tmsg.to, Address(&f->tmsg.dest), to_id);
+  LangPrintf(fwd_to, f->tmsg.to, Address(&f->tmsg.dest), _ib); }
 
   vbuf_flush();
 }

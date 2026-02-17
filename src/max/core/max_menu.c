@@ -1466,6 +1466,16 @@ int Display_Options(char *first_name, XMSG *msg)
 
       if (next_menu_char==-1)
       {
+        /* Clear screen before redrawing a lightbar menu after returning
+         * from an action.  The header file handles the initial paint,
+         * but subsequent redraws need a clean canvas. */
+        if (!first_time && menu.cm_enabled && menu.cm_lightbar_menu &&
+            menu.cm_x1 > 0 && menu.cm_y1 > 0 &&
+            menu.cm_x2 >= menu.cm_x1 && menu.cm_y2 >= menu.cm_y1)
+        {
+          Puts(CLS);
+        }
+
         menuhelp=help;
         ShowMenuHeader(&menu, help, first_time);
         ShowMenuBody(&menu, help, title, menu_name);

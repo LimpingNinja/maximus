@@ -160,10 +160,12 @@ static int near Handle_Matrix_Charges(NETADDR *dest,int total)
       { char _bal[16]; snprintf(_bal, sizeof(_bal), "%ld", (long)(usr.credit-usr.debit));
         LangPrintf(ms_5, _bal); }
 
-      logit(log_charge, cost);
+      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", cost);
+        logit(log_charge, _ib); }
 
       if (usr.credit-usr.debit < 100)
-        logit(log_bal, usr.credit-usr.debit);
+        { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", (int)(usr.credit-usr.debit));
+          logit(log_bal, _ib); }
     }
   }
 

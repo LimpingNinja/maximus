@@ -408,7 +408,8 @@ static int near Compress_Attach_Files(PMAH pmah, char *szAttachName, dword *pulF
 
     if (ret != 0 || !fexist(pth))
     {
-      logit(log_err_compr, ret);
+      { char _ib[8]; snprintf(_ib, sizeof(_ib), "%d", ret);
+        logit(log_err_compr, _ib); }
       unlink(pth);
       ret=-1;
     }
