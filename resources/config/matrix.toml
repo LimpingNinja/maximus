@@ -1,0 +1,34 @@
+ctla_priv = 65535
+seenby_priv = 100
+private_priv = 100
+fromfile_priv = 100
+unlisted_priv = 100
+unlisted_cost = 50
+log_echomail = true
+after_edit_exit = 11
+after_echomail_exit = 12
+after_local_exit = 0
+nodelist_version = "7"
+fidouser = "data/nodelist/fidouser.lst"
+echotoss_name = "log/echotoss.log"
+
+[message_edit]
+
+[message_edit.ask]
+private = 65535
+crash = 100
+fileattach = 100
+killsent = 65535
+hold = 100
+filerequest = 65535
+updaterequest = 65535
+localattach = 30
+
+[message_edit.assume]
+private = 65535
+crash = 65535
+fileattach = 65535
+killsent = 65535
+hold = 65535
+filerequest = 65535
+updaterequest = 65535

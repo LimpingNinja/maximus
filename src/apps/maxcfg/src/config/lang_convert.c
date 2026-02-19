@@ -1171,6 +1171,117 @@ static const char *lc_skip_toml_value(const char *s)
 }
 
 /**
+ * @brief Return the index of the [_legacy_map] section header, or line_count.
+ */
+static int lc_find_legacy_map_index(char **lines, int line_count)
+{
+    for (int i = 0; i < line_count; i++) {
+        const char *p = lines[i];
+        while (*p == ' ' || *p == '\t') p++;
+        if (strncmp(p, "[_legacy_map]", 13) == 0)
+            return i;
+    }
+    return line_count;
+}
+
+/**
+ * @brief Resolve the [start,end) line range for a TOML section.
+ *
+ * When section_header is empty, resolves the top-level range (before first
+ * section header). When non-empty, resolves that exact section by header text.
+ *
+ * @return true if a matching explicit section was found, or if top-level range
+ *         was resolved. false only when a non-empty section was requested but
+ *         not present in the base file.
+ */
+static bool lc_find_section_range(char **lines,
+                                  int line_count,
+                                  const char *section_header,
+                                  int *out_start,
+                                  int *out_end)
+{
+    if (!section_header || !*section_header) {
+        int end = line_count;
+        for (int i = 0; i < line_count; i++) {
+            const char *p = lines[i];
+            while (*p == ' ' || *p == '\t') p++;
+            if (*p == '[') {
+                end = i;
+                break;
+            }
+        }
+        *out_start = 0;
+        *out_end = end;
+        return true;
+    }
+
+    for (int i = 0; i < line_count; i++) {
+        const char *p = lines[i];
+        while (*p == ' ' || *p == '\t') p++;
+
+        if (strcmp(p, section_header) == 0) {
+            int start = i + 1;
+            int end = line_count;
+
+            for (int j = start; j < line_count; j++) {
+                const char *q = lines[j];
+                while (*q == ' ' || *q == '\t') q++;
+                if (*q == '[') {
+                    end = j;
+                    break;
+                }
+            }
+
+            *out_start = start;
+            *out_end = end;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @brief Map a delta section header to its base TOML section header.
+ *
+ * Delta tier-2 sections use the format [maximusng-<heap>] to indicate
+ * nextgen updates for an existing heap. In the merged output, keys belong
+ * under the real base heap section [<heap>].
+ *
+ * Examples:
+ *   [maximusng-global] -> [global]
+ *   [maximusng-f_area] -> [f_area]
+ *
+ * Non-maximusng section headers are copied unchanged.
+ */
+static void lc_map_delta_section_to_base(const char *delta_section,
+                                         char *out,
+                                         size_t out_sz)
+{
+    if (!out || out_sz == 0)
+        return;
+
+    out[0] = '\0';
+
+    if (!delta_section || !*delta_section)
+        return;
+
+    if (strncmp(delta_section, "[maximusng-", 11) == 0) {
+        const char *tail = delta_section + 11;
+        size_t tail_len = strlen(tail);
+
+        if (tail_len > 0 && tail[tail_len - 1] == ']') {
+            int wrote = snprintf(out, out_sz, "[%.*s]", (int)(tail_len - 1), tail);
+            if (wrote >= 0 && (size_t)wrote < out_sz)
+                return;
+        }
+    }
+
+    strncpy(out, delta_section, out_sz - 1);
+    out[out_sz - 1] = '\0';
+}
+
+/**
  * @brief Merge a delta inline table into a base TOML line (shallow field merge).
  *
  * When the delta value is an inline table `{ ... }`, merges its fields into
@@ -1424,6 +1535,7 @@ bool lang_apply_delta(const char *toml_path,
      *   - Lines inside [maximusng-*] sections    = Tier 2 */
     bool merge_next = false;
     bool in_ng_section = false;
+    char current_section[256] = "";
 
     while (fgets(lbuf, (int)sizeof(lbuf), df)) {
         size_t ln = strlen(lbuf);
@@ -1439,6 +1551,17 @@ bool lang_apply_delta(const char *toml_path,
 
         /* Section headers: track whether we're in a [maximusng-*] tier */
         if (*p == '[') {
+            const char *sec_end = strchr(p, ']');
+            if (sec_end) {
+                size_t sec_len = (size_t)(sec_end - p + 1);
+                if (sec_len >= sizeof(current_section))
+                    sec_len = sizeof(current_section) - 1;
+                memcpy(current_section, p, sec_len);
+                current_section[sec_len] = '\0';
+            } else {
+                current_section[0] = '\0';
+            }
+
             in_ng_section = (strncmp(p, "[maximusng-", 11) == 0);
             merge_next = false;
             continue;
@@ -1470,7 +1593,8 @@ bool lang_apply_delta(const char *toml_path,
         while (key_len > 0 && (p[key_len - 1] == ' ' || p[key_len - 1] == '\t'))
             key_len--;
 
-        /* Search for existing key in base lines */
+        /* Always search the entire base file for existing keys.
+         * Keys may live in a different heap than the delta section suggests. */
         int found = -1;
         for (int i = 0; i < line_count; i++) {
             const char *bl = lines[i];
@@ -1495,19 +1619,43 @@ bool lang_apply_delta(const char *toml_path,
                 }
                 /* If merge fails, base line is preserved unchanged */
             } else {
-                /* Full replacement */
+                /* Full replacement — update in place */
                 free(lines[found]);
                 lines[found] = strdup(lbuf);
             }
-        } else {
-            /* Insert before [_legacy_map] or at end */
-            int insert_at = line_count;
-            for (int i = 0; i < line_count; i++) {
-                if (strncmp(lines[i], "[_legacy_map]", 13) == 0) {
-                    insert_at = i;
-                    break;
+        } else if (in_ng_section) {
+            /* Genuinely new key: insert into the mapped base heap.
+             * Resolve the target section from the delta [maximusng-*] header. */
+            char target_section[256] = "";
+            lc_map_delta_section_to_base(current_section, target_section, sizeof(target_section));
+
+            int scope_start = 0, scope_end = line_count;
+            bool have_scope = lc_find_section_range(lines, line_count, target_section,
+                                                    &scope_start, &scope_end);
+            int insert_at;
+            int legacy_at = lc_find_legacy_map_index(lines, line_count);
+
+            if (have_scope) {
+                insert_at = scope_end;
+            } else {
+                /* Target section not present in base:
+                 * create it before [_legacy_map], then insert key under it. */
+                if (line_count + 2 >= line_cap) {
+                    line_cap = line_cap ? line_cap * 2 : 256;
+                    while (line_cap < line_count + 2)
+                        line_cap *= 2;
+                    lines = realloc(lines, (size_t)line_cap * sizeof(char *));
                 }
+
+                memmove(&lines[legacy_at + 2], &lines[legacy_at],
+                        (size_t)(line_count - legacy_at) * sizeof(char *));
+                lines[legacy_at] = strdup(target_section);
+                lines[legacy_at + 1] = strdup(lbuf);
+                line_count += 2;
+                merge_next = false;
+                continue;
             }
+
             if (line_count >= line_cap) {
                 line_cap = line_cap ? line_cap * 2 : 256;
                 lines = realloc(lines, (size_t)line_cap * sizeof(char *));
@@ -1517,6 +1665,8 @@ bool lang_apply_delta(const char *toml_path,
             lines[insert_at] = strdup(lbuf);
             line_count++;
         }
+        /* Tier 1 keys not found in base are silently skipped —
+         * @merge entries should only modify existing keys. */
         merge_next = false;
     }
     fclose(df);

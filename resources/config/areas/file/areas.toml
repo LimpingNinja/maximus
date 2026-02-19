@@ -1,0 +1,48 @@
+
+[[area]]
+name = "0"
+description = "Unchecked uploads"
+acs = "Sysop"
+menu = ""
+division = ""
+download = "data/files/uncheck"
+upload = "data/files/uncheck"
+filelist = ""
+barricade = ""
+types = []
+
+[[area]]
+name = "1"
+description = "New Files"
+acs = "Demoted"
+menu = ""
+division = ""
+download = "data/files/newup"
+upload = "data/files/uncheck/"
+filelist = ""
+barricade = ""
+types = []
+
+[[area]]
+name = "2"
+description = "General Utilities"
+acs = "Demoted"
+menu = ""
+division = ""
+download = "data/files/util"
+upload = "data/files/uncheck"
+filelist = ""
+barricade = ""
+types = []
+
+[[area]]
+name = "3"
+description = "Maximus-related files"
+acs = "Demoted"
+menu = ""
+division = ""
+download = "data/files/util"
+upload = "data/files/uncheck"
+filelist = ""
+barricade = ""
+types = []

@@ -1,0 +1,129 @@
+name = "MEX"
+title = "MEX SAMPLES (%t mins)"
+header_file = "display/screens/mexinfo"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "MEX"
+arguments = "scripts/userlist"
+priv_level = "Demoted"
+description = "1 Userlist"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/callers"
+priv_level = "Demoted"
+description = "2 Callers"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/chgdob"
+priv_level = "Demoted"
+description = "3 Change Birthdate"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/chgsex"
+priv_level = "Demoted"
+description = "4 Change Gender"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/card"
+priv_level = "Demoted"
+description = "5 21-like game"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/dir"
+priv_level = "Demoted"
+description = "6 Directory list"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/dorinfo"
+priv_level = "Demoted"
+description = "7 Generate DORINFO"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/class"
+priv_level = "Demoted"
+description = "8 User class info."
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/lastrd"
+priv_level = "Demoted"
+description = "9 Show lastread"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/mexbank"
+priv_level = "Demoted"
+description = "A Time bank"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/pstat"
+priv_level = "Demoted"
+description = "B PSTAT (OS2 only)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/mexchat"
+priv_level = "Demoted"
+description = "C Full-screen chat"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/taglist"
+priv_level = "Demoted"
+description = "D Tagged file list"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Demoted"
+description = "Goodbye"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Demoted"
+description = "Main menu"
+key_poke = ""
+modifiers = []

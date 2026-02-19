@@ -1,0 +1,12 @@
+output = "com"
+com_port = 1
+baud_maximum = 38400
+busy = "v~~^~~|~ATZ|~ATM0H1|"
+init = "~v~````|~^``AT&B1H0S0=0|"
+ring = "Ring"
+answer = "ATA|"
+connect = "Connect"
+carrier_mask = 128
+handshaking = ["xon", "cts"]
+send_break = false
+no_critical = false

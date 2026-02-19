@@ -331,6 +331,28 @@ typedef struct {
     char *tune;
 } MaxCfgNgGeneralDisplayFiles;
 
+/** @brief Lightbar area display settings for a single area type (file or msg). */
+typedef struct {
+    bool  lightbar_area;       /**< Enable lightbar navigation for area list */
+    int   reduce_area;         /**< Rows to subtract from screen height for bottom boundary fallback */
+    int   top_boundary_row;    /**< Top boundary row (1-based, 0 = not set) */
+    int   top_boundary_col;    /**< Top boundary col (1-based, 0 = not set) */
+    int   bottom_boundary_row; /**< Bottom boundary row (1-based, 0 = not set) */
+    int   bottom_boundary_col; /**< Bottom boundary col (1-based, 0 = not set) */
+    int   header_location_row; /**< Header anchor row (1-based, 0 = not set) */
+    int   header_location_col; /**< Header anchor col (1-based, 0 = not set) */
+    int   footer_location_row; /**< Footer anchor row (1-based, 0 = not set) */
+    int   footer_location_col; /**< Footer anchor col (1-based, 0 = not set) */
+    char *custom_screen;       /**< Optional additive display file path */
+} MaxCfgNgDisplayAreaCfg;
+
+/** @brief Top-level display/UI behavior configuration (general.display). */
+typedef struct {
+    bool                    lightbar_prompts; /**< Global lightbar prompt toggle */
+    MaxCfgNgDisplayAreaCfg  file_areas;       /**< File area lightbar settings */
+    MaxCfgNgDisplayAreaCfg  msg_areas;        /**< Message area lightbar settings */
+} MaxCfgNgGeneralDisplay;
+
 typedef struct {
     int fg;
     int bg;
@@ -485,6 +507,9 @@ typedef struct {
     char *header_file;
     char **header_types;
     size_t header_type_count;
+    char *footer_file;
+    char **footer_types;
+    size_t footer_type_count;
     char *menu_file;
     char **menu_types;
     size_t menu_type_count;
@@ -671,6 +696,10 @@ void maxcfg_ng_language_free(MaxCfgNgLanguage *lang);
 MaxCfgStatus maxcfg_ng_general_display_files_init(MaxCfgNgGeneralDisplayFiles *files);
 void maxcfg_ng_general_display_files_free(MaxCfgNgGeneralDisplayFiles *files);
 
+MaxCfgStatus maxcfg_ng_general_display_init(MaxCfgNgGeneralDisplay *disp);
+void maxcfg_ng_general_display_free(MaxCfgNgGeneralDisplay *disp);
+MaxCfgStatus maxcfg_ng_get_general_display(const MaxCfgToml *toml, const char *prefix, MaxCfgNgGeneralDisplay *disp);
+
 MaxCfgStatus maxcfg_ng_general_colors_init(MaxCfgNgGeneralColors *colors);
 
 MaxCfgStatus maxcfg_ng_menu_init(MaxCfgNgMenu *menu);
@@ -703,6 +732,7 @@ MaxCfgStatus maxcfg_ng_get_access_levels(const MaxCfgToml *toml, const char *pre
 MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys);
 MaxCfgStatus maxcfg_ng_write_general_session_toml(FILE *fp, const MaxCfgNgGeneralSession *session);
 MaxCfgStatus maxcfg_ng_write_general_display_files_toml(FILE *fp, const MaxCfgNgGeneralDisplayFiles *files);
+MaxCfgStatus maxcfg_ng_write_general_display_toml(FILE *fp, const MaxCfgNgGeneralDisplay *disp);
 MaxCfgStatus maxcfg_ng_write_general_colors_toml(FILE *fp, const MaxCfgNgGeneralColors *colors);
 MaxCfgStatus maxcfg_ng_write_matrix_toml(FILE *fp, const MaxCfgNgMatrix *matrix);
 MaxCfgStatus maxcfg_ng_write_reader_toml(FILE *fp, const MaxCfgNgReader *reader);

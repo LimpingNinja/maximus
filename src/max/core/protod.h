@@ -297,7 +297,7 @@ void Dont_Use_Wildcards(char *name);
 void Strip_Path(char *filename);
 void Add_To_Upload_Log(char *path,char *fname,long bytes);
 char *zalloc(void);
-void ListFileAreas(char *div_name, int show_help);
+int ListFileAreas(char *div_name, int show_help, char *selected_out);
 void File_Kill(void);
 void File_Locate(void);
 int DispMoreYnBreak(char *nonstop,char *colour,int type);
@@ -550,6 +550,8 @@ typedef struct MaxCfg MaxCfg;  /* Forward declaration */
 extern MaxCfg *ng_cfg;
 const char *ngcfg_get_path(const char *toml_path);
 int ngcfg_get_bool(const char *toml_path);
+int ngcfg_get_int(const char *toml_path);
+int ngcfg_get_int_array_2(const char *toml_path, int *out_a, int *out_b);
 int ngcfg_get_handshake_mask_int(void);
 int ngcfg_get_nodelist_version_int(void);
 const char *ngcfg_get_string(const char *toml_path);

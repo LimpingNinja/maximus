@@ -1,0 +1,47 @@
+# Display and UI behavior settings
+# Runtime path prefix: general.display
+
+[general]
+lightbar_prompts = false
+
+[file_areas]
+lightbar_area = false
+reduce_area = 8
+
+# Selection highlight behavior: row, full, or name
+lightbar_what = "row"
+
+# Optional selected-row color overrides (name or 0-f nibble).
+# If unset, selected foreground inherits normal text and selected
+# background defaults to theme lightbar background.
+lightbar_fore = ""
+lightbar_back = ""
+
+# Optional row/col boundaries as [row, col] (1-based).
+# If omitted or invalid, fallback rules apply (see lightbar_areas_proposal.md).
+# top_boundary = [3, 1]
+# bottom_boundary = [20, 80]
+
+# Optional fixed header/footer anchor points as [row, col].
+# header_location = [1, 1]
+# footer_location = [22, 1]
+
+# Optional custom screen/display file shown additively before list.
+custom_screen = ""
+
+[msg_areas]
+lightbar_area = false
+reduce_area = 8
+
+# Selection highlight behavior: row, full, or name
+lightbar_what = "row"
+
+# Optional selected-row color overrides (name or 0-f nibble).
+lightbar_fore = ""
+lightbar_back = ""
+
+# top_boundary = [3, 1]
+# bottom_boundary = [20, 80]
+# header_location = [1, 1]
+# footer_location = [22, 1]
+custom_screen = ""

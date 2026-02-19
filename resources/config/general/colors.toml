@@ -1,0 +1,62 @@
+[menu]
+name = "|14"
+highlight = "|14"
+option = "|07"
+
+[file]
+name = "|14"
+size = "|05"
+date = "|02"
+description = "|03"
+search_match = "|14"
+offline = "|04"
+new = "|03|24"
+
+[msg]
+from_label = "|03"
+from_text = "|14"
+to_label = "|03"
+to_text = "|14"
+subject_label = "|03"
+subject_text = "|14"
+attributes = "|10"
+date = "|10"
+address = "|03"
+locus = "|09"
+body = "|03"
+quote = "|07"
+kludge = "|13"
+
+[fsr]
+msgnum = "|12|17"
+links = "|14|17"
+attrib = "|14|17"
+msginfo = "|14|17"
+date = "|15|17"
+addr = "|14|17"
+static = "|15|17"
+border = "|03|17"
+locus = "|15"
+
+[theme]
+name = "Classic Maximus"
+
+[theme.colors]
+text         = "|07"
+highlight    = "|15"
+prompt       = "|14"
+input        = "|15"
+textbox_fg   = "|15"
+textbox_bg   = "|17"
+heading      = "|11"
+lightbar_fg  = "|15"
+lightbar_bg  = "|17"
+error        = "|12"
+warning      = "|14"
+success      = "|10"
+dim          = "|08"
+file_info    = "|03"
+sysop        = "|13"
+quote        = "|09"
+border       = "|03"
+default      = "|16|07"

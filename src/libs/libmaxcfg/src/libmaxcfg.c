@@ -1328,11 +1328,13 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
     const char *name = "";
     const char *title = "";
     const char *header_file = "";
+    const char *footer_file = "";
     const char *menu_file = "";
     int menu_length = 0;
     int menu_color = -1;
     int option_width = 0;
     MaxCfgStrView header_types = {0};
+    MaxCfgStrView footer_types = {0};
     MaxCfgStrView menu_types = {0};
 
     st = ng_tbl_get_string_default(&doc, "name", &name, "");
@@ -1343,6 +1345,11 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
     st = ng_tbl_get_string_default(&doc, "header_file", &header_file, "");
     if (st != MAXCFG_OK) goto fail_menu;
     st = ng_tbl_get_string_array_view(&doc, "header_types", &header_types);
+    if (st != MAXCFG_OK) goto fail_menu;
+
+    st = ng_tbl_get_string_default(&doc, "footer_file", &footer_file, "");
+    if (st != MAXCFG_OK) goto fail_menu;
+    st = ng_tbl_get_string_array_view(&doc, "footer_types", &footer_types);
     if (st != MAXCFG_OK) goto fail_menu;
 
     st = ng_tbl_get_string_default(&doc, "menu_file", &menu_file, "");
@@ -1365,6 +1372,11 @@ MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxC
     st = ng_strdup_safe(&menu->header_file, header_file);
     if (st != MAXCFG_OK) goto fail_menu;
     st = ng_copy_strv_from_view(&menu->header_types, &menu->header_type_count, &header_types);
+    if (st != MAXCFG_OK) goto fail_menu;
+
+    st = ng_strdup_safe(&menu->footer_file, footer_file);
+    if (st != MAXCFG_OK) goto fail_menu;
+    st = ng_copy_strv_from_view(&menu->footer_types, &menu->footer_type_count, &footer_types);
     if (st != MAXCFG_OK) goto fail_menu;
 
     st = ng_strdup_safe(&menu->menu_file, menu_file);
@@ -4369,6 +4381,126 @@ void maxcfg_ng_general_display_files_free(MaxCfgNgGeneralDisplayFiles *files)
     memset(files, 0, sizeof(*files));
 }
 
+/* ============================================================================
+ * Display UI config (general.display) — lightbar area settings
+ * ============================================================================ */
+
+static void ng_display_area_cfg_defaults(MaxCfgNgDisplayAreaCfg *a)
+{
+    a->lightbar_area = false;
+    a->reduce_area = 8;
+    a->top_boundary_row = 0;
+    a->top_boundary_col = 0;
+    a->bottom_boundary_row = 0;
+    a->bottom_boundary_col = 0;
+    a->header_location_row = 0;
+    a->header_location_col = 0;
+    a->footer_location_row = 0;
+    a->footer_location_col = 0;
+    a->custom_screen = NULL;
+}
+
+MaxCfgStatus maxcfg_ng_general_display_init(MaxCfgNgGeneralDisplay *disp)
+{
+    if (disp == NULL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    memset(disp, 0, sizeof(*disp));
+    disp->lightbar_prompts = false;
+    ng_display_area_cfg_defaults(&disp->file_areas);
+    ng_display_area_cfg_defaults(&disp->msg_areas);
+    return MAXCFG_OK;
+}
+
+void maxcfg_ng_general_display_free(MaxCfgNgGeneralDisplay *disp)
+{
+    if (disp == NULL) {
+        return;
+    }
+    maxcfg_free_and_null(&disp->file_areas.custom_screen);
+    maxcfg_free_and_null(&disp->msg_areas.custom_screen);
+    memset(disp, 0, sizeof(*disp));
+}
+
+/**
+ * @brief Read a [file_areas] or [msg_areas] sub-table into a MaxCfgNgDisplayAreaCfg.
+ */
+static MaxCfgStatus ng_read_display_area_cfg(const MaxCfgVar *tbl, MaxCfgNgDisplayAreaCfg *out)
+{
+    ng_display_area_cfg_defaults(out);
+    if (tbl == NULL) {
+        return MAXCFG_OK; /* section absent — keep defaults */
+    }
+
+    ng_tbl_get_bool_default(tbl, "lightbar_area", &out->lightbar_area, false);
+    ng_tbl_get_int_default(tbl, "reduce_area", &out->reduce_area, 8);
+
+    /* Boundary arrays: [row, col] */
+    MaxCfgIntView iv = {0};
+
+    if (ng_tbl_get_int_array_view(tbl, "top_boundary", &iv) == MAXCFG_OK && iv.count >= 2) {
+        out->top_boundary_row = iv.items[0];
+        out->top_boundary_col = iv.items[1];
+    }
+    iv.items = NULL; iv.count = 0;
+    if (ng_tbl_get_int_array_view(tbl, "bottom_boundary", &iv) == MAXCFG_OK && iv.count >= 2) {
+        out->bottom_boundary_row = iv.items[0];
+        out->bottom_boundary_col = iv.items[1];
+    }
+    iv.items = NULL; iv.count = 0;
+    if (ng_tbl_get_int_array_view(tbl, "header_location", &iv) == MAXCFG_OK && iv.count >= 2) {
+        out->header_location_row = iv.items[0];
+        out->header_location_col = iv.items[1];
+    }
+    iv.items = NULL; iv.count = 0;
+    if (ng_tbl_get_int_array_view(tbl, "footer_location", &iv) == MAXCFG_OK && iv.count >= 2) {
+        out->footer_location_row = iv.items[0];
+        out->footer_location_col = iv.items[1];
+    }
+
+    {
+        const char *cs = "";
+        ng_tbl_get_string_default(tbl, "custom_screen", &cs, "");
+        out->custom_screen = strdup(cs ? cs : "");
+    }
+    return MAXCFG_OK;
+}
+
+MaxCfgStatus maxcfg_ng_get_general_display(const MaxCfgToml *toml, const char *prefix, MaxCfgNgGeneralDisplay *disp)
+{
+    if (toml == NULL || disp == NULL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+    maxcfg_ng_general_display_init(disp);
+
+    MaxCfgVar root;
+    MaxCfgStatus st = maxcfg_toml_get(toml, prefix, &root);
+    if (st == MAXCFG_ERR_NOT_FOUND) {
+        return MAXCFG_OK; /* file absent — keep defaults */
+    }
+    if (st != MAXCFG_OK || root.type != MAXCFG_VAR_TABLE) {
+        return st;
+    }
+
+    /* [general] sub-table */
+    MaxCfgVar sub;
+    if (maxcfg_toml_table_get(&root, "general", &sub) == MAXCFG_OK && sub.type == MAXCFG_VAR_TABLE) {
+        ng_tbl_get_bool_default(&sub, "lightbar_prompts", &disp->lightbar_prompts, false);
+    }
+
+    /* [file_areas] sub-table */
+    if (maxcfg_toml_table_get(&root, "file_areas", &sub) == MAXCFG_OK && sub.type == MAXCFG_VAR_TABLE) {
+        ng_read_display_area_cfg(&sub, &disp->file_areas);
+    }
+
+    /* [msg_areas] sub-table */
+    if (maxcfg_toml_table_get(&root, "msg_areas", &sub) == MAXCFG_OK && sub.type == MAXCFG_VAR_TABLE) {
+        ng_read_display_area_cfg(&sub, &disp->msg_areas);
+    }
+
+    return MAXCFG_OK;
+}
+
 MaxCfgStatus maxcfg_ng_general_colors_init(MaxCfgNgGeneralColors *colors)
 {
     if (colors == NULL) {
@@ -4518,9 +4650,11 @@ void maxcfg_ng_menu_free(MaxCfgNgMenu *menu)
     maxcfg_free_and_null(&menu->name);
     maxcfg_free_and_null(&menu->title);
     maxcfg_free_and_null(&menu->header_file);
+    maxcfg_free_and_null(&menu->footer_file);
     maxcfg_free_and_null(&menu->menu_file);
 
     maxcfg_free_strv(&menu->header_types, &menu->header_type_count);
+    maxcfg_free_strv(&menu->footer_types, &menu->footer_type_count);
     maxcfg_free_strv(&menu->menu_types, &menu->menu_type_count);
 
     if (menu->custom_menu != NULL) {
@@ -5830,6 +5964,46 @@ MaxCfgStatus maxcfg_ng_write_general_display_files_toml(FILE *fp, const MaxCfgNg
     return MAXCFG_OK;
 }
 
+static void ng_write_display_area_cfg(FILE *fp, const char *section, const MaxCfgNgDisplayAreaCfg *a)
+{
+    fprintf(fp, "\n[%s]\n", section);
+    toml_kv_bool(fp, "lightbar_area", a->lightbar_area);
+    toml_kv_int(fp, "reduce_area", a->reduce_area);
+
+    if (a->top_boundary_row > 0 && a->top_boundary_col > 0) {
+        int items[2] = { a->top_boundary_row, a->top_boundary_col };
+        toml_kv_int_array(fp, "top_boundary", items, 2);
+    }
+    if (a->bottom_boundary_row > 0 && a->bottom_boundary_col > 0) {
+        int items[2] = { a->bottom_boundary_row, a->bottom_boundary_col };
+        toml_kv_int_array(fp, "bottom_boundary", items, 2);
+    }
+    if (a->header_location_row > 0 && a->header_location_col > 0) {
+        int items[2] = { a->header_location_row, a->header_location_col };
+        toml_kv_int_array(fp, "header_location", items, 2);
+    }
+    if (a->footer_location_row > 0 && a->footer_location_col > 0) {
+        int items[2] = { a->footer_location_row, a->footer_location_col };
+        toml_kv_int_array(fp, "footer_location", items, 2);
+    }
+    toml_kv_string(fp, "custom_screen", a->custom_screen);
+}
+
+MaxCfgStatus maxcfg_ng_write_general_display_toml(FILE *fp, const MaxCfgNgGeneralDisplay *disp)
+{
+    if (fp == NULL || disp == NULL) {
+        return MAXCFG_ERR_INVALID_ARGUMENT;
+    }
+
+    fputs("[general]\n", fp);
+    toml_kv_bool(fp, "lightbar_prompts", disp->lightbar_prompts);
+
+    ng_write_display_area_cfg(fp, "file_areas", &disp->file_areas);
+    ng_write_display_area_cfg(fp, "msg_areas", &disp->msg_areas);
+
+    return MAXCFG_OK;
+}
+
 MaxCfgStatus maxcfg_ng_write_general_colors_toml(FILE *fp, const MaxCfgNgGeneralColors *colors)
 {
     if (fp == NULL || colors == NULL) {
@@ -5938,6 +6112,9 @@ MaxCfgStatus maxcfg_ng_write_menu_toml(FILE *fp, const MaxCfgNgMenu *menu)
 
     toml_kv_string(fp, "header_file", menu->header_file);
     toml_kv_string_array(fp, "header_types", menu->header_types, menu->header_type_count);
+
+    toml_kv_string(fp, "footer_file", menu->footer_file);
+    toml_kv_string_array(fp, "footer_types", menu->footer_types, menu->footer_type_count);
 
     toml_kv_string(fp, "menu_file", menu->menu_file);
     toml_kv_string_array(fp, "menu_types", menu->menu_types, menu->menu_type_count);

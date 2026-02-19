@@ -1,0 +1,8 @@
+max_lang = 0
+lang_file = ["english"]
+max_ptrs = 0
+max_heap = 0
+max_glh_ptrs = 0
+max_glh_len = 0
+max_syh_ptrs = 0
+max_syh_len = 0

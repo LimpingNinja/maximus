@@ -1,0 +1,108 @@
+# Language file converted from .MAD format by maxcfg
+# Do not edit the [_legacy_map] section manually.
+
+[meta]
+name = "english"
+version = 1
+
+[global]
+left_x = { text = "|[D01|!1", flags = ["mex"], params = [{name = "count_char", type = "string", desc = "Cursor-left repeat count as character", default = "\x01"}] }
+located = { text = "|15\nLocated |!1 match|!2.\n", params = [{name = "match_count", type = "string", desc = "Number of matches found", default = "5"}, {name = "plural_suffix", type = "string", desc = "'es' if plural, blank if singular", default = "es"}] }
+pl_match = "es"
+wrong_pwd = { text = "\aWrong! (Try #|!1)\n", params = [{name = "attempts_left", type = "string", desc = "Password attempts remaining", default = "3"}] }
+end_prompt = { text = "]: ", flags = ["mex"] }
+bed_lu = { text = "|03Type \"|15?|03\" by itself to list users.\n", flags = ["mex"] }
+dot_slash_n = { text = ".\n", flags = ["mex"] }
+r_cleol = { text = "\r|[K", flags = ["mex"] }
+paddr = { text = " (|!1/|!2)", params = [{name = "net", type = "string", desc = "FidoNet net number", default = "234"}, {name = "node", type = "string", desc = "FidoNet node number", default = "567"}] }
+bs_sn = "\\\n"
+max_tear = { text = "--- Maximus", flags = ["mex"] }
+cleol = { text = "|[K", flags = ["mex"] }
+cantkill = { text = "|12\nCan't kill msg.\n|15", flags = ["mex"] }
+addrfmt = { text = "|!1|!2    |!3$T34|!4 (|!5) $T30|!6\n", params = [{name = "addr_color", type = "string", desc = "Address label color code", default = "|03"}, {name = "orig_or_dest", type = "string", desc = "Origin or Destination label", default = "From:"}, {name = "locus_color", type = "string", desc = "Address text color code", default = "|07"}, {name = "name", type = "string", desc = "Person name at this address", default = "Sysop"}, {name = "address", type = "string", desc = "FidoNet network address", default = "1:234/567"}, {name = "city", type = "string", desc = "Person's city", default = "Los Angeles"}] }
+orig_addr = { text = "Orig:", flags = ["mex"] }
+dest_addr = { text = "Dest:", flags = ["mex"] }
+endavailmsg = { text = "|CLEnd of available messages in this area|!1.\n", flags = ["mex"], params = [{name = "pvt_note", type = "string", desc = "Private area note or blank for public areas", default = ""}] }
+remain_pvt = { text = ", or remaining messages are private", flags = ["mex"] }
+msgnotavail = { text = "|15\nThat message isn't available.\n", flags = ["mex"] }
+abortmsg = { text = "|[KThrow message away", flags = ["mex"] }
+toomanylines = { text = "Too many lines.\n", flags = ["mex"] }
+tryagain = { text = "|prTry again: |in", flags = ["mex"] }
+znnp = { text = "|!1:|!2/|!3.|!4", params = [{name = "zone", type = "string", desc = "FidoNet zone number", default = "1"}, {name = "net", type = "string", desc = "FidoNet net number", default = "234"}, {name = "node", type = "string", desc = "FidoNet node number", default = "567"}, {name = "point", type = "string", desc = "FidoNet point number", default = "0"}] }
+xferaborted = "|15\n\nTransfer aborted.\n"
+xfercomplete = "|15\n\nTransfer completed."
+cps_rating = { text = "|14  (CPS=|!1, $l020|!2%%)\n", params = [{name = "cps", type = "string", desc = "Characters per second transfer rate", default = "1440"}, {name = "efficiency", type = "string", desc = "Transfer efficiency percentage", default = "95"}] }
+unlisteddest = { text = "|15\n\nUnlisted destination address.\n", flags = ["mex"] }
+baudtoolowforxfer = { text = "|15You must call at |!1 bps to send or receive files.\n", params = [{name = "min_baud", type = "string", desc = "Minimum baud rate for transfers", default = "9600"}] }
+xtrn_caller = { text = "|!1|!2 |!3 -p%%p -b%%b -t%%k -m%%d -f%%D -r%%t", params = [{name = "caller_exe", type = "string", desc = "External caller program path", default = "/bbs/bin/caller"}, {name = "caller_args", type = "string", desc = "Caller program arguments", default = ""}, {name = "config_path", type = "string", desc = "Config file path argument", default = "/bbs/config/"}] }
+iseenoxhere = { text = "|12I see no \"|!1\" here.\n|15", params = [{name = "filename", type = "string", desc = "Filename that was not found", default = "FILE.ZIP"}] }
+dontunderstand = { text = "|hi\nI don't understand \"|!1\".\n\n|cd", params = [{name = "typed_char", type = "string", desc = "Character the user typed that was not understood", default = "X"}] }
+no_undrstnd = { text = "I don't understand \"|!1\".  ", params = [{name = "typed_char", type = "string", desc = "Character the user typed", default = "X"}] }
+printfstringtoolong = { text = "Err!  |!1rintf string too long!\n", params = [{name = "prefix", type = "string", desc = "'p' or 'sp' prefix for printf/sprintf", default = "p"}] }
+err999_1 = { text = "|er\nError!  Files cannot be uploaded in local mode.\n|cd", flags = ["mex"] }
+err999_2 = { text = "Press ENTER to continue ", flags = ["mex"] }
+searchingfor = { text = "|hi\nSearching for \"|!1\".\n|!2|cd", params = [{name = "search_text", type = "string", desc = "Text being searched for", default = "hello"}, {name = "ellipsis", type = "string", desc = "Trailing period/ellipsis char", default = "."}] }
+errwriting = " \a\aError writing message! (disk full?)\n"
+idxnode = { text = "|!1nodelist.idx", params = [{name = "nodelist_path", type = "string", desc = "Path to nodelist directory", default = "/bbs/nodelist/"}] }
+datnode = { text = "|!1nodelist.dat", params = [{name = "nodelist_path", type = "string", desc = "Path to nodelist directory", default = "/bbs/nodelist/"}] }
+sysnode = { text = "|!1nodelist.sys", params = [{name = "nodelist_path", type = "string", desc = "Path to nodelist directory", default = "/bbs/nodelist/"}] }
+pressentertoskip = { text = "Press ENTER to skip item.", flags = ["mex"] }
+sp_public = { text = " public", flags = ["mex"] }
+sp_private = { text = " private", flags = ["mex"] }
+cantskip = { text = "\n\nYou can't skip this question.\n", flags = ["mex"] }
+asctime_format = { text = "%H:%M:%S |!1 %b |!2 %Y\n", params = [{name = "day_name", type = "string", desc = "Day of week name", default = "Mon"}, {name = "day_of_month", type = "string", desc = "Day of month", default = "15"}] }
+useyforyes = { text = "Use \"Y\" for YES and \"N\" for NO.  ", flags = ["mex"] }
+useyforyesns = { text = "Use \"Y\" for YES, \"N\" for NO, and \"=\" for non-stop.  ", flags = ["mex"] }
+useyforyesnst = { text = "Use \"Y\" for YES, \"N\" for NO, and \"T\" to tag file.  ", flags = ["mex"] }
+unlisted_system = { text = "|03|!1:    |02Unlisted system (|!2)\n", flags = ["mex"], params = [{name = "node_type", type = "string", desc = "Nodelist entry type (Hub/Node/etc)", default = "Node"}, {name = "address", type = "string", desc = "FidoNet network address", default = "1:234/567"}] }
+unlisted_node = { text = "Unlisted node", flags = ["mex"] }
+more_prompt = { text = "More", flags = ["mex"] }
+Tag = { text = "T", flags = ["mex"] }
+MoreYnTag = { text = "[Y]es,[n]o,[t]ag,[=]help", flags = ["mex"] }
+CYn = { text = "[Y]es,[n]o", flags = ["mex"] }
+yCN = { text = "[y]es,[N]o", flags = ["mex"] }
+Yne = { text = "[Y]es,[n]o,[=]help", flags = ["mex"] }
+CYnq = { text = "[Y]es,[n]o,[?]help", flags = ["mex"] }
+yCNq = { text = "[y]es,[N]o,[?]help", flags = ["mex"] }
+Yes = { text = "Y", flags = ["mex"] }
+No = { text = "N", flags = ["mex"] }
+M_nonstop = { text = "=", flags = ["mex"] }
+quote_format = { text = "|[Y37|[X99|!1|[K |!2> |!3", params = [{name = "line_num", type = "string", desc = "Editor line number", default = "1"}, {name = "quote_col", type = "string", desc = "Quote prefix color code", default = "|03"}, {name = "initials", type = "string", desc = "Quoted author's initials", default = "KM"}] }
+norm_format = { text = "|[Y37|[X99|!1|[K|!2", params = [{name = "line_num", type = "string", desc = "Editor line number", default = "1"}, {name = "quote_col", type = "string", desc = "Quote prefix color code", default = "|03"}] }
+areadoesntexist = { text = "|er\nThat area doesn't exist!\n|cd", flags = ["mex"] }
+done_ex = { text = "Done!\n", flags = ["mex"] }
+tnx4ul = { text = "|ok\nThanks for the upload, |!1.\n|cd", flags = ["mex"], params = [{name = "firstname", type = "string", desc = "Caller's first name", default = "Kevin"}] }
+press_enter_s = { text = "Press ENTER to continue ", flags = ["mex"], rip = "\r!|1\x1b0000$SMF$\n!|1K|Y00000100|1BHN0A0207PE0200000F080700020F07000000\n!|1U019000002700<>Press OK to continue<>^M|#|#\n" }
+usr_pwd = { text = "|prPassword: |in", flags = ["mex"] }
+unavailable = { text = "|hiSorry!  That option is not available at the present time.\n|cd", flags = ["mex"] }
+e_save = { text = " Save ", flags = ["mex"] }
+e_quit = { text = " Quit ", flags = ["mex"] }
+select_p = { text = "|prSelect: |in", flags = ["mex"] }
+userdoesntexist = { text = "|er\nThat user doesn't exist!\n|cd", flags = ["mex"] }
+ck_for_help = "|pr|tbPress Control-N for help.|cd"
+l_invalid_pwd = { text = " INVALID PASSWORD", flags = ["mex"] }
+invalid_pwd = { text = "|er\n\aINVALID PASSWORD\a\n|cd", flags = ["mex"] }
+time_added_for_ul = { text = "|ok\n|!1:$l020|!2|pr minutes added for upload.\n\n|cd", params = [{name = "added_seconds", type = "string", desc = "Seconds added for upload credit", default = "120"}, {name = "added_bytes", type = "string", desc = "Bytes credited for upload", default = "102400"}] }
+yes = { text = "YES", flags = ["mex"] }
+no = { text = "NO", flags = ["mex"] }
+s_ansi = { text = "ANSI", flags = ["mex"] }
+s_avatar = { text = "AVATAR", flags = ["mex"] }
+s_tty = { text = "TTY", flags = ["mex"] }
+enter_city = { text = "|prPlease enter your city and state/province: |in", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your city and state/province: " }
+enter_phone = { text = "|prPlease enter your phone number [(xxx) yyy-zzzz]: |in", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your phone number [(xxx) yyy-zzzz]: " }
+enter_name = { text = "|prPlease enter your alias: |in", flags = ["mex"], rip = "\r!|1K|#|#\nPlease enter your alias: " }
+msg_aborted = { text = "|CL|15|[K\n|[K\n|[KMessage aborted.\n|[K\n|[K", flags = ["mex"] }
+node_listing = { text = " $L05|!1,|03 |!2, |!3\n", params = [{name = "node_num", type = "string", desc = "Nodelist entry number", default = "567"}, {name = "system_name", type = "string", desc = "System/BBS name from nodelist", default = "MaximusNG BBS"}, {name = "city", type = "string", desc = "System city from nodelist", default = "Los Angeles"}] }
+pad_zone = { text = "|prZONE  ", flags = ["mex"] }
+pad_region = { text = "|prREGION", flags = ["mex"] }
+pad_net = { text = "|prNET   ", flags = ["mex"] }
+pad_none = { text = "|pr      ", flags = ["mex"] }
+ordinal_th = { text = "th", flags = ["mex"] }
+ordinal_st = { text = "st", flags = ["mex"] }
+ordinal_nd = { text = "nd", flags = ["mex"] }
+ordinal_rd = { text = "rd", flags = ["mex"] }
+file_ar_name = { text = "|10File area |13|!1|07 ... |03|!2", params = [{name = "area_name", type = "string", desc = "File area name", default = "Uploads"}, {name = "area_desc", type = "string", desc = "File area description", default = "Public uploads"}] }
+message_name = { text = "|10|!1area |13|!2|07 ... |03|!3\n", params = [{name = "area_type", type = "string", desc = "Area type prefix (e.g. 'Msg ')", default = "Msg "}, {name = "area_tag", type = "string", desc = "Message area tag", default = "GENERAL"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
+space_over = { text = "\r|[K                          \r", flags = ["mex"] }
+s_on = { text = "ON", flags = ["mex"] }
+s_off = { text = "OFF", flags = ["mex"] }

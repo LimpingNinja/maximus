@@ -425,7 +425,7 @@ word DisplayMaxCode(DSTK *d)
         if ((ch=DispSlowGetChar(d))=='M')
           ListMsgAreas(NULL, FALSE, FALSE);
         else if (ch=='F')
-          ListFileAreas(NULL, FALSE);
+          ListFileAreas(NULL, FALSE, NULL);
 
         no_local_output=was_no_output;
       }

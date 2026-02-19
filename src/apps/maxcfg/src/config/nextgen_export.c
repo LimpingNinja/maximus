@@ -498,22 +498,30 @@ static bool strv_add_words(char ***items_io, size_t *count_io, const char *words
     return true;
 }
 
-static bool menu_types_from_flags(word flags, bool is_header, char ***out_types, size_t *out_count)
+/* Menu type context for flags conversion helpers. */
+#define MENU_TYPE_HEADER 0
+#define MENU_TYPE_FOOTER 1
+#define MENU_TYPE_BODY   2
+
+static bool menu_types_from_flags(word flags, int kind, char ***out_types, size_t *out_count)
 {
-    (void)is_header;
     *out_types = NULL;
     *out_count = 0;
 
-    if ((flags & (MFLAG_MF_NOVICE | MFLAG_HF_NOVICE)) != 0u) {
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE)) != 0u) {
         if (!strv_add(out_types, out_count, "Novice")) return false;
     }
-    if ((flags & (MFLAG_MF_REGULAR | MFLAG_HF_REGULAR)) != 0u) {
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR)) != 0u) {
         if (!strv_add(out_types, out_count, "Regular")) return false;
     }
-    if ((flags & (MFLAG_MF_EXPERT | MFLAG_HF_EXPERT)) != 0u) {
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT)) != 0u) {
         if (!strv_add(out_types, out_count, "Expert")) return false;
     }
-    if ((flags & (MFLAG_MF_RIP | MFLAG_HF_RIP)) != 0u) {
+    if (kind != MENU_TYPE_FOOTER &&
+        (flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP)) != 0u) {
         if (!strv_add(out_types, out_count, "RIP")) return false;
     }
 
@@ -1987,13 +1995,18 @@ static bool write_menu_toml(FILE *fp, void *vctx, char *err, size_t err_len)
     if (!dup_str(&menu.name, ctx->menu->name, err, err_len)) goto fail;
     if (!dup_str(&menu.title, ctx->menu->title, err, err_len)) goto fail;
     if (!dup_str(&menu.header_file, ctx->menu->header_file, err, err_len)) goto fail;
+    if (!dup_str(&menu.footer_file, ctx->menu->footer_file, err, err_len)) goto fail;
     if (!dup_str(&menu.menu_file, ctx->menu->menu_file, err, err_len)) goto fail;
 
-    if (!menu_types_from_flags(ctx->menu->header_flags, true, &menu.header_types, &menu.header_type_count)) {
+    if (!menu_types_from_flags(ctx->menu->header_flags, MENU_TYPE_HEADER, &menu.header_types, &menu.header_type_count)) {
         set_err(err, err_len, "Out of memory");
         goto fail;
     }
-    if (!menu_types_from_flags(ctx->menu->menu_flags, false, &menu.menu_types, &menu.menu_type_count)) {
+    if (!menu_types_from_flags(ctx->menu->footer_flags, MENU_TYPE_FOOTER, &menu.footer_types, &menu.footer_type_count)) {
+        set_err(err, err_len, "Out of memory");
+        goto fail;
+    }
+    if (!menu_types_from_flags(ctx->menu->menu_flags, MENU_TYPE_BODY, &menu.menu_types, &menu.menu_type_count)) {
         set_err(err, err_len, "Out of memory");
         goto fail;
     }

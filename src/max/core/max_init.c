@@ -519,7 +519,14 @@ const char *ngcfg_get_path(const char *toml_path)
   size_t len;
 
   s = ngcfg_get_string_raw(toml_path);
-  if (s == NULL || *s == '\0')
+
+  /* An explicitly empty value means "not configured" — return empty so
+   * callers can distinguish it from a missing key.  Only fall back to
+   * the current working directory when the key is entirely absent. */
+  if (s != NULL && *s == '\0')
+    return "";
+
+  if (s == NULL)
   {
     if (getcwd(buf, sizeof(buf)) == NULL)
       buf[0] = '\0';
@@ -595,6 +602,23 @@ int ngcfg_get_bool(const char *toml_path)
       v.type == MAXCFG_VAR_BOOL)
   {
     return v.v.b ? 1 : 0;
+  }
+
+  return 0;
+}
+
+int ngcfg_get_int_array_2(const char *toml_path, int *out_a, int *out_b)
+{
+  MaxCfgVar v;
+
+  if (toml_path && ng_cfg &&
+      maxcfg_toml_get(ng_cfg, toml_path, &v) == MAXCFG_OK &&
+      v.type == MAXCFG_VAR_INT_ARRAY &&
+      v.v.intv.count >= 2)
+  {
+    if (out_a) *out_a = v.v.intv.items[0];
+    if (out_b) *out_b = v.v.intv.items[1];
+    return 1;
   }
 
   return 0;
@@ -1370,6 +1394,7 @@ void Read_Cfg(void)
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/display_files", "general.display_files");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/equipment", "general.equipment");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/colors", "general.colors");
+      (void)maxcfg_toml_load_file(ng_cfg, "config/general/display", "general.display");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/reader", "general.reader");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/protocol", "general.protocol");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/language", "general.language");

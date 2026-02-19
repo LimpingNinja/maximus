@@ -1,0 +1,36 @@
+; Like all standard AREAS.BBS files, the first NON-COMMENT line should
+; be the name of your system, followed by an exclamation point, and then
+; your name.  This name will be used when adding origin lines to messages
+; which were created on your system.
+
+No-name BBS * Anytown, Anystate! Joe SysOp
+
+; Next, you can define any number of EchoMail areas.  Squish uses the
+; standard format for defining EchoMail areas, but with one exception:
+;
+; To specify a Squish-format message area, add a dollar sign ('$')
+; before the path/filename of the area.  For example, to declare
+; the D:\MSG\AARDVARK.SQ? files as being of the Squish type, one would
+; place the following entry in AREAS.BBS:
+;
+;    $D:\MSG\AARDVARK        AARDVARK        1:123/1 2 ...
+;
+; If an area's path does NOT begin with a '$', Squish assumes that
+; the area uses the *.MSG format.
+;
+; To specify a "passthru" message area, add a hash symbol ('#') before
+; the path/filename of the area.  In most cases, you'll want
+; to declare passthru areas using the Squish format (add "#$" before
+; the area's path), since passthru Squish areas do not need a separate
+; directory to hold the duplicate data files.
+
+; Area path             Name            Scan to these nodes:
+; --------------------- --------------- --------------------------------------
+;  C:\Max\Msg\Piffle     PIFFLE          1:123/456 789
+; $C:\Max\Msg\Cackle     CACKLE          1:222/333 444
+;  C:\Max\Msg\Warble     WARBLE          1:456/789 123
+;#$C:\Max\Msg\Boffo      BOFFO           1:234/334 2:456/123
+
+$/var/max/spool/msgbase/fido_sysop	FIDO_SYSOP		1:249/303
+$/var/max/spool/msgbase/users249	USERS249		1:249/303
+

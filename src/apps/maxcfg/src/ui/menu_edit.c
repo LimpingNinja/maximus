@@ -205,33 +205,44 @@ static bool token_has(const char *str, const char *token)
     return found;
 }
 
-static char *types_string_from_flags(word flags)
+/* Menu type context for flags conversion helpers. */
+#define MENU_TYPE_HEADER 0
+#define MENU_TYPE_FOOTER 1
+#define MENU_TYPE_BODY   2
+
+static char *types_string_from_flags(word flags, int kind)
 {
     char buf[64];
     buf[0] = '\0';
 
     if (flags == 0) return strdup("");
 
-    if ((flags == MFLAG_MF_ALL) || (flags == MFLAG_HF_ALL)) {
+    if ((kind == MENU_TYPE_HEADER && flags == MFLAG_HF_ALL) ||
+        (kind == MENU_TYPE_FOOTER && flags == MFLAG_FF_ALL) ||
+        (kind == MENU_TYPE_BODY && flags == MFLAG_MF_ALL)) {
         return strdup("");
     }
 
     bool first = true;
-    if (flags & (word)0x0001 || flags & (word)0x0010) {
+    if (flags & (word)((kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                       (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE)) {
         strcat(buf, "Novice");
         first = false;
     }
-    if (flags & (word)0x0002 || flags & (word)0x0020) {
+    if (flags & (word)((kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                       (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR)) {
         if (!first) strcat(buf, " ");
         strcat(buf, "Regular");
         first = false;
     }
-    if (flags & (word)0x0004 || flags & (word)0x0040) {
+    if (flags & (word)((kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                       (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT)) {
         if (!first) strcat(buf, " ");
         strcat(buf, "Expert");
         first = false;
     }
-    if (flags & (word)0x0400 || flags & (word)0x0800) {
+    if (kind != MENU_TYPE_FOOTER &&
+        (flags & (word)((kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP))) {
         if (!first) strcat(buf, " ");
         strcat(buf, "RIP");
     }
@@ -239,21 +250,27 @@ static char *types_string_from_flags(word flags)
     return strdup(buf);
 }
 
-static word types_flags_from_string(const char *str, bool is_header)
+static word types_flags_from_string(const char *str, int kind)
 {
     word flags = 0;
 
     if (!str || !*str) {
-        return is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL;
+        return (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+               (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
     }
 
-    if (token_has(str, "Novice")) flags |= is_header ? MFLAG_HF_NOVICE : MFLAG_MF_NOVICE;
-    if (token_has(str, "Regular")) flags |= is_header ? MFLAG_HF_REGULAR : MFLAG_MF_REGULAR;
-    if (token_has(str, "Expert")) flags |= is_header ? MFLAG_HF_EXPERT : MFLAG_MF_EXPERT;
-    if (token_has(str, "RIP")) flags |= is_header ? MFLAG_HF_RIP : MFLAG_MF_RIP;
+    if (token_has(str, "Novice")) flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                                              (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE;
+    if (token_has(str, "Regular")) flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                                               (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR;
+    if (token_has(str, "Expert")) flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                                              (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT;
+    if (kind != MENU_TYPE_FOOTER && token_has(str, "RIP"))
+        flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP;
 
     if (flags == 0) {
-        return is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL;
+        return (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+               (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
     }
 
     return flags;
@@ -274,24 +291,26 @@ void menu_load_properties_form(MenuDefinition *menu, char **values)
 
     values[0] = safe_strdup(menu->title ? menu->title : "");
     values[1] = safe_strdup(menu->header_file ? menu->header_file : "");
-    values[2] = types_string_from_flags(menu->header_flags);
-    values[3] = safe_strdup(menu->menu_file ? menu->menu_file : "");
-    values[4] = types_string_from_flags(menu->menu_flags);
+    values[2] = types_string_from_flags(menu->header_flags, MENU_TYPE_HEADER);
+    values[3] = safe_strdup(menu->footer_file ? menu->footer_file : "");
+    values[4] = types_string_from_flags(menu->footer_flags, MENU_TYPE_FOOTER);
+    values[5] = safe_strdup(menu->menu_file ? menu->menu_file : "");
+    values[6] = types_string_from_flags(menu->menu_flags, MENU_TYPE_BODY);
 
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", menu->menu_length);
-        values[5] = strdup(buf);
+        values[7] = strdup(buf);
     }
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", menu->menu_color);
-        values[6] = strdup(buf);
+        values[8] = strdup(buf);
     }
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", menu->opt_width);
-        values[7] = strdup(buf);
+        values[9] = strdup(buf);
     }
 }
 
@@ -304,12 +323,14 @@ bool menu_save_properties_form(MenuDefinition *menu, char **values)
     const char *new_title = values[0] ? values[0] : "";
     const char *new_header_file = values[1] ? values[1] : "";
     const char *new_header_types = values[2] ? values[2] : "";
-    const char *new_menu_file = values[3] ? values[3] : "";
-    const char *new_menu_types = values[4] ? values[4] : "";
+    const char *new_footer_file = values[3] ? values[3] : "";
+    const char *new_footer_types = values[4] ? values[4] : "";
+    const char *new_menu_file = values[5] ? values[5] : "";
+    const char *new_menu_types = values[6] ? values[6] : "";
 
-    int new_menu_length = values[5] ? atoi(values[5]) : 0;
-    int new_menu_color = values[6] ? atoi(values[6]) : -1;
-    int new_opt_width = values[7] ? atoi(values[7]) : 0;
+    int new_menu_length = values[7] ? atoi(values[7]) : 0;
+    int new_menu_color = values[8] ? atoi(values[8]) : -1;
+    int new_opt_width = values[9] ? atoi(values[9]) : 0;
 
     if (!menu->title || strcmp(menu->title, new_title) != 0) {
         free(menu->title);
@@ -323,9 +344,21 @@ bool menu_save_properties_form(MenuDefinition *menu, char **values)
         modified = true;
     }
 
-    word hf = types_flags_from_string(new_header_types, true);
+    word hf = types_flags_from_string(new_header_types, MENU_TYPE_HEADER);
     if (menu->header_flags != hf) {
         menu->header_flags = hf;
+        modified = true;
+    }
+
+    if ((!menu->footer_file && new_footer_file[0]) || (menu->footer_file && strcmp(menu->footer_file, new_footer_file) != 0)) {
+        free(menu->footer_file);
+        menu->footer_file = new_footer_file[0] ? strdup(new_footer_file) : NULL;
+        modified = true;
+    }
+
+    word ff = types_flags_from_string(new_footer_types, MENU_TYPE_FOOTER);
+    if (menu->footer_flags != ff) {
+        menu->footer_flags = ff;
         modified = true;
     }
 
@@ -335,7 +368,7 @@ bool menu_save_properties_form(MenuDefinition *menu, char **values)
         modified = true;
     }
 
-    word mf = types_flags_from_string(new_menu_types, false);
+    word mf = types_flags_from_string(new_menu_types, MENU_TYPE_BODY);
     if (menu->menu_flags != mf) {
         menu->menu_flags = mf;
         modified = true;

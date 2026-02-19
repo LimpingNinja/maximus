@@ -84,6 +84,13 @@ static int near DoHdrFile(byte help, word flag)
           (hasRIP() && (flag & MFLAG_HF_RIP)));
 }
 
+static int near DoFtrFile(byte help, word flag)
+{
+  return ((help==NOVICE   && (flag & MFLAG_FF_NOVICE))  ||
+          (help==REGULAR  && (flag & MFLAG_FF_REGULAR)) ||
+          (help==EXPERT   && (flag & MFLAG_FF_EXPERT)));
+}
+
 /* This shows the header part of the menu (in general, the headerfile)      *
  * to the user.                                                             */
 
@@ -112,6 +119,31 @@ static void near ShowMenuHeader(PAMENU pam, byte help, int first_time)
 
     sprintf(temp, "%s %d", filename+1, first_time);
 
+    Mex(temp);
+  }
+  else if (Display_File(DISPLAY_HOTMENU | DISPLAY_MENUHELP, NULL, filename)==-1)
+  {
+    logit(cantfind, filename);
+  }
+}
+
+/* This shows the footer part of the menu (in general, the footerfile)      *
+ * to the user.                                                              */
+static void near ShowMenuFooter(PAMENU pam, byte help, int first_time)
+{
+  char *filename;
+
+  filename=MNU(*pam, m.footfile);
+
+  if (!*filename || !DoFtrFile(help, pam->m.flag))
+    return;
+
+  /* Is it a MEX file? */
+  if (*filename==':')
+  {
+    char temp[PATHLEN];
+
+    sprintf(temp, "%s %d", filename+1, first_time);
     Mex(temp);
   }
   else if (Display_File(DISPLAY_HOTMENU | DISPLAY_MENUHELP, NULL, filename)==-1)
@@ -1479,6 +1511,7 @@ int Display_Options(char *first_name, XMSG *msg)
         menuhelp=help;
         ShowMenuHeader(&menu, help, first_time);
         ShowMenuBody(&menu, help, title, menu_name);
+        ShowMenuFooter(&menu, help, first_time);
       }
 
       do

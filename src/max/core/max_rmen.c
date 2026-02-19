@@ -48,7 +48,11 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname);
 static int near mnu_cmd_to_opt(const char *cmd, option *out);
 static int near mnu_heap_add(char **pp, char *base, size_t cap, const char *s, zstr *out);
 static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pareatype);
-static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header);
+static word near mnu_menu_flag_from_types(MaxCfgStrView types, int kind);
+
+#define MENU_TYPE_HEADER 0
+#define MENU_TYPE_FOOTER 1
+#define MENU_TYPE_BODY   2
 
 /* Count the number of menu options */
 
@@ -445,7 +449,7 @@ static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pare
 }
 
 
-static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header)
+static word near mnu_menu_flag_from_types(MaxCfgStrView types, int kind)
 {
   size_t i;
   word flag = 0;
@@ -457,17 +461,21 @@ static word near mnu_menu_flag_from_types(MaxCfgStrView types, int is_header)
       continue;
 
     if (stricmp(t, "Novice") == 0)
-      flag |= (is_header ? MFLAG_HF_NOVICE : MFLAG_MF_NOVICE);
+      flag |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+              (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE;
     else if (stricmp(t, "Regular") == 0)
-      flag |= (is_header ? MFLAG_HF_REGULAR : MFLAG_MF_REGULAR);
+      flag |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+              (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR;
     else if (stricmp(t, "Expert") == 0)
-      flag |= (is_header ? MFLAG_HF_EXPERT : MFLAG_MF_EXPERT);
-    else if (stricmp(t, "RIP") == 0)
-      flag |= (is_header ? MFLAG_HF_RIP : MFLAG_MF_RIP);
+      flag |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+              (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT;
+    else if (stricmp(t, "RIP") == 0 && kind != MENU_TYPE_FOOTER)
+      flag |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP;
   }
 
   if (flag == 0)
-    flag = (is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL);
+    flag = (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+            (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
 
   return flag;
 }
@@ -483,15 +491,18 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
   size_t n;
   const char *title = "";
   const char *header_file = "";
+  const char *footer_file = "";
   const char *menu_file = "";
   int menu_length = 0;
   int menu_color = -1;
   int option_width = 0;
   MaxCfgStrView header_types = {0};
+  MaxCfgStrView footer_types = {0};
   MaxCfgStrView menu_types = {0};
   size_t heap_cap;
   char *hp;
   word mf_flag;
+  word ff_flag;
   word hf_flag;
 
   menu->cm_enabled = 0;
@@ -552,6 +563,7 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   title = ng.title ? ng.title : "";
   header_file = ng.header_file ? ng.header_file : "";
+  footer_file = ng.footer_file ? ng.footer_file : "";
   menu_file = ng.menu_file ? ng.menu_file : "";
   menu_length = ng.menu_length;
   menu_color = ng.menu_color;
@@ -560,6 +572,8 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   header_types.items = (const char **)ng.header_types;
   header_types.count = ng.header_type_count;
+  footer_types.items = (const char **)ng.footer_types;
+  footer_types.count = ng.footer_type_count;
   menu_types.items = (const char **)ng.menu_types;
   menu_types.count = ng.menu_type_count;
 
@@ -630,11 +644,14 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   hf_flag = 0;
   if (header_file && *header_file)
-    hf_flag = mnu_menu_flag_from_types(header_types, TRUE);
+    hf_flag = mnu_menu_flag_from_types(header_types, MENU_TYPE_HEADER);
+  ff_flag = 0;
+  if (footer_file && *footer_file)
+    ff_flag = mnu_menu_flag_from_types(footer_types, MENU_TYPE_FOOTER);
   mf_flag = 0;
   if (menu_file && *menu_file)
-    mf_flag = mnu_menu_flag_from_types(menu_types, FALSE);
-  menu->m.flag = (word)(hf_flag | mf_flag);
+    mf_flag = mnu_menu_flag_from_types(menu_types, MENU_TYPE_BODY);
+  menu->m.flag = (word)(hf_flag | ff_flag | mf_flag);
 
   if (opt_count > 0)
   {
@@ -647,6 +664,7 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
   heap_cap = 1;
   heap_cap += (title && *title) ? strlen(title) + 1 : 0;
   heap_cap += (header_file && *header_file) ? strlen(header_file) + 1 : 0;
+  heap_cap += (footer_file && *footer_file) ? strlen(footer_file) + 1 : 0;
   heap_cap += (menu_file && *menu_file) ? strlen(menu_file) + 1 : 0;
 
   for (i = 0; i < opt_count; i++)
@@ -673,6 +691,7 @@ static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 
   if (!mnu_heap_add(&hp, menu->menuheap, heap_cap, title, &menu->m.title) ||
       !mnu_heap_add(&hp, menu->menuheap, heap_cap, header_file, &menu->m.headfile) ||
+      !mnu_heap_add(&hp, menu->menuheap, heap_cap, footer_file, &menu->m.footfile) ||
       !mnu_heap_add(&hp, menu->menuheap, heap_cap, menu_file, &menu->m.dspfile))
     goto fail;
 

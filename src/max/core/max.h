@@ -751,6 +751,7 @@ struct _menu
   word headfile;    /* Length of the header filename, not counting \0      */
   word dspfile;     /* Name of file to display for menu, instead of        *
                      * generating menu from .Mnu file.                     */
+  word footfile;    /* Length of the footer filename, not counting \0      */
   word flag;        /* See MFLAG_XXX in MAX.H.                             */
 }  __attribute__((packed, aligned(2)));
 
@@ -808,6 +809,11 @@ typedef struct _amenu
 /*  #define MFLAG_HF_HOTFLASH 0x0080u*/
 
   #define MFLAG_HF_ALL      (MFLAG_HF_NOVICE | MFLAG_HF_REGULAR | MFLAG_HF_EXPERT /*| MFLAG_HF_HOTFLASH*/)
+
+  #define MFLAG_FF_NOVICE   0x1000u /* FooterFile for these levels only */
+  #define MFLAG_FF_REGULAR  0x2000u
+  #define MFLAG_FF_EXPERT   0x4000u
+  #define MFLAG_FF_ALL      (MFLAG_FF_NOVICE | MFLAG_FF_REGULAR | MFLAG_FF_EXPERT)
 
   #define MFLAG_SILENT      0x0100u /* Silent menuheader option */
   #define MFLAG_RESET       0x0200u /* Reset term size on display */

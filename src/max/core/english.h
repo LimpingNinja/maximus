@@ -171,6 +171,7 @@
 #define xp_minutes maxlang_get(g_current_lang, "global.xp_minutes")
 #define number_comma maxlang_get(g_current_lang, "global.number_comma")
 #define achg_help maxlang_get(g_current_lang, "global.achg_help")
+#define achg_lb_help maxlang_get(g_current_lang, "global.achg_lb_help")
 #define bar_access maxlang_get(g_current_lang, "global.bar_access")
 #define bar_priv_huh maxlang_get(g_current_lang, "global.bar_priv_huh")
 #define sex_male maxlang_get(g_current_lang, "global.sex_male")

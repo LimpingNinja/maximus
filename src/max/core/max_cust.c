@@ -500,6 +500,40 @@ Next:
           strcpy(out, blank_str);
           break;
 
+        case 't':     /* Entry type label for file-area list */
+          if (pfah && (pfah->fa.attribs & FA_DIVBEGIN))
+            strcpy(out, "div");
+          else
+            strcpy(out, "area");
+          break;
+
+        case 'b':     /* Breadcrumb trail: "Root -> Div -> Sub" */
+          {
+            char bc[PATHLEN];
+            char *bp = bc;
+            size_t remain = sizeof(bc);
+            int wrote;
+
+            wrote = snprintf(bp, remain, "Root");
+            bp += wrote; remain -= wrote;
+
+            if (div && *div)
+            {
+              const char *seg = div;
+              while (*seg && remain > 5)
+              {
+                const char *dot_pos = strchr(seg, '.');
+                size_t slen = dot_pos ? (size_t)(dot_pos - seg) : strlen(seg);
+
+                wrote = snprintf(bp, remain, " -> %.*s", (int)slen, seg);
+                bp += wrote; remain -= wrote;
+                seg = dot_pos ? dot_pos + 1 : seg + slen;
+              }
+            }
+            strcpy(out, bc);
+          }
+          break;
+
         case 'f':
           if (pfah)
           {

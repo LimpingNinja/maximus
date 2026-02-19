@@ -70,7 +70,7 @@ void File_Hurl(void)
     InputGets(temp, which_area);
 
     if (eqstri(temp, qmark))
-      ListFileAreas(NULL, FALSE);
+      ListFileAreas(NULL, FALSE, NULL);
   }
   while (eqstri(temp, qmark));
 

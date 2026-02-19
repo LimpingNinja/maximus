@@ -107,6 +107,9 @@ typedef int (*ui_lightbar_list_get_item_fn)(void *ctx, int index, char *out, siz
 /**
  * @brief Configuration for paged lightbar list display
  */
+/** @brief Return value when the lightbar exits due to an unhandled key. */
+#define LB_LIST_KEY_PASSTHROUGH (-2)
+
 typedef struct {
   int x;                    /* Starting column (1-based) */
   int y;                    /* Starting row (1-based) */
@@ -114,17 +117,21 @@ typedef struct {
   int height;               /* Number of visible rows */
   int count;                /* Total number of items in list */
   int initial_index;        /* Starting selected index (0-based) */
+  int *selected_index_ptr;  /* Optional: receives current selected index */
   byte normal_attr;         /* Attribute for normal rows */
   byte selected_attr;       /* Attribute for selected row */
   int wrap;                 /* Enable wrapping at edges (0=no wrap) */
   ui_lightbar_list_get_item_fn get_item; /* Callback to format items */
   void *ctx;                /* User context passed to get_item */
+  int *out_key;             /* Optional: receives unhandled key on passthrough */
 } ui_lightbar_list_t;
 
 /**
  * @brief Run a paged lightbar list with keyboard navigation
  * @param list Configuration and callbacks
- * @return Selected index (0-based), or -1 if cancelled (ESC)
+ * @return Selected index (0-based), -1 if cancelled (ESC),
+ *         or LB_LIST_KEY_PASSTHROUGH (-2) if an unhandled printable
+ *         key was pressed (key value stored in list->out_key).
  */
 int ui_lightbar_list_run(ui_lightbar_list_t *list);
 

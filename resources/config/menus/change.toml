@@ -1,0 +1,209 @@
+name = "CHANGE"
+title = "CHANGE (%t mins)"
+header_file = ":scripts/headchg"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "Chg_Alias"
+arguments = ""
+priv_level = "Hidden"
+description = "Alias"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Phone"
+arguments = ""
+priv_level = "Demoted"
+description = "#Telephone no."
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_City"
+arguments = ""
+priv_level = "Demoted"
+description = "City"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Password"
+arguments = ""
+priv_level = "Demoted"
+description = "Password"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Help"
+arguments = ""
+priv_level = "Demoted"
+description = "Help level"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Nulls"
+arguments = ""
+priv_level = "Demoted"
+description = "Nulls"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Width"
+arguments = ""
+priv_level = "Demoted"
+description = "Width"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Length"
+arguments = ""
+priv_level = "Demoted"
+description = "Length"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Tabs"
+arguments = ""
+priv_level = "Demoted"
+description = "Tabs"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Video"
+arguments = ""
+priv_level = "Demoted"
+description = "Video mode"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_RIP"
+arguments = ""
+priv_level = "Demoted"
+description = "RIP Graphics"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Editor"
+arguments = ""
+priv_level = "Demoted"
+description = "FullScrnEdit"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Clear"
+arguments = ""
+priv_level = "Demoted"
+description = "Screen clear"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_IBM"
+arguments = ""
+priv_level = "Demoted"
+description = "IBM characters"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Hotkeys"
+arguments = ""
+priv_level = "Demoted"
+description = "!Hotkeys"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Language"
+arguments = ""
+priv_level = "Demoted"
+description = "@Language"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Userlist"
+arguments = ""
+priv_level = "Demoted"
+description = "%ShowInUserlist"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Protocol"
+arguments = ""
+priv_level = "Demoted"
+description = "$Protocol default"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_Archiver"
+arguments = ""
+priv_level = "Demoted"
+description = "&Archiver default"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_FSR"
+arguments = ""
+priv_level = "Demoted"
+description = "^FullScrnRead"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Chg_More"
+arguments = ""
+priv_level = "Demoted"
+description = "*More Prompt"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "Main Menu"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "Q"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_Menu"
+arguments = "MAIN"
+priv_level = "Transient"
+description = "|"
+key_poke = ""
+modifiers = ["NoDsp"]
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/change"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []

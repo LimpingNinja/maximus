@@ -1905,6 +1905,11 @@ static const char *headerfile_type_options[] = {
     "Novice", "Regular", "Expert", "RIP", NULL
 };
 
+/* FooterFile display type flags */
+static const char *footerfile_type_options[] = {
+    "Novice", "Regular", "Expert", NULL
+};
+
 static const char *menu_command_options[] = {
     "Display_Menu",
     "Display_File",
@@ -1971,6 +1976,26 @@ const FieldDef menu_properties_fields[] = {
         .max_length = 80,
         .default_value = "",
         .toggle_options = headerfile_type_options
+    },
+    {
+        .keyword = "FooterFile",
+        .label = "Footer file",
+        .help = "File or MEX script to display after menu body rendering. MEX scripts "
+                "start with ':'. Leave blank for none.",
+        .type = FIELD_TEXT,
+        .max_length = 120,
+        .default_value = "",
+        .toggle_options = NULL
+    },
+    {
+        .keyword = "FooterFileTypes",
+        .label = "Footer types",
+        .help = "User types that see the FooterFile. Press ENTER or F2 to select. "
+                "If none selected, all users see it.",
+        .type = FIELD_MULTISELECT,
+        .max_length = 80,
+        .default_value = "",
+        .toggle_options = footerfile_type_options
     },
     {
         .keyword = "MenuFile",

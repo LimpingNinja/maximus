@@ -168,25 +168,35 @@ static unsigned char colors_to_attr(const char *fg, const char *bg)
     return (unsigned char)((fg_val & 0x0F) | ((bg_val & 0x0F) << 4));
 }
 
-static bool menu_types_from_flags(word flags, bool is_header, char ***out_types, size_t *out_count)
+/* Menu type context for flags conversion helpers. */
+#define MENU_TYPE_HEADER 0
+#define MENU_TYPE_FOOTER 1
+#define MENU_TYPE_BODY   2
+
+static bool menu_types_from_flags(word flags, int kind, char ***out_types, size_t *out_count)
 {
     *out_types = NULL;
     *out_count = 0;
 
-    word all = is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL;
+    word all = (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+               (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
     if (flags == 0 || flags == all) {
         return true;
     }
 
-    if ((flags & (is_header ? MFLAG_HF_NOVICE : MFLAG_MF_NOVICE)) != 0u) { if (!strv_add(out_types, out_count, "Novice")) return false; }
-    if ((flags & (is_header ? MFLAG_HF_REGULAR : MFLAG_MF_REGULAR)) != 0u) { if (!strv_add(out_types, out_count, "Regular")) return false; }
-    if ((flags & (is_header ? MFLAG_HF_EXPERT : MFLAG_MF_EXPERT)) != 0u) { if (!strv_add(out_types, out_count, "Expert")) return false; }
-    if ((flags & (is_header ? MFLAG_HF_RIP : MFLAG_MF_RIP)) != 0u) { if (!strv_add(out_types, out_count, "RIP")) return false; }
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE)) != 0u) { if (!strv_add(out_types, out_count, "Novice")) return false; }
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR)) != 0u) { if (!strv_add(out_types, out_count, "Regular")) return false; }
+    if ((flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                  (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT)) != 0u) { if (!strv_add(out_types, out_count, "Expert")) return false; }
+    if (kind != MENU_TYPE_FOOTER &&
+        (flags & ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP)) != 0u) { if (!strv_add(out_types, out_count, "RIP")) return false; }
 
     return true;
 }
 
-static bool menu_flags_from_types(char **types, size_t count, bool is_header, word *out_flags)
+static bool menu_flags_from_types(char **types, size_t count, int kind, word *out_flags)
 {
     if (out_flags == NULL) {
         return false;
@@ -197,14 +207,22 @@ static bool menu_flags_from_types(char **types, size_t count, bool is_header, wo
         const char *t = types[i];
         if (t == NULL || t[0] == '\0') continue;
 
-        if (strcasecmp(t, "Novice") == 0) flags |= is_header ? MFLAG_HF_NOVICE : MFLAG_MF_NOVICE;
-        else if (strcasecmp(t, "Regular") == 0) flags |= is_header ? MFLAG_HF_REGULAR : MFLAG_MF_REGULAR;
-        else if (strcasecmp(t, "Expert") == 0) flags |= is_header ? MFLAG_HF_EXPERT : MFLAG_MF_EXPERT;
-        else if (strcasecmp(t, "RIP") == 0) flags |= is_header ? MFLAG_HF_RIP : MFLAG_MF_RIP;
+        if (strcasecmp(t, "Novice") == 0)
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE;
+        else if (strcasecmp(t, "Regular") == 0)
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR;
+        else if (strcasecmp(t, "Expert") == 0)
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT;
+        else if (strcasecmp(t, "RIP") == 0 && kind != MENU_TYPE_FOOTER)
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP;
     }
 
     if (flags == 0) {
-        flags = is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL;
+        flags = (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+                (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
     }
 
     *out_flags = flags;
@@ -267,13 +285,15 @@ static bool menu_definition_from_ng(const MaxCfgNgMenu *ng, MenuDefinition **out
 
     m->title = safe_strdup(ng->title);
     m->header_file = safe_strdup(ng->header_file);
+    m->footer_file = safe_strdup(ng->footer_file);
     m->menu_file = safe_strdup(ng->menu_file);
     m->menu_length = ng->menu_length;
     m->menu_color = ng->menu_color;
     m->opt_width = ng->option_width;
 
-    (void)menu_flags_from_types(ng->header_types, ng->header_type_count, true, &m->header_flags);
-    (void)menu_flags_from_types(ng->menu_types, ng->menu_type_count, false, &m->menu_flags);
+    (void)menu_flags_from_types(ng->header_types, ng->header_type_count, MENU_TYPE_HEADER, &m->header_flags);
+    (void)menu_flags_from_types(ng->footer_types, ng->footer_type_count, MENU_TYPE_FOOTER, &m->footer_flags);
+    (void)menu_flags_from_types(ng->menu_types, ng->menu_type_count, MENU_TYPE_BODY, &m->menu_flags);
 
     /* Load custom menu fields if present */
     if (ng->custom_menu != NULL && ng->custom_menu->enabled) {
@@ -382,18 +402,25 @@ bool save_menu_toml(MaxCfgToml *toml, const char *toml_path, const char *toml_pr
     ng.name = safe_strdup(menu->name ? menu->name : "");
     ng.title = safe_strdup(menu->title ? menu->title : "");
     ng.header_file = safe_strdup(menu->header_file ? menu->header_file : "");
+    ng.footer_file = safe_strdup(menu->footer_file ? menu->footer_file : "");
     ng.menu_file = safe_strdup(menu->menu_file ? menu->menu_file : "");
     ng.menu_length = menu->menu_length;
     ng.menu_color = menu->menu_color;
     ng.option_width = menu->opt_width;
 
-    if (!menu_types_from_flags(menu->header_flags, true, &ng.header_types, &ng.header_type_count)) {
+    if (!menu_types_from_flags(menu->header_flags, MENU_TYPE_HEADER, &ng.header_types, &ng.header_type_count)) {
         maxcfg_ng_menu_free(&ng);
         fclose(fp);
         set_err(err, err_len, "Out of memory");
         return false;
     }
-    if (!menu_types_from_flags(menu->menu_flags, false, &ng.menu_types, &ng.menu_type_count)) {
+    if (!menu_types_from_flags(menu->footer_flags, MENU_TYPE_FOOTER, &ng.footer_types, &ng.footer_type_count)) {
+        maxcfg_ng_menu_free(&ng);
+        fclose(fp);
+        set_err(err, err_len, "Out of memory");
+        return false;
+    }
+    if (!menu_types_from_flags(menu->menu_flags, MENU_TYPE_BODY, &ng.menu_types, &ng.menu_type_count)) {
         maxcfg_ng_menu_free(&ng);
         fclose(fp);
         set_err(err, err_len, "Out of memory");
@@ -756,6 +783,7 @@ void free_menu_definition(MenuDefinition *menu) {
     free(menu->name);
     free(menu->title);
     free(menu->header_file);
+    free(menu->footer_file);
     free(menu->menu_file);
     
     /* Free custom menu color strings */
@@ -839,10 +867,11 @@ bool remove_menu_option(MenuDefinition *menu, int index) {
 }
 
 /* Helper to parse flag types from space-separated list */
-static word parse_type_flags(const char *types, bool is_header) {
+static word parse_type_flags(const char *types, int kind) {
     word flags = 0;
     if (!types || !*types) {
-        return is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL;
+        return (kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+               (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL;
     }
     
     char *types_copy = strdup(types);
@@ -850,19 +879,23 @@ static word parse_type_flags(const char *types, bool is_header) {
     
     while (token) {
         if (strcasecmp(token, "Novice") == 0) {
-            flags |= is_header ? MFLAG_HF_NOVICE : MFLAG_MF_NOVICE;
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_NOVICE :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_NOVICE : MFLAG_MF_NOVICE;
         } else if (strcasecmp(token, "Regular") == 0) {
-            flags |= is_header ? MFLAG_HF_REGULAR : MFLAG_MF_REGULAR;
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_REGULAR :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_REGULAR : MFLAG_MF_REGULAR;
         } else if (strcasecmp(token, "Expert") == 0) {
-            flags |= is_header ? MFLAG_HF_EXPERT : MFLAG_MF_EXPERT;
-        } else if (strcasecmp(token, "RIP") == 0) {
-            flags |= is_header ? MFLAG_HF_RIP : MFLAG_MF_RIP;
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_EXPERT :
+                     (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_EXPERT : MFLAG_MF_EXPERT;
+        } else if (strcasecmp(token, "RIP") == 0 && kind != MENU_TYPE_FOOTER) {
+            flags |= (kind == MENU_TYPE_HEADER) ? MFLAG_HF_RIP : MFLAG_MF_RIP;
         }
         token = strtok(NULL, " \t");
     }
     
     free(types_copy);
-    return flags ? flags : (is_header ? MFLAG_HF_ALL : MFLAG_MF_ALL);
+    return flags ? flags : ((kind == MENU_TYPE_HEADER) ? MFLAG_HF_ALL :
+                            (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL);
 }
 
 /* Helper to parse option modifiers and return flags */
@@ -1019,12 +1052,27 @@ MenuDefinition **parse_menus_ctl(const char *sys_path, int *menu_count, char *er
                         space++;
                         while (*space && isspace((unsigned char)*space)) space++;
                         current_menu->header_file = safe_strdup(rest);
-                        current_menu->header_flags = parse_type_flags(space, true);
+                        current_menu->header_flags = parse_type_flags(space, MENU_TYPE_HEADER);
                     } else {
                         current_menu->header_file = safe_strdup(rest);
                         current_menu->header_flags = MFLAG_HF_ALL;
                     }
-                
+
+                } else if (kw_value(trimmed, "FooterFile", &v2)) {
+                    char *rest = trim_whitespace((char *)v2);
+                    char *space = rest;
+                    while (*space && !isspace((unsigned char)*space)) space++;
+                    if (*space) {
+                        *space = '\0';
+                        space++;
+                        while (*space && isspace((unsigned char)*space)) space++;
+                        current_menu->footer_file = safe_strdup(rest);
+                        current_menu->footer_flags = parse_type_flags(space, MENU_TYPE_FOOTER);
+                    } else {
+                        current_menu->footer_file = safe_strdup(rest);
+                        current_menu->footer_flags = MFLAG_FF_ALL;
+                    }
+
                 } else if (kw_value(trimmed, "MenuFile", &v2)) {
                     char *rest = trim_whitespace((char *)v2);
                     char *space = rest;
@@ -1034,7 +1082,7 @@ MenuDefinition **parse_menus_ctl(const char *sys_path, int *menu_count, char *er
                         space++;
                         while (*space && isspace((unsigned char)*space)) space++;
                         current_menu->menu_file = safe_strdup(rest);
-                        current_menu->menu_flags = parse_type_flags(space, false);
+                        current_menu->menu_flags = parse_type_flags(space, MENU_TYPE_BODY);
                     } else {
                         current_menu->menu_file = safe_strdup(rest);
                         current_menu->menu_flags = MFLAG_MF_ALL;

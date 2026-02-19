@@ -921,6 +921,7 @@ file_no_wc = { text = "|erThis command does not support wildcards.\n|cd", flags 
 # --- Batch 3: Prompts and instructions (|14 → |pr) ---
 please_wait = { text = "|pr\nPlease wait...|cd", flags = ["mex"] }
 achg_help = { text = "|prFor more areas, type \"|ok..|pr\" to go up one level or \"|ok/|pr\" for top level areas.\n\n|cd", flags = ["mex"] }
+achg_lb_help = { text = "|prUse cursor keys to highlight a selection, |hiENTER|pr to select an area.\nFor more areas, type \"|hi/|pr\" for top level areas.|cd", flags = ["mex"] }
 menu_end = { text = "|pr]: |cd", flags = ["mex"] }
 pad_zone = { text = "|prZONE  ", flags = ["mex"] }
 pad_region = { text = "|prREGION", flags = ["mex"] }

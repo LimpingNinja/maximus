@@ -27,7 +27,12 @@ typedef struct MaxCfgToml MaxCfgToml;
 #define MFLAG_HF_RIP      0x0800  /* HeaderFile for RIP users */
 #define MFLAG_HF_ALL      (MFLAG_HF_NOVICE | MFLAG_HF_REGULAR | MFLAG_HF_EXPERT)
 
-#define MFLAG_SILENT      0x1000  /* Silent menu header */
+#define MFLAG_FF_NOVICE   0x1000  /* FooterFile for novice users */
+#define MFLAG_FF_REGULAR  0x2000  /* FooterFile for regular users */
+#define MFLAG_FF_EXPERT   0x4000  /* FooterFile for expert users */
+#define MFLAG_FF_ALL      (MFLAG_FF_NOVICE | MFLAG_FF_REGULAR | MFLAG_FF_EXPERT)
+
+#define MFLAG_SILENT      0x0100  /* Silent menu header */
 
 /* Option flags (from max.h) */
 #define OFLAG_NODSP       0x0001  /* Don't display on menu (hidden) */
@@ -66,6 +71,8 @@ typedef struct {
     char *title;             /* Display title */
     char *header_file;       /* HeaderFile path (NULL if none) */
     word header_flags;       /* MFLAG_HF_* flags */
+    char *footer_file;       /* FooterFile path (NULL if none) */
+    word footer_flags;       /* MFLAG_FF_* flags */
     char *menu_file;         /* MenuFile path (NULL if none) */
     word menu_flags;         /* MFLAG_MF_* flags */
     int menu_length;         /* MenuFile line count (0 if none) */

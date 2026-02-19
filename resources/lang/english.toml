@@ -106,7 +106,7 @@ message_name = { text = "|10|!1area |13|!2|07 ... |03|!3\n", params = [{name = "
 space_over = { text = "\r|[K                          \r", flags = ["mex"] }
 s_on = { text = "ON", flags = ["mex"] }
 s_off = { text = "OFF", flags = ["mex"] }
-four_blanks = "ÄÄÄÄ"
+four_blanks = "ï¿½ï¿½ï¿½ï¿½"
 moreyn_blank = "              \r"
 moreynns_blank = "\r                  \r"
 lzh_type = { text = "$T15$R15|!1 $L08|!2 $L08|!3 $R02|!4.|!5%% $l020|!6-$l020|!7-$l020|!8 $l020|!9:$l020|!A:$l020|!B |!C $T08$R08|!D $l040|!E\n", params = [{name = "filename", type = "string", desc = "Archived filename", default = "README.TXT"}, {name = "uncomp_size", type = "string", desc = "Uncompressed size in bytes", default = "102400"}, {name = "comp_size", type = "string", desc = "Compressed size in bytes", default = "51200"}, {name = "ratio_whole", type = "string", desc = "Compression ratio whole part", default = "50"}, {name = "ratio_dec", type = "string", desc = "Compression ratio decimal part", default = "0"}, {name = "month", type = "string", desc = "File date month", default = "2"}, {name = "day", type = "string", desc = "File date day", default = "15"}, {name = "year", type = "string", desc = "File date year (2-digit)", default = "25"}, {name = "hours", type = "string", desc = "File time hours", default = "14"}, {name = "minutes", type = "string", desc = "File time minutes", default = "30"}, {name = "seconds", type = "string", desc = "File time seconds", default = "45"}, {name = "attributes", type = "string", desc = "File attribute flags", default = "----"}, {name = "method", type = "string", desc = "LZH compression method", default = "-lh5-"}, {name = "crc", type = "string", desc = "CRC checksum value", default = "41394"}] }
@@ -346,7 +346,7 @@ cantcreate = { text = "!Can't create \"|!1\"", params = [{name = "dir_name", typ
 log_err_compr = { text = "!Archiver error (errorlevel |!1)", params = [{name = "ret", type = "string", desc = "Return code", default = "0"}] }
 type_keys_to_toggle = "|pr\nSysOp: Type letters/numbers of keys to toggle.  <enter> to save changes, or\n<esc> to restore old keys.\n\n|cd"
 copen_log = { text = "\aCan't open log file \"|!1\"\n", params = [{name = "log_path", type = "string", desc = "Log file path that could not be opened", default = "max.log"}] }
-line_noise = "û kı\x1c¯[Æ\rœŞw“UV Uq€>V&ó\"Fƒ’Áù"
+line_noise = "ï¿½ kï¿½\x1cï¿½[ï¿½\rï¿½ï¿½wï¿½ï¿½UVï¿½Uqï¿½>V&ï¿½\"Fï¿½ï¿½ï¿½ï¿½"
 yell_toggle = { text = "Yell noise toggled (now |!1)", params = [{name = "on_off", type = "string", desc = "New yell state (ON or OFF)", default = "ON"}] }
 priv_1 = "Use <up> and <down>"
 priv_2 = "to adjust priv level."
@@ -456,9 +456,9 @@ pause_msg = { text = "|prHit <enter> (or wait |!1 seconds) to |!2, or hit <esc> 
 pause_time = { text = "\r$R02|!1", params = [{name = "seconds_left", type = "string", desc = "Countdown seconds remaining", default = "25"}] }
 fname_mask = { text = "|prFilename mask: |in", flags = ["mex"] }
 avail_proto = { text = "|pr\nAvailable protocols:\n\n|cd", flags = ["mex"] }
-proto_box_top = { text = "|11 Ú$D|!1Ä¿\n", params = [{name = "fill_width", type = "string", desc = "Box-drawing top border repeat count (zero-padded)", default = "75"}] }
-proto_box_mid = { text = " ³ |14|!1|07)|!4 |11³\n", params = [{name = "hotkey", type = "string", desc = "Protocol selection hotkey letter", default = "Z"}, {name = "pad_width", type = "string", desc = "Padding width (unused in text)", default = "12"}, {name = "pad_width2", type = "string", desc = "Padding width 2 (unused in text)", default = "12"}, {name = "protocol_name", type = "string", desc = "Protocol display name (first letter stripped)", default = "modem"}] }
-proto_box_bot = { text = " À$D|!1ÄÙ\n\n|15", params = [{name = "fill_width", type = "string", desc = "Box-drawing bottom border repeat count (zero-padded)", default = "75"}] }
+proto_box_top = { text = "|11 ï¿½$D|!1Ä¿\n", params = [{name = "fill_width", type = "string", desc = "Box-drawing top border repeat count (zero-padded)", default = "75"}] }
+proto_box_mid = { text = " ï¿½ |14|!1|07)|!4 |11ï¿½\n", params = [{name = "hotkey", type = "string", desc = "Protocol selection hotkey letter", default = "Z"}, {name = "pad_width", type = "string", desc = "Padding width (unused in text)", default = "12"}, {name = "pad_width2", type = "string", desc = "Padding width 2 (unused in text)", default = "12"}, {name = "protocol_name", type = "string", desc = "Protocol display name (first letter stripped)", default = "modem"}] }
+proto_box_bot = { text = " ï¿½$D|!1ï¿½ï¿½\n\n|15", params = [{name = "fill_width", type = "string", desc = "Box-drawing bottom border repeat count (zero-padded)", default = "75"}] }
 proto_quit = { text = "Quit", flags = ["mex"] }
 file_ul = { text = "|prFile to upload? |in", flags = ["mex"] }
 file_dl = { text = "File(s) to download (#|!1): ", params = [{name = "tagged_count", type = "string", desc = "Number of tagged files", default = "3"}] }
@@ -493,7 +493,7 @@ contents_of = { text = "|prDisplay the contents of which archive? |in", flags = 
 bad_arc = { text = "|15\nFile \"|!1\" is not a ZIP/LZH/ARC/PAK/ARJ, or file damaged.\n", params = [{name = "filename", type = "string", desc = "Filename (uppercase)", default = "FILE.ZIP"}] }
 sarc = { text = "\nSearching archive: |!1 ", params = [{name = "filename", type = "string", desc = "Filename (no path)", default = "FILE.ZIP"}] }
 ziphdr1 = " Length  Method   Size   Ratio   Date   Time   CRC-32  Attr Name\n"
-ziphdr2 = "ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ ÄÄÄÄ\n"
+ziphdr2 = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½\n"
 zip_store = "Stored "
 zip_shrunk = "Shrunk "
 zip_reduce = "ReduceX"
@@ -502,11 +502,11 @@ unknown = "Unknown"
 zip_format = { text = "$L08|!1 $R07|!2 $L07|!3 $R02|!4.|!5%% $l020|!6-$l020|!7-$l020|!8 $l020|!9:$l020|!A $l080|!B |!C|!D $T17|!E\n", params = [{name = "uncomp_size", type = "string", desc = "Uncompressed size in bytes", default = "102400"}, {name = "method", type = "string", desc = "ZIP compression method", default = "Deflate"}, {name = "comp_size", type = "string", desc = "Compressed size in bytes", default = "51200"}, {name = "ratio_whole", type = "string", desc = "Compression ratio whole part", default = "50"}, {name = "ratio_dec", type = "string", desc = "Compression ratio decimal part", default = "0"}, {name = "month", type = "string", desc = "File date month", default = "2"}, {name = "day", type = "string", desc = "File date day", default = "15"}, {name = "year", type = "string", desc = "File date year (2-digit)", default = "25"}, {name = "hours", type = "string", desc = "File time hours", default = "14"}, {name = "minutes", type = "string", desc = "File time minutes", default = "30"}, {name = "crc", type = "string", desc = "CRC checksum value", default = "41394"}, {name = "attributes", type = "string", desc = "File attribute flags", default = "----"}, {name = "encrypted", type = "string", desc = "'*' if encrypted, blank otherwise", default = " "}, {name = "filename", type = "string", desc = "Archived filename", default = "README.TXT"}] }
 zip_cmnt = { text = "Comment: |!1\n", params = [{name = "file_comment", type = "string", desc = "Archive file comment", default = "No comment"}] }
 zip_encrypt = { text = "Warning!  File \"|!1\" is encrypted!\n", params = [{name = "filename", type = "string", desc = "Filename", default = "FILE.ZIP"}] }
-zip_trail1 = "ÄÄÄÄÄÄÄÄ         ÄÄÄÄÄÄÄ ÄÄÄÄÄ                              ÄÄÄÄ\n"
+zip_trail1 = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½                              ï¿½ï¿½ï¿½ï¿½\n"
 zip_trail2 = { text = "$L08|!1        $L08|!2 $R02|!3.|!4%%                              |!5\n", params = [{name = "_tu", type = "string", desc = "Total uncompressed", default = "1048576"}, {name = "_tc", type = "string", desc = "Total compressed", default = "524288"}, {name = "_rp", type = "string", desc = "Ratio whole part", default = "50"}, {name = "_rd", type = "string", desc = "Ratio decimal part", default = "0"}, {name = "_nf", type = "string", desc = "File count", default = "5"}] }
 arc_h1 = "\n\n      Name       Length    Size   Ratio   Date     Time   Attr   Type   CRC\n"
-arc_h2 = "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄ\n"
-arc_t1 = "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ\n"
+arc_h2 = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½\n"
+arc_t1 = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½\n"
 arc_t2 = { text = "$L15|!1 $L08|!2 $L08|!3 $R02|!4.|!5%%\n", params = [{name = "_nf", type = "string", desc = "File count", default = "5"}, {name = "_tu", type = "string", desc = "Total uncompressed", default = "1048576"}, {name = "_tc", type = "string", desc = "Total compressed", default = "524288"}, {name = "_rp", type = "string", desc = "Ratio whole part", default = "50"}, {name = "_rd", type = "string", desc = "Ratio decimal part", default = "0"}] }
 full_ovr_path = { text = "|prEnter FULL override path: |in", flags = ["mex"] }
 file_enter_tag = { text = "(|!1) Filename(s) to tag: ", rip = "\r!|1K|Y00000100|S0100|B008MHS9Q\n!|c08|R018UI196|c0F|R008THQ95\n!|S0107|B018UHQ95|c01|@048W(|!1) Filename(s) to tag:\n!|w0P14271400|#|#\n|[Y01|[X01|01|23|[K", params = [{name = "tagged_count", type = "string", desc = "Number of currently tagged files", default = "3"}] }
@@ -521,7 +521,7 @@ tag_keys = { text = "ALDC?Q", flags = ["mex"] }
 file_no_wc = { text = "|erThis command does not support wildcards.\n|cd", flags = ["mex"] }
 zip_deflate = "Deflate"
 file_sect_hdr = { text = "|CL|hd|tb|[KThe FILES Section|tx", flags = ["mex"], rip = "\r!|*|Y00000100|c08|R010HHR0S\n!|c09|R000GHQ0R|S0101|B010HHQ0R\n!|c0E|@040JThe FILES Section|#|#\n" }
-file_menu_hdr = { text = "|ok\n\nFile area |sy", flags = ["mex"], rip = "\r!|w0002271210|c08|R0101HR0C\n!|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TFile Area |c05|T" }
+file_menu_hdr = { text = "|okFile area |sy", flags = ["mex"], rip = "\r!|w0002271210|c08|R0101HR0C\n!|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TFile Area |c05|T" }
 file_menu_sep = { text = "|tx ... |fi", flags = ["mex"], rip = "|c00|T: |c01|T" }
 badupload = { text = "|er\nThe filename '|!1' is not acceptible as an upload to this BBS.\n|cd", params = [{name = "filename", type = "string", desc = "Filename (uppercase)", default = "FILE.ZIP"}] }
 file_name_col = "|14"
@@ -698,11 +698,11 @@ balance_adjusted = { text = "|12\nBalance adjusted by +|!1 cents to compensate f
 replying_to_area = { text = "* Replying to a message originally in area |!1\r\r", params = [{name = "orig_area", type = "string", desc = "Original area name", default = "General"}] }
 reader_more_prompt = { text = "More", flags = ["mex"], rip = "\r!|1K|Y00000100\n!|S0100|B008XHI9Q|c08|R018YHR9A\n!|c0F|R008XHQ99|S0107|B018YHQ99\n!|c01|@0A90More?\n!|1B1E080207PE0201080F000700020407000000\n!|1U1L9000002H00<>Yes<>Y\n!|1U349000002600<>No<>N\n!|1U4N9000001P00<>=Cont<>=\n!|1U669000001600<>*Again<>*\n!|1U7P9000002800<>Prev<>^@K\n!|1U989000001X00<>Next<>^@M\n!|1UAR9000001900<>-orig<>-\n!|1UCA9000001700<>+reply<>+\n!|1UDT9000002A00<>Reply<>R\n!|1B2A080207PE0200080F000700020407000000\n!|1UFC9000001100<>PvtReply<>%\n!|#|#\n" }
 reader_more_blank = { text = "\r|[K", flags = ["mex"], rip = "\r!|S0100|B008RHS9Q|#|#\n" }
-reader_box_top = { text = "|CL|[Y01|[X01|CD|11|17|[KÄ |14|17|!1: |!2 |11|17$D|!3Ä", rip = "\r!|S0100|B008GHR9P|w0007271110|Y00000100|1K\n!|c08|R0101HR0C|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TMsg Area |c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I|S0107|B010EHQ1I\n!|c08|L041EHL1E|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
+reader_box_top = { text = "|CL|[Y01|[X01|CD|11|17|[Kï¿½ |14|17|!1: |!2 |11|17$D|!3ï¿½", rip = "\r!|S0100|B008GHR9P|w0007271110|Y00000100|1K\n!|c08|R0101HR0C|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TMsg Area |c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I|S0107|B010EHQ1I\n!|c08|L041EHL1E|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
 reader_box_mid = { text = "|[Y02|[X01|15|17|[KMsg#:       |15|17|!1|15|17", rip = "\r!|c08|c08|@040GMsg#:|c08|@2M0G|!1|#|#\n", params = [{name = "msg_counter", type = "string", desc = "Message counter display (e.g. 'of 500' or '(100-500)')", default = "of 500"}] }
 reader_box_from = { text = "|[Y03|[X01|15|17|[KFrom:", rip = "\r!|c08|@040OFrom:|#|#\n" }
 reader_box_to = { text = "|[Y04|[X01|15|17|[KTo:", rip = "\r!|c08|@040WTo:|#|#\n" }
-reader_box_bottom = { text = "|[Y06|[X01|CD|11|17|[K$D|!1Ä", rip = "", params = [{name = "fill_width", type = "string", desc = "Box-drawing bottom border repeat count (zero-padded)", default = "75"}] }
+reader_box_bottom = { text = "|[Y06|[X01|CD|11|17|[K$D|!1ï¿½", rip = "", params = [{name = "fill_width", type = "string", desc = "Box-drawing bottom border repeat count (zero-padded)", default = "75"}] }
 rbox_msgn = { text = "|[Y02|[X07|12|17$L05|!1", rip = "\r!|c01|@1C0G$R05|!1|#|#\n", params = [{name = "msg_num", type = "string", desc = "Current message number", default = "100"}] }
 rbox_high = { text = "|[Y02|[X18|12|17$L05|!1|[K", rip = "\r!|c01|@3K0G$R05|!1|#|#\n", params = [{name = "highest_msg", type = "string", desc = "Highest message number in area", default = "500"}] }
 rbox_replyto = { text = " - |!1", params = [{name = "_tl", type = "string", desc = "Thread/reply link number", default = "100"}] }
@@ -746,7 +746,7 @@ no_files_attached = "|erThere are no unreceived file attaches for you.\n|cd"
 attach_hdr0 = "|15\nList of files attached to |12YOU:\n"
 attach_hdr0_5 = "                                              Compr.\n"
 attach_hdr1 = "Date     Time  From                           Size   Message Area\n"
-attach_hdr2 = "ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n"
+attach_hdr2 = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n"
 attach_fmt = { text = "|13$T08$R08|!1 $l020|!2:$l020|!3 |14$T30$R30|!4 |12$L06|!5 |10$T26|!6\n|15", params = [{name = "date", type = "string", desc = "Attachment date", default = "15 Feb 25"}, {name = "hours", type = "string", desc = "Attachment time hours", default = "14"}, {name = "minutes", type = "string", desc = "Attachment time minutes", default = "30"}, {name = "from", type = "string", desc = "Who attached the file", default = "Sysop"}, {name = "size", type = "string", desc = "File size string", default = "1,024"}, {name = "area", type = "string", desc = "Area the attachment is in", default = "NETMAIL"}] }
 attach_fmt2 = { text = "|10\n Date: |13$T08$R08|!1 $l020|!2:$l020|!3\n|10 From: |14|!4\n|10 Area: |11|!5\n\n", params = [{name = "date", type = "string", desc = "Attachment date", default = "15 Feb 25"}, {name = "hours", type = "string", desc = "Attachment time hours", default = "14"}, {name = "minutes", type = "string", desc = "Attachment time minutes", default = "30"}, {name = "from", type = "string", desc = "Who attached the file", default = "Sysop"}, {name = "area", type = "string", desc = "Area the attachment is in", default = "NETMAIL"}] }
 ok_to_overwrite = { text = "File '|!1' exists.  Overwrite", params = [{name = "filename", type = "string", desc = "Existing filename to overwrite", default = "FILE.ZIP"}] }
@@ -839,7 +839,7 @@ help_keys = { text = "NRE", flags = ["mex"] }
 num_nulls = { text = "|prNulls (0-200): |in", flags = ["mex"], rip = "\r!|1K|#|#\nNulls (0-200): " }
 mon_width = { text = "|prMonitor width (20-132): |in", flags = ["mex"], rip = "\r!|1K|#|#\nMonitor width (20-132): " }
 bad_width = { text = "Invalid width.  Try again.\n\n", flags = ["mex"] }
-draw_line = { text = "|CL\n\n\n|07$D|!1ÄX$D09Ä\n\n\n\n\n|15", rip = "\r!|*|1K|#|#\n|CL\n\n\n|07$D|!1ÄX$D09Ä\n\n\n\n\n|15", params = [{name = "fill_width", type = "string", desc = "Line fill repeat count (zero-padded)", default = "80"}] }
+draw_line = { text = "|CL\n\n\n|07$D|!1ï¿½X$D09ï¿½\n\n\n\n\n|15", rip = "\r!|*|1K|#|#\n|CL\n\n\n|07$D|!1ï¿½X$D09ï¿½\n\n\n\n\n|15", params = [{name = "fill_width", type = "string", desc = "Line fill repeat count (zero-padded)", default = "80"}] }
 check_x = "Is the \"X\" at the far left side of your display"
 incorrect_width = { text = "\nThe width that you entered is incorrect.  Try again.\n\n", flags = ["mex"] }
 top_num = { text = "|prPlease type the number at the TOP of your display: |in", flags = ["mex"] }
@@ -906,7 +906,7 @@ cs_outside = { text = "Running external program", flags = ["mex"] }
 ch_page_msg = { text = "\a|!1\n|[K", params = [{name = "message", type = "string", desc = "Page notification message text", default = "You are being paged!"}] }
 ch_hey_dude_msg = { text = "|!1\n|[K", params = [{name = "message", type = "string", desc = "Inter-node page message text", default = "Hey, are you there?"}] }
 hu_is_on_1 = "|15\nUsername                             Node         Status\n"
-hu_is_on_2 = "$D35Ä  $D04Ä  $D29Ä\n"
+hu_is_on_2 = "$D35ï¿½  $D04ï¿½  $D29ï¿½\n"
 hu_is_on_3 = { text = "|14$T36$R36|!1  $L03|!2  |07|!3|!4\n", params = [{name = "user_name", type = "string", desc = "User name on the node", default = "Kevin Morgan"}, {name = "node_num", type = "string", desc = "Node/task number", default = "1"}, {name = "status", type = "string", desc = "Node activity status", default = "Idle"}, {name = "you_marker", type = "string", desc = "' (You)' if this is your node, blank otherwise", default = ""}] }
 ch_xx_join = { text = "|12|!1 |13joins the conversation.\n|[K", params = [{name = "user_name", type = "string", desc = "Name of user joining chat", default = "Kevin Morgan"}] }
 ch_xx_leave = { text = "|12|!1 |13leaves the conversation.\n|[K", params = [{name = "user_name", type = "string", desc = "Name of user leaving chat", default = "Kevin Morgan"}] }
@@ -922,7 +922,7 @@ ch_chat_pvt = { text = "Private chat with node |!1", params = [{name = "node_num
 ch_enter_chat = { text = "|hi\nEntering chat mode.  |cd", flags = ["mex"] }
 ch_help_str = { text = "Type \"/q\" to quit, \"/w\" to list users on this channel,\n\"/s\" to list users on system, and \"/?\" for help.\n\n", flags = ["mex"] }
 ch_byline = { text = "|10[$T15$R15|!1]: |!2", params = [{name = "user_name", type = "string", desc = "Caller's display name", default = "Kevin Morgan"}, {name = "typed_char", type = "string", desc = "Character the user typed in chat", default = "H"}] }
-ch_ulist_hdr = { text = "|14\nList of users on this channel:\n\n|15Name\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|14", flags = ["mex"] }
+ch_ulist_hdr = { text = "|14\nList of users on this channel:\n\n|15Name\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n|14", flags = ["mex"] }
 ch_alone = { text = "You are alone on this channel.\n", flags = ["mex"] }
 ch_chat_sect = { text = "|CL|14|17|[KThe CHAT Section\n", flags = ["mex"] }
 ch_us_avail = { text = "|pr\nYou are currently |ok|!1AVAILABLE|pr for chat.\n\n|cd", params = [{name = "not_prefix", type = "string", desc = "'NOT ' if unavailable, blank if available", default = ""}] }
@@ -960,33 +960,33 @@ ued_credit = "Credit (cents): "
 ued_time = "Time: "
 ued_ulall = "Total uploads (in K): "
 ued_getpriv = "|[K|prNew priv level (# or priv key): |in"
-ued_ss1 = "|CL|14U|07ser |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ |07Last call                   |10ÄÄÄÄÄÄÄÄÄÄÄÄ¿\n"
-ued_ss2 = " ³ |14N|07ame                         |14A|07lias                                        |10³\n"
-ued_ss3 = " ³ |14C|07ity                         |14V|07oicePhone                 |14S|07ex               |10³\n"
-ued_ss4 = " À |14P|07assword                     |14D|07ataPhone                  |14B|07Day              |10Ù\n"
-ued_ss5 = "|14A|07ccess |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿    |14S|07ettings |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿\n"
-ued_ss6 = " ³ |14P|07riv level             |14C|07redit            |10³     ³ |14W|07idth                    |10³\n"
-ued_ss7 = " ³ |14K|07eys                   |14D|07ebit             |10³     ³ |14L|07ength                   |10³\n"
-ued_ss8 = " ³ |14G|07roup Num              |14U|07sed Pts          |10³     ³ |14N|07ulls                    |10³\n"
-ued_ss9 = " ³ |14A|07lloc Pts              |14S|07howUlist         |10³     ³ |14M|07sgArea                  |10³\n"
-ued_ss10 = " À |14N|07erd                                     |10Ù     ³ |14F|07ileArea                 |10³\n"
-ued_ss11 = "|14I|07nformation |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ ³ |14V|07ideo Mode               |10³\n"
-ued_ss12 = " ³ |14D|07L (all)                 |14C|07ur. Time           |10³ ³ |14H|07elp                     |10³\n"
-ued_ss13 = " ³ |14T|07oday DL                 |14A|07dded Time          |10³ ³ |14!|07Language                |10³\n"
-ued_ss14 = " ³ |14U|07ploads                  |14#|07 calls             |10³ ³ |14P|07rotocol                 |10³\n"
-ued_ss15 = " ³ |14P|07ostMsgs                 |14R|07eadMsgs            |10³ À |14C|07ompress                 |10Ù\n"
-ued_ss16 = " À |141|07stCall                  |14!|07PwdDate            |10Ù\n"
-ued_ss17 = "|14F|07lags |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ |14E|07xpiry |10ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿\n"
-ued_ss18 = " ³ |14H|07otkeys      |14I|07BM Chars         |14S|07crnClr       |10³  ³ |14E|07xpire by               |10³\n"
-ued_ss19 = " ³ |14M|07axEd        |14P|07ause (More)      |14A|07vailChat     |10³  ³ |14A|07ction                  |10³\n"
-ued_ss20 = " ³ |14T|07abs         |14C|07alledBefore      |14F|07SR           |10³  À |14D|07ate                    |10Ù\n"
-ued_ss21 = " À |14R|07IP                                          |10Ù\n"
+ued_ss1 = "|CL|14U|07ser |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ |07Last call                   |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n"
+ued_ss2 = " ï¿½ |14N|07ame                         |14A|07lias                                        |10ï¿½\n"
+ued_ss3 = " ï¿½ |14C|07ity                         |14V|07oicePhone                 |14S|07ex               |10ï¿½\n"
+ued_ss4 = " ï¿½ |14P|07assword                     |14D|07ataPhone                  |14B|07Day              |10ï¿½\n"
+ued_ss5 = "|14A|07ccess |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿    |14S|07ettings |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n"
+ued_ss6 = " ï¿½ |14P|07riv level             |14C|07redit            |10ï¿½     ï¿½ |14W|07idth                    |10ï¿½\n"
+ued_ss7 = " ï¿½ |14K|07eys                   |14D|07ebit             |10ï¿½     ï¿½ |14L|07ength                   |10ï¿½\n"
+ued_ss8 = " ï¿½ |14G|07roup Num              |14U|07sed Pts          |10ï¿½     ï¿½ |14N|07ulls                    |10ï¿½\n"
+ued_ss9 = " ï¿½ |14A|07lloc Pts              |14S|07howUlist         |10ï¿½     ï¿½ |14M|07sgArea                  |10ï¿½\n"
+ued_ss10 = " ï¿½ |14N|07erd                                     |10ï¿½     ï¿½ |14F|07ileArea                 |10ï¿½\n"
+ued_ss11 = "|14I|07nformation |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ ï¿½ |14V|07ideo Mode               |10ï¿½\n"
+ued_ss12 = " ï¿½ |14D|07L (all)                 |14C|07ur. Time           |10ï¿½ ï¿½ |14H|07elp                     |10ï¿½\n"
+ued_ss13 = " ï¿½ |14T|07oday DL                 |14A|07dded Time          |10ï¿½ ï¿½ |14!|07Language                |10ï¿½\n"
+ued_ss14 = " ï¿½ |14U|07ploads                  |14#|07 calls             |10ï¿½ ï¿½ |14P|07rotocol                 |10ï¿½\n"
+ued_ss15 = " ï¿½ |14P|07ostMsgs                 |14R|07eadMsgs            |10ï¿½ ï¿½ |14C|07ompress                 |10ï¿½\n"
+ued_ss16 = " ï¿½ |141|07stCall                  |14!|07PwdDate            |10ï¿½\n"
+ued_ss17 = "|14F|07lags |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ |14E|07xpiry |10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿\n"
+ued_ss18 = " ï¿½ |14H|07otkeys      |14I|07BM Chars         |14S|07crnClr       |10ï¿½  ï¿½ |14E|07xpire by               |10ï¿½\n"
+ued_ss19 = " ï¿½ |14M|07axEd        |14P|07ause (More)      |14A|07vailChat     |10ï¿½  ï¿½ |14A|07ction                  |10ï¿½\n"
+ued_ss20 = " ï¿½ |14T|07abs         |14C|07alledBefore      |14F|07SR           |10ï¿½  ï¿½ |14D|07ate                    |10ï¿½\n"
+ued_ss21 = " ï¿½ |14R|07IP                                          |10ï¿½\n"
 ued_ss22 = ""
 ued_spermflag = { text = "|[Y01|[X14|!1", params = [{name = "eqstri", type = "string", desc = "User status indicator", default = "Current"}] }
 ued_sstatcur = "|12 * Current * |15"
 ued_sstatdel = "|12 * Deleted * |15"
 ued_sstatprm = "|12 *Permanent* |15"
-ued_sstatblank = "|10ÄÄÄÄÄÄÄÄÄÄÄÄÄ|15"
+ued_sstatblank = "|10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½|15"
 ued_slastcall = { text = "|[Y01|[X48|!1", params = [{name = "sc_time", type = "string", desc = "Formatted timestamp", default = "15 Feb 25 14:30"}] }
 ued_sname = { text = "|[Y02|[X14$T18$R18|!1", params = [{name = "name", type = "string", desc = "User's display name", default = "Kevin Morgan"}] }
 ued_scity = { text = "|[Y03|[X14$T18$R18|!1", params = [{name = "city", type = "string", desc = "User's city", default = "Los Angeles"}] }
@@ -1099,7 +1099,7 @@ br_display_verbose = "|14Display:\n\n|14R|07)ead (show entire message: default)\
 br_display = "Display: [R)ead (show whole msg), L)ist (one per line), P)ack (QWK), Q)uit]: "
 br_dispk = "RLPQ?"
 br_list_head1 = { text = "|CL|15Msg#   From                 To                   Subject\n", rip = "\r!|1K|Y00000100|S0100|B000GHR0V\n!|c08|R010HHR0T|c0F|R000GHQ0S|S0107|B010HHQ0S\n!|c01|@020HMsg#   From                 To                   Subject|#|#\n" }
-br_list_head2 = { text = "ÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n", rip = "\r!|@020MÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n!|w0004271600|#|#\n|CL" }
+br_list_head2 = { text = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n", rip = "\r!|@020Mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n!|w0004271600|#|#\n|CL" }
 br_this = { text = "|10Area |13|!1|03: |!2\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
 br_s_where_verbose = "|14Search where?  (More than one letter may be entered.)\n\n|14T|07)o field\n|14F|07)rom field\n|14S|07)ubject field\n|14B|07)ody of message\n|14?|07)help\n|15"
 br_s_where = "Search where [any or all of T)o, F)rom, S)ubject, B)ody, or ?)help]: "
@@ -1167,9 +1167,9 @@ qwk_too_many = { text = "|wn\nWarning!  A maximum of |!1 messages can be packed 
 qwk_nuke_tear = "\r---"
 qwk_replace_tear = "___"
 qwk_msg_skipped = "|er\nMessage skipped.\n|cd"
-qwk_pack_start = "|pr\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n|hi$D09Ä  $D27Ä  $D10Ä  $D11Ä  $D11Ä\n"
+qwk_pack_start = "|pr\nArea Name  Description                  Total Msgs  Msgs to you  Msgs Packed\n|hi$D09ï¿½  $D27ï¿½  $D10ï¿½  $D11ï¿½  $D11ï¿½\n"
 qwk_pack_fmt = { text = "|10$T09$L09|!1  |11$T27$R27|!2  |13$L07|!3$D05 |12$L06|!4$D07 |10$L07|!5\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "total_msgs", type = "string", desc = "Total messages in area", default = "42"}, {name = "personal", type = "string", desc = "Personal messages in area", default = "2"}, {name = "new_msgs", type = "string", desc = "New messages in area", default = "10"}] }
-qwk_pack_end = { text = "|15$D09Ä  $D27Ä  $D10Ä  $D11Ä  $D11Ä\n|12$D11 Total$D24 |13$L07|!1$D05 |12$L06|!2$D07 |10$L07|!3\n\n|15", params = [{name = "total_msgs", type = "string", desc = "Total messages packed", default = "150"}, {name = "personal", type = "string", desc = "Personal messages packed", default = "5"}, {name = "areas", type = "string", desc = "Number of areas packed", default = "12"}] }
+qwk_pack_end = { text = "|15$D09ï¿½  $D27ï¿½  $D10ï¿½  $D11ï¿½  $D11ï¿½\n|12$D11 Total$D24 |13$L07|!1$D05 |12$L06|!2$D07 |10$L07|!3\n\n|15", params = [{name = "total_msgs", type = "string", desc = "Total messages packed", default = "150"}, {name = "personal", type = "string", desc = "Personal messages packed", default = "5"}, {name = "areas", type = "string", desc = "Number of areas packed", default = "12"}] }
 restr_prompt = "Enter date of oldest message to pack, or press <enter> for "
 qwk_busy_msg = "Error!  QWK packer is currently in use on another node!  (QWK_BUSY.$$$)\n"
 maxpipe_cmd = { text = "|!1", params = [{name = "cmd", type = "string", desc = "Command string", default = "pkzip"}] }
@@ -1190,7 +1190,7 @@ browse_select_c = { text = "", rip = "\r!|1K|w0000271610|#|#\n|CL" }
 browse_which_c = { text = "", rip = "\r!|1K|w0000271610|#|#\n|CL" }
 browse_more_prompt = { text = "More", rip = "\r!|1K|S0100|B008XHR9Q|c08|R028Y6L9A\n!|c0F|R018X6K99|S0107|B028Y6K99\n!|c01|@0690More?\n!|1B1K0A0207PE0201080F000700020407000000\n!|1U1L9000002H00<>Yes<>Y\n!|1U349000002600<>No<>N\n!|1U4N9000001P00<>=Cont<>=\n!|#|#\n" }
 browse_more_blank = { text = "\r|[K", rip = "\r!|S0100|B008KHS90|#|#\n" }
-browse_rbox_top = { text = "|CL|[Y01|[X01|CD|br|tb|[KÄ |pr|tb|!1: |!2 |br|tb$D|!3Ä", rip = "\r!|1K|S0100|B008GHR9P|w0007271110|Y00000100\n!|c08|R0101HR0C|c0F|R0000HQ0B\n!|S0107|B0101HQ0B|m0403|c02|TMsg Area \n!|c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I\n!|S0107|B010EHQ1I|c08|L041EHL1E\n!|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
+browse_rbox_top = { text = "|CL|[Y01|[X01|CD|br|tb|[Kï¿½ |pr|tb|!1: |!2 |br|tb$D|!3ï¿½", rip = "\r!|1K|S0100|B008GHR9P|w0007271110|Y00000100\n!|c08|R0101HR0C|c0F|R0000HQ0B\n!|S0107|B0101HQ0B|m0403|c02|TMsg Area \n!|c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I\n!|S0107|B010EHQ1I|c08|L041EHL1E\n!|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
 
 [max_wfc]
 wfc_waiting = "Waiting"
@@ -1202,10 +1202,10 @@ log_wfc_exit_erl = { text = ":Event - Exiting with errorlevel |!1", params = [{n
 log_wfc_waiting = { text = ":Waiting for caller (event in |!1 mins)", params = [{name = "minutes", type = "string", desc = "Minutes until next scheduled event", default = "60"}] }
 log_wfc_connect = { text = "+Connected at |!1 bps|!2|!3|!4", params = [{name = "baud_rate", type = "string", desc = "Connection speed (bps)", default = "9600"}, {name = "slash_sep", type = "string", desc = "Slash separator (or blank if no ARQ)", default = "/"}, {name = "arq_info", type = "string", desc = "ARQ error correction info", default = "V.42bis"}, {name = "arq_suffix", type = "string", desc = "'/ARQ' suffix or blank", default = "/ARQ"}] }
 log_wfc_keybjunk = " Junk character from keyboard"
-wfc_status_tit = "¹ Status Ì"
-wfc_modem_tit = "¹ Modem Responses Ì"
-wfc_activ_tit = "¹ Current Activity Ì"
-wfc_keys_tit = "¹ SysOp Keys Ì"
+wfc_status_tit = "ï¿½ Status ï¿½"
+wfc_modem_tit = "ï¿½ Modem Responses ï¿½"
+wfc_activ_tit = "ï¿½ Current Activity ï¿½"
+wfc_keys_tit = "ï¿½ SysOp Keys ï¿½"
 wfc_keys1 = "<Alt-X>  System down"
 wfc_keys2 = "<Alt-J>  Shell to operating system"
 wfc_keys3 = "<Alt-K>  Local keyboard log-on"
@@ -1304,7 +1304,7 @@ trk_new_owner = "|prName of new owner: |in"
 trk_new_alias = "|prEnter four-character alias: |in"
 trk_set_alias = { text = "Set alias \"|!1\" for |!2.\n", params = [{name = "to", type = "string", desc = "Owner alias", default = "SYS"}, {name = "szOwner", type = "string", desc = "Owner name", default = "Sysop"}] }
 trk_err_alias = { text = "Error!  Could not set alias \"|!1\"!\n", params = [{name = "to", type = "string", desc = "Owner alias", default = "SYS"}] }
-trk_owner_header = "|15\nAlias  Owner\nÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|14"
+trk_owner_header = "|15\nAlias  Owner\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n|14"
 trk_owner_fmt = { text = "$T06$R06|!1 |!2\n", params = [{name = "option_num", type = "string", desc = "Owner list option number", default = "1"}, {name = "owner_name", type = "string", desc = "Owner display name", default = "Sysop"}] }
 trk_remalias_which = "|prRemove which alias (?=list): |in"
 trk_remalias_done = { text = "Alias \"|!1\" removed.\n", params = [{name = "alias", type = "string", desc = "Owner alias that was removed", default = "SYS"}] }
@@ -1317,7 +1317,7 @@ trk_owner_assgn_err = { text = "Error assigning owner for |!1!  (Maybe area alre
 trk_owner_lnk_rem = "Remove owner link for which area (?=list): "
 trk_owner_lnk_done = { text = "Area/owner link removed for area |!1\n", params = [{name = "szArea", type = "string", desc = "Area tag", default = "GENERAL"}] }
 trk_owner_lnk_err = { text = "Could not remove area/owner link for area |!1!\n", params = [{name = "szArea", type = "string", desc = "Area tag", default = "GENERAL"}] }
-trk_owner_lnk_head = "|15\nOwner  Area\nÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|14"
+trk_owner_lnk_head = "|15\nOwner  Area\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n|14"
 trk_owner_lnk_fmt = { text = "$T06$R06|!1 |!2\n", params = [{name = "option_num", type = "string", desc = "Area list option number", default = "1"}, {name = "area_tag", type = "string", desc = "Area tag to link", default = "GENERAL"}] }
 trk_area_txt = "Area: [A)ssign Owner, D)elete Owner, L)ist Owners]: "
 trk_area_keys = "ADLQ"
@@ -1338,7 +1338,7 @@ trk_rep_pri_keys = "OLNUCA"
 trk_rep_s_owner = "Search for messages owned by whom (*=all (default), ?=list): "
 trk_rep_dl_related_qwk = "Download related messages in QWK packet"
 trk_rep_hdr = "ID               Date     Owner Priority     Status  Message\n---------------- -------- ----- ------------ ------- -------------------------\n"
-trk_rep_hdr_graph = "|CL|hiID               Date     Owner Priority     Status  Message\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄ ÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|pr"
+trk_rep_hdr_graph = "|CL|hiID               Date     Owner Priority     Status  Message\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n|pr"
 trk_rep_msgnum = { text = "|!1#|!2", params = [{name = "area_name", type = "string", desc = "Area name for tracked message", default = "General"}, {name = "msg_uid", type = "string", desc = "Message UID number", default = "1234"}] }
 trk_rep_fmt = { text = "$T16$R16|!1 $l020|!2.$l020|!3.$l020|!4|!5$T05$R05|!6 $T12$R12|!7 $T07$R07|!8 $T26|!9\n", params = [{name = "track_id", type = "string", desc = "Tracking ID", default = "AB12"}, {name = "year", type = "string", desc = "Report date year (2-digit)", default = "25"}, {name = "month", type = "string", desc = "Report date month", default = "2"}, {name = "day", type = "string", desc = "Report date day", default = "15"}, {name = "changed_flag", type = "string", desc = "'*' if changed, blank otherwise", default = " "}, {name = "owner", type = "string", desc = "Tracking owner name", default = "Sysop"}, {name = "priority", type = "string", desc = "Tracking priority", default = "Normal"}, {name = "status", type = "string", desc = "Tracking status", default = "Open"}, {name = "comment", type = "string", desc = "Tracking comment", default = "Working on it"}] }
 trk_rep_qwk_bulletin = { text = "|!1blt-1.99", params = [{name = "qwk_path", type = "string", desc = "QWK directory path", default = "/tmp/qwk/"}] }
@@ -1355,7 +1355,7 @@ trk_bad_cmd = { text = "Invalid tracking command: |!1\n", params = [{name = "_tb
 trk_bad_old_id = { text = "Error findind old tracking ID \"|!1\" in database!\n", params = [{name = "track_id", type = "string", desc = "Invalid tracking ID that could not be found", default = "XXXX"}] }
 trk_err_updating_db = { text = "Error updating tracking database for \"|!1\"!\n", params = [{name = "track_id", type = "string", desc = "Tracking ID that failed to update", default = "AB12"}] }
 trk_info_updated = { text = "Tracking information updated for \"|!1\"!\n", params = [{name = "track_id", type = "string", desc = "Tracking ID that was updated", default = "AB12"}] }
-trk_list_hdr = "|hi\nID   Owner\nÄÄÄÄ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n|pr"
+trk_list_hdr = "|hi\nID   Owner\nï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\n|pr"
 trk_list_type = { text = "$T04$R04|!1 |!2\n", params = [{name = "list_type", type = "string", desc = "Report list filter type", default = "All"}, {name = "owner_name", type = "string", desc = "Owner filter name", default = "Sysop"}] }
 trk_err_removing = { text = "Error removing message |!1 from tracking database!\n", params = [{name = "szTrackID", type = "string", desc = "Tracking ID", default = "AB12"}] }
 trk_owner_not_accept = { text = "Error!  '|!1' is not an acceptable message owner.\n", params = [{name = "szOwner", type = "string", desc = "Tracking owner", default = "Sysop"}] }

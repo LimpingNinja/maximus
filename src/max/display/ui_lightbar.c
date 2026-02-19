@@ -1355,6 +1355,31 @@ int ui_select_prompt(
 }
 
 /**
+ * @brief Draw a single list row and clear stale trailing screen content.
+ *
+ * We always blank the full row width first, then print the current row text.
+ * This avoids ghost characters when display strings shrink or when embedded
+ * MCI/color tokens make raw string length differ from visible width.
+ */
+static void ui_lb_draw_list_row(const ui_lightbar_list_t *list, int screen_row,
+                                byte attr, const char *text)
+{
+  int j;
+
+  ui_goto(screen_row, list->x);
+  ui_set_attr(attr);
+  for (j = 0; j < list->width; j++)
+    Printf(" ");
+
+  if (text && *text)
+  {
+    ui_goto(screen_row, list->x);
+    ui_set_attr(attr);
+    Printf("%s", text);
+  }
+}
+
+/**
  * @brief Run a paged lightbar list with keyboard navigation
  * 
  * Implements Storm-style paging:
@@ -1389,6 +1414,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
   if (selected_index >= list->count)
     selected_index = list->count - 1;
 
+  if (list->selected_index_ptr)
+    *list->selected_index_ptr = selected_index;
+
   /* Position top_index so selected is visible */
   if (selected_index >= list->height)
     top_index = selected_index - list->height + 1;
@@ -1397,6 +1425,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
 
   while (1)
   {
+    if (list->selected_index_ptr)
+      *list->selected_index_ptr = selected_index;
+
     /* Redraw visible rows if needed */
     if (need_full_redraw)
     {
@@ -1406,34 +1437,25 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
         int is_selected = (item_idx == selected_index);
         byte attr = is_selected ? list->selected_attr : list->normal_attr;
 
-        ui_goto(list->y + i, list->x);
-        ui_set_attr(attr);
-
         if (item_idx < list->count)
         {
           if (list->get_item(list->ctx, item_idx, row_buffer, list->width + 1) == 0)
           {
-            /* Pad or truncate to width */
             int len = (int)strlen(row_buffer);
             if (len > list->width)
               row_buffer[list->width] = '\0';
-            Printf("%s", row_buffer);
-            /* Pad with spaces if needed */
-            for (; len < list->width; len++)
-              Printf(" ");
+            ui_lb_draw_list_row(list, list->y + i, attr, row_buffer);
           }
           else
           {
             /* Error formatting item, show blank */
-            for (int j = 0; j < list->width; j++)
-              Printf(" ");
+            ui_lb_draw_list_row(list, list->y + i, attr, NULL);
           }
         }
         else
         {
           /* Past end of list, blank row */
-          for (int j = 0; j < list->width; j++)
-            Printf(" ");
+          ui_lb_draw_list_row(list, list->y + i, attr, NULL);
         }
       }
       vbuf_flush();
@@ -1491,39 +1513,29 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             int new_row = selected_index - top_index;
 
             /* Redraw old selected row as normal */
-            ui_goto(list->y + old_row, list->x);
-            ui_set_attr(list->normal_attr);
             if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
             {
               int len = (int)strlen(row_buffer);
               if (len > list->width)
                 row_buffer[list->width] = '\0';
-              Printf("%s", row_buffer);
-              for (; len < list->width; len++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, row_buffer);
             }
             else
             {
-              for (int j = 0; j < list->width; j++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, NULL);
             }
 
             /* Redraw new selected row as selected */
-            ui_goto(list->y + new_row, list->x);
-            ui_set_attr(list->selected_attr);
             if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
             {
               int len = (int)strlen(row_buffer);
               if (len > list->width)
                 row_buffer[list->width] = '\0';
-              Printf("%s", row_buffer);
-              for (; len < list->width; len++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, row_buffer);
             }
             else
             {
-              for (int j = 0; j < list->width; j++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, NULL);
             }
             vbuf_flush();
           }
@@ -1568,39 +1580,29 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             int new_row = selected_index - top_index;
 
             /* Redraw old selected row as normal */
-            ui_goto(list->y + old_row, list->x);
-            ui_set_attr(list->normal_attr);
             if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
             {
               int len = (int)strlen(row_buffer);
               if (len > list->width)
                 row_buffer[list->width] = '\0';
-              Printf("%s", row_buffer);
-              for (; len < list->width; len++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, row_buffer);
             }
             else
             {
-              for (int j = 0; j < list->width; j++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, NULL);
             }
 
             /* Redraw new selected row as selected */
-            ui_goto(list->y + new_row, list->x);
-            ui_set_attr(list->selected_attr);
             if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
             {
               int len = (int)strlen(row_buffer);
               if (len > list->width)
                 row_buffer[list->width] = '\0';
-              Printf("%s", row_buffer);
-              for (; len < list->width; len++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, row_buffer);
             }
             else
             {
-              for (int j = 0; j < list->width; j++)
-                Printf(" ");
+              ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, NULL);
             }
             vbuf_flush();
           }
@@ -1668,7 +1670,14 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
         break;
 
       default:
-        /* Ignore other keys */
+        if (ui_lb_is_printable(ch) && list->out_key)
+        {
+          *list->out_key = ch;
+          free(row_buffer);
+          ui_set_attr(Mci2Attr("|tx", 0x07));
+          ui_lb_show_cursor(did_hide_cursor);
+          return LB_LIST_KEY_PASSTHROUGH;
+        }
         break;
     }
   }
