@@ -123,7 +123,7 @@ static int near Reply_Get_Area(struct _replyp *r, char *areaname)
     gotarea=FALSE;
     
     if (*temp == '?')
-      ListMsgAreas(NULL, FALSE, FALSE);
+      ListMsgAreas(NULL, FALSE, FALSE, NULL);
     else if (!*temp || *temp == '=')
       return 1;
     else

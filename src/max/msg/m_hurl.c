@@ -66,7 +66,7 @@ static sword near DoTheHurlThing(HMSG omh, dword msgnum, byte *aname)
     InputGets(input, which_area);
 
     if (eqstri(input, qmark))
-      ListMsgAreas(NULL, FALSE, FALSE);
+      ListMsgAreas(NULL, FALSE, FALSE, NULL);
   }
   while (eqstri(input, qmark));
 

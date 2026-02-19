@@ -260,7 +260,7 @@ static int near Fwd_Get_Area(struct _fwdp *f)
     switch(*temp)
     {
       case '?':
-        ListMsgAreas(NULL, FALSE, FALSE);
+        ListMsgAreas(NULL, FALSE, FALSE, NULL);
         break;
         
       default:

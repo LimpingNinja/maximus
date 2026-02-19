@@ -719,7 +719,7 @@ static int near QWKGetValidArea(PXMSG msg, char *aname, word tossto)
       break;
     }
     else if (eqstri(aname, qmark))
-      ListMsgAreas(NULL, FALSE, FALSE);
+      ListMsgAreas(NULL, FALSE, FALSE, NULL);
 
     /* Set 'tossto' to zero so that we can recycle properly */
   }

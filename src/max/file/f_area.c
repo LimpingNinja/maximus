@@ -1008,8 +1008,13 @@ static int lb_file_area_interact(char *div_name, char *selected_out)
     /* Resolve list boundaries (start_row = current display_line) */
     lb_resolve_boundaries(&lx, &ly, &lw, &lh, display_line, 1);
 
+    /* Position cursor below the lightbar region before rendering
+     * footer and help so the list doesn't overwrite them. */
     if (!did_show_custom_screen)
     {
+      if (!show_footer)
+        ui_goto(ly + lh, 1);
+
       ParseCustomFileAreaList(NULL, cdiv,
         (char *)ngcfg_get_string_raw("general.display_files.file_footer"),
         headfoot, FALSE);
@@ -1086,7 +1091,11 @@ static int lb_file_area_interact(char *div_name, char *selected_out)
       }
       else
       {
-        /* Area selected — return it */
+        /* Area selected — park cursor below list region and return */
+        ui_goto(ly + lh, 1);
+        ui_set_attr(Mci2Attr("|tx", 0x07));
+        Puts("\n");
+        vbuf_flush();
         strncpy(selected_out, sel->name, MAX_ALEN - 1);
         selected_out[MAX_ALEN - 1] = '\0';
         free(entries);

@@ -423,7 +423,7 @@ word DisplayMaxCode(DSTK *d)
           no_local_output=FALSE;
 
         if ((ch=DispSlowGetChar(d))=='M')
-          ListMsgAreas(NULL, FALSE, FALSE);
+          ListMsgAreas(NULL, FALSE, FALSE, NULL);
         else if (ch=='F')
           ListFileAreas(NULL, FALSE, NULL);
 

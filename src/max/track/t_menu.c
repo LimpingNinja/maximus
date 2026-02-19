@@ -366,7 +366,7 @@ static int near GetValidArea(char *szArea, int sizeofarea, char *szAreaPrompt)
 
     if (eqstri(szArea, qmark))
     {
-      ListMsgAreas(NULL, TRUE, FALSE);
+      ListMsgAreas(NULL, TRUE, FALSE, NULL);
       continue;
     }
 

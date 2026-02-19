@@ -5,8 +5,8 @@
 lightbar_prompts = false
 
 [file_areas]
-lightbar_area = false
-reduce_area = 8
+lightbar_area = true
+reduce_area = 5
 
 # Selection highlight behavior: row, full, or name
 lightbar_what = "row"
@@ -30,8 +30,8 @@ lightbar_back = ""
 custom_screen = ""
 
 [msg_areas]
-lightbar_area = false
-reduce_area = 8
+lightbar_area = true
+reduce_area = 5
 
 # Selection highlight behavior: row, full, or name
 lightbar_what = "row"

@@ -141,7 +141,7 @@ void Msg_Tag(void)
 
     if (*inp=='/' || *inp=='?')
     {
-      ListMsgAreas(NULL, TRUE, FALSE);
+      ListMsgAreas(NULL, TRUE, FALSE, NULL);
       if (! *linebuf)
         Puts(at_equals_tagged);
       continue;

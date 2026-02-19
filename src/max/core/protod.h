@@ -459,7 +459,7 @@ void EnterMsgAreaBarricade(void);
 void ExitMsgAreaBarricade(void);
 char *CurrentMenuName(void);
 char *MessageSection(char *cur_area, char *szTmp);
-void ListMsgAreas(char *div_name, int do_tag, int show_help);
+int ListMsgAreas(char *div_name, int do_tag, int show_help, char *selected_out);
 char *FileSection(char *current, char *szTmp);
 int CopyMsgArea(PMAH to, PMAH from);
 int CopyFileArea(PFAH to, PFAH from);
