@@ -65,7 +65,6 @@ static char rcs_id[]="$Id: max_main.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 
 static void near Yell(void);
 static void near Max_Version(void);
-static void near Compilation_Data(void);
 static void near Goodbye(void);
 
 
@@ -281,268 +280,56 @@ static void near Yell(void)
 
 
 
+/**
+ * @brief Display the Maximus NG version/about screen.
+ *
+ * Shows version, build info, system stats, legacy credits,
+ * and current maintainer contact information.
+ */
 static void near Max_Version(void)
 {
-#if !defined(UNIX) && !defined(NT)
-  byte id, subid;
-#endif
+  Puts(CLS
+       "\n"
+       "            |11$D56=\n"
+       "            |15             M  A  X  I  M  U  S    N  G\n"
+       "            |11$D56=\n"
+       "\n");
 
-  Puts(CLS);
+  /* Version and build info */
+  Printf("    |14Version |08: |15%s%s\n", version, test);
+  Printf("    |14Built   |08: |15%s at %s\n", comp_date, comp_time);
 
-  LangPrintf(slogan, LMAGENTA, version, test);
-  Puts(copyright);
-  Puts(dev_info);
-
-#ifdef KEY
-  Printf(LRED "System: %s\n"
-              " SysOp: %s\n\n",
-         gkey_info+strlen(gkey_info)+1,
-         gkey_info);
-#endif
-
-  /* Now tell user when we were compiled */
-
-  Compilation_Data();
-
-#ifdef HCC
-  Printf(YELLOW "Licensed for use by members of the Dutch HCC.\n\n");
-#endif
-
-#if !defined(NT) && !defined(UNIX)
-  #if defined(OS_2)
-    #ifdef __FLAT__
-      DosDevConfig(&id, DEVINFO_MODEL);
-      DosDevConfig(&subid, DEVINFO_SUBMODEL);
-    #else
-      DosDevConfig(&id, DEVINFO_MODEL, 0);
-      DosDevConfig(&subid, DEVINFO_SUBMODEL, 0);
-    #endif
-  #elif defined(__MSDOS__)
-    id=*(char far *)MK_FP(0xffffu, 0x000e);
-    subid=0;
-  #else
-    #error Unknown OS
-  #endif
-
-
-    Puts(computer_type);
-
-    switch (id)
+#ifdef UNIX
+  {
+    struct utsname uts;
+    if (uname(&uts) != -1)
     {
-      case 0xff:
-        Puts(class_pc);
-        break;
-
-      case 0xfe:
-        Puts(class_xt);
-        break;
-
-      case 0xfd:
-        Puts(class_pcjr);
-        break;
-
-      case 0xfc:
-        switch(subid)
-        {
-          case 0x02:
-            Puts(class_ps2_xt);
-            break;
-
-          case 0x04:
-            LangPrintf(class_ps2_mod, "50");
-            break;
-
-          case 0x05:
-            LangPrintf(class_ps2_mod, "60");
-            break;
-
-          case 0x01: /* many clones have AT/339 - fall thru to "Generic AT" */
-          default:
-            Puts(class_at);
-            break;
-        }
-        break;
-
-      case 0xfa:
-        LangPrintf(class_ps2_mod, "30");
-        break;
-
-      case 0xf9:
-        Puts(class_pc_conv);
-        break;
-
-      case 0xf8:
-        switch (subid)
-        {
-          case 0x2e: case 0x14: case 0x16: case 0x2a: case 0x2c: case 0x58:
-          case 0x5a: case 0x5c: case 0x40: case 0x28:
-            LangPrintf(class_ps2_mod, "95");
-            subid=0;
-            break;
-
-          case 0x2f: case 0x11: case 0x13: case 0x2b: case 0x2d: case 0x57:
-          case 0x59: case 0x5b: case 0x3f: case 0x29:
-            LangPrintf(class_ps2_mod, "90");
-            subid=0;
-            break;
-
-          default:
-            LangPrintf(class_ps2_mod, "80");
-        }
-
-
-        break;
-
-      case 0x9a:
-        Puts(class_compaq_p);
-        break;
-
-      case 0x2d:
-        Puts(class_compaq);
-        break;
-
-      default:
-        { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", (int)id);
-          LangPrintf(class_generic, _ib); }
-        break;
+      Printf("    |14System  |08: |15%s %s (%s)\n",
+             uts.sysname, uts.release, uts.machine);
+      Printf("    |14Host    |08: |15%s\n", uts.nodename);
     }
-
-    #ifdef OS_2
-    if (subid)
-      { char _ib[16]; snprintf(_ib, sizeof(_ib), "%d", subid+1);
-        LangPrintf(minor_revision, _ib); }
-    #endif
+  }
 #endif
 
-  Puts(oper_sys);
+  /* Legacy credits */
+  Puts("    |08$D56-\n"
+       "    |07Originally created by Scott Dudley; developed by Peter\n"
+       "    |07Fitzsimmons and David Nugent. UNIX port by Wes Garland,\n"
+       "    |07Bo Simonsen, and R.F. Jones.\n"
+       "\n"
+       "    |07Licensed under the GNU General Public License v2.\n"
+       "    |08Copyright (C) 1989-2002 Lanius Corporation.\n");
 
-#if defined(NT)
-  {
-#if 1 /* NT 3.1 or below */
-    int ver=GetVersion();
+  /* NG maintainer info */
+  Puts("    |08$D56-\n"
+       "    |10Maximus NG |15maintained by |10Kevin Morgan\n"
+       "      |14GitHub  |08: |15github.com/LimpingNinja/maximus\n"
+       "      |14Email   |08: |15kevin@limping.ninja\n"
+       "      |14Reddit  |08: |15u/TheLimpingNinja\n"
+       "\n");
 
-    Printf("Windows%s Version %u.%02u\n",
-           (ver & 0xff) >= 4 ? "95" : " NT",
-           ver & 0xff, (ver >> 8) & 0xff);
-#else
-    OSVERSIONINFO vi;
-    int ver;
-
-    GetVersionExA(&vi);
-
-    Printf("Windows%s Version %u.%02u (build %d)\n",
-           vi.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS ? "95" : " NT",
-           vi.dwMajorVersion,
-           vi.dwMinorVersion,
-           vi.dwBuildNumber);
-#endif
-  }
-#elif defined(OS_2)
-  {
-    int osmajor = _osmajor;
-    int osminor = _osminor;
-
-    if (_osmajor==20 && _osminor >= 30)
-    {
-      osmajor = 30;
-      osminor = (_osminor - 30) * 10;
-    }
-
-    { char _i1[16], _i2[16];
-      snprintf(_i1, sizeof(_i1), "%d", osmajor/10);
-      snprintf(_i2, sizeof(_i2), "%d", osminor);
-      LangPrintf(os2_ver, _i1, _i2); }
-  }
-#elif defined(__MSDOS__)
-
-  {
-    struct _fossil_info finfo;
-
-    if (_osmajor > 9)
-    { char _i1[16], _i2[16];
-      snprintf(_i1, sizeof(_i1), "%d", _osmajor/10);
-      snprintf(_i2, sizeof(_i2), "%d", _osminor);
-      LangPrintf(os2_dosbox, _i1, _i2); }
-    else { char _i1[16], _i2[16];
-      snprintf(_i1, sizeof(_i1), "%d", _osmajor);
-      snprintf(_i2, sizeof(_i2), "%d", _osminor);
-      LangPrintf(dos_ver, _i1, _i2); }
-
-    fossil_inf(&finfo);
-    LangPrintf(fossil_ver,finfo.id);
-  }
-
-#elif defined(UNIX)
-  {
-    struct utsname name;
-
-    if (uname(&name) != -1) /* Don't change this */
-      Printf("%s %s, running on %s hardware (%s)\n", name.sysname, name.release, name.machine, name.nodename);
-    else
-      Printf("Unknown UNIX-type platform\n");
-  }
-#else
-  #error Unknown OS
-#endif
-
-  {
-    char temp[40];
-    LangPrintf(heap_mem, commaize((long)coreleft(), temp));
-  }
-
-  Puts(WHITE);
+  Puts("|07");
   Press_ENTER();
-}
-
-
-
-static void near Compilation_Data(void)
-{
-#if defined(__WATCOMC__)
-  #ifdef __FLAT__
-    #define COMPILER "WATCOM C/32"
-  #else
-    #define COMPILER "WATCOM C/16"
-  #endif
-#elif defined(__TURBOC__)
-  #define COMPILER "Turbo C"
-#elif defined(_QC)
-  #define COMPILER "Microsoft Quick C"
-#elif defined(__MSC__)
-  #define COMPILER "Microsoft C"
-#elif defined(__ZTC__)
-  #define COMPILER "Zortech C"
-#elif defined(__GNUC__)
-  #define COMPILER "GNU C"
-#else
-#error Unknown compiler type!
-#endif
-
-
-#if defined(_MSC_VER)
-  #if _MSC_VER > 0
-    #define COMPSTR       " v%d.%d"
-    #define COMPVERMAJ    (_MSC_VER/100)
-    #define COMPVERMIN    (_MSC_VER % 100)
-  #endif
-#elif defined(__WATCOMC__)
-  #define COMPSTR       " v%d.%d"
-  #define COMPVERMAJ    (__WATCOMC__/100)
-  #define COMPVERMIN    (__WATCOMC__%100)
-#elif defined(__TURBOC__)
-  #define COMPSTR       " v%d.%d"
-  #define COMPVERMAJ    (__TURBOC__/0x100)
-  #define COMPVERMIN    (__TURBOC__ % 0x100)
-#else
-  #define COMPSTR
-  #define COMPVERMAJ    0
-  #define COMPVERMIN    0
-#endif
-
-  LangPrintf(compiled_on,
-             comp_date, comp_time);
-
-  Printf(COMPILER COMPSTR ")\n", COMPVERMAJ, COMPVERMIN);
 }
 
 

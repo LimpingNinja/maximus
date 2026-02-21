@@ -30,6 +30,7 @@ static char rcs_id[]="$Id: max_cho.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #define MAX_LANG_global
 #define MAX_LANG_m_area
 #define MAX_LANG_max_chat
+#define MAX_LANG_max_wfc
 #define MAX_LANG_sysop
 #include <stdio.h>
 #include <stdlib.h>
@@ -330,6 +331,11 @@ void Who_Is_On(void)
 
   char username[36];
   char status[80];
+  word avail;
+
+  int total_nodes = 0;   /* Total nodes seen */
+  int active_users = 0;  /* Nodes with a logged-in user */
+  int chat_avail = 0;    /* Users available for chat */
 
 #ifndef MCP
   if (! *ngcfg_get_path("maximus.node_path"))
@@ -345,14 +351,31 @@ void Who_Is_On(void)
   if ((cgs=ChatFindOpen())==NULL)
     return;
 
-  while (ChatFindNext(cgs, &tid, username, status, NULL))
+  while (ChatFindNext(cgs, &tid, username, status, &avail))
   {
+    char _tid[8];
+
     if (! tid)
       continue;
 
-    { char _tid[8]; snprintf(_tid, sizeof(_tid), "%d", tid);
+    total_nodes++;
+    snprintf(_tid, sizeof(_tid), "%d", tid);
+
+    if (eqstri(status, cs_wfc))
+    {
+      /* Idle/WFC node — dim row, WFC text in user column */
+      LangPrintf(hu_is_on_4, cs_wfc, _tid);
+    }
+    else
+    {
+      /* Logged-in user — bright row with status */
+      active_users++;
+      if (avail)
+        chat_avail++;
+
       LangPrintf(hu_is_on_3, username, _tid, status,
-                 eqstri(username, usrname) ? ch_you : blank_str); }
+                 eqstri(username, usrname) ? ch_you : blank_str);
+    }
 
     if (MoreYnBreak(&nonstop, CYAN))
       break;
@@ -360,8 +383,16 @@ void Who_Is_On(void)
     if (halt())
       break;
   }
-  
+
   ChatFindClose(cgs);
+
+  /* Summary footer */
+  Puts(hu_is_on_5);
+  { char _tn[8], _au[8], _ca[8];
+    snprintf(_tn, sizeof(_tn), "%d", total_nodes);
+    snprintf(_au, sizeof(_au), "%d", active_users);
+    snprintf(_ca, sizeof(_ca), "%d", chat_avail);
+    LangPrintf(hu_is_on_6, _tn, _au, _ca); }
 }
 
 static void near Chat_Toggle(void)

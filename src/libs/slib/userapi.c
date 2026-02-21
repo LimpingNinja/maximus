@@ -530,6 +530,8 @@ int _fast UserFileFind(HUF huf, char *name, char *alias, struct _usr *pusr)
       dbuser = maxdb_user_find_by_name((MaxDB*)huf->db, name);
     else if (alias && *alias)
       dbuser = maxdb_user_find_by_alias((MaxDB*)huf->db, alias);
+    else
+      dbuser = maxdb_user_find_next_after_id((MaxDB*)huf->db, 0);
     
     if (dbuser)
     {

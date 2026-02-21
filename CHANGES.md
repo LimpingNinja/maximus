@@ -2,7 +2,7 @@
 
 ---
 
-## Summary of Changes (Jan 30 – Feb 18, 2026)
+## Summary of Changes (Jan 30 – Feb 21, 2026)
 
 A lot has happened since the 4.0 baseline landed. Here's the short version:
 
@@ -16,11 +16,70 @@ A lot has happened since the 4.0 baseline landed. Here's the short version:
 
 **New UI primitives — and they're all scriptable.** The lightbar list engine (`ui_lightbar_list_run`) is a generic paged list with full keyboard nav (arrows, PgUp/PgDn, Home/End, Enter, ESC) and a key-passthrough mechanism so callers can layer domain-specific behavior on top without touching the primitive. Lightbar prompts (`ui_select_prompt`) give you inline single-key selection with highlight bar navigation — used everywhere from Yes/No/Cancel to multi-option menus. Input fields (`ui_edit_field`) got centralized key decoding, forward-delete, format masks, and start-mode control (append vs. overwrite vs. cursor-at-end). On top of all that, there's a new struct-based form runner with 2D spatial navigation across fields, cursor show/hide tied to edit state, and required-field validation. Every one of these primitives is fully exposed to MEX via intrinsics, so sysops can build custom interactive screens entirely from script.
 
-**MCI display codes expanded.** New terminal control codes, semantic theme color stubs (the lowercase pipe namespace — `|tx`, `|pr`, `|hi`, etc.), and a bunch of rendering/attribute fixes across the board.
+**MCI display codes expanded.** New terminal control codes, semantic theme color stubs (the lowercase pipe namespace — `|tx`, `|pr`, `|hi`, etc.), deferred parameter expansion (`|#N`) with format-op support, and a bunch of rendering/attribute fixes across the board.
 
 **Runtime foundations for 4.0.** SQLite-backed user database, TOML-first configuration via `libmaxcfg`, and Door32 support with automatic dropfile generation. MAXTEL gained headless/daemon modes and interactive sysop features (snoop overlay, chat break-in, shell-out to maxcfg).
 
+**Hardened input flows.** Remote login now enforces attempt limits on name, city, alias, and password entry — excess failures disconnect the caller. Legacy DOS dropfile generators (WWIV chain.txt, CallInfo, door.sys, dorinfo) removed in favor of native C dropfile support. All MEC display files cleaned up for Unix path compatibility.
+
 Full details for each change are in the dated entries below.
+
+---
+
+## Fri Feb 21 2026 - Maximus/UNIX 3.04a-r2 [alpha]
+
+*Preparation for MaximusNG 4.0*
+
+**Deferred MCI Params, Input Hardening, MEC Path Cleanup**  
+Maintainer: Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+
+### New: Deferred Parameter Expansion (|#N)
+
+- New `|#N` MCI codes for deferred parameter expansion during `MciExpand`
+- Format ops (`$L`, `$R`, `$T`, `$C`) now apply to resolved `|#N` values (e.g., `$L04|#2` pads to width 4)
+- `|!N` (early, via `LangVsprintf`) and `|#N` (deferred, via `MciExpand`) can be mixed in a single `LangPrintf` call
+- `LangPrintf` binds params via `va_copy` to `g_lang_params` for deferred resolution
+
+### Improved: Who-Is-On Display
+
+- WFC/idle nodes now shown with dim formatting via new `hu_is_on_4` lang string
+- Active user and chat-available counts tracked and displayed
+- `hu_is_on_3` uses deferred `|#N` for padded username and node number
+
+### Improved: Input Hardening
+
+- Name, city, alias, and password entry loops enforce a 3-attempt limit for remote callers
+- Excess attempts trigger disconnect with log entry and `too_many_attempts` lang string
+
+### Changed: Version Screen
+
+- Stripped all DOS/OS2 hardware detection code (PC/XT/AT/PS2/Convertible)
+- Clean MaximusNG about screen with MCI-formatted output
+
+### Fixed: MEC Display File Paths
+
+- All legacy `Misc\` backslash paths updated to `display/screens/` (bulletin, bul_hdr, bul_next, mailchek, rookie, welcome, newuser2)
+- `Hlp\mb_help` updated to `display/help/mb_help` in mexbank.mec/.mer
+- `[mex]m/oneliner` updated to `[mex]scripts/oneliner` in welcome.mec, newuser2.mec
+
+### Removed: Deprecated MEC Dropfile Generators
+
+- Removed `wwiv.mec`, `callinfo.mec`, `doorsys.mec`, `dorinfo.mec`, `outside.mec`
+- All superseded by native C dropfile support in `dropfile.c` (door.sys, door32, chain.txt)
+
+### Improved: Lightbar Area Selection
+
+- `ListFileAreas`/`ListMsgAreas` return value now distinguishes selection vs. back-out (positive = selected, negative = escape)
+
+### Changed: MAXTEL Popup Handling
+
+- Popup overlay state managed by main loop with auto-dismiss timer instead of inline ncurses window creation
+
+### Docs & Scripts
+
+- New `using-lightbar-areas.md` — full lightbar configuration guide with recipes, troubleshooting, and format token reference
+- Updated `mci-codes.md`, `mci-feature-spec.md`, `using-display-codes.md`
+- New `propagate_lang.sh` script for lang file sync across config trees
 
 ---
 

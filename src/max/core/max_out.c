@@ -232,11 +232,11 @@ int _stdc LangPrintf(char *format,...)
   va_list var_args;
   va_start(var_args, format);
 
-  /* Check if the format uses |!N positional parameters */
+  /* Check if the format uses |!N or |#N positional parameters */
   int has_positional = 0;
   for (const char *p = format; *p; p++)
   {
-    if (p[0] == '|' && p[1] == '!' &&
+    if (p[0] == '|' && (p[1] == '!' || p[1] == '#') &&
         ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
     {
       has_positional = 1;
@@ -246,11 +246,36 @@ int _stdc LangPrintf(char *format,...)
 
   if (has_positional)
   {
-    /* Expand |!N[suffix] via the type-aware core engine, then Puts()
-     * for MCI format-op processing, pipe colors, AVATAR/ANSI output. */
+    /* Pass 1: LangVsprintf expands |!N (early) and passes |#N through.
+     * Pass 2: Bind params to g_lang_params so MciExpand can resolve
+     * deferred |#N codes with pending format ops applied. */
     char expanded[PATHLEN * 2];
+    va_list ap_copy;
+    va_copy(ap_copy, var_args);
     LangVsprintf(expanded, sizeof(expanded), format, var_args);
+
+    /* Bind params for deferred |#N expansion in MciExpand */
+    MciLangParams lp = {0};
+    int max_slot = 0;
+    for (const char *p = format; *p; p++)
+    {
+      if (p[0] == '|' && (p[1] == '!' || p[1] == '#') &&
+          ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+      {
+        int slot = (p[2] >= '1' && p[2] <= '9')
+                     ? p[2] - '1' + 1
+                     : p[2] - 'A' + 10;
+        if (slot > max_slot) max_slot = slot;
+      }
+    }
+    lp.count = (max_slot > 15) ? 15 : max_slot;
+    for (int i = 0; i < lp.count; i++)
+      lp.values[i] = va_arg(ap_copy, const char *);
+    va_end(ap_copy);
+
+    g_lang_params = &lp;
     Puts(expanded);
+    g_lang_params = NULL;
   }
   else
   {
@@ -296,8 +321,14 @@ int LangSprintf(char *buf, size_t bufsz, const char *format, ...)
  * before passing them.
  *
  * Format tokens:
- *   |!1..|!9  — positional parameter 1–9  (const char *)
- *   |!A..|!F  — positional parameter 10–15 (const char *)
+ *   |!1..|!9  — positional parameter 1–9  (early expansion)
+ *   |!A..|!F  — positional parameter 10–15 (early expansion)
+ *   |#1..|#9  — deferred parameter 1–9  (passed through for MciExpand)
+ *   |#A..|#F  — deferred parameter 10–15 (passed through for MciExpand)
+ *
+ * Both |!N and |#N consume the same vararg slot.  |#N codes are left
+ * intact in the output so MciExpand can apply pending format ops ($L,
+ * $R, $T, $C) to the resolved value.
  *
  * @param buf    Destination buffer.
  * @param bufsz  Size of destination buffer.
@@ -309,11 +340,11 @@ int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
 {
   const char *vals[15] = {0};
 
-  /* Pass 1: scan for highest slot index */
+  /* Pass 1: scan for highest slot index (both |!N and |#N) */
   int max_slot = 0;
   for (const char *p = format; *p; p++)
   {
-    if (p[0] == '|' && p[1] == '!' &&
+    if (p[0] == '|' && (p[1] == '!' || p[1] == '#') &&
         ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
     {
       int slot = (p[2] >= '1' && p[2] <= '9')
@@ -329,13 +360,14 @@ int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
   for (int i = 0; i < count; i++)
     vals[i] = va_arg(ap, const char *);
 
-  /* Pass 3: walk format, expanding |!N inline */
+  /* Pass 3: walk format, expanding |!N inline, passing |#N through */
   size_t di = 0;
   for (const char *p = format; *p && di + 1 < bufsz; p++)
   {
     if (p[0] == '|' && p[1] == '!' &&
         ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
     {
+      /* |!N — early expansion: substitute param value inline */
       int slot = (p[2] >= '1' && p[2] <= '9')
                    ? p[2] - '1'
                    : p[2] - 'A' + 9;
@@ -345,6 +377,13 @@ int LangVsprintf(char *buf, size_t bufsz, const char *format, va_list ap)
         for (const char *v = vals[slot]; *v && di + 1 < bufsz; v++)
           buf[di++] = *v;
       }
+    }
+    else if (p[0] == '|' && p[1] == '#' &&
+             ((p[2] >= '1' && p[2] <= '9') || (p[2] >= 'A' && p[2] <= 'F')))
+    {
+      /* |#N — deferred expansion: copy through for MciExpand */
+      if (di + 3 < bufsz) { buf[di++] = p[0]; buf[di++] = p[1]; buf[di++] = p[2]; }
+      p += 2;
     }
     else
     {

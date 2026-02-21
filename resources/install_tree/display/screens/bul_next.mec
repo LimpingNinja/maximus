@@ -19,5 +19,5 @@
 [locate 21 1 cleol endcolour nocolour]
 [endcolour yellow locate  2 14 quit]
 
-[/nope cls link]Misc\Mailchek
+[/nope cls link]display/screens/mailchek
 [exit]

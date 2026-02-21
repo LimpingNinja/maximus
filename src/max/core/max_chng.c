@@ -30,6 +30,7 @@ static char rcs_id[]="$Id: max_chng.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #define MAX_LANG_m_area
 #define MAX_LANG_max_bor
 #define MAX_LANG_max_chng
+#define MAX_LANG_max_init
 #define MAX_LANG_sysop
 #include <stdio.h>
 #include <ctype.h>
@@ -386,9 +387,18 @@ static void near Chg_Edit(void)
 void Chg_City(void)
 {
   char temp[PATHLEN];
+  unsigned tries = 0; /* Counts invalid city entry attempts */
 
   do
   {
+    if (!local && tries++ >= 3)
+    {
+      ci_ejectuser();
+      logit("!Too many invalid city entries -- disconnecting");
+      Puts(too_many_attempts);
+      mdm_hangup();
+    }
+
     *linebuf='\0';
     WhiteN();
 
@@ -402,10 +412,19 @@ void Chg_City(void)
 void Chg_Alias(void)
 {
   char temp[PATHLEN];
+  unsigned tries = 0; /* Counts invalid alias entry attempts */
 
   do
   {
     int l;
+
+    if (!local && tries++ >= 3)
+    {
+      ci_ejectuser();
+      logit("!Too many invalid alias entries -- disconnecting");
+      Puts(too_many_attempts);
+      mdm_hangup();
+    }
 
     *linebuf='\0';
     WhiteN();
@@ -439,9 +458,18 @@ void Chg_Alias(void)
 void Chg_Phone(void)
 {
   char temp[PATHLEN];
+  unsigned tries = 0; /* Counts invalid phone entry attempts */
 
   do
   {
+    if (!local && tries++ >= 3)
+    {
+      ci_ejectuser();
+      logit("!Too many invalid phone entries -- disconnecting");
+      Puts(too_many_attempts);
+      mdm_hangup();
+    }
+
     *linebuf='\0';
     WhiteN();
 

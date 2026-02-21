@@ -1239,7 +1239,8 @@ int DispMoreYnBreak(char *nonstop,char *colour,int type)
     cantag=(local || (baud >= ClassGetInfo(cls,CIT_MIN_XFER_BAUD))) &&
            CanAccessFileCommand(&fah, file_tag, 0, NULL);
 
-    c=GetListAnswer(cantag ? MoreYnTag : Yne,
+    c=GetListAnswer(cantag ? (USE_LIGHTBAR_PROMPTS() ? MoreYnTag_lightbar : MoreYnTag)
+                           : (USE_LIGHTBAR_PROMPTS() ? Yne_lightbar : Yne),
                     NULL,
                     cantag ? useyforyesnst : useyforyesns,
                     CINPUT_NOLF | CINPUT_DISPLAY,

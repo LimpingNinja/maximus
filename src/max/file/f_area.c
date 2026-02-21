@@ -109,11 +109,14 @@ static int near ChangeToArea(char *group, char *input, int first, PFAH pfahDest)
     if (first)
     {
       char sel[MAX_ALEN] = {0};
-      if (ListFileAreas(group, !!*group, sel) && *sel)
+      int ret = ListFileAreas(group, !!*group, sel);
+      if (ret > 0 && *sel)
       {
         SetAreaName(usr.files, sel);
         return TRUE;
       }
+      else if (ret < 0)
+        return TRUE;
     }
     else return TRUE;
   }
@@ -164,11 +167,14 @@ static int near ChangeToArea(char *group, char *input, int first, PFAH pfahDest)
       DisposeFah(&fa);
       {
         char sel[MAX_ALEN] = {0};
-        if (ListFileAreas(group, !!*group, sel) && *sel)
+        int ret = ListFileAreas(group, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.files, sel);
           return TRUE;
         }
+        else if (ret < 0)
+          return TRUE;
       }
       return FALSE;
     }
@@ -248,12 +254,15 @@ static int near FileAreaMenu(PFAH pfah, char *group, BARINFO *pbi)
       if (! *linebuf)
       {
         char sel[MAX_ALEN] = {0};
-        if (ListFileAreas(group, !!*group, sel) && *sel)
+        int ret = ListFileAreas(group, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.files, sel);
           CopyFileArea(pfah, &fah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input=='.')   /* go up one or more levels */
@@ -281,12 +290,15 @@ static int near FileAreaMenu(PFAH pfah, char *group, BARINFO *pbi)
       if (! *linebuf)
       {
         char sel[MAX_ALEN] = {0};
-        if (ListFileAreas(group, !!*group, sel) && *sel)
+        int ret = ListFileAreas(group, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.files, sel);
           CopyFileArea(pfah, &fah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input==achg[2] || *input=='?')
@@ -294,12 +306,15 @@ static int near FileAreaMenu(PFAH pfah, char *group, BARINFO *pbi)
       strcpy(linebuf, input+1);
       {
         char sel[MAX_ALEN] = {0};
-        if (ListFileAreas(group, !!*group, sel) && *sel)
+        int ret = ListFileAreas(group, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.files, sel);
           CopyFileArea(pfah, &fah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input=='=')
@@ -1116,14 +1131,16 @@ static int lb_file_area_interact(char *div_name, char *selected_out)
     }
   }
 
-  /* Park cursor at bottom of screen and reset attribute before returning */
+  /* Park cursor at bottom of screen and reset attribute before returning.
+   * Return -1 to signal the caller that the user cancelled (ESC at root),
+   * as opposed to legacy-scroll returning 0 (list shown, re-prompt). */
   ui_goto((int)usr.len, 1);
   ui_set_attr(Mci2Attr("|tx", 0x07));
   Puts("\n");
   vbuf_flush();
 
   free(entries);
-  return 0;
+  return -1;
 }
 
 /* ============================================================================

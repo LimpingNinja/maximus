@@ -110,11 +110,14 @@ static int near ChangeToArea(char *group, char *input, int first, PMAH pmahDest)
     if (first)
     {
       char sel[MAX_ALEN] = {0};
-      if (ListMsgAreas(group, FALSE, !!*group, sel) && *sel)
+      int ret = ListMsgAreas(group, FALSE, !!*group, sel);
+      if (ret > 0 && *sel)
       {
         SetAreaName(usr.msg, sel);
         return TRUE;
       }
+      else if (ret < 0)
+        return TRUE;
     }
     else return TRUE;
   }
@@ -157,11 +160,14 @@ static int near ChangeToArea(char *group, char *input, int first, PMAH pmahDest)
       DisposeMah(&ma);
       {
         char sel[MAX_ALEN] = {0};
-        if (ListMsgAreas(group, FALSE, !!*group, sel) && *sel)
+        int ret = ListMsgAreas(group, FALSE, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.msg, sel);
           return TRUE;
         }
+        else if (ret < 0)
+          return TRUE;
       }
       return FALSE;
     }
@@ -231,12 +237,15 @@ static int near MsgAreaMenu(PMAH pmah, BARINFO *pbi, char *group)
       if (! *linebuf)
       {
         char sel[MAX_ALEN] = {0};
-        if (ListMsgAreas(group, FALSE, !!*group, sel) && *sel)
+        int ret = ListMsgAreas(group, FALSE, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.msg, sel);
           CopyMsgArea(pmah, &mah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input=='.')   /* go up one or more levels */
@@ -264,12 +273,15 @@ static int near MsgAreaMenu(PMAH pmah, BARINFO *pbi, char *group)
       if (! *linebuf)
       {
         char sel[MAX_ALEN] = {0};
-        if (ListMsgAreas(group, FALSE, !!*group, sel) && *sel)
+        int ret = ListMsgAreas(group, FALSE, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.msg, sel);
           CopyMsgArea(pmah, &mah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input==keys[2] || *input=='?')
@@ -277,23 +289,29 @@ static int near MsgAreaMenu(PMAH pmah, BARINFO *pbi, char *group)
       strcpy(linebuf, input+1);
       {
         char sel[MAX_ALEN] = {0};
-        if (ListMsgAreas(group, FALSE, !!*group, sel) && *sel)
+        int ret = ListMsgAreas(group, FALSE, !!*group, sel);
+        if (ret > 0 && *sel)
         {
           SetAreaName(usr.msg, sel);
           CopyMsgArea(pmah, &mah);
           return did_valid;
         }
+        else if (ret < 0)
+          return did_valid;
       }
     }
     else if (*input=='=')
     {
       char sel[MAX_ALEN] = {0};
-      if (ListMsgAreas(NULL, FALSE, FALSE, sel) && *sel)
+      int ret = ListMsgAreas(NULL, FALSE, FALSE, sel);
+      if (ret > 0 && *sel)
       {
         SetAreaName(usr.msg, sel);
         CopyMsgArea(pmah, &mah);
         return did_valid;
       }
+      else if (ret < 0)
+        return did_valid;
     }
     else if (! *input ||
              (*input >= '0' && *input <= '9') ||
@@ -1070,14 +1088,16 @@ static int lb_msg_area_interact(char *div_name, int do_tag, char *selected_out)
     }
   }
 
-  /* Park cursor at bottom of screen and reset attribute before returning */
+  /* Park cursor at bottom of screen and reset attribute before returning.
+   * Return -1 to signal the caller that the user cancelled (ESC at root),
+   * as opposed to legacy-scroll returning 0 (list shown, re-prompt). */
   ui_goto((int)usr.len, 1);
   ui_set_attr(Mci2Attr("|tx", 0x07));
   Puts("\n");
   vbuf_flush();
 
   free(entries);
-  return 0;
+  return -1;
 }
 
 

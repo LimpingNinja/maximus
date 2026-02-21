@@ -162,11 +162,26 @@
 #define mdm_getsp(d,m)      Inputf(d,INPUT_MSGENTER | INPUT_NLB_LINE,0,m,NULL)
 #define mdm_getspnc(d,m)    Inputf(d,INPUT_MSGENTER | INPUT_NLB_LINE  | INPUT_NOCLEOL,0,m,NULL)
 #define KeyGetRNP(p)        Input_Charf(CINPUT_DISPLAY | CINPUT_PROMPT | CINPUT_NOXLT | CINPUT_DUMP, p)
-#define GetYnAnswer(p,t)    GetListAnswer(CYn,NULL,useyforyes,t,percent_s,p)
-#define GetyNAnswer(p,t)    GetListAnswer(yCN,NULL,useyforyes,t,percent_s,p)
-#define GetYnnsAnswer(p,t)  GetListAnswer(Yne,NULL,useyforyesns,t,percent_s,p)
-#define GetYnhAnswer(h,p,t) GetListAnswer(CYnq,h,useyforyes,t,percent_s,p)
-#define GetyNhAnswer(h,p,t) GetListAnswer(yCNq,h,useyforyes,t,percent_s,p)
+/** True when this session should use lightbar prompt strings:
+ *  lightbar_prompts = true in display.toml AND terminal supports graphics. */
+#define USE_LIGHTBAR_PROMPTS() \
+    (ngcfg_get_bool("general.display.general.lightbar_prompts") \
+     && usr.video != GRAPH_TTY)
+#define GetYnAnswer(p,t)    GetListAnswer( \
+    USE_LIGHTBAR_PROMPTS() ? CYn_lightbar : CYn, \
+    NULL,useyforyes,t,percent_s,p)
+#define GetyNAnswer(p,t)    GetListAnswer( \
+    USE_LIGHTBAR_PROMPTS() ? yCN_lightbar : yCN, \
+    NULL,useyforyes,t,percent_s,p)
+#define GetYnnsAnswer(p,t)  GetListAnswer( \
+    USE_LIGHTBAR_PROMPTS() ? Yne_lightbar : Yne, \
+    NULL,useyforyesns,t,percent_s,p)
+#define GetYnhAnswer(h,p,t) GetListAnswer( \
+    USE_LIGHTBAR_PROMPTS() ? CYnq_lightbar : CYnq, \
+    h,useyforyes,t,percent_s,p)
+#define GetyNhAnswer(h,p,t) GetListAnswer( \
+    USE_LIGHTBAR_PROMPTS() ? yCNq_lightbar : yCNq, \
+    h,useyforyes,t,percent_s,p)
 #define UserHasKey(k)       (usr.xkeys & (1L << (dword)(k)))
 #define UserKeyOff(k)       (usr.xkeys &= ~(1L << (dword)(k)))
 #define UserKeyOn(k)        (usr.xkeys |= (1L << (dword)(k)))

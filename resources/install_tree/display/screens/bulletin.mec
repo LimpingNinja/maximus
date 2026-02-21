@@ -3,7 +3,7 @@
  This file contains a list of bulletins to be shown to the user.  The
  only restrictions for modifying this file are:
 
- 1) There must be one {link}Misc\Bul_Hdr at the top of the file, below
+ 1) There must be one {link}display/screens/bul_hdr at the top of the file, below
     any comments.
 
  2) The start of each bulletin should contain the date that the
@@ -12,12 +12,12 @@
  3) The date should be followed by two blank lines, and then the
     bulletin itself.
 
- 4) After each bulletin, you should use a {link}Misc\Bul_Next token.
+ 4) After each bulletin, you should use a {link}display/screens/bul_next token.
 
  Aside from these restrictions, you can create as many different
  bulletins as you wish.
 
-][link]Misc\Bul_Hdr
+][link]display/screens/bul_hdr
 [comment ********* BEGIN BULLETIN *********][hline]
 [lightmagenta]Aug 10/95[yellow]
 
@@ -25,7 +25,7 @@
 After an extensive period of development and testing, Maximus 3.00
 was released on this date.
 
-[link]Misc\Bul_Next
+[link]display/screens/bul_next
 [comment ********* END BULLETIN *********][hline]
 [comment ********* BEGIN BULLETIN *********][hline]
 [lightmagenta]Jul 29/95[yellow]
@@ -34,7 +34,7 @@ was released on this date.
 Today marks five years since the release of Maximus 1.02.  Happy
 birthday, Maximus!
 
-[link]Misc\Bul_Next
+[link]display/screens/bul_next
 [comment ********* END BULLETIN *********][hline]
-[cls display]Misc\mailchek
+[cls display]display/screens/mailchek
 

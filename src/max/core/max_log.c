@@ -279,8 +279,19 @@ static int near GetName(void)
     quit(ERROR_CRITICAL);
   }
 
+  unsigned name_tries = 0; /* Counts failed username entry attempts */
+
   for (;;)
   {
+    /* Disconnect remote callers who can't enter a valid name after 3 tries */
+    if (!local && name_tries++ >= 3)
+    {
+      ci_ejectuser();
+      logit("!Too many invalid name entries -- disconnecting");
+      Puts(too_many_attempts);
+      mdm_hangup();
+    }
+
     found_it=FALSE;
 
     *fname=*lname='\0';
@@ -1314,9 +1325,19 @@ void Get_Pwd(void)
 {
   char got[PATHLEN];
   char check[PATHLEN];
+  unsigned tries = 0; /* Counts failed password-set attempts */
 
   do
   {
+    /* Disconnect remote callers who can't set a valid password after 3 tries */
+    if (!local && tries++ >= 3)
+    {
+      ci_ejectuser();
+      logit("!Too many invalid password attempts during new user registration -- disconnecting");
+      Puts(too_many_attempts);
+      mdm_hangup();
+    }
+
     Clear_KBuffer();
 
     InputGetsLe(got, BUFLEN, '.', get_pwd1);

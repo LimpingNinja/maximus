@@ -58,12 +58,18 @@ unlisted_system = { text = "|03|!1:    |02Unlisted system (|!2)\n", flags = ["me
 unlisted_node = { text = "Unlisted node", flags = ["mex"] }
 more_prompt = { text = "More", flags = ["mex"] }
 Tag = { text = "T", flags = ["mex"] }
-MoreYnTag = { text = "[Y]es,[n]o,[t]ag,[=]help", flags = ["mex"] }
-CYn = { text = "[Y]es,[n]o", flags = ["mex"] }
-yCN = { text = "[y]es,[N]o", flags = ["mex"] }
-Yne = { text = "[Y]es,[n]o,[=]help", flags = ["mex"] }
-CYnq = { text = "[Y]es,[n]o,[?]help", flags = ["mex"] }
-yCNq = { text = "[y]es,[N]o,[?]help", flags = ["mex"] }
+MoreYnTag = { text = "Ynt=", flags = ["mex"] }
+MoreYnTag_lightbar = { text = "[Y]es,[n]o,[t]ag,[=]nonstop", flags = ["mex"] }
+CYn = { text = "Yn", flags = ["mex"] }
+CYn_lightbar = { text = "[Y]es,[n]o", flags = ["mex"] }
+yCN = { text = "yN", flags = ["mex"] }
+yCN_lightbar = { text = "[y]es,[N]o", flags = ["mex"] }
+Yne = { text = "Yn=", flags = ["mex"] }
+Yne_lightbar = { text = "[Y]es,[n]o,[=]nonstop", flags = ["mex"] }
+CYnq = { text = "Yn?", flags = ["mex"] }
+CYnq_lightbar = { text = "[Y]es,[n]o,[?]help", flags = ["mex"] }
+yCNq = { text = "yN?", flags = ["mex"] }
+yCNq_lightbar = { text = "[y]es,[N]o,[?]help", flags = ["mex"] }
 Yes = { text = "Y", flags = ["mex"] }
 No = { text = "N", flags = ["mex"] }
 M_nonstop = { text = "=", flags = ["mex"] }
@@ -746,7 +752,7 @@ no_files_attached = "|erThere are no unreceived file attaches for you.\n|cd"
 attach_hdr0 = "|15\nList of files attached to |12YOU:\n"
 attach_hdr0_5 = "                                              Compr.\n"
 attach_hdr1 = "Date     Time  From                           Size   Message Area\n"
-attach_hdr2 = "�������� ����� ������������������������������ ������ ��������������������������\n"
+attach_hdr2 = "\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n"
 attach_fmt = { text = "|13$T08$R08|!1 $l020|!2:$l020|!3 |14$T30$R30|!4 |12$L06|!5 |10$T26|!6\n|15", params = [{name = "date", type = "string", desc = "Attachment date", default = "15 Feb 25"}, {name = "hours", type = "string", desc = "Attachment time hours", default = "14"}, {name = "minutes", type = "string", desc = "Attachment time minutes", default = "30"}, {name = "from", type = "string", desc = "Who attached the file", default = "Sysop"}, {name = "size", type = "string", desc = "File size string", default = "1,024"}, {name = "area", type = "string", desc = "Area the attachment is in", default = "NETMAIL"}] }
 attach_fmt2 = { text = "|10\n Date: |13$T08$R08|!1 $l020|!2:$l020|!3\n|10 From: |14|!4\n|10 Area: |11|!5\n\n", params = [{name = "date", type = "string", desc = "Attachment date", default = "15 Feb 25"}, {name = "hours", type = "string", desc = "Attachment time hours", default = "14"}, {name = "minutes", type = "string", desc = "Attachment time minutes", default = "30"}, {name = "from", type = "string", desc = "Who attached the file", default = "Sysop"}, {name = "area", type = "string", desc = "Area the attachment is in", default = "NETMAIL"}] }
 ok_to_overwrite = { text = "File '|!1' exists.  Overwrite", params = [{name = "filename", type = "string", desc = "Existing filename to overwrite", default = "FILE.ZIP"}] }
@@ -906,7 +912,7 @@ cs_outside = { text = "Running external program", flags = ["mex"] }
 ch_page_msg = { text = "\a|!1\n|[K", params = [{name = "message", type = "string", desc = "Page notification message text", default = "You are being paged!"}] }
 ch_hey_dude_msg = { text = "|!1\n|[K", params = [{name = "message", type = "string", desc = "Inter-node page message text", default = "Hey, are you there?"}] }
 hu_is_on_1 = "|15\nUsername                             Node         Status\n"
-hu_is_on_2 = "$D35�  $D04�  $D29�\n"
+hu_is_on_2 = "$D35\xC4  $D04\xC4  $D29\xC4\n"
 hu_is_on_3 = { text = "|14$T36$R36|!1  $L03|!2  |07|!3|!4\n", params = [{name = "user_name", type = "string", desc = "User name on the node", default = "Kevin Morgan"}, {name = "node_num", type = "string", desc = "Node/task number", default = "1"}, {name = "status", type = "string", desc = "Node activity status", default = "Idle"}, {name = "you_marker", type = "string", desc = "' (You)' if this is your node, blank otherwise", default = ""}] }
 ch_xx_join = { text = "|12|!1 |13joins the conversation.\n|[K", params = [{name = "user_name", type = "string", desc = "Name of user joining chat", default = "Kevin Morgan"}] }
 ch_xx_leave = { text = "|12|!1 |13leaves the conversation.\n|[K", params = [{name = "user_name", type = "string", desc = "Name of user leaving chat", default = "Kevin Morgan"}] }
@@ -960,33 +966,33 @@ ued_credit = "Credit (cents): "
 ued_time = "Time: "
 ued_ulall = "Total uploads (in K): "
 ued_getpriv = "|[K|prNew priv level (# or priv key): |in"
-ued_ss1 = "|CL|14U|07ser |10������������������������������� |07Last call                   |10�����������Ŀ\n"
-ued_ss2 = " � |14N|07ame                         |14A|07lias                                        |10�\n"
-ued_ss3 = " � |14C|07ity                         |14V|07oicePhone                 |14S|07ex               |10�\n"
-ued_ss4 = " � |14P|07assword                     |14D|07ataPhone                  |14B|07Day              |10�\n"
-ued_ss5 = "|14A|07ccess |10������������������������������������Ŀ    |14S|07ettings |10������������������Ŀ\n"
-ued_ss6 = " � |14P|07riv level             |14C|07redit            |10�     � |14W|07idth                    |10�\n"
-ued_ss7 = " � |14K|07eys                   |14D|07ebit             |10�     � |14L|07ength                   |10�\n"
-ued_ss8 = " � |14G|07roup Num              |14U|07sed Pts          |10�     � |14N|07ulls                    |10�\n"
-ued_ss9 = " � |14A|07lloc Pts              |14S|07howUlist         |10�     � |14M|07sgArea                  |10�\n"
-ued_ss10 = " � |14N|07erd                                     |10�     � |14F|07ileArea                 |10�\n"
-ued_ss11 = "|14I|07nformation |10�����������������������������������Ŀ � |14V|07ideo Mode               |10�\n"
-ued_ss12 = " � |14D|07L (all)                 |14C|07ur. Time           |10� � |14H|07elp                     |10�\n"
-ued_ss13 = " � |14T|07oday DL                 |14A|07dded Time          |10� � |14!|07Language                |10�\n"
-ued_ss14 = " � |14U|07ploads                  |14#|07 calls             |10� � |14P|07rotocol                 |10�\n"
-ued_ss15 = " � |14P|07ostMsgs                 |14R|07eadMsgs            |10� � |14C|07ompress                 |10�\n"
-ued_ss16 = " � |141|07stCall                  |14!|07PwdDate            |10�\n"
-ued_ss17 = "|14F|07lags |10�����������������������������������������Ŀ |14E|07xpiry |10�������������������Ŀ\n"
-ued_ss18 = " � |14H|07otkeys      |14I|07BM Chars         |14S|07crnClr       |10�  � |14E|07xpire by               |10�\n"
-ued_ss19 = " � |14M|07axEd        |14P|07ause (More)      |14A|07vailChat     |10�  � |14A|07ction                  |10�\n"
-ued_ss20 = " � |14T|07abs         |14C|07alledBefore      |14F|07SR           |10�  � |14D|07ate                    |10�\n"
-ued_ss21 = " � |14R|07IP                                          |10�\n"
+ued_ss1 = "|CL|14U|07ser |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 |07Last call                   |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n"
+ued_ss2 = " \xB3 |14N|07ame                         |14A|07lias                                        |10\xB3\n"
+ued_ss3 = " \xB3 |14C|07ity                         |14V|07oicePhone                 |14S|07ex               |10\xB3\n"
+ued_ss4 = " \xB3 |14P|07assword                     |14D|07ataPhone                  |14B|07Day              |10\xB3\n"
+ued_ss5 = "|14A|07ccess |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF    |14S|07ettings |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n"
+ued_ss6 = " \xB3 |14P|07riv level             |14C|07redit            |10\xB3     \xB3 |14W|07idth                    |10\xB3\n"
+ued_ss7 = " \xB3 |14K|07eys                   |14D|07ebit             |10\xB3     \xB3 |14L|07ength                   |10\xB3\n"
+ued_ss8 = " \xB3 |14G|07roup Num              |14U|07sed Pts          |10\xB3     \xB3 |14N|07ulls                    |10\xB3\n"
+ued_ss9 = " \xB3 |14A|07lloc Pts              |14S|07howUlist         |10\xB3     \xB3 |14M|07sgArea                  |10\xB3\n"
+ued_ss10 = " \xB3 |14N|07erd                                     |10\xB3     \xB3 |14F|07ileArea                 |10\xB3\n"
+ued_ss11 = "|14I|07nformation |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF \xB3 |14V|07ideo Mode               |10\xB3\n"
+ued_ss12 = " \xB3 |14D|07L (all)                 |14C|07ur. Time           |10\xB3 \xB3 |14H|07elp                     |10\xB3\n"
+ued_ss13 = " \xB3 |14T|07oday DL                 |14A|07dded Time          |10\xB3 \xB3 |14!|07Language                |10\xB3\n"
+ued_ss14 = " \xB3 |14U|07ploads                  |14#|07 calls             |10\xB3 \xB3 |14P|07rotocol                 |10\xB3\n"
+ued_ss15 = " \xB3 |14P|07ostMsgs                 |14R|07eadMsgs            |10\xB3 \xB3 |14C|07ompress                 |10\xB3\n"
+ued_ss16 = " \xB3 |141|07stCall                  |14!|07PwdDate            |10\xB3\n"
+ued_ss17 = "|14F|07lags |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF |14E|07xpiry |10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n"
+ued_ss18 = " \xB3 |14H|07otkeys      |14I|07BM Chars         |14S|07crnClr       |10\xB3  \xB3 |14E|07xpire by               |10\xB3\n"
+ued_ss19 = " \xB3 |14M|07axEd        |14P|07ause (More)      |14A|07vailChat     |10\xB3  \xB3 |14A|07ction                  |10\xB3\n"
+ued_ss20 = " \xB3 |14T|07abs         |14C|07alledBefore      |14F|07SR           |10\xB3  \xB3 |14D|07ate                    |10\xB3\n"
+ued_ss21 = " \xB3 |14R|07IP                                          |10\xB3\n"
 ued_ss22 = ""
 ued_spermflag = { text = "|[Y01|[X14|!1", params = [{name = "eqstri", type = "string", desc = "User status indicator", default = "Current"}] }
 ued_sstatcur = "|12 * Current * |15"
 ued_sstatdel = "|12 * Deleted * |15"
 ued_sstatprm = "|12 *Permanent* |15"
-ued_sstatblank = "|10�������������|15"
+ued_sstatblank = "|10\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4|15"
 ued_slastcall = { text = "|[Y01|[X48|!1", params = [{name = "sc_time", type = "string", desc = "Formatted timestamp", default = "15 Feb 25 14:30"}] }
 ued_sname = { text = "|[Y02|[X14$T18$R18|!1", params = [{name = "name", type = "string", desc = "User's display name", default = "Kevin Morgan"}] }
 ued_scity = { text = "|[Y03|[X14$T18$R18|!1", params = [{name = "city", type = "string", desc = "User's city", default = "Los Angeles"}] }
@@ -1099,7 +1105,7 @@ br_display_verbose = "|14Display:\n\n|14R|07)ead (show entire message: default)\
 br_display = "Display: [R)ead (show whole msg), L)ist (one per line), P)ack (QWK), Q)uit]: "
 br_dispk = "RLPQ?"
 br_list_head1 = { text = "|CL|15Msg#   From                 To                   Subject\n", rip = "\r!|1K|Y00000100|S0100|B000GHR0V\n!|c08|R010HHR0T|c0F|R000GHQ0S|S0107|B010HHQ0S\n!|c01|@020HMsg#   From                 To                   Subject|#|#\n" }
-br_list_head2 = { text = "������ �������������������� �������������������� ����������������������������\n", rip = "\r!|@020M������ �������������������� �������������������� ����������������������������\n!|w0004271600|#|#\n|CL" }
+br_list_head2 = { text = "\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n", rip = "\r!|@020M\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n!|w0004271600|#|#\n|CL" }
 br_this = { text = "|10Area |13|!1|03: |!2\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
 br_s_where_verbose = "|14Search where?  (More than one letter may be entered.)\n\n|14T|07)o field\n|14F|07)rom field\n|14S|07)ubject field\n|14B|07)ody of message\n|14?|07)help\n|15"
 br_s_where = "Search where [any or all of T)o, F)rom, S)ubject, B)ody, or ?)help]: "
@@ -1202,10 +1208,10 @@ log_wfc_exit_erl = { text = ":Event - Exiting with errorlevel |!1", params = [{n
 log_wfc_waiting = { text = ":Waiting for caller (event in |!1 mins)", params = [{name = "minutes", type = "string", desc = "Minutes until next scheduled event", default = "60"}] }
 log_wfc_connect = { text = "+Connected at |!1 bps|!2|!3|!4", params = [{name = "baud_rate", type = "string", desc = "Connection speed (bps)", default = "9600"}, {name = "slash_sep", type = "string", desc = "Slash separator (or blank if no ARQ)", default = "/"}, {name = "arq_info", type = "string", desc = "ARQ error correction info", default = "V.42bis"}, {name = "arq_suffix", type = "string", desc = "'/ARQ' suffix or blank", default = "/ARQ"}] }
 log_wfc_keybjunk = " Junk character from keyboard"
-wfc_status_tit = "� Status �"
-wfc_modem_tit = "� Modem Responses �"
-wfc_activ_tit = "� Current Activity �"
-wfc_keys_tit = "� SysOp Keys �"
+wfc_status_tit = "\xC4 Status \xC4"
+wfc_modem_tit = "\xC4 Modem Responses \xC4"
+wfc_activ_tit = "\xC4 Current Activity \xC4"
+wfc_keys_tit = "\xC4 SysOp Keys \xC4"
 wfc_keys1 = "<Alt-X>  System down"
 wfc_keys2 = "<Alt-J>  Shell to operating system"
 wfc_keys3 = "<Alt-K>  Local keyboard log-on"

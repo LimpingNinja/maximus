@@ -391,27 +391,55 @@ positions the cursor at column 10, then prints in light cyan.
 
 ---
 
-## Language String Parameters (`|!N`)
+## Language String Parameters (`|!N` and `|#N`)
 
 Language strings (in `english.toml`) can contain **positional parameters**
-that are filled in by the BBS at runtime. These use the `|!` prefix followed
-by a single character identifying the parameter slot:
+that are filled in by the BBS at runtime. There are two expansion modes:
+
+### Early Expansion (`|!N`)
 
 | Code        | Parameter   |
 |-------------|-------------|
 | `\|!1`–`\|!9` | Parameters 1 through 9 |
 | `\|!A`–`\|!F` | Parameters 10 through 15 |
 
-Positional parameters work with formatting operators. For example, a language
-string might contain:
+Early-expansion parameters are substituted **before** formatting operators
+run. Use `|!N` when the parameter value feeds *into* a formatting operator
+as an argument — for example, providing the repeat count for `$D`:
 
 ```toml
-user_stats_line = { text = "$R20|UN $R10|!1 $R10|!2" }
+# |!3 provides the number "75", which becomes the repeat count for $D
+box_border = { text = "|br$D|!3\xC4" }
 ```
 
-When displayed, `|!1` and `|!2` are replaced with values supplied by the
-calling code (e.g., message count and file count), each right-padded to
-10 columns.
+### Deferred Expansion (`|#N`)
+
+| Code        | Parameter   |
+|-------------|-------------|
+| `\|#1`–`\|#9` | Parameters 1 through 9 |
+| `\|#A`–`\|#F` | Parameters 10 through 15 |
+
+Deferred-expansion parameters are substituted **during** formatting-operator
+processing. Pending format ops (`$L`, `$R`, `$T`, `$C`) are applied to the
+resolved value. Use `|#N` when a formatting operator should *wrap* the
+parameter output:
+
+```toml
+# $L04 left-pads the node number to 4 columns
+# $T28$R28 trims the username to 28 chars then right-pads to 28
+who_row = { text = "|15 $L04|#2  $T28$R28|#1  |12|!3" }
+```
+
+### Mixing Both Modes
+
+Both `|!N` and `|#N` share the same slot numbering. A single language string
+can mix both — early slots are replaced first, deferred slots are resolved
+later with format ops applied:
+
+```toml
+# |#1 = username (deferred, gets padded), |!3 = status (early, plain text)
+user_line = { text = "$R20|#1 |!3" }
+```
 
 **Note:** Positional parameters are primarily used in language file strings.
 Display files and menu titles typically use information codes (`|XY`) instead.
@@ -448,6 +476,8 @@ all display codes normally.
 | Fill to column | `$X##C`      | `$X80.`          | Dots to column 80         |
 | Clear screen   | `\|CL`       | `\|CL`           | Clears the screen         |
 | Goto column    | `[X##`       | `[X01`           | Cursor to column 1        |
+| Early param    | `\|!N`       | `\|!1`           | Early-expanded parameter  |
+| Deferred param | `\|#N`       | `$R20\|#1`       | Format-op-wrapped param   |
 | Literal pipe   | `\|\|`       | `\|\|`           | Displays `\|`             |
 | Literal dollar | `$$`         | `$$`             | Displays `$`              |
 

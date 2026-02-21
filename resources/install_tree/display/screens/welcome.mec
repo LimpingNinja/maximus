@@ -1,4 +1,4 @@
-[cls onexit]Misc\Bulletin
+[cls onexit]bulletin
                        [lightgreen on blue]ÚÄÄÄÄÄÄÄÄÄÄ¿[white]
                        [lightgreen on blue]³ [FG yellow]Welcome! [FG lightgreen]³[white]
                        [lightgreen on blue]ÀÄÄÄÄÄÄÄÄÄÄÙ[white]
@@ -8,4 +8,4 @@
 [lightgreen]You have uploaded [ul]K.  You have downloaded [dl]K. (UL:DL=[ratio].)
 
 [white enter]
-[mex]m/oneliner
+[mex]scripts/oneliner

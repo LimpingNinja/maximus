@@ -114,8 +114,8 @@ static int mci_visible_len(const char *s)
       continue;
     }
 
-    /* |!N positional parameter codes — zero visible width */
-    if (*s=='|' && s[1]=='!' &&
+    /* |!N and |#N positional parameter codes — zero visible width */
+    if (*s=='|' && (s[1]=='!' || s[1]=='#') &&
         ((s[2] >= '1' && s[2] <= '9') || (s[2] >= 'A' && s[2] <= 'F')))
     {
       s += 3;
@@ -519,8 +519,12 @@ literal_dollar:
       }
     }
 
-    /* |!N positional parameter expansion (|!1..|!9, |!A..|!F) */
-    if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' && in[i+1]=='!' &&
+    /* |!N and |#N positional parameter expansion (|!1..|!9, |!A..|!F).
+     * |!N is early-expanded by LangVsprintf before reaching here.
+     * |#N is deferred — left intact by LangVsprintf so format ops
+     * ($L, $R, $T, $C) can be applied to the resolved value here. */
+    if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' &&
+        (in[i+1]=='!' || in[i+1]=='#') &&
         ((in[i+2] >= '1' && in[i+2] <= '9') || (in[i+2] >= 'A' && in[i+2] <= 'F')))
     {
       int idx;
@@ -532,9 +536,66 @@ literal_dollar:
       if (g_lang_params && idx < g_lang_params->count &&
           g_lang_params->values[idx])
       {
-        mci_out_append_str(out, out_size, &out_len, g_lang_params->values[idx]);
+        char tmp[512];
+        snprintf(tmp, sizeof(tmp), "%s", g_lang_params->values[idx]);
+
+        if (pending_pad_space)
+        {
+          char with_pad[512];
+          snprintf(with_pad, sizeof(with_pad), " %s", tmp);
+          snprintf(tmp, sizeof(tmp), "%s", with_pad);
+        }
+        pending_pad_space=0;
+
+        if (pending_trim >= 0)
+        {
+          mci_apply_trim(tmp, pending_trim);
+          pending_trim=-1;
+        }
+
+        if (pending_fmt != MCI_FMT_NONE && pending_width >= 0)
+        {
+          int vlen=mci_visible_len(tmp);
+          int pad=(pending_width > vlen) ? (pending_width - vlen) : 0;
+          int left=0, right=0;
+
+          if (pending_fmt==MCI_FMT_LEFTPAD)       left=pad;
+          else if (pending_fmt==MCI_FMT_RIGHTPAD)  right=pad;
+          else { left=pad/2; right=pad-left; }
+
+          if (left)
+          {
+            out_len=mci_emit_repeated(out, out_size, out_len, left, pending_padch);
+            cur_col += left;
+          }
+
+          mci_out_append_str(out, out_size, &out_len, tmp);
+          cur_col += mci_visible_len(tmp);
+
+          if (right)
+          {
+            out_len=mci_emit_repeated(out, out_size, out_len, right, pending_padch);
+            cur_col += right;
+          }
+
+          pending_fmt=MCI_FMT_NONE;
+          pending_width=-1;
+          pending_padch=' ';
+        }
+        else
+        {
+          mci_out_append_str(out, out_size, &out_len, tmp);
+          cur_col += mci_visible_len(tmp);
+        }
       }
-      /* If no params bound or index out of range, emit nothing (strip) */
+      /* If no params bound or index out of range, consume pending state and emit nothing */
+      else
+      {
+        pending_trim=-1;
+        pending_fmt=MCI_FMT_NONE;
+        pending_width=-1;
+        pending_pad_space=0;
+      }
 
       i += 3;
       continue;

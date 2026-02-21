@@ -404,14 +404,47 @@ and allow Maximus to track cursor position internally.
 
 ### Language string positional parameters
 
+Two expansion modes share the same slot numbering (1–9, A–F) and the
+same vararg positions.  A single `LangPrintf` call can mix both.
+
+#### Early expansion (`|!N`)
+
 | Code | Meaning |
 |---|---|
-| `\|!1`..`\|!9` | Positional parameter 1–9 |
-| `\|!A`..`\|!F` | Positional parameter 10–15 |
+| `\|!1`..`\|!9` | Positional parameter 1–9 (early) |
+| `\|!A`..`\|!F` | Positional parameter 10–15 (early) |
 
-Expanded by `LangPrintf()` pass 1 before MCI format ops run.
+Expanded by `LangVsprintf()` **before** `MciExpand()` runs.  The
+substituted text becomes part of the string that format ops see, so
+the value can feed **into** a format op argument.
+
+Use case: `$D|!3\xC4` — `|!3` resolves to `"75"`, producing `$D75─`
+(75 horizontal-line characters).
+
 Callers must zero-pad numeric values with `%02d` when the expanded
 value feeds into `$D##C`, `|[Y##`, `|[X##`, or similar 2-digit fields.
+
+#### Deferred expansion (`|#N`)
+
+| Code | Meaning |
+|---|---|
+| `\|#1`..`\|#9` | Positional parameter 1–9 (deferred) |
+| `\|#A`..`\|#F` | Positional parameter 10–15 (deferred) |
+
+Left intact by `LangVsprintf()` and resolved by `MciExpand()` during
+MCI processing.  Pending format ops (`$L`, `$R`, `$T`, `$C`) are
+applied to the resolved value.
+
+Use case: `$L04|#2` — left-pad the node number to 4 columns.
+`$T28$R28|#1` — truncate username to 28 chars then right-pad to 28.
+
+#### Implementation
+
+`LangPrintf()` uses `va_copy` to bind params into a stack-local
+`MciLangParams` struct pointed to by `g_lang_params`.  After
+`LangVsprintf()` expands `|!N` codes, `Puts()` is called with
+`g_lang_params` set so `MciExpand()` can resolve remaining `|#N`
+codes.  `g_lang_params` is cleared after `Puts()` returns.
 
 ## TOML Language File Rules
 

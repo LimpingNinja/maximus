@@ -251,7 +251,8 @@ is set.
 
 ### Operators That Modify the Next MCI Code
 
-These set pending state that is applied to the next `|XY` expansion:
+These set pending state that is applied to the next `|XY` info code or
+deferred `|#N` parameter expansion:
 
 | Operator | Description |
 |---|---|
@@ -290,6 +291,50 @@ reference position.
 
 ---
 
+## Language String Parameters (`|!N` and `|#N`)
+
+Language strings support **positional parameters** in two expansion modes
+that share the same slot numbering (1–9, A–F) and the same vararg positions.
+
+### Early Expansion (`|!N`)
+
+| Code | Slot |
+|---|---|
+| `\|!1`..`\|!9` | Parameter 1–9 |
+| `\|!A`..`\|!F` | Parameter 10–15 |
+
+Expanded by `LangVsprintf()` **before** `MciExpand()` runs.  The substituted
+text becomes part of the string that format ops see, so the value can feed
+**into** a format op argument (e.g., `$D|!3\xC4` where `|!3` provides the
+repeat count).
+
+### Deferred Expansion (`|#N`)
+
+| Code | Slot |
+|---|---|
+| `\|#1`..`\|#9` | Parameter 1–9 |
+| `\|#A`..`\|#F` | Parameter 10–15 |
+
+Left intact by `LangVsprintf()` and resolved by `MciExpand()` during MCI
+processing.  Pending format ops (`$L`, `$R`, `$T`, `$C`) are applied to
+the resolved value (e.g., `$L04|#2` left-pads node number to 4 columns).
+
+### Implementation
+
+`LangPrintf()` (`max_out.c`) uses `va_copy` to read params twice:
+
+1. First pass to `LangVsprintf()` — expands `|!N`, passes `|#N` through.
+2. Second pass binds all params into a stack-local `MciLangParams` struct
+   pointed to by the global `g_lang_params`.
+
+`Puts()` is called with `g_lang_params` set.  `MciExpand()` resolves `|#N`
+codes via `g_lang_params`, applying pending format ops.  `g_lang_params` is
+cleared after `Puts()` returns.
+
+Both `|!N` and `|#N` are treated as zero visible width by `mci_visible_len()`.
+
+---
+
 ## Contexts Where Parsing Is Disabled
 
 The following contexts push `MCI_PARSE_ALL → 0` at entry and pop at exit,
@@ -315,6 +360,7 @@ sequences directly and is unaffected by the push/pop.
 
 - AVATAR control sequences (`\x16` + 2 bytes)
 - Pipe color sequences (`|` + 2 digits, codes 00–31)
+- Positional parameter codes (`|!N` and `|#N`)
 - Escaped pipes (`||` counts as 1 visible character)
 
 Used by: `mci_visible_len()` (length measurement) and `mci_apply_trim()`

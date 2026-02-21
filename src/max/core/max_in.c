@@ -642,12 +642,13 @@ int cdecl GetListAnswer(char *list, char *help_file, char *invalid_response,
     }
   }
 
-  /* Lightbar path: on graphical terminals with no stacked input, present
-   * the list as an inline lightbar via ui_select_prompt. Handles both
-   * rich format ([Y]es,[n]o) and compact format (Yn). Falls through to
-   * legacy Input_Char loop for TTY users or when linebuf has input. */
+  /* Lightbar path: on graphical terminals with lightbar_prompts enabled
+   * and no stacked input, present the list as an inline lightbar via
+   * ui_select_prompt. Falls through to legacy Input_Char loop for TTY
+   * users, when lightbar_prompts = false, or when linebuf has input. */
 
-  if (list && *list && usr.video != GRAPH_TTY && !*linebuf)
+  if (list && *list && usr.video != GRAPH_TTY && !*linebuf
+      && ngcfg_get_bool("general.display.general.lightbar_prompts"))
   {
     const char *opts[16];
     int opt_count = 0;

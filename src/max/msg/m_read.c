@@ -1038,7 +1038,7 @@ static int near MoreYnns_Read(int inbrowse)
 {
   int c;
 
-  c= GetListAnswer(Yne, NULL, useyforyesns,
+  c= GetListAnswer(USE_LIGHTBAR_PROMPTS() ? Yne_lightbar : Yne, NULL, useyforyesns,
                    inbrowse ? CINPUT_NOLF : (CINPUT_NOLF | CINPUT_MSGREAD | CINPUT_ANY | CINPUT_SCAN),
                    inbrowse ? browse_more_prompt : reader_more_prompt);
 

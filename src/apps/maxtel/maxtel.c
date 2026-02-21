@@ -65,6 +65,7 @@
 #define LOCK_SUFFIX     ".lck"
 #define STATUS_PREFIX   "bbstat"
 #define REFRESH_MS      100
+#define POPUP_TIMEOUT_SECS 10  /* Seconds before crash dialog auto-dismisses */
 #define MAX_VISIBLE_NODES 6   /* Max nodes visible before scrolling */
 #define LASTUS_PREFIX   "lastus"
 #define MAX_CALLER_HISTORY 10
@@ -173,59 +174,23 @@ static int          headless_mode;
 static char         shown_error_sigs[MAX_ERROR_SIGS][128];
 static int          shown_error_sigs_count = 0;
 
+/* Popup overlay state — set by show_popup(), rendered and cleared by the main loop */
+static int          popup_active = 0;
+static char         popup_title[128];
+static char         popup_msg[512];
+static time_t       popup_dismiss_at = 0;
+
 static void show_popup(const char *title, const char *msg)
 {
-    if (headless_mode) {
+    if (headless_mode || config_mode)
         return;
-    }
 
-    if (config_mode) {
-        return;
-    }
-
-    int w = COLS - 8;
-    if (w > 76) w = 76;
-    if (w < 30) w = 30;
-    int h = 9;
-    int x = (COLS - w) / 2;
-    int y = (LINES - h) / 2;
-    WINDOW *win = newwin(h, w, y, x);
-    keypad(win, TRUE);
-
-    wattron(win, COLOR_PAIR(8));
-    mvwhline(win, 0, 0, ' ', w);
-    if (title) {
-        mvwprintw(win, 0, 2, "%s", title);
-    }
-    wattroff(win, COLOR_PAIR(8));
-
-    box(win, 0, 0);
-
-    wattron(win, COLOR_PAIR(4));
-    if (msg && *msg) {
-        int maxw = w - 4;
-        char line[512];
-        int row = 2;
-        const char *p = msg;
-        while (*p && row < h - 3) {
-            int n = 0;
-            while (p[n] && p[n] != '\n' && n < maxw) n++;
-            memcpy(line, p, (size_t)n);
-            line[n] = '\0';
-            mvwprintw(win, row++, 2, "%s", line);
-            p += n;
-            if (*p == '\n') p++;
-        }
-    }
-    wattroff(win, COLOR_PAIR(4));
-
-    wattron(win, COLOR_PAIR(14));
-    mvwprintw(win, h - 2, 2, "Press any key to continue");
-    wattroff(win, COLOR_PAIR(14));
-
-    wrefresh(win);
-    (void)wgetch(win);
-    delwin(win);
+    strncpy(popup_title, title ? title : "", sizeof(popup_title) - 1);
+    popup_title[sizeof(popup_title) - 1] = '\0';
+    strncpy(popup_msg, msg ? msg : "", sizeof(popup_msg) - 1);
+    popup_msg[sizeof(popup_msg) - 1] = '\0';
+    popup_dismiss_at = time(NULL) + POPUP_TIMEOUT_SECS;
+    popup_active = 1;
     need_refresh = 1;
 }
 
@@ -2079,6 +2044,61 @@ static void init_display(void)
     wbkgd(info_win, COLOR_PAIR(9));
 }
 
+/* Draw the popup overlay on top of the display, if one is pending */
+static void draw_popup_overlay(void)
+{
+    if (!popup_active)
+        return;
+
+    int remaining = (int)(popup_dismiss_at - time(NULL));
+    if (remaining <= 0) {
+        popup_active = 0;
+        need_refresh = 1;
+        return;
+    }
+
+    int w = COLS - 8;
+    if (w > 76) w = 76;
+    if (w < 30) w = 30;
+    int h = 9;
+    int x = (COLS - w) / 2;
+    int y = (LINES - h) / 2;
+    WINDOW *win = newwin(h, w, y, x);
+
+    wattron(win, COLOR_PAIR(8));
+    mvwhline(win, 0, 0, ' ', w);
+    if (popup_title[0])
+        mvwprintw(win, 0, 2, "%s", popup_title);
+    wattroff(win, COLOR_PAIR(8));
+
+    box(win, 0, 0);
+
+    wattron(win, COLOR_PAIR(4));
+    if (popup_msg[0]) {
+        int maxw = w - 4;
+        char line[512];
+        int row = 2;
+        const char *p = popup_msg;
+        while (*p && row < h - 3) {
+            int n = 0;
+            while (p[n] && p[n] != '\n' && n < maxw) n++;
+            memcpy(line, p, (size_t)n);
+            line[n] = '\0';
+            mvwprintw(win, row++, 2, "%s", line);
+            p += n;
+            if (*p == '\n') p++;
+        }
+    }
+    wattroff(win, COLOR_PAIR(4));
+
+    wattron(win, COLOR_PAIR(14));
+    mvwprintw(win, h - 2, 2, "Press any key or wait %2ds...", remaining);
+    wattroff(win, COLOR_PAIR(14));
+
+    wrefresh(win);
+    delwin(win);
+}
+
 static void update_display(void)
 {
     time_t now = time(NULL);
@@ -2339,6 +2359,8 @@ static void update_display(void)
     }
     wattroff(info_win, COLOR_PAIR(9));
     wrefresh(info_win);
+
+    draw_popup_overlay();
 }
 
 static void cleanup_display(void)
@@ -2376,6 +2398,13 @@ static void ensure_visible(void)
 
 static void handle_input(int ch)
 {
+    /* Any keypress dismisses the popup overlay */
+    if (popup_active) {
+        popup_active = 0;
+        need_refresh = 1;
+        return;
+    }
+
     if (ch >= '1' && ch <= '9') {
         int n = ch - '1';
         if (n < num_nodes) {
@@ -2797,6 +2826,10 @@ int main(int argc, char *argv[])
             }
         }
         
+        /* Keep refreshing while popup is visible so the countdown ticks */
+        if (popup_active)
+            need_refresh = 1;
+
         /* Refresh display (UI mode only, not in config mode) */
         if (!headless_mode && !config_mode && need_refresh) {
             update_display();
