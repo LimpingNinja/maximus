@@ -1,0 +1,37 @@
+# MEX Runtime Configuration
+#
+# Controls the behavior of MEX script socket and HTTP intrinsics.
+# These settings apply globally to all MEX scripts.
+
+[sockets]
+# Master switch — set to false to disable all outgoing socket/HTTP calls.
+enabled = true
+
+# Maximum concurrent socket connections per MEX session.
+max_connections = 8
+
+# Default connect timeout (ms) when the script passes 0.
+connect_timeout_ms = 500
+
+# Hard cap on TLS handshake duration (ms). A typical handshake completes
+# in 50–150 ms; anything beyond 500 ms indicates a problem.
+tls_handshake_timeout_ms = 500
+
+# Maximum bytes per sock_recv call.
+max_recv_size = 131072
+
+# Access control: allow/deny by host pattern.
+# Evaluated top-to-bottom, first match wins. Default: allow all.
+#
+# [[sockets.rules]]
+# action = "allow"
+# host = "*"
+# ports = [80, 443, 23, 8080]
+#
+# [[sockets.rules]]
+# action = "deny"
+# host = "10.*"
+#
+# [[sockets.rules]]
+# action = "deny"
+# host = "192.168.*"

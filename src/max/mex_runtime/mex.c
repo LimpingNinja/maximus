@@ -104,12 +104,41 @@ static struct _usrfunc _intrinfunc[]=
   {"get_static_string",       intrin_get_static_string,       0},
   {"getch",                   intrin_getch,                   0},
   {"hstr",                    intrin_lang_heap_string,        0},
+  {"http_request",             intrin_http_request,            0},
   {"input_ch",                intrin_input_ch,                0},
   {"input_list",              intrin_input_list,              0},
   {"input_str",               intrin_input_str,               0},
   {"iskeyboard",              intrin_iskeyboard,              0},
   {"issnoop",                 intrin_issnoop,                 0},
   {"itostr",                  intrin_itostr,                  0},
+  {"json_add_array",          intrin_json_add_array,           0},
+  {"json_add_object",         intrin_json_add_object,          0},
+  {"json_array_push_num",     intrin_json_array_push_num,      0},
+  {"json_array_push_str",     intrin_json_array_push_str,      0},
+  {"json_bool",               intrin_json_bool,                0},
+  {"json_close",              intrin_json_close,               0},
+  {"json_count",              intrin_json_count,               0},
+  {"json_create",             intrin_json_create,              0},
+  {"json_create_array",       intrin_json_create_array,        0},
+  {"json_enter",              intrin_json_enter,               0},
+  {"json_exit",               intrin_json_exit,                0},
+  {"json_find",               intrin_json_find,                0},
+  {"json_get_bool",           intrin_json_get_bool,            0},
+  {"json_get_count",          intrin_json_get_count,           0},
+  {"json_get_num",            intrin_json_get_num,             0},
+  {"json_get_str",            intrin_json_get_str,             0},
+  {"json_get_type",           intrin_json_get_type,            0},
+  {"json_key",                intrin_json_key,                 0},
+  {"json_next",               intrin_json_next,                0},
+  {"json_num",                intrin_json_num,                 0},
+  {"json_open",               intrin_json_open,                0},
+  {"json_rewind",             intrin_json_rewind,              0},
+  {"json_serialize",          intrin_json_serialize,           0},
+  {"json_set_bool",           intrin_json_set_bool,            0},
+  {"json_set_num",            intrin_json_set_num,             0},
+  {"json_set_str",            intrin_json_set_str,             0},
+  {"json_str",                intrin_json_str,                 0},
+  {"json_type",               intrin_json_type,                0},
   {"kbhit",                   intrin_kbhit,                   0},
   {"keyboard",                intrin_keyboard,                0},
   {"lang_get",                intrin_lang_get,                0},
@@ -154,6 +183,12 @@ static struct _usrfunc _intrinfunc[]=
   {"shell",                   intrin_shell,                   0},
   {"sleep",                   intrin_sleep,                   0},
   {"snoop",                   intrin_snoop,                   0},
+  {"sock_avail",              intrin_sock_avail,              0},
+  {"sock_close",              intrin_sock_close,              0},
+  {"sock_open",               intrin_sock_open,               0},
+  {"sock_recv",               intrin_sock_recv,               0},
+  {"sock_send",               intrin_sock_send,               0},
+  {"sock_status",             intrin_sock_status,             0},
   {"stamp_string",            intrin_stamp_string,            0},
   {"stamp_to_long",           intrin_stamp_to_long,           0},
   {"strfind",                 intrin_strfind,                 0},
@@ -746,6 +781,12 @@ void EXPENTRY intrin_term(short *psRet)
   for (i=0; i < MAX_MEXFH; ++i)
     if (pmis->fht[i]!=(word)-1)
       close(pmis->fht[i]);
+
+  /* Free any JSON handles still open */
+  MexJsonCleanup();
+
+  /* Close any socket handles still open */
+  MexSockCleanup();
 
   /* Now copy back the input buffer and other global information */
 

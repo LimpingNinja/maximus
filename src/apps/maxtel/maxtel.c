@@ -674,6 +674,10 @@ static void enter_snoop_mode(int node_num)
                 n = read(node->pty_master, buf, sizeof(buf));
                 if (n > 0) {
                     write(STDOUT_FILENO, buf, n);
+                } else {
+                    /* EOF or error (EIO) — slave side closed, node exited */
+                    snoop_active = 0;
+                    break;
                 }
             }
             

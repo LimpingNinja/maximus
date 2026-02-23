@@ -1,0 +1,151 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: json.mh
+//
+// Desc: MEX JSON intrinsics — cursor-based parser with path convenience
+//       accessors. Parse JSON into an opaque handle, navigate with a
+//       cursor (enter/next/exit/find), read values at cursor position,
+//       or use path strings for one-shot lookups.
+//
+// Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef __JSON_MH_DEFINED
+#define __JSON_MH_DEFINED
+
+// JSON type constants (returned by json_type and json_next)
+#define JSON_NULL    0
+#define JSON_BOOL    1
+#define JSON_NUMBER  2
+#define JSON_STRING  3
+#define JSON_ARRAY   4
+#define JSON_OBJECT  5
+#define JSON_END    -1      // No more siblings (iteration complete)
+#define JSON_INVALID -2
+
+// ========================================================================
+// Lifecycle
+// ========================================================================
+
+// Parse a JSON string. Returns handle (0..15) or -1 on parse error.
+// Cursor starts at the root node.
+int json_open(string: text);
+
+// Create an empty JSON object. Returns handle or -1.
+// Cursor starts at the (empty) root object.
+int json_create();
+
+// Create an empty JSON array. Returns handle or -1.
+int json_create_array();
+
+// Destroy a parsed/created JSON tree and free the handle.
+void json_close(int: jh);
+
+// ========================================================================
+// Cursor navigation
+// ========================================================================
+
+// Descend into the current object or array. After entering, the cursor
+// is positioned BEFORE the first child — call json_next() to advance
+// to the first element. Returns 0 on success, -1 if cursor is not at
+// a container.
+int json_enter(int: jh);
+
+// Advance cursor to the next sibling. Returns the JSON type constant
+// of the new element, or JSON_END if there are no more siblings.
+int json_next(int: jh);
+
+// Ascend back to the parent container. Returns 0 on success, -1 if
+// already at root depth.
+int json_exit(int: jh);
+
+// Within the current object, jump the cursor to the child with the
+// given key name. Returns 0 on success, -1 if key not found or
+// current container is not an object.
+int json_find(int: jh, string: key);
+
+// Reset cursor to before-first-child of the current container.
+// The next json_next() call will return the first child again.
+void json_rewind(int: jh);
+
+// ========================================================================
+// Reading at cursor position
+// ========================================================================
+
+// Get the JSON type of the node at the current cursor position.
+int json_type(int: jh);
+
+// Get the key name of the current node (when inside an object).
+// Returns "" if inside an array or at root.
+string json_key(int: jh);
+
+// Get the current value as a string. Auto-converts numbers and booleans.
+// Returns "" if cursor is at a container (object/array) or invalid.
+string json_str(int: jh);
+
+// Get the current value as a long. Returns 0 if not a number.
+// Note: MEX has no float type; fractional values are truncated.
+long json_num(int: jh);
+
+// Get the current value as a boolean (0 or 1). Returns 0 if not a bool.
+int json_bool(int: jh);
+
+// Count children of the current container (object or array).
+// Returns 0 if cursor is not at a container.
+int json_count(int: jh);
+
+// ========================================================================
+// Path-based convenience accessors (do NOT move the cursor)
+// ========================================================================
+//
+// Path syntax: "key.subkey", "arr[0]", "obj.list[2].name"
+// Empty string "" refers to the root node.
+
+// Get a string value by path. Returns "" if not found or not a string.
+string json_get_str(int: jh, string: path);
+
+// Get a numeric value by path. Returns 0 if not found or not a number.
+long json_get_num(int: jh, string: path);
+
+// Get a boolean by path. Returns 0 if not found.
+int json_get_bool(int: jh, string: path);
+
+// Get the type at a path.
+int json_get_type(int: jh, string: path);
+
+// Count children at a path (array length or object key count).
+int json_get_count(int: jh, string: path);
+
+// ========================================================================
+// Building (for constructing request bodies)
+// ========================================================================
+
+// Set a string value at key in current object. Returns 0 or -1.
+int json_set_str(int: jh, string: key, string: val);
+
+// Set a numeric value at key in current object.
+int json_set_num(int: jh, string: key, long: val);
+
+// Set a boolean value at key in current object.
+int json_set_bool(int: jh, string: key, int: val);
+
+// Add an empty sub-object at key in current object. Use json_enter()
+// + json_find() to navigate into it and add fields.
+int json_add_object(int: jh, string: key);
+
+// Add an empty sub-array at key in current object.
+int json_add_array(int: jh, string: key);
+
+// Append a string value to the current array. Cursor must be inside
+// an array (via json_enter). Returns 0 or -1.
+int json_array_push_str(int: jh, string: val);
+
+// Append a numeric value to the current array.
+int json_array_push_num(int: jh, long: val);
+
+// Serialize the entire JSON tree to a compact string.
+string json_serialize(int: jh);
+
+#endif // __JSON_MH_DEFINED

@@ -5,18 +5,24 @@ LANGHDR     	:=  $(SRC)/src/max/core/english.h
 # english.h (formerly english.lth) lives in the source tree; english.toml is the source of truth.
 # smserial is OS/2-only, skip on UNIX platforms
 ifeq ($(PLATFORM),darwin)
-LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat -lssl -lcrypto
 else ifeq ($(PLATFORM),linux)
-LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat -lssl -lcrypto
 else ifeq ($(PLATFORM),freebsd)
-LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
+LOADLIBES	+= -lmexvm -lmsgapi -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat -lssl -lcrypto
 else
-LOADLIBES	+= -lmexvm -lmsgapi -lsmserial -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat
+LOADLIBES	+= -lmexvm -lmsgapi -lsmserial -lmax -lmaxbtree -lmaxbt -lmaxdb -lsqlite3 -lxfer -lcomm -lmaxcfg -lcompat -lssl -lcrypto
 endif
 CFLAGS 		+= -USWAP -UOVERLAY_BUILD
 CPPFLAGS	+= -I./core -I./display -I./msg -I./file -I./track -I./mex_runtime -I./netmail -I./platform_legacy
 
-CPPFLAGS	+= -I$(SRC)/src/libs/libmaxdb/include -I$(SRC)/src/libs/sqlite
+CPPFLAGS	+= -I$(SRC)/src/libs/libmaxdb/include -I$(SRC)/src/libs/sqlite -I$(SRC)/src/libs/cjson
+
+# OpenSSL paths — Homebrew on macOS, system on Linux/FreeBSD
+ifeq ($(PLATFORM),darwin)
+OPENSSL_PREFIX ?= /opt/homebrew/opt/openssl@3
+LDFLAGS += -L$(OPENSSL_PREFIX)/lib
+endif
 
 VPATH		+= .:core:display:msg:file:track:mex_runtime:netmail:platform_legacy
 
@@ -69,7 +75,8 @@ max2priv.obj    mexintu.obj     mexstat.obj     mexfarea.obj    \
 mexcall.obj     mexoutp.obj     mextime.obj     mexlang.obj     \
 mexrip.obj      mexstr.obj      mexmarea.obj    mexfile.obj     \
 mexclass.obj    mexuser.obj     mexinp.obj      mextag.obj      \
-mexui.obj       \
+mexui.obj       mexjson.obj     mexsock.obj     mex_tls.obj     \
+local_term_ansi.obj                                             \
 mexffind.obj    mexxtrn.obj     mexrtl.obj      max_accs.obj    \
 m_input.obj     m_lines.obj     f_okay.obj      atexit.obj	\
 xspawn.obj
@@ -81,6 +88,9 @@ xspawn.obj
 #               noise.obj
 
 MOBJS := $(strip $(MOBJS:.obj=.o))
+
+# Vendored cJSON library (MIT license) — built as a standalone object
+MOBJS += cJSON.o
 
 DEPEND_FILES = $(MOBJS:.o=.c) max.c date.c
 
@@ -123,6 +133,20 @@ bldupd.o: bldupd.h
 
 # MAID build rules removed — english.h (formerly english.lth) is in src/max/core/.
 # Language strings now come from english.toml via the maxlang API.
+
+# Build vendored cJSON from its source location
+cJSON.o: $(SRC)/src/libs/cjson/cJSON.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# OpenSSL TLS wrapper — compiled with OpenSSL headers ONLY (no Maximus headers)
+# to avoid namespace collisions (e.g. english.h macros vs OpenSSL symbols).
+ifeq ($(PLATFORM),darwin)
+mex_tls.o: mex_runtime/mex_tls.c mex_runtime/mex_tls.h
+	$(CC) $(CFLAGS) -O2 -Wall -I$(OPENSSL_PREFIX)/include -Imex_runtime -c -o $@ $<
+else
+mex_tls.o: mex_runtime/mex_tls.c mex_runtime/mex_tls.h
+	$(CC) $(CFLAGS) -O2 -Wall -Imex_runtime -c -o $@ $<
+endif
 
 max.o: CPPFLAGS += -DINSTALL_PREFIX=\"$(PREFIX)\"
 

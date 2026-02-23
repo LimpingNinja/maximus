@@ -1,0 +1,212 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: socktest.mex
+//
+// Desc: Weather report via wttr.in — demonstrates socket + JSON intrinsics.
+//       Fetches the user's current weather by city (from their BBS profile),
+//       parses the JSON response, and displays current conditions plus
+//       today's high temperature.
+//
+// Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <max.mh>
+#include <json.mh>
+#include <socket.mh>
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// Replace spaces with '+' for URL-safe city names.
+// "Portland, OR" -> "Portland,+OR"
+string url_safe_city(string: s)
+{
+    string: result;
+    string: tok;
+    int:    pos;
+    int:    first;
+
+    result := "";
+    pos    := 0;
+    first  := 1;
+
+    tok := strtok(s, " ", pos);
+    while (strlen(tok) > 0)
+    {
+        if (first = 0)
+            result := result + "+";
+        result := result + tok;
+        first  := 0;
+        tok    := strtok(s, " ", pos);
+    }
+
+    return result;
+}
+
+// Prompt the user for an optional city override.
+// Returns the city to use (profile city, user entry, or default).
+string get_city()
+{
+    string: city;
+    string: entered;
+    int:    rc;
+
+    city := usr.city;
+
+    if (strlen(city) > 0)
+        print("|14Your profile city: |15" + city + "\n");
+    else
+        print("|14No city in your profile.|07\n");
+
+    if (strlen(city) > 0)
+        print("|07Press |15ENTER|07 to use " + city + ", or type a city name:\n");
+    else
+        print("|07Press |15ENTER|07 to use Vancouver, or type a city name:\n");
+
+    entered := "";
+    rc := input_str(entered, INPUT_WORD, 0, 40, "|11City: |07");
+
+    if (strlen(entered) > 0)
+        return entered;
+
+    if (strlen(city) > 0)
+        return city;
+
+    return "Vancouver";
+}
+
+// Draw a separator line
+void sep()
+{
+    print("|08" + strpad("", 50, '-') + "|07\n");
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+void main()
+{
+    string: city;
+    string: safe_city;
+    string: url;
+    string: response;
+    int:    status;
+    int:    jh;
+    int:    running;
+    string: again;
+    int:    rc;
+
+    // Location fields
+    string: area_name;
+    string: country;
+
+    // Current conditions
+    string: temp_c;
+    string: temp_f;
+    string: feels_c;
+    string: feels_f;
+    string: weather_desc;
+    string: humidity;
+    string: wind_kmph;
+    string: wind_dir;
+
+    // Today's highs
+    string: max_c;
+    string: max_f;
+
+    running := 1;
+
+    while (running = 1)
+    {
+        print(AVATAR_CLS);
+        print("\n|15|17  Weather Report  |07|16\n\n");
+
+        // --- Determine city ---
+
+        city := get_city();
+
+        print("\n|11Fetching weather for |15" + city + "|11...\n\n");
+
+        safe_city := url_safe_city(city);
+        url := "https://wttr.in/" + safe_city + "?format=j1";
+
+        // --- HTTP request ---
+
+        status := http_request(url, "GET", "", "", response, 10000);
+
+        if (status <> 200)
+        {
+            print("|12Error: |07Could not get weather data");
+            if (status > 0)
+                print(" (HTTP " + itostr(status) + ")");
+            else
+                print(" (connection failed)");
+            print("\n\n");
+        }
+        else
+        {
+            // --- Parse JSON ---
+
+            jh := json_open(response);
+            if (jh = -1)
+            {
+                print("|12Error: |07Failed to parse weather JSON\n\n");
+            }
+            else
+            {
+                // --- Extract data via path accessors ---
+
+                // Location
+                area_name    := json_get_str(jh, "nearest_area[0].areaName[0].value");
+                country      := json_get_str(jh, "nearest_area[0].country[0].value");
+
+                // Current conditions
+                temp_c       := json_get_str(jh, "current_condition[0].temp_C");
+                temp_f       := json_get_str(jh, "current_condition[0].temp_F");
+                feels_c      := json_get_str(jh, "current_condition[0].FeelsLikeC");
+                feels_f      := json_get_str(jh, "current_condition[0].FeelsLikeF");
+                weather_desc := json_get_str(jh, "current_condition[0].weatherDesc[0].value");
+                humidity     := json_get_str(jh, "current_condition[0].humidity");
+                wind_kmph    := json_get_str(jh, "current_condition[0].windspeedKmph");
+                wind_dir     := json_get_str(jh, "current_condition[0].winddir16Point");
+
+                // Today's forecast highs
+                max_c        := json_get_str(jh, "weather[0].maxtempC");
+                max_f        := json_get_str(jh, "weather[0].maxtempF");
+
+                json_close(jh);
+
+                // --- Display ---
+
+                sep();
+                print("|14  Location:      |15" + area_name + "|07, " + country + "\n");
+                print("|14  Conditions:    |15" + weather_desc + "\n");
+                sep();
+                print("\n");
+                print("|14  Temperature:   |15" + temp_c + " C  |08/  |15" + temp_f + " F\n");
+                print("|14  Feels Like:    |15" + feels_c + " C  |08/  |15" + feels_f + " F\n");
+                print("|14  Today's High:  |15" + max_c + " C  |08/  |15" + max_f + " F\n");
+                print("\n");
+                print("|14  Humidity:      |15" + humidity + "%%\n");
+                print("|14  Wind:          |15" + wind_kmph + " km/h " + wind_dir + "\n");
+                sep();
+            }
+        }
+
+        // --- Try again or exit ---
+
+        print("\n");
+        again := "";
+        rc := input_str(again, INPUT_WORD, 0, 1,
+                        "|11Try another city? (|15Y|11/|15N|11): |07");
+
+        if (again <> "Y" and again <> "y")
+            running := 0;
+    }
+
+    print("\n|07");
+}

@@ -1,0 +1,68 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: socket.mh
+//
+// Desc: MEX socket intrinsics for outgoing TCP connections and HTTP
+//       convenience. Connect to remote services, send/receive raw data,
+//       or make one-shot HTTP requests — all with timeout control.
+//
+// Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef __SOCKET_MH_DEFINED
+#define __SOCKET_MH_DEFINED
+
+// sock_status() return values
+#define SOCK_CLOSED      0
+#define SOCK_CONNECTED   1
+#define SOCK_ERROR      -1
+
+// sock_open flags (reserved for future use — TLS, keep-alive, etc.)
+#define SOCK_FLAG_NONE   0
+
+// ========================================================================
+// Core socket functions
+// ========================================================================
+
+// Connect to host:port with timeout. Returns handle (0..7) or -1 on error.
+// timeout_ms: milliseconds to wait for connection (0 = server default).
+int sock_open(string: host, int: port, int: timeout_ms);
+
+// Close a socket. Returns 0 on success, -1 if invalid handle.
+int sock_close(int: sh);
+
+// Send raw bytes. len = number of bytes to send (0 = entire string).
+// Returns bytes sent, or -1 on error.
+int sock_send(int: sh, string: data, int: len);
+
+// Receive up to max_len bytes with timeout. Returns bytes received,
+// 0 on timeout, -1 on error/disconnect. Buffer is passed by reference.
+int sock_recv(int: sh, ref string: buf, int: max_len, int: timeout_ms);
+
+// Query connection state. Returns SOCK_CONNECTED, SOCK_CLOSED, or SOCK_ERROR.
+int sock_status(int: sh);
+
+// Return number of bytes available to read without blocking.
+int sock_avail(int: sh);
+
+// ========================================================================
+// Convenience: one-shot HTTP request
+// ========================================================================
+
+// Performs a full HTTP/1.1 request and returns the response body.
+//
+// url:       Full URL (http:// only for now — no TLS yet).
+// method:    "GET", "POST", "PUT", "DELETE", etc.
+// headers:   Additional headers (\r\n separated) or "" for none.
+//            Example: "Content-Type: application/json\r\n"
+// body:      Request body for POST/PUT, or "" for none.
+// response:  (ref) Response body is stored here.
+// timeout_ms: Timeout per I/O operation (0 = server default).
+//
+// Returns HTTP status code (200, 404, etc.) or -1 on connection/timeout error.
+int http_request(string: url, string: method, string: headers,
+                 string: body, ref string: response, int: timeout_ms);
+
+#endif // __SOCKET_MH_DEFINED

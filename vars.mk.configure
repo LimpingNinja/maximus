@@ -25,7 +25,7 @@ LIBEXEC		= $(PREFIX)/libexec
 LIB		= $(PREFIX)/bin/lib
 STATIC_LIB	= $(SRC)/lib
 
-H_DIRS		:= src/libs/unix/include src/libs/slib src/libs/msgapi src/libs/btree src/max src/libs/prot src/libs/mexvm src/libs/libmaxcfg/include
+H_DIRS		:= src/libs/unix/include src/libs/slib src/libs/msgapi src/libs/btree src/max src/max/core src/max/display src/max/msg src/max/file src/max/track src/max/mex_runtime src/max/netmail src/max/platform_legacy src/libs/prot src/libs/mexvm src/libs/libmaxcfg/include
 SO_DIRS		:= src/libs/unix src/libs/slib src/libs/msgapi src/libs/btree src/libs/prot src/libs/mexvm src/libs/legacy/comdll src/libs/libmaxcfg
 LDFLAGS		+= $(foreach DIR, $(SO_DIRS), -L$(SRC)/$(DIR))
 INCLUDES	:= -I. $(foreach DIR, $(H_DIRS), -I$(SRC)/$(DIR))

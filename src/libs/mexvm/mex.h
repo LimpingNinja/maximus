@@ -78,7 +78,7 @@
                                          * exernal indentifiers.
                                          */
 #define DEFAULT_STACKSIZE 2048          /* Default stack size */
-#define DEFAULT_HEAPSIZE  8192          /* Default heap size */
+#define DEFAULT_HEAPSIZE  262144        /* Default heap size (256 KB) */
 
 #define DECLDEBUG                       /* Debug variable decl's            */
 #define SCOPEDEBUG                      /* Debug scope open/close           */

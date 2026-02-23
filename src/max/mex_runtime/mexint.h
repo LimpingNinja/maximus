@@ -223,6 +223,60 @@
   word EXPENTRY intrin_ui_text_viewer_handle_key(void);
   word EXPENTRY intrin_ui_text_viewer_read_key(void);
 
+  /* JSON lifecycle */
+  word EXPENTRY intrin_json_open(void);
+  word EXPENTRY intrin_json_create(void);
+  word EXPENTRY intrin_json_create_array(void);
+  word EXPENTRY intrin_json_close(void);
+
+  /* JSON cursor navigation */
+  word EXPENTRY intrin_json_enter(void);
+  word EXPENTRY intrin_json_next(void);
+  word EXPENTRY intrin_json_exit(void);
+  word EXPENTRY intrin_json_find(void);
+  word EXPENTRY intrin_json_rewind(void);
+
+  /* JSON cursor reading */
+  word EXPENTRY intrin_json_type(void);
+  word EXPENTRY intrin_json_key(void);
+  word EXPENTRY intrin_json_str(void);
+  word EXPENTRY intrin_json_num(void);
+  word EXPENTRY intrin_json_bool(void);
+  word EXPENTRY intrin_json_count(void);
+
+  /* JSON path convenience */
+  word EXPENTRY intrin_json_get_str(void);
+  word EXPENTRY intrin_json_get_num(void);
+  word EXPENTRY intrin_json_get_bool(void);
+  word EXPENTRY intrin_json_get_type(void);
+  word EXPENTRY intrin_json_get_count(void);
+
+  /* JSON building */
+  word EXPENTRY intrin_json_set_str(void);
+  word EXPENTRY intrin_json_set_num(void);
+  word EXPENTRY intrin_json_set_bool(void);
+  word EXPENTRY intrin_json_add_object(void);
+  word EXPENTRY intrin_json_add_array(void);
+  word EXPENTRY intrin_json_array_push_str(void);
+  word EXPENTRY intrin_json_array_push_num(void);
+  word EXPENTRY intrin_json_serialize(void);
+
+  /* JSON cleanup — called from intrin_term() */
+  void MexJsonCleanup(void);
+
+  /* Socket intrinsics */
+  word EXPENTRY intrin_sock_open(void);
+  word EXPENTRY intrin_sock_close(void);
+  word EXPENTRY intrin_sock_send(void);
+  word EXPENTRY intrin_sock_recv(void);
+  word EXPENTRY intrin_sock_status(void);
+  word EXPENTRY intrin_sock_avail(void);
+  word EXPENTRY intrin_http_request(void);
+
+  /* Socket cleanup/init — called from intrin_term() and startup */
+  void MexSockCleanup(void);
+  void MexSockInit(void);
+
   void _MexKillStructString(void *pstr, int increment);
   void MexReturnStringBytes(char *s, int len);
   void MexReturnString(char *s);

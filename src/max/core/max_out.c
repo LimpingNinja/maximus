@@ -36,6 +36,7 @@ static char rcs_id[]="$Id: max_out.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #include "prog.h"
 #include "mm.h"
 #include "mci.h"
+#include "local_term.h"
 
 void MdmPipeFlush(void);
 void LPipeFlush(void);
@@ -519,6 +520,11 @@ void vbuf_flush(void)
   if (no_video)
     return;
 
+#ifdef UNIX
+  /* On UNIX, flush the local terminal backend + Win* (for WFC). */
+  g_local_term->lt_flush();
+  WinSync(win, in_wfc ? FALSE : TRUE);
+#else
 #ifdef TTYVIDEO
   if (displaymode==VIDEO_IBM)
 #endif
@@ -526,6 +532,7 @@ void vbuf_flush(void)
 #ifdef TTYVIDEO
   else fflush(stdout);
 #endif
+#endif /* UNIX */
 }
 
 

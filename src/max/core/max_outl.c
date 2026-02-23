@@ -35,6 +35,7 @@ static char rcs_id[]="$Id: max_outl.c,v 1.6 2004/01/28 06:38:10 paltas Exp $";
 #include "prog.h"
 #include "mm.h"
 #include "mci.h"
+#include "local_term.h"
 
 extern int last_cc;
 extern char strng[];
@@ -44,6 +45,10 @@ static byte g_lcl_pipe_d1=0;
 static byte g_lcl_pipe_inhibit=0;
 
 void Lputc(int ch);
+
+/** ANSI passthrough buffer for raw ESC sequences from .ans files etc. */
+static char s_ansi_buf[128];
+static int  s_ansi_buf_pos = 0;
 
 void LPipeFlush(void)
 {
@@ -296,8 +301,15 @@ void Lputc(int ch)
 
     switch (ch)
     {
+      case 8:
+        /* Destructive backspace — move left, overwrite with space, move left */
+        g_local_term->lt_putc('\b');
+        g_local_term->lt_putc(' ');
+        g_local_term->lt_putc('\b');
+        break;
+
       case 9:
-        /* So tabs will work reliably in lputs() */
+        /* So tabs will work reliably */
 
         if (last_cc==-1)
         {
@@ -306,76 +318,44 @@ void Lputc(int ch)
         }
 
         for (x=0; x < (word)(9-(last_cc % 8)); x++)
-          lputc(' ');
+          g_local_term->lt_putc(' ');
 
         last_cc=-1;
         break;
 
       case 10:
-#ifdef TTYVIDEO
-        if (displaymode==VIDEO_IBM)
-        {
-#endif
-          WinPutc(win,13);
-          WinPutc(win,10);
-#ifdef TTYVIDEO
-        }
-        else
-        {
-          #if defined(OS_2) || defined(UNIX)   /* Non-IBM video mode for MS-DOS adds '\r'         */
-          lputc(13);    /* automatically, but OS/2 doesn't.                */
-          #endif
-
-          lputc(10);
-        }
-#endif
+        g_local_term->lt_putc('\r');
+        g_local_term->lt_putc('\n');
         break;
 
       case 12:
         if (usr.bits2 & BITS2_CLS)
         {
-          vbuf_flush();
+          g_local_term->lt_flush();
 
           curattr=DEFAULT_ATTR;
-
-#ifdef TTYVIDEO
-          if (displaymode==VIDEO_IBM)
-          {
-#endif
-            WinCls(win,CGRAY);
-            WinSetAttr(win, curattr);
-#ifdef TTYVIDEO
-          }
-          else lputs(ansi_cls);
-#endif
+          g_local_term->lt_cls();
+          g_local_term->lt_set_attr(curattr);
 
           /* If user has graphics turned off, then make local display GRAY! */
           curattr=CGRAY;
-          
-          if (! usr.video)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinSetAttr(win, curattr);
-#ifdef TTYVIDEO
-            else lputs(ansi_gray);
-#endif
-          }
 
-          vbuf_flush();
+          if (! usr.video)
+            g_local_term->lt_set_attr(curattr);
+
+          g_local_term->lt_flush();
           curattr=3;
         }
         else
         {
-          lputc(13);
-          lputc(10);
+          g_local_term->lt_putc('\r');
+          g_local_term->lt_putc('\n');
         }
         rip_state=0;
         break;
 
       case 13:
-        lputc(13);
+        g_local_term->lt_putc('\r');
         break;
 
       case 22:
@@ -392,8 +372,14 @@ void Lputc(int ch)
         else Local_Beep(1);
         break;
 
+      case 0x1b:  /* ESC — start ANSI passthrough */
+        s_ansi_buf[0] = '\x1b';
+        s_ansi_buf_pos = 1;
+        state = 40;
+        break;
+
       default:
-        lputc((usr.bits2 & BITS2_IBMCHARS) ? ch : nohibit[(byte)ch]);
+        g_local_term->lt_putc(ch);
         break;
     }
   }
@@ -410,86 +396,40 @@ void Lputc(int ch)
           if (usr.video)
           {
             curattr |= _BLINK;
-            
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinSetAttr(win, curattr);   /* Add high bit */
-#ifdef TTYVIDEO
-            else lputs(ansi_blink);
-#endif
+            g_local_term->lt_set_blink();
           }
           state=-1;
           break;
 
         case 3:
           if (usr.video || in_file_xfer)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinGotoXY(win, WinGetRow(win)-1, WinGetCol(win), FALSE);
-#ifdef TTYVIDEO
-            else lputs(ansi_up);
-#endif
-          }
+            g_local_term->lt_cursor_up();
           state=-1;
           break;
 
         case 4:
           if (usr.video)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinGotoXY(win, WinGetRow(win)+1, WinGetCol(win), FALSE);
-#ifdef TTYVIDEO
-            else lputs(ansi_down);
-#endif
-          }
+            g_local_term->lt_cursor_down();
           state=-1;
           break;
 
         case 5:
           if (usr.video)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinGotoXY(win, WinGetRow(win), WinGetCol(win)-1, FALSE);
-#ifdef TTYVIDEO
-            else lputs(ansi_left);
-#endif
-          }
+            g_local_term->lt_cursor_left();
           state=-1;
           break;
 
         case 6:
           if (usr.video)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinGotoXY(win, WinGetRow(win), WinGetCol(win)+1, FALSE);
-#ifdef TTYVIDEO
-            else lputs(ansi_right);
-#endif
-          }
-          else lputc(' ');
+            g_local_term->lt_cursor_right();
+          else
+            g_local_term->lt_putc(' ');
           state=-1;
           break;
 
         case 7:
           if (usr.video)
-          {
-#ifdef TTYVIDEO
-            if (displaymode==VIDEO_IBM)
-#endif
-              WinCleol(win, WinGetRow(win), WinGetCol(win), WinGetAttr(win));
-#ifdef TTYVIDEO
-            else lputs(ansi_cleol);
-#endif
-          }
+            g_local_term->lt_cleol(current_line, current_col, (byte)curattr);
 
           state=-1;
           break;
@@ -517,8 +457,8 @@ void Lputc(int ch)
         case 15:                  /* Clear to end of screen */
           if (usr.video)
           {
-            int wasline=WinGetRow(win)+1;
-            int wascol=WinGetCol(win)+1;
+            int wasline = current_line;
+            int wascol  = current_col;
 
             Lputc('\x07');    /* Clear rest of current line */
             /* Now clear the rest of the lines */
@@ -548,14 +488,7 @@ void Lputc(int ch)
       {
         if (usr.video)
         {
-#ifdef TTYVIDEO
-          if (displaymode==VIDEO_IBM)
-#endif
-            WinSetAttr(win, (byte)ch);
-#ifdef TTYVIDEO
-          else lputs(avt2ansi(ch, curattr, strng));
-#endif
-
+          g_local_term->lt_set_attr((byte)ch);
           curattr=(char)ch;
         }
 
@@ -568,15 +501,7 @@ void Lputc(int ch)
       if (usr.video)
       {
         newattr=(char)(ch & 0x7f);
-
-#ifdef TTYVIDEO
-        if (displaymode==VIDEO_IBM)
-#endif
-          WinSetAttr(win, newattr);
-#ifdef TTYVIDEO
-        else lputs(avt2ansi(newattr, curattr, strng));
-#endif
-
+        g_local_term->lt_set_attr(newattr);
         curattr=newattr;
       }
 
@@ -592,17 +517,12 @@ void Lputc(int ch)
       state=-1;
 
       if (usr.video || in_file_xfer)
-      {
-#ifdef TTYVIDEO
-        if (displaymode==VIDEO_IBM)
-#endif
-          WinGotoXY(win, save_cx-1, ch-1, FALSE);
-#ifdef TTYVIDEO
-        else Lprintf(ch==1 ? ansi_goto1 : ansi_goto, save_cx, ch);
-#endif
-      }
+        g_local_term->lt_goto_xy(save_cx, ch);
       else if (ch==1)
-        lputs("\r\n");
+      {
+        g_local_term->lt_putc('\r');
+        g_local_term->lt_putc('\n');
+      }
       break;
 
     case 12:                        /* Clear 1 */
@@ -672,14 +592,11 @@ void Lputc(int ch)
     case 27:                      /* RLE2 */
       {
         word x;
-        byte c;
-
-        c=(usr.bits2 & BITS2_IBMCHARS) ? (byte)save_cx:nohibit[(byte)save_cx];
 
         uch=(byte)ch;
 
         for (x=0; x < uch; x++)
-          lputc(c);
+          g_local_term->lt_putc((int)(byte)save_cx);
 
         state=-1;
       }
@@ -705,6 +622,44 @@ void Lputc(int ch)
 
         for (y=0; y < uch; y++)
           Lputs(str2);
+      }
+      break;
+
+    case 40:                      /* ANSI passthrough: got ESC, next byte */
+      if (s_ansi_buf_pos < (int)sizeof(s_ansi_buf) - 1)
+        s_ansi_buf[s_ansi_buf_pos++] = (char)ch;
+
+      if (ch == '[')
+      {
+        /* CSI sequence — collect until final byte */
+        state = 41;
+      }
+      else
+      {
+        /* Two-byte ESC sequence (e.g. ESC D, ESC M) — flush now */
+        g_local_term->lt_raw_write(s_ansi_buf, s_ansi_buf_pos);
+        s_ansi_buf_pos = 0;
+        state = -1;
+      }
+      break;
+
+    case 41:                      /* ANSI passthrough: collecting CSI */
+      if (s_ansi_buf_pos < (int)sizeof(s_ansi_buf) - 1)
+        s_ansi_buf[s_ansi_buf_pos++] = (char)ch;
+
+      /* CSI final bytes are in 0x40..0x7E */
+      if (ch >= 0x40 && ch <= 0x7E)
+      {
+        g_local_term->lt_raw_write(s_ansi_buf, s_ansi_buf_pos);
+        s_ansi_buf_pos = 0;
+        state = -1;
+      }
+      else if (s_ansi_buf_pos >= (int)sizeof(s_ansi_buf) - 1)
+      {
+        /* Buffer overflow — dump what we have and bail */
+        g_local_term->lt_raw_write(s_ansi_buf, s_ansi_buf_pos);
+        s_ansi_buf_pos = 0;
+        state = -1;
       }
       break;
 

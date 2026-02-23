@@ -56,6 +56,7 @@ static char rcs_id[]="$Id: max_init.c,v 1.7 2004/06/06 21:48:51 paltas Exp $";
 #include "prog.h"
 #include "cfg_consts.h"
 #include "mm.h"
+#include "local_term.h"
 #include "newarea.h"
 #include "max_msg.h"
 #include "max_file.h"
@@ -1398,6 +1399,7 @@ void Read_Cfg(void)
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/reader", "general.reader");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/protocol", "general.protocol");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/language", "general.language");
+      (void)maxcfg_toml_load_file(ng_cfg, "config/general/mex", "mex");
       (void)maxcfg_toml_load_file(ng_cfg, "config/security/access_levels", "security.access_levels");
       (void)maxcfg_toml_load_file(ng_cfg, "config/areas/msg/areas", "areas.msg");
       (void)maxcfg_toml_load_file(ng_cfg, "config/areas/file/areas", "areas.file");
@@ -2942,6 +2944,51 @@ static void near install_handlers(void)
 
 static void near StartUpVideo(void)
 {
+#ifdef UNIX
+  /* On UNIX/macOS, use the ANSI+UTF-8 local terminal backend.
+   * This bypasses the curses/Win* layer entirely and writes
+   * clean ANSI SGR + UTF-8 directly to stdout. */
+  if (!no_video)
+  {
+    g_local_term = &local_term_ansi_utf8;
+    g_local_term->lt_init();
+  }
+  else
+  {
+    g_local_term = &local_term_null;
+  }
+
+  /* Still need the Win* layer for WFC and other legacy code
+   * that directly calls Win* functions. */
+  VidOpen(ngcfg_get_has_snow(), multitasker==MULTITASKER_desqview,
+          FALSE);
+
+  if (!no_video)
+    VidCls(CGREY);
+
+  WinApiOpen(FALSE);
+
+  if ((win=WinOpen(0,
+                   0,
+                   VidNumRows()-((!local && ngcfg_get_bool("maximus.status_line")) ? 1 : 0),
+                   VidNumCols(),
+                   BORDER_NONE,
+                   CGRAY,
+                   CGRAY,
+                   0))==NULL)
+  {
+    logit(mem_none);
+    Local_Beep(3);
+    maximus_exit(ERROR_CRITICAL);
+  }
+
+  /* Keep local_putc/local_puts pointing to Win* for any
+   * remaining callers outside of Lputc. */
+  local_putc=(void (_stdc *)(int))DoWinPutc;
+  local_puts=(void (_stdc *)(char *))DoWinPuts;
+
+#else /* !UNIX */
+
   VidOpen(ngcfg_get_has_snow(), multitasker==MULTITASKER_desqview,
           FALSE);
 
@@ -2976,6 +3023,8 @@ static void near StartUpVideo(void)
 
   local_putc=(void (_stdc *)(int))DoWinPutc;
   local_puts=(void (_stdc *)(char *))DoWinPuts;
+
+#endif /* UNIX */
 }
 
 

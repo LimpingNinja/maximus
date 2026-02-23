@@ -1,0 +1,228 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: weather.mh
+//
+// Desc: Weather icon metadata, layout constants, and WeatherAPI condition
+//       code mapping for the Maximus BBS weather script.
+//
+// Copyright 2025 by Kevin Morgan (Limping Ninja). All rights reserved.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+#ifndef __WEATHER_MH_DEFINED
+#define __WEATHER_MH_DEFINED
+
+// ============================================================================
+// Layout geometry (80-col safe: 16 + 1 + 28 + 1 + 16 + 1 + 16 = 79 max)
+// ============================================================================
+
+#define WTHR_PANEL_W        16
+#define WTHR_PANEL_H         7
+#define WTHR_SUMMARY_W      28
+#define WTHR_COL_TODAY       1
+#define WTHR_COL_SUMMARY    17
+#define WTHR_COL_TMRW       45
+#define WTHR_COL_DAY2       61
+#define WTHR_ROW_HEADER      1
+#define WTHR_ROW_DAYNAME     3
+#define WTHR_ROW_ICONS       4
+#define WTHR_ROW_TEMPS_HI   11
+#define WTHR_ROW_TEMPS_LO   12
+#define WTHR_ROW_COND       13
+
+// Default location when user profile has no city set
+#define WTHR_DEFAULT_CITY   "Vancouver, BC"
+
+// Icon base path — sysop: adjust for your installation
+#define WTHR_ICON_DIR   "scripts/weather-icons/"
+
+// ============================================================================
+// Icon indices (1-based)
+// ============================================================================
+
+// Day (1-27)
+#define ICON_SUNNY                     1
+#define ICON_MOSTLY_SUNNY              2
+#define ICON_PARTLY_SUNNY              3
+#define ICON_INTERMITTENT_CLOUDS       4
+#define ICON_HAZY_SUN                  5
+#define ICON_MOSTLY_CLOUDY             6
+#define ICON_CLOUDY                    7
+#define ICON_OVERCAST                  8
+#define ICON_FOG                       9
+#define ICON_SHOWERS                  10
+#define ICON_MOSTLY_CLOUDY_SHOWERS    11
+#define ICON_PARTLY_SUNNY_SHOWERS     12
+#define ICON_THUNDERSTORM             13
+#define ICON_MOSTLY_CLOUDY_TSTORM     14
+#define ICON_PARTLY_SUNNY_TSTORM      15
+#define ICON_RAIN                     16
+#define ICON_FLURRIES                 17
+#define ICON_MOSTLY_CLOUDY_FLURRIES   18
+#define ICON_PARTLY_SUNNY_FLURRIES    19
+#define ICON_SNOW                     20
+#define ICON_MOSTLY_CLOUDY_SNOW       21
+#define ICON_ICE                      22
+#define ICON_SLEET                    23
+#define ICON_FREEZING_RAIN            24
+#define ICON_RAIN_SNOW                25
+#define ICON_HOT                      26
+#define ICON_COLD                     27
+
+// Night (28-39)
+#define ICON_CLEAR_N                        28
+#define ICON_MOSTLY_CLEAR_N                 29
+#define ICON_PARTLY_CLOUDY_N                30
+#define ICON_INTRMTNT_CLOUDS_N              31
+#define ICON_HAZY_MOON                      32
+#define ICON_MOSTLY_CLOUDY_N                33
+#define ICON_PARTLY_CLD_SHOWERS_N           34
+#define ICON_MOSTLY_CLD_SHOWERS_N           35
+#define ICON_PARTLY_CLD_TSTORM_N            36
+#define ICON_MOSTLY_CLD_TSTORM_N            37
+#define ICON_FLURRIES_N                     38
+#define ICON_SNOW_N                         39
+
+#define WTHR_NUM_ICONS     39
+
+// ============================================================================
+// Icon metadata arrays — populated by wthr_init(), O(1) lookup thereafter
+// ============================================================================
+
+array [1..39] of int:    g_icon_w;
+array [1..39] of int:    g_icon_h;
+array [1..39] of string: g_icon_file;
+
+// ============================================================================
+// wthr_init — call once at startup before any icon lookups
+// ============================================================================
+
+void wthr_init()
+{
+    // Day icons: width, height, filename
+    g_icon_w[ 1] := 14; g_icon_h[ 1] := 7; g_icon_file[ 1] := "sunny.ans";
+    g_icon_w[ 2] := 15; g_icon_h[ 2] := 7; g_icon_file[ 2] := "mostly-sunny.ans";
+    g_icon_w[ 3] := 15; g_icon_h[ 3] := 7; g_icon_file[ 3] := "partly-sunny.ans";
+    g_icon_w[ 4] := 15; g_icon_h[ 4] := 7; g_icon_file[ 4] := "intermittent-clouds.ans";
+    g_icon_w[ 5] := 15; g_icon_h[ 5] := 7; g_icon_file[ 5] := "hazy-sun.ans";
+    g_icon_w[ 6] := 15; g_icon_h[ 6] := 6; g_icon_file[ 6] := "mostly-cloudy.ans";
+    g_icon_w[ 7] := 12; g_icon_h[ 7] := 4; g_icon_file[ 7] := "cloudy.ans";
+    g_icon_w[ 8] := 12; g_icon_h[ 8] := 4; g_icon_file[ 8] := "overcast.ans";
+    g_icon_w[ 9] := 12; g_icon_h[ 9] := 4; g_icon_file[ 9] := "fog.ans";
+    g_icon_w[10] := 12; g_icon_h[10] := 6; g_icon_file[10] := "showers.ans";
+    g_icon_w[11] := 16; g_icon_h[11] := 6; g_icon_file[11] := "mostly-cloudy-showers.ans";
+    g_icon_w[12] := 16; g_icon_h[12] := 6; g_icon_file[12] := "partly-sunny-showers.ans";
+    g_icon_w[13] := 12; g_icon_h[13] := 5; g_icon_file[13] := "thunderstorm.ans";
+    g_icon_w[14] := 12; g_icon_h[14] := 5; g_icon_file[14] := "mostly-cloudy-tstorm.ans";
+    g_icon_w[15] := 15; g_icon_h[15] := 6; g_icon_file[15] := "partly-sunny-tstorm.ans";
+    g_icon_w[16] := 12; g_icon_h[16] := 6; g_icon_file[16] := "rain.ans";
+    g_icon_w[17] := 12; g_icon_h[17] := 6; g_icon_file[17] := "flurries.ans";
+    g_icon_w[18] := 12; g_icon_h[18] := 6; g_icon_file[18] := "mostly-cloudy-flurries.ans";
+    g_icon_w[19] := 16; g_icon_h[19] := 6; g_icon_file[19] := "partly-sunny-flurries.ans";
+    g_icon_w[20] := 13; g_icon_h[20] := 6; g_icon_file[20] := "snow.ans";
+    g_icon_w[21] := 12; g_icon_h[21] := 6; g_icon_file[21] := "mostly-cloudy-snow.ans";
+    g_icon_w[22] := 12; g_icon_h[22] := 6; g_icon_file[22] := "ice.ans";
+    g_icon_w[23] := 12; g_icon_h[23] := 6; g_icon_file[23] := "sleet.ans";
+    g_icon_w[24] := 12; g_icon_h[24] := 6; g_icon_file[24] := "freezing-rain.ans";
+    g_icon_w[25] := 12; g_icon_h[25] := 6; g_icon_file[25] := "rain-snow.ans";
+    g_icon_w[26] := 15; g_icon_h[26] := 7; g_icon_file[26] := "hot.ans";
+    g_icon_w[27] := 15; g_icon_h[27] := 7; g_icon_file[27] := "cold.ans";
+
+    // Night icons
+    g_icon_w[28] := 14; g_icon_h[28] := 4; g_icon_file[28] := "clear-night.ans";
+    g_icon_w[29] := 13; g_icon_h[29] := 5; g_icon_file[29] := "mostly-clear-night.ans";
+    g_icon_w[30] := 13; g_icon_h[30] := 5; g_icon_file[30] := "partly-cloudy-night.ans";
+    g_icon_w[31] := 14; g_icon_h[31] := 5; g_icon_file[31] := "intermittent-clouds-night.ans";
+    g_icon_w[32] := 14; g_icon_h[32] := 5; g_icon_file[32] := "hazy-moon.ans";
+    g_icon_w[33] := 14; g_icon_h[33] := 5; g_icon_file[33] := "mostly-cloudy-night.ans";
+    g_icon_w[34] := 14; g_icon_h[34] := 6; g_icon_file[34] := "partly-cloudy-showers-night.ans";
+    g_icon_w[35] := 14; g_icon_h[35] := 6; g_icon_file[35] := "mostly-cloudy-showers-night.ans";
+    g_icon_w[36] := 14; g_icon_h[36] := 6; g_icon_file[36] := "partly-cloudy-tstorm-night.ans";
+    g_icon_w[37] := 14; g_icon_h[37] := 6; g_icon_file[37] := "mostly-cloudy-tstorm-night.ans";
+    g_icon_w[38] := 14; g_icon_h[38] := 6; g_icon_file[38] := "flurries-night.ans";
+    g_icon_w[39] := 14; g_icon_h[39] := 6; g_icon_file[39] := "snow-night.ans";
+}
+
+// ============================================================================
+// wthr_map_day — WeatherAPI condition code → day icon index
+// ============================================================================
+
+int wthr_map_day(int: code)
+{
+    // Clear / cloud
+    if (code = 1000) return ICON_SUNNY;
+    if (code = 1003) return ICON_PARTLY_SUNNY;
+    if (code = 1006) return ICON_MOSTLY_CLOUDY;
+    if (code = 1009) return ICON_OVERCAST;
+    // Mist / fog
+    if (code = 1030 or code = 1135 or code = 1147) return ICON_FOG;
+    // Patchy precip
+    if (code = 1063 or code = 1150 or code = 1180) return ICON_PARTLY_SUNNY_SHOWERS;
+    if (code = 1066 or code = 1210) return ICON_PARTLY_SUNNY_FLURRIES;
+    if (code = 1069) return ICON_SLEET;
+    if (code = 1072) return ICON_FREEZING_RAIN;
+    // Thunder
+    if (code = 1087) return ICON_MOSTLY_CLOUDY_TSTORM;
+    if (code = 1273 or code = 1276 or code = 1279 or code = 1282) return ICON_THUNDERSTORM;
+    // Wind / blizzard
+    if (code = 1114) return ICON_MOSTLY_CLOUDY_SNOW;
+    if (code = 1117) return ICON_SNOW;
+    // Drizzle / light rain
+    if (code = 1153 or code = 1183 or code = 1240) return ICON_SHOWERS;
+    // Freezing rain
+    if (code = 1168 or code = 1171 or code = 1198 or code = 1201) return ICON_FREEZING_RAIN;
+    // Moderate+ rain
+    if (code = 1186 or code = 1192 or code = 1243) return ICON_MOSTLY_CLOUDY_SHOWERS;
+    if (code = 1189 or code = 1195 or code = 1246) return ICON_RAIN;
+    // Sleet
+    if (code = 1204 or code = 1207 or code = 1249 or code = 1252) return ICON_SLEET;
+    // Snow
+    if (code = 1213 or code = 1219 or code = 1222 or code = 1225 or code = 1258) return ICON_SNOW;
+    if (code = 1216) return ICON_MOSTLY_CLOUDY_SNOW;
+    if (code = 1255) return ICON_FLURRIES;
+    // Ice
+    if (code = 1237 or code = 1261 or code = 1264) return ICON_ICE;
+
+    return ICON_PARTLY_SUNNY;   // safe fallback
+}
+
+// ============================================================================
+// wthr_map_night — condition code → night icon index.
+//                  Falls through to day icon for codes without night variant.
+// ============================================================================
+
+int wthr_map_night(int: code)
+{
+    // Clear / cloud
+    if (code = 1000) return ICON_CLEAR_N;
+    if (code = 1003) return ICON_PARTLY_CLOUDY_N;
+    if (code = 1006 or code = 1009) return ICON_MOSTLY_CLOUDY_N;
+    // Light / patchy rain
+    if (code = 1063 or code = 1150 or code = 1180 or code = 1240) return ICON_PARTLY_CLD_SHOWERS_N;
+    // Steady rain
+    if (code = 1153 or code = 1183 or code = 1186 or code = 1189) return ICON_MOSTLY_CLD_SHOWERS_N;
+    if (code = 1192 or code = 1195 or code = 1243 or code = 1246) return ICON_MOSTLY_CLD_SHOWERS_N;
+    // Thunder
+    if (code = 1087 or code = 1276 or code = 1279 or code = 1282) return ICON_MOSTLY_CLD_TSTORM_N;
+    if (code = 1273) return ICON_PARTLY_CLD_TSTORM_N;
+    // Flurries / snow
+    if (code = 1066 or code = 1210 or code = 1255) return ICON_FLURRIES_N;
+    if (code = 1114 or code = 1117 or code = 1213 or code = 1216) return ICON_SNOW_N;
+    if (code = 1219 or code = 1222 or code = 1225 or code = 1258) return ICON_SNOW_N;
+
+    // No night variant — use day icon (fog, sleet, ice, freezing rain)
+    return wthr_map_day(code);
+}
+
+// ============================================================================
+// wthr_map_condition — top-level: condition code + is_day → icon index
+// ============================================================================
+
+int wthr_map_condition(int: code, int: is_day)
+{
+    if (is_day = 0)
+        return wthr_map_night(code);
+    return wthr_map_day(code);
+}
+
+#endif // __WEATHER_MH_DEFINED

@@ -50,6 +50,7 @@ static char __attribute__((unused)) rcs_id[]="$Id: max_fini.c,v 1.6 2004/06/07 1
 #include "libmaxcfg.h"
 #include "prog.h"
 #include "mm.h"
+#include "local_term.h"
 #include "max_msg.h"
 #include "max_file.h"
 #include "dropfile.h"
@@ -383,6 +384,10 @@ void ShutDownVideo(void)
   }
 
   Local_Cleanup();
+
+  /* Shut down the local terminal backend (resets ANSI attrs, flushes). */
+  g_local_term->lt_fini();
+  g_local_term = &local_term_null;
 
   /* Reset the standard output pointers, in case we try to output something *
    * later.                                                                 */

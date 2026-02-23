@@ -1,0 +1,320 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: weather.mex
+//
+// Desc: Weather forecast display for Maximus BBS. Fetches current conditions
+//       and 3-day forecast from WeatherAPI, displays ANSI weather icons with
+//       temperatures and conditions in an 80-col panelled layout.
+//
+// Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <max.mh>
+#include <json.mh>
+#include <socket.mh>
+#include <maxui.mh>
+#include "weather.mh"
+
+#define API_KEY     "a0c6623e22d041c28f9171351262202"
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/// Replace spaces with '+' for URL encoding.
+string url_safe(string: s)
+{
+    string: r, tok;
+    int: pos, first;
+    r := ""; pos := 0; first := 1;
+    tok := strtok(s, " ", pos);
+    while (strlen(tok) > 0)
+    {
+        if (first = 0) r := r + "+";
+        r := r + tok;
+        first := 0;
+        tok := strtok(s, " ", pos);
+    }
+    return r;
+}
+
+/// Strip trailing CR from a readln'd string (ANS files have \r\n endings).
+string strip_cr(string: s)
+{
+    int: len;
+    len := strlen(s);
+    if (len > 0)
+    {
+        if (substr(s, len, 1) = "\r")
+            return substr(s, 1, len - 1);
+    }
+    return s;
+}
+
+/// Display an ANS weather icon at (row, col), centered in WTHR_PANEL_W slot.
+/// Returns the number of rows actually drawn.
+int draw_icon(int: icon_idx, int: row, int: col)
+{
+    int:    fd, lines, pad_x, pad_y;
+    string: path, line;
+
+    path := WTHR_ICON_DIR + g_icon_file[icon_idx];
+    fd := open(path, IOPEN_READ + IOPEN_BINARY);
+    if (fd = -1)
+        return 0;
+
+    // Horizontal centering within panel slot
+    pad_x := (WTHR_PANEL_W - g_icon_w[icon_idx]) / 2;
+    // Vertical centering within panel height
+    pad_y := (WTHR_PANEL_H - g_icon_h[icon_idx]) / 2;
+
+    lines := 0;
+    while (readln(fd, line) <> -1)
+    {
+        line := strip_cr(line);
+        if (strlen(line) > 0)
+        {
+            ui_goto(row + pad_y + lines, col + pad_x);
+            print(line);
+            print("|07|16");   // reset attr after icon art
+            lines := lines + 1;
+        }
+    }
+    close(fd);
+    return lines;
+}
+
+/// Write text centered within a given width at (row, col).
+void write_centered(int: row, int: col, int: width, string: s)
+{
+    int: pad;
+    if (strlen(s) >= width)
+    {
+        ui_goto(row, col);
+        print(substr(s, 1, width));
+        return;
+    }
+    pad := (width - strlen(s)) / 2;
+    ui_goto(row, col + pad);
+    print(s);
+}
+
+// Default city is WTHR_DEFAULT_CITY from weather.mh
+
+// ============================================================================
+// Display routines
+// ============================================================================
+
+/// Draw one forecast panel (icon + day name + hi/lo + condition).
+void draw_forecast_panel(int: col, string: day_name,
+                         int: icon_idx, string: hi, string: lo,
+                         string: cond)
+{
+    // Day label
+    ui_set_attr(UI_YELLOW);
+    write_centered(WTHR_ROW_DAYNAME, col, WTHR_PANEL_W, day_name);
+
+    // Icon art
+    draw_icon(icon_idx, WTHR_ROW_ICONS, col);
+
+    // High temp
+    ui_set_attr(UI_LRED);
+    write_centered(WTHR_ROW_TEMPS_HI, col, WTHR_PANEL_W,
+                   "High: " + hi);
+
+    // Low temp
+    ui_set_attr(UI_LCYAN);
+    write_centered(WTHR_ROW_TEMPS_LO, col, WTHR_PANEL_W,
+                   "Low:  " + lo);
+
+    // Condition text (truncate to panel width)
+    ui_set_attr(UI_GRAY);
+    write_centered(WTHR_ROW_COND, col, WTHR_PANEL_W,
+                   substr(cond, 1, WTHR_PANEL_W));
+}
+
+/// Draw the summary text block beside today's icon.
+void draw_summary(string: cond_text, string: temp, string: feels,
+                  string: wind_spd, string: wind_dir, string: humidity,
+                  string: localtime)
+{
+    int: r, c, w;
+    r := WTHR_ROW_ICONS;
+    c := WTHR_COL_SUMMARY;
+    w := WTHR_SUMMARY_W;
+
+    ui_set_attr(UI_LCYAN);
+    ui_goto(r, c);
+    print("Right now");
+
+    ui_set_attr(UI_WHITE);
+    ui_goto(r + 1, c);
+    print(cond_text);
+
+    ui_set_attr(UI_YELLOW);
+    ui_goto(r + 3, c);
+    print("Temp: ");
+    ui_set_attr(UI_WHITE);
+    print(temp);
+
+    ui_set_attr(UI_YELLOW);
+    ui_goto(r + 4, c);
+    print("Feels: ");
+    ui_set_attr(UI_WHITE);
+    print(feels);
+
+    ui_set_attr(UI_YELLOW);
+    ui_goto(r + 5, c);
+    print("Wind: ");
+    ui_set_attr(UI_WHITE);
+    print(wind_spd + " km/h " + wind_dir);
+
+    ui_set_attr(UI_YELLOW);
+    ui_goto(r + 6, c);
+    print("Humidity: ");
+    ui_set_attr(UI_WHITE);
+    print(humidity + "%%");
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+/// Fetch weather for a city. Returns HTTP status code.
+int fetch_weather(string: city, ref string: response)
+{
+    string: url;
+    int: status;
+
+    url := "https:" + "//api.weatherapi.com/v1/forecast.json?days=3&key=" + API_KEY + "&q=" + url_safe(city);
+    status := http_request(url, "GET", "", "", response, 10000);
+    return status;
+}
+
+void main()
+{
+    string: city, response;
+    int:    status, jh;
+    char:   dummy;
+
+    // Current conditions
+    string: loc_name, loc_region, loc_time;
+    string: cond_text, temp_c, temp_f, feels_c, feels_f;
+    string: wind_kph, wind_dir, humidity_s;
+    int:    cond_code, is_day;
+    int:    cur_icon;
+
+    // Forecast days
+    string: fc_hi, fc_lo, fc_cond;
+    int:    fc_code, fc_icon;
+    string: fc_date;
+
+    wthr_init();
+
+    // --- Determine city from profile, fallback to default ---
+    city := usr.city;
+    if (strlen(city) = 0)
+        city := WTHR_DEFAULT_CITY;
+
+    print(AVATAR_CLS);
+    print("|11Fetching forecast for |15" + city + "|11...\n");
+
+    status := fetch_weather(city, response);
+
+    // Bad location? Fall back to default.
+    if (status <> 200 and city <> WTHR_DEFAULT_CITY)
+    {
+        print("|12Could not get weather for " + city + "|07\n");
+        print("|11Trying |15" + WTHR_DEFAULT_CITY + "|11...\n");
+        city   := WTHR_DEFAULT_CITY;
+        status := fetch_weather(city, response);
+    }
+
+    if (status <> 200)
+    {
+        print("|12Error: |07Could not fetch weather");
+        if (status > 0) print(" (HTTP " + itostr(status) + ")");
+        print("\n|07Press any key...");
+        dummy := getch();
+        return;
+    }
+
+    jh := json_open(response);
+    if (jh = -1)
+    {
+        print("|12Error: |07Bad JSON response\n|07Press any key...");
+        dummy := getch();
+        return;
+    }
+
+    // --- Extract current conditions ---
+    loc_name   := json_get_str(jh, "location.name");
+    loc_region := json_get_str(jh, "location.region");
+    loc_time   := json_get_str(jh, "location.localtime");
+    cond_text  := json_get_str(jh, "current.condition.text");
+    cond_code  := strtoi(json_get_str(jh, "current.condition.code"));
+    is_day     := strtoi(json_get_str(jh, "current.is_day"));
+    temp_c     := json_get_str(jh, "current.temp_c");
+    temp_f     := json_get_str(jh, "current.temp_f");
+    feels_c    := json_get_str(jh, "current.feelslike_c");
+    feels_f    := json_get_str(jh, "current.feelslike_f");
+    wind_kph   := json_get_str(jh, "current.wind_kph");
+    wind_dir   := json_get_str(jh, "current.wind_dir");
+    humidity_s := json_get_str(jh, "current.humidity");
+    cur_icon   := wthr_map_condition(cond_code, is_day);
+
+    // --- Clear and draw layout ---
+    print(AVATAR_CLS);
+
+    // Header
+    ui_set_attr(UI_LCYAN);
+    ui_goto(WTHR_ROW_HEADER, 1);
+    print(loc_name);
+    if (strlen(loc_region) > 0)
+        print(", " + loc_region);
+    ui_set_attr(UI_DKGRAY);
+    print("  " + loc_time);
+
+    // --- Today panel (col 1) ---
+    draw_forecast_panel(WTHR_COL_TODAY, "Today",
+        cur_icon,
+        temp_c + "C", feels_c + "C",
+        cond_text);
+
+    // --- Summary text (col 17) ---
+    draw_summary(cond_text,
+        temp_c + "C / " + temp_f + "F",
+        feels_c + "C / " + feels_f + "F",
+        wind_kph, wind_dir, humidity_s,
+        loc_time);
+
+    // --- Tomorrow panel (col 45) ---
+    fc_hi   := json_get_str(jh, "forecast.forecastday[1].day.maxtemp_c");
+    fc_lo   := json_get_str(jh, "forecast.forecastday[1].day.mintemp_c");
+    fc_cond := json_get_str(jh, "forecast.forecastday[1].day.condition.text");
+    fc_code := strtoi(json_get_str(jh, "forecast.forecastday[1].day.condition.code"));
+    fc_icon := wthr_map_day(fc_code);
+    draw_forecast_panel(WTHR_COL_TMRW, "Tomorrow",
+        fc_icon, fc_hi + "C", fc_lo + "C", fc_cond);
+
+    // --- Day+2 panel (col 61) ---
+    fc_hi   := json_get_str(jh, "forecast.forecastday[2].day.maxtemp_c");
+    fc_lo   := json_get_str(jh, "forecast.forecastday[2].day.mintemp_c");
+    fc_cond := json_get_str(jh, "forecast.forecastday[2].day.condition.text");
+    fc_code := strtoi(json_get_str(jh, "forecast.forecastday[2].day.condition.code"));
+    fc_date := json_get_str(jh, "forecast.forecastday[2].date");
+    fc_icon := wthr_map_day(fc_code);
+    draw_forecast_panel(WTHR_COL_DAY2, fc_date,
+        fc_icon, fc_hi + "C", fc_lo + "C", fc_cond);
+
+    json_close(jh);
+
+    // --- Wait for keypress to return to menu ---
+    ui_set_attr(UI_GRAY);
+    ui_goto(WTHR_ROW_COND + 2, 1);
+    print("|07Press any key...");
+    dummy := getch();
+    print("\n|07");
+}

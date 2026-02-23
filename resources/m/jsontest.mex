@@ -1,0 +1,854 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: jsontest.mex
+//
+// Desc: Comprehensive test suite for JSON MEX intrinsics. Exercises
+//       parsing, cursor navigation, path convenience, building, and
+//       serialization. Run from the MEX Scripts menu.
+//
+// Copyright 2025 by Kevin Morgan (Limping Ninja). All rights reserved.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <max.mh>
+#include <json.mh>
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+void section(string: title)
+{
+  print("\n|15=== ", title, " ===|07\n\n");
+}
+
+void pass(string: label)
+{
+  print("  |10PASS|07  ", label, "\n");
+}
+
+void fail(string: label, string: detail)
+{
+  print("  |12FAIL|07  ", label, " - ", detail, "\n");
+}
+
+void press_any_key()
+{
+  print("\n|08Press any key...|07");
+  getch();
+}
+
+/// @brief Display the JSON string the test operates on
+void show_json(string: j)
+{
+  print("|08JSON:|07 |11", j, "|07\n\n");
+}
+
+/// @brief Display the main menu
+void show_menu()
+{
+  print(AVATAR_CLS);
+  print("|14JSON Intrinsics Test Suite|07\n");
+  print("|08", strpad("", 42, '-'), "|07\n\n");
+  print("|15 1|07  Path convenience accessors\n");
+  print("|15 2|07  Cursor: array iteration\n");
+  print("|15 3|07  Cursor: object key enumeration\n");
+  print("|15 4|07  Cursor: rewind\n");
+  print("|15 5|07  JSON builder (creates from scratch)\n");
+  print("|15 6|07  Multiple handles\n");
+  print("|15 7|07  Error handling\n");
+  print("|15 8|07  json_str auto-conversion\n");
+  print("|15 A|07  Run ALL tests\n");
+  print("\n|15 P|07  |11Live parser|07 - enter your own JSON\n");
+  print("|15 Q|07  Quit\n");
+  print("\n|08", strpad("", 42, '-'), "|07\n");
+}
+
+// ---------------------------------------------------------------------------
+// Recursive tree dumper (for live parser)
+// ---------------------------------------------------------------------------
+
+/// @brief Recursively dump a JSON node at the cursor with indentation
+void dump_node(int: jh, int: depth)
+{
+  string: indent;
+  string: k;
+  string: v;
+  int:    t;
+  int:    ct;
+  int:    i;
+
+  indent := "";
+  i := 0;
+  while (i < depth)
+  {
+    indent := indent + "  ";
+    i := i + 1;
+  }
+
+  t := json_type(jh);
+  k := json_key(jh);
+
+  if (t = JSON_OBJECT)
+  {
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |08{object}|07\n");
+    else
+      print(indent, "|08{object}|07\n");
+    json_enter(jh);
+    ct := json_next(jh);
+    while (ct <> JSON_END)
+    {
+      dump_node(jh, depth + 1);
+      ct := json_next(jh);
+    }
+    json_exit(jh);
+  }
+  else if (t = JSON_ARRAY)
+  {
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |08[array]|07\n");
+    else
+      print(indent, "|08[array]|07\n");
+    json_enter(jh);
+    ct := json_next(jh);
+    while (ct <> JSON_END)
+    {
+      dump_node(jh, depth + 1);
+      ct := json_next(jh);
+    }
+    json_exit(jh);
+  }
+  else if (t = JSON_NULL)
+  {
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |08null|07\n");
+    else
+      print(indent, "|08null|07\n");
+  }
+  else if (t = JSON_NUMBER)
+  {
+    v := json_str(jh);
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |14", v, "|07\n");
+    else
+      print(indent, "|14", v, "|07\n");
+  }
+  else if (t = JSON_BOOL)
+  {
+    v := json_str(jh);
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |12", v, "|07\n");
+    else
+      print(indent, "|12", v, "|07\n");
+  }
+  else
+  {
+    v := json_str(jh);
+    if (strlen(k) > 0)
+      print(indent, "|15", k, "|07: |10\"", v, "\"|07\n");
+    else
+      print(indent, "|10\"", v, "\"|07\n");
+  }
+}
+
+/// @brief Dump an entire JSON tree starting from the root
+void dump_tree(int: jh)
+{
+  int: t;
+  int: ct;
+
+  t := json_type(jh);
+  if (t = JSON_OBJECT)
+  {
+    print("|08{object - root}|07\n");
+    json_enter(jh);
+    ct := json_next(jh);
+    while (ct <> JSON_END)
+    {
+      dump_node(jh, 1);
+      ct := json_next(jh);
+    }
+    json_exit(jh);
+  }
+  else if (t = JSON_ARRAY)
+  {
+    print("|08[array - root]|07\n");
+    json_enter(jh);
+    ct := json_next(jh);
+    while (ct <> JSON_END)
+    {
+      dump_node(jh, 1);
+      ct := json_next(jh);
+    }
+    json_exit(jh);
+  }
+  else
+  {
+    print("|07", json_str(jh), "\n");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Live Parser: enter multi-line JSON, see the parsed tree
+// ---------------------------------------------------------------------------
+
+void live_parser()
+{
+  string: line;
+  string: buf;
+  int:    jh;
+  int:    rc;
+
+  print(AVATAR_CLS);
+  section("Live JSON Parser");
+  print("|07Enter JSON line by line. |08Blank line|07 to parse, |08.|07 to cancel.\n");
+  print("|08(Max ~250 chars total - this is a BBS after all!)|07\n\n");
+
+  buf := "";
+  print("|11> |07");
+  rc := input_str(line, INPUT_NLB_LINE, 0, 200, "");
+
+  while (strlen(line) > 0 and line <> ".")
+  {
+    buf := buf + line;
+    print("|11> |07");
+    rc := input_str(line, INPUT_NLB_LINE, 0, 200, "");
+  }
+
+  if (line = "." or strlen(buf) = 0)
+  {
+    print("\n|08Cancelled.|07\n");
+    press_any_key();
+    return;
+  }
+
+  print("\n|08Parsing...|07\n\n");
+  jh := json_open(buf);
+  if (jh < 0)
+  {
+    print("|12Parse error!|07 Invalid JSON.\n");
+    press_any_key();
+    return;
+  }
+
+  print("|15Parse tree:|07\n");
+  print("|08", strpad("", 40, '-'), "|07\n");
+  dump_tree(jh);
+  print("|08", strpad("", 40, '-'), "|07\n");
+
+  json_close(jh);
+  press_any_key();
+}
+
+// ---------------------------------------------------------------------------
+// Test 1: Parse + path convenience accessors
+// ---------------------------------------------------------------------------
+
+void test_path_convenience()
+{
+  string: json_text;
+  int:    jh;
+  string: name;
+  long:   age;
+  int:    active;
+  string: theme;
+  long:   cols;
+  string: tag0;
+  string: tag2;
+  int:    t;
+  int:    cnt;
+
+  print(AVATAR_CLS);
+  section("Path Convenience Accessors");
+
+  json_text := "{\"name\":\"Kevin\",\"age\":42,\"active\":true,\"score\":null,\"prefs\":{\"theme\":\"dark\",\"cols\":80},\"tags\":[\"sysop\",\"dev\",\"retro\"]}";
+  show_json(json_text);
+
+  jh := json_open(json_text);
+  if (jh < 0)
+  {
+    fail("json_open", "returned -1");
+    return;
+  }
+  pass("json_open returned handle " + itostr(jh));
+
+  // String lookup
+  name := json_get_str(jh, "name");
+  if (name = "Kevin")
+    pass("json_get_str(\"name\") = \"" + name + "\"");
+  else
+    fail("json_get_str(\"name\")", "got \"" + name + "\"");
+
+  // Number lookup
+  age := json_get_num(jh, "age");
+  if (age = 42)
+    pass("json_get_num(\"age\") = " + ltostr(age));
+  else
+    fail("json_get_num(\"age\")", "got " + ltostr(age));
+
+  // Boolean lookup
+  active := json_get_bool(jh, "active");
+  if (active = 1)
+    pass("json_get_bool(\"active\") = " + itostr(active));
+  else
+    fail("json_get_bool(\"active\")", "got " + itostr(active));
+
+  // Nested path
+  theme := json_get_str(jh, "prefs.theme");
+  if (theme = "dark")
+    pass("json_get_str(\"prefs.theme\") = \"" + theme + "\"");
+  else
+    fail("json_get_str(\"prefs.theme\")", "got \"" + theme + "\"");
+
+  // Nested number
+  cols := json_get_num(jh, "prefs.cols");
+  if (cols = 80)
+    pass("json_get_num(\"prefs.cols\") = " + ltostr(cols));
+  else
+    fail("json_get_num(\"prefs.cols\")", "got " + ltostr(cols));
+
+  // Array element by index
+  tag0 := json_get_str(jh, "tags[0]");
+  if (tag0 = "sysop")
+    pass("json_get_str(\"tags[0]\") = \"" + tag0 + "\"");
+  else
+    fail("json_get_str(\"tags[0]\")", "got \"" + tag0 + "\"");
+
+  tag2 := json_get_str(jh, "tags[2]");
+  if (tag2 = "retro")
+    pass("json_get_str(\"tags[2]\") = \"" + tag2 + "\"");
+  else
+    fail("json_get_str(\"tags[2]\")", "got \"" + tag2 + "\"");
+
+  // Type checks
+  t := json_get_type(jh, "name");
+  if (t = JSON_STRING)
+    pass("json_get_type(\"name\") = JSON_STRING");
+  else
+    fail("json_get_type(\"name\")", "got " + itostr(t));
+
+  t := json_get_type(jh, "tags");
+  if (t = JSON_ARRAY)
+    pass("json_get_type(\"tags\") = JSON_ARRAY");
+  else
+    fail("json_get_type(\"tags\")", "got " + itostr(t));
+
+  t := json_get_type(jh, "prefs");
+  if (t = JSON_OBJECT)
+    pass("json_get_type(\"prefs\") = JSON_OBJECT");
+  else
+    fail("json_get_type(\"prefs\")", "got " + itostr(t));
+
+  // Count
+  cnt := json_get_count(jh, "tags");
+  if (cnt = 3)
+    pass("json_get_count(\"tags\") = " + itostr(cnt));
+  else
+    fail("json_get_count(\"tags\")", "got " + itostr(cnt));
+
+  cnt := json_get_count(jh, "prefs");
+  if (cnt = 2)
+    pass("json_get_count(\"prefs\") = " + itostr(cnt));
+  else
+    fail("json_get_count(\"prefs\")", "got " + itostr(cnt));
+
+  json_close(jh);
+  pass("json_close");
+}
+
+// ---------------------------------------------------------------------------
+// Test 2: Cursor navigation - array iteration
+// ---------------------------------------------------------------------------
+
+void test_cursor_array()
+{
+  string: json_text;
+  int:    jh;
+  int:    rc;
+  int:    cnt;
+  int:    t;
+  int:    item_count;
+  long:   id;
+  string: label;
+
+  print(AVATAR_CLS);
+  section("Cursor Array Iteration");
+
+  json_text := "{\"items\":[{\"id\":1,\"label\":\"Mail\"},{\"id\":2,\"label\":\"Files\"},{\"id\":3,\"label\":\"Chat\"}]}";
+  show_json(json_text);
+
+  jh := json_open(json_text);
+  if (jh < 0)
+  {
+    fail("json_open", "returned -1");
+    return;
+  }
+
+  json_enter(jh);                    // enter root object
+  rc := json_find(jh, "items");
+  if (rc < 0)
+  {
+    fail("json_find(\"items\")", "returned -1");
+    json_close(jh);
+    return;
+  }
+  pass("json_find(\"items\")");
+
+  // Check count at cursor
+  cnt := json_count(jh);
+  if (cnt = 3)
+    pass("json_count() at cursor = " + itostr(cnt));
+  else
+    fail("json_count()", "got " + itostr(cnt));
+
+  json_enter(jh);                    // enter items array
+
+  item_count := 0;
+  t := json_next(jh);
+  while (t <> JSON_END)
+  {
+    item_count := item_count + 1;
+    json_enter(jh);                  // enter item object
+
+    json_find(jh, "id");
+    id := json_num(jh);
+
+    json_find(jh, "label");
+    label := json_str(jh);
+
+    print("  Item #" + ltostr(id) + ": " + label + "\n");
+
+    json_exit(jh);                   // back to array level
+    t := json_next(jh);
+  }
+
+  if (item_count = 3)
+    pass("Iterated " + itostr(item_count) + " items");
+  else
+    fail("Iteration count", "got " + itostr(item_count));
+
+  json_close(jh);
+  pass("json_close");
+}
+
+// ---------------------------------------------------------------------------
+// Test 3: Cursor navigation - object key enumeration
+// ---------------------------------------------------------------------------
+
+void test_cursor_keys()
+{
+  string: json_text;
+  int:    jh;
+  int:    t;
+  int:    key_count;
+  string: k;
+  string: v;
+
+  print(AVATAR_CLS);
+  section("Cursor Object Key Enumeration");
+
+  json_text := "{\"settings\":{\"theme\":\"dark\",\"lang\":\"en\",\"node\":3,\"active\":true}}";
+  show_json(json_text);
+
+  jh := json_open(json_text);
+  if (jh < 0)
+  {
+    fail("json_open", "returned -1");
+    return;
+  }
+
+  json_enter(jh);                    // root object
+  json_find(jh, "settings");
+  json_enter(jh);                    // settings object
+
+  key_count := 0;
+  t := json_next(jh);
+  while (t <> JSON_END)
+  {
+    key_count := key_count + 1;
+    k := json_key(jh);
+    v := json_str(jh);
+    print("  " + k + " = " + v + "\n");
+    t := json_next(jh);
+  }
+
+  if (key_count = 4)
+    pass("Enumerated " + itostr(key_count) + " keys");
+  else
+    fail("Key count", "got " + itostr(key_count));
+
+  json_close(jh);
+  pass("json_close");
+}
+
+// ---------------------------------------------------------------------------
+// Test 4: Cursor rewind
+// ---------------------------------------------------------------------------
+
+void test_cursor_rewind()
+{
+  string: json_text;
+  int:    jh;
+  int:    t;
+  int:    count1;
+  int:    count2;
+
+  print(AVATAR_CLS);
+  section("Cursor Rewind");
+
+  json_text := "[10, 20, 30]";
+  show_json(json_text);
+
+  jh := json_open(json_text);
+  if (jh < 0)
+  {
+    fail("json_open", "returned -1");
+    return;
+  }
+
+  json_enter(jh);                    // enter root array
+
+  // First pass
+  count1 := 0;
+  t := json_next(jh);
+  while (t <> JSON_END)
+  {
+    count1 := count1 + 1;
+    t := json_next(jh);
+  }
+
+  if (count1 = 3)
+    pass("First pass: " + itostr(count1) + " elements");
+  else
+    fail("First pass", "got " + itostr(count1));
+
+  // Rewind and iterate again
+  json_rewind(jh);
+
+  count2 := 0;
+  t := json_next(jh);
+  while (t <> JSON_END)
+  {
+    count2 := count2 + 1;
+    t := json_next(jh);
+  }
+
+  if (count2 = 3)
+    pass("After rewind: " + itostr(count2) + " elements");
+  else
+    fail("After rewind", "got " + itostr(count2));
+
+  json_close(jh);
+  pass("json_close");
+}
+
+// ---------------------------------------------------------------------------
+// Test 5: Building a JSON object
+// ---------------------------------------------------------------------------
+
+void test_build_object()
+{
+  int:    jh;
+  string: out;
+  string: check;
+  long:   node;
+  int:    tag_count;
+
+  print(AVATAR_CLS);
+  section("JSON Builder - Object");
+  print("|08(Builds JSON from scratch using set/add/push intrinsics)|07\n\n");
+
+  jh := json_create();
+  if (jh < 0)
+  {
+    fail("json_create", "returned -1");
+    return;
+  }
+  pass("json_create returned handle " + itostr(jh));
+
+  json_set_str(jh, "username", "Kevin");
+  json_set_num(jh, "node", 1);
+  json_set_bool(jh, "active", 1);
+
+  // Add nested object
+  json_add_object(jh, "prefs");
+  json_enter(jh);                    // enter root object
+  json_find(jh, "prefs");
+  json_enter(jh);                    // enter prefs object
+  json_set_str(jh, "theme", "dark");
+  json_set_num(jh, "width", 80);
+  json_exit(jh);                     // back to root level
+  json_exit(jh);
+
+  // Add array
+  json_add_array(jh, "tags");
+  json_enter(jh);
+  json_find(jh, "tags");
+  json_enter(jh);                    // enter tags array
+  json_array_push_str(jh, "sysop");
+  json_array_push_str(jh, "dev");
+  json_array_push_num(jh, 42);
+  json_exit(jh);                     // back to root
+  json_exit(jh);
+
+  out := json_serialize(jh);
+  print("  Serialized: " + out + "\n");
+
+  if (strlen(out) > 10)
+    pass("json_serialize produced output");
+  else
+    fail("json_serialize", "output too short");
+
+  // Verify with path accessors on the same handle
+  check := json_get_str(jh, "username");
+  if (check = "Kevin")
+    pass("Verify json_get_str(\"username\") = \"" + check + "\"");
+  else
+    fail("Verify username", "got \"" + check + "\"");
+
+  node := json_get_num(jh, "node");
+  if (node = 1)
+    pass("Verify json_get_num(\"node\") = " + ltostr(node));
+  else
+    fail("Verify node", "got " + ltostr(node));
+
+  check := json_get_str(jh, "prefs.theme");
+  if (check = "dark")
+    pass("Verify json_get_str(\"prefs.theme\") = \"" + check + "\"");
+  else
+    fail("Verify prefs.theme", "got \"" + check + "\"");
+
+  tag_count := json_get_count(jh, "tags");
+  if (tag_count = 3)
+    pass("Verify json_get_count(\"tags\") = " + itostr(tag_count));
+  else
+    fail("Verify tags count", "got " + itostr(tag_count));
+
+  json_close(jh);
+  pass("json_close");
+}
+
+// ---------------------------------------------------------------------------
+// Test 6: Multiple handles
+// ---------------------------------------------------------------------------
+
+void test_multiple_handles()
+{
+  int:    jh1;
+  int:    jh2;
+  string: s1;
+  string: s2;
+
+  print(AVATAR_CLS);
+  section("Multiple Handles");
+  show_json("{\"src\":\"handle1\"}  +  {\"src\":\"handle2\"}");
+
+  jh1 := json_open("{\"src\":\"handle1\"}");
+  jh2 := json_open("{\"src\":\"handle2\"}");
+
+  if (jh1 < 0 or jh2 < 0)
+  {
+    fail("json_open", "failed to open two handles");
+    return;
+  }
+
+  if (jh1 <> jh2)
+    pass("Two distinct handles: " + itostr(jh1) + " and " + itostr(jh2));
+  else
+    fail("Handle reuse", "both returned " + itostr(jh1));
+
+  s1 := json_get_str(jh1, "src");
+  s2 := json_get_str(jh2, "src");
+
+  if (s1 = "handle1" and s2 = "handle2")
+    pass("Independent data: \"" + s1 + "\" / \"" + s2 + "\"");
+  else
+    fail("Data isolation", "got \"" + s1 + "\" / \"" + s2 + "\"");
+
+  json_close(jh1);
+  json_close(jh2);
+  pass("Both handles closed");
+}
+
+// ---------------------------------------------------------------------------
+// Test 7: Error handling
+// ---------------------------------------------------------------------------
+
+void test_error_handling()
+{
+  int:    jh;
+  int:    t;
+  string: s;
+
+  print(AVATAR_CLS);
+  section("Error Handling");
+  print("|08(Tests invalid JSON, bad handles, missing paths)|07\n\n");
+
+  // Parse invalid JSON
+  jh := json_open("not valid json {{{");
+  if (jh = -1)
+    pass("json_open rejects invalid JSON");
+  else
+  {
+    fail("json_open", "accepted invalid JSON as handle " + itostr(jh));
+    json_close(jh);
+  }
+
+  // Operations on invalid handle
+  t := json_get_type(99, "foo");
+  if (t = JSON_INVALID)
+    pass("json_get_type on invalid handle returns JSON_INVALID");
+  else
+    fail("json_get_type(99)", "got " + itostr(t));
+
+  // Path to nonexistent key
+  jh := json_open("{\"a\":1}");
+  s := json_get_str(jh, "nonexistent.deep.path");
+  if (s = "")
+    pass("Missing path returns empty string");
+  else
+    fail("Missing path", "got \"" + s + "\"");
+
+  json_close(jh);
+  pass("Cleanup OK");
+}
+
+// ---------------------------------------------------------------------------
+// Test 8: Auto-conversion in json_str
+// ---------------------------------------------------------------------------
+
+void test_str_auto_convert()
+{
+  string: json_text;
+  int:    jh;
+  string: v;
+
+  print(AVATAR_CLS);
+  section("json_str Auto-Conversion");
+
+  json_text := "{\"num\":42,\"bool\":true,\"nil\":null,\"str\":\"hello\"}";
+  show_json(json_text);
+
+  jh := json_open(json_text);
+
+  json_enter(jh);
+
+  json_find(jh, "num");
+  v := json_str(jh);
+  if (v = "42")
+    pass("Number -> str: \"" + v + "\"");
+  else
+    fail("Number -> str", "got \"" + v + "\"");
+
+  json_find(jh, "bool");
+  v := json_str(jh);
+  if (v = "true")
+    pass("Bool -> str: \"" + v + "\"");
+  else
+    fail("Bool -> str", "got \"" + v + "\"");
+
+  json_find(jh, "nil");
+  v := json_str(jh);
+  if (v = "null")
+    pass("Null -> str: \"" + v + "\"");
+  else
+    fail("Null -> str", "got \"" + v + "\"");
+
+  json_find(jh, "str");
+  v := json_str(jh);
+  if (v = "hello")
+    pass("String -> str: \"" + v + "\"");
+  else
+    fail("String -> str", "got \"" + v + "\"");
+
+  json_close(jh);
+}
+
+/// @brief Run all automated tests sequentially
+void run_all_tests()
+{
+  test_path_convenience();
+  press_any_key();
+  test_cursor_array();
+  press_any_key();
+  test_cursor_keys();
+  press_any_key();
+  test_cursor_rewind();
+  press_any_key();
+  test_build_object();
+  press_any_key();
+  test_multiple_handles();
+  press_any_key();
+  test_error_handling();
+  press_any_key();
+  test_str_auto_convert();
+  print("\n|14All tests complete.|07\n");
+  press_any_key();
+}
+
+// ---------------------------------------------------------------------------
+// Main — menu loop
+// ---------------------------------------------------------------------------
+
+void main()
+{
+  int: ch;
+  int: running;
+
+  running := 1;
+  while (running)
+  {
+    show_menu();
+    ch := input_list("12345678APQ", CINPUT_FULLPROMPT, "", "", "|15Choice: |07");
+
+    if (ch = '1')
+    {
+      test_path_convenience();
+      press_any_key();
+    }
+    else if (ch = '2')
+    {
+      test_cursor_array();
+      press_any_key();
+    }
+    else if (ch = '3')
+    {
+      test_cursor_keys();
+      press_any_key();
+    }
+    else if (ch = '4')
+    {
+      test_cursor_rewind();
+      press_any_key();
+    }
+    else if (ch = '5')
+    {
+      test_build_object();
+      press_any_key();
+    }
+    else if (ch = '6')
+    {
+      test_multiple_handles();
+      press_any_key();
+    }
+    else if (ch = '7')
+    {
+      test_error_handling();
+      press_any_key();
+    }
+    else if (ch = '8')
+    {
+      test_str_auto_convert();
+      press_any_key();
+    }
+    else if (ch = 'A')
+      run_all_tests();
+    else if (ch = 'P')
+      live_parser();
+    else if (ch = 'Q')
+      running := 0;
+  }
+
+  print(AVATAR_CLS);
+}

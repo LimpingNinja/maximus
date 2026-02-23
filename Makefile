@@ -31,7 +31,7 @@
 
 SQUISH_LIB_DIRS = src/libs/btree src/libs/unix src/libs/slib src/libs/msgapi src/utils/squish
 SQAFIX_LIB_DIRS = src/libs/msgapi src/utils/sqafix
-MAX_LIB_DIRS    = src/libs/unix src/libs/slib src/libs/msgapi src/libs/mexvm src/libs/prot src/libs/legacy/comdll src/libs/libmaxcfg src/libs/sqlite src/libs/libmaxdb 
+MAX_LIB_DIRS    = src/libs/unix src/libs/slib src/libs/msgapi src/libs/mexvm src/libs/prot src/libs/legacy/comdll src/libs/libmaxcfg src/libs/sqlite src/libs/libmaxdb
 LIB_DIRS	= $(SQUISH_LIB_DIRS) $(SQAFIX_LIB_DIRS) $(MAX_LIB_DIRS)
 PROG_DIRS	= src/utils/squish src/max src/apps/mex src/utils/util src/apps/maxcfg
 MAXTEL_DIR	= src/apps/maxtel

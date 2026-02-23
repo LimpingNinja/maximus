@@ -395,7 +395,7 @@ Menu MEX
         MEX             m/class                 Demoted "8 User class info."
         MEX             m/lastrd                Demoted "9 Show lastread"
         MEX             m/mexbank               Demoted "A Time bank"
-        MEX             m/pstat                 Demoted "B PSTAT (OS2 only)"
+        MEX             m/weather               Demoted "B Weather forecast"
         MEX             m/mexchat               Demoted "C Full-screen chat"
         MEX             m/taglist               Demoted "D Tagged file list"
         Goodbye                                 Demoted "Goodbye"

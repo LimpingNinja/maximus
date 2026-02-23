@@ -90,9 +90,9 @@ modifiers = []
 
 [[option]]
 command = "MEX"
-arguments = "scripts/pstat"
+arguments = "scripts/weather"
 priv_level = "Demoted"
-description = "B PSTAT (OS2 only)"
+description = "B Weather forecast"
 key_poke = ""
 modifiers = []
 
@@ -109,6 +109,22 @@ command = "MEX"
 arguments = "scripts/taglist"
 priv_level = "Demoted"
 description = "D Tagged file list"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/jsontest"
+priv_level = "Demoted"
+description = "E JSON test suite"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/socktest"
+priv_level = "Demoted"
+description = "F Weather report (wttr.in)"
 key_poke = ""
 modifiers = []
 
