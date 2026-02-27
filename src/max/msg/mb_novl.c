@@ -485,6 +485,11 @@ static int near Browse_Scan_This_Area(BROWSE *b, PMAH pmah, BARINFO *pbi)
       return FALSE;   /* Skip this area if this is a mailcheck */
     }
 
+    /* Always skip the EMAIL area in multi-area browse scans.
+     * Email is accessed exclusively via Msg_CheckEmail(). */
+    if (pmah->ma.attribs_2 & MA2_EMAIL)
+      return FALSE;
+
     if (b->bflag & BROWSE_ATAG)   /* Only scan tagged areas */
     {
       if (!TagQueryTagList(&mtm, PMAS(pmah, name)))

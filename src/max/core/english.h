@@ -1211,6 +1211,7 @@
 #define br_dispk maxlang_get(g_current_lang, "m_browse.br_dispk")
 #define br_list_head1 maxlang_get(g_current_lang, "m_browse.br_list_head1")
 #define br_list_head2 maxlang_get(g_current_lang, "m_browse.br_list_head2")
+#define br_list_foot maxlang_get(g_current_lang, "m_browse.br_list_foot")
 #define br_this maxlang_get(g_current_lang, "m_browse.br_this")
 #define br_s_where_verbose maxlang_get(g_current_lang, "m_browse.br_s_where_verbose")
 #define br_s_where maxlang_get(g_current_lang, "m_browse.br_s_where")

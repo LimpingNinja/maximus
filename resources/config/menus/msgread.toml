@@ -1,0 +1,70 @@
+name = "MSGREAD"
+title = "MSG READER"
+header_file = ""
+header_types = []
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+# NG Full-Screen Reader keybindings.
+# Navigation keys (arrows, PgUp/PgDn, ESC) are handled directly by
+# the reader loop.  This menu defines action commands dispatched via
+# keystroke matching inside the FSR.
+
+[[option]]
+command = "Msg_Reply"
+arguments = ""
+priv_level = "Demoted"
+description = "Reply"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Kill"
+arguments = ""
+priv_level = "Demoted"
+description = "Kill (delete)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Forward"
+arguments = ""
+priv_level = "Demoted"
+description = "Forward (copy)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Xport"
+arguments = ""
+priv_level = "Sysop"
+description = "Xport to disk"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Enter"
+arguments = ""
+priv_level = "Demoted"
+description = "Enter message"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Kludges"
+arguments = ""
+priv_level = "Sysop"
+description = "!Toggle Kludges"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_File"
+arguments = "display/help/msgreader"
+priv_level = "Demoted"
+description = "?help"
+key_poke = ""
+modifiers = []

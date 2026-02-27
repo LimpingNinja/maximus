@@ -224,7 +224,7 @@ static int near Quote_Read(void)
     }
   }
 
-  PrintfForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
 
   Goto(cursor_x,cursor_y);  /* Restore original cursor position */
   vbuf_flush();

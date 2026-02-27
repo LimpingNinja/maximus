@@ -16,13 +16,20 @@ with semantic `|xx` theme codes. Organized into batches by reasoning.
 | `lf` | lightbar_fg   | `\|15`   |
 | `lb` | lightbar_bg   | `\|17`   |
 | `er` | error         | `\|12`   |
-| `wn` | warning       | `\|14`   |
+| `wn` | warning       | `\|06`   |
 | `ok` | success       | `\|10`   |
 | `dm` | dim           | `\|08`   |
 | `fi` | file_info     | `\|03`   |
 | `sy` | sysop         | `\|13`   |
 | `qt` | quote         | `\|09`   |
 | `br` | border        | `\|01`   |
+| `hk` | hotkey        | `\|14`   |
+| `ac` | accent        | `\|11`   |
+| `ds` | disabled      | `\|08`   |
+| `nf` | info          | `\|10`   |
+| `nt` | notice        | `\|13`   |
+| `dv` | divider       | `\|05`   |
+| `la` | label         | `\|03`   |
 | `cd` | default       | `\|07`   |
 
 ---

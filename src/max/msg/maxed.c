@@ -156,7 +156,6 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
     Init_Vars();
 
-    PutsForce(maxed_init);
 
     if (!(usr.bits2 & BITS2_CLS))
       NoFF_CLS();
@@ -166,6 +165,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
     break_loop=FALSE;
 
+    PutsForce(maxed_init);
     if (msgh)
     {
       Load_Message(msgh);
@@ -184,7 +184,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
       Goto(usrlen, 1);
       PutsForce(ck_for_help);
       Puts(CLEOL);
-      PrintfForce(msg_text_col);
+      EMIT_MSG_TEXT_COL();
       Goto(cursor_x, cursor_y);
     }
     else
@@ -272,6 +272,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               Delete_Char();
               break;
 
+#ifndef UNIX
             case K_VTDEL:    /* VT 100 delete */
 
               /* Delete char under cusor if user has ibmchars turned on */
@@ -282,8 +283,10 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
                 break;
               }
               /* else fall-through */
+#endif
 
             case K_BS:    /* Backspace */
+            case K_VTDEL: /* Also treat DEL-as-Backspace on UNIX terminals */
               BackSpace();
               break;
 
@@ -420,7 +423,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
                   /* Tell this deadbeat to lighten up! */
                   PutsForce(happy);
-                  PrintfForce(msg_text_col);
+                  EMIT_MSG_TEXT_COL();
 
 
                   Goto(cursor_x,cursor_y);
@@ -656,7 +659,7 @@ static void near Process_Control_Q(void)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "^Q");
   Goto(cursor_x,cursor_y);
-  PrintfForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
   vbuf_flush();
 
   ch=Mdm_getcwcc();
@@ -691,7 +694,7 @@ static void near Process_Control_Q(void)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "  ");
   Goto(cursor_x,cursor_y);
-  PrintfForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
   vbuf_flush();
 }
 
@@ -704,7 +707,7 @@ static word near Process_Control_K(struct _replyp *pr)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "^K");
   Goto(cursor_x,cursor_y);
-  PrintfForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
   vbuf_flush();
 
   ret=NOTHING;
@@ -764,7 +767,7 @@ static word near Process_Control_K(struct _replyp *pr)
   Goto(usrlen,usrwidth-3);
   Puts(YELONBLUE "  ");
   Goto(cursor_x,cursor_y);
-  PrintfForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
   vbuf_flush();
 
   return ret;

@@ -47,6 +47,9 @@ int Editor(XMSG *msg, HMSG msgh, long msgnum, char *ctrl_buf, struct _replyp *pr
 
   last_maxed=FALSE;
 
+  mdm_attr=curattr=-1;
+  Puts("\x1b[0m");
+
   ChatSaveStatus(&css);
   ChatSetStatus(FALSE, cs_enter_msg);
 

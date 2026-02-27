@@ -63,7 +63,7 @@ void LPipeFlush(void)
     return;
   }
 
-  if (g_lcl_pipe_state==2)
+  if (g_lcl_pipe_state==2 || g_lcl_pipe_state==3)
   {
     g_lcl_pipe_state=0;
     g_lcl_pipe_inhibit=1;
@@ -188,6 +188,15 @@ void Lputc(int ch)
         return;
       }
 
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= 'a' && ch <= 'z')
+      {
+        g_lcl_pipe_d1=(byte)ch;
+        g_lcl_pipe_state=3;
+        return;
+      }
+
       g_lcl_pipe_inhibit=1;
       Lputc('|');
       Lputc(ch);
@@ -219,6 +228,29 @@ void Lputc(int ch)
           Lputc(attr);
           return;
         }
+      }
+
+      g_lcl_pipe_inhibit=1;
+      Lputc('|');
+      Lputc(g_lcl_pipe_d1);
+      Lputc(ch);
+      return;
+    }
+    else if (g_lcl_pipe_state==3)
+    {
+      g_lcl_pipe_state=0;
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          g_mci_theme && ch >= 'a' && ch <= 'z')
+      {
+        char slot[4] = {'|', (char)g_lcl_pipe_d1, (char)ch, '\0'};
+        byte attr=(byte)curattr;
+        attr=Mci2Attr(slot, attr);
+        Lputc(22);
+        Lputc(1);
+        Lputc(attr);
+        return;
       }
 
       g_lcl_pipe_inhibit=1;

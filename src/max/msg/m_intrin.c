@@ -91,6 +91,11 @@ int Exec_Msg(int type, char **result, int key, char *arg, char *menuname)
 
     case msg_dload_attach:    Msg_Attach_Download();          break;
     case msg_reply_area:      Msg_ReplyArea(arg);             break;
+    case msg_checkemail:      Msg_CheckEmail(menuname);       break;
+    case msg_email_compose:   Email_Compose(arg);             break;
+    case msg_email_inbox:     Email_Inbox(menuname);          break;
+    case msg_ng_read:         Msg_NG_Read();                  break;
+    case msg_ng_find:         Msg_NG_Find();                  break;
 
     default:              logit(bad_menu_opt, type); return 0;
   }

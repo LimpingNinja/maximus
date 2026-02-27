@@ -18,10 +18,10 @@ ifeq ($(BUILD),PROFILE)
 else
   # Darwin/macOS uses @executable_path for portable installs
   ifeq ($(PLATFORM),darwin)
-    # Use @executable_path/../lib so binaries find libs relative to their location
-    # This works for any PREFIX since bin/ and lib/ are always siblings
-    # Also add $(LIB) rpath for build-time library discovery
-    LDFLAGS	+= -L$(LIB) -Wl,-rpath,@executable_path/../lib -Wl,-rpath,$(LIB) $(foreach DIR, $(EXTRA_LD_LIBRARY_PATH), -L$(DIR))
+    # Libs live at $(PREFIX)/bin/lib/ — a child of bin/, not a sibling.
+    # @executable_path/lib resolves correctly for any PREFIX layout.
+    # Also add $(LIB) absolute rpath for build-time library discovery.
+    LDFLAGS	+= -L$(LIB) -Wl,-rpath,@executable_path/lib -Wl,-rpath,$(LIB) $(foreach DIR, $(EXTRA_LD_LIBRARY_PATH), -L$(DIR))
   else
     LDFLAGS	+= -L$(LIB) -Xlinker -R$(LIB) $(foreach DIR, $(EXTRA_LD_LIBRARY_PATH), -Xlinker -R$(DIR))
   endif

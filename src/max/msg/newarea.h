@@ -92,6 +92,7 @@ typedef struct _ovride
 #define MA_DIVEND   0x8000  /* End of the message area division            */
 
 #define MA2_NOMCHK  0x0001  /* Don't do personal mail check in this area   */
+#define MA2_EMAIL   0x0002  /* Dedicated system email area (singleton)     */
 
 #define MA_SHARED   (MA_ECHO | MA_CONF)
 

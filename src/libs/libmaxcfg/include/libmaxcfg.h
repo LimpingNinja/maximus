@@ -402,7 +402,7 @@ typedef struct {
  * ============================================================================ */
 
 /** @brief Number of defined semantic theme color slots. */
-#define MCI_THEME_SLOT_COUNT 19
+#define MCI_THEME_SLOT_COUNT 25
 
 /** @brief A single theme color slot mapping a 2-char code to an MCI pipe string. */
 typedef struct {

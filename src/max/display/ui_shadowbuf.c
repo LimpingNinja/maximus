@@ -404,6 +404,34 @@ int ui_shadowbuf_normalize_line(const char *text, byte start_attr, byte default_
       continue;
     }
 
+    /* Pipe color codes: |## (numeric) and |xx (semantic theme).
+     * Must be consumed here so cell count matches what Lputc renders. */
+    if (*p == '|' && p[1] && p[2])
+    {
+      if (p[1] >= '0' && p[1] <= '9' && p[2] >= '0' && p[2] <= '9')
+      {
+        int code = ((int)(p[1] - '0') * 10) + (int)(p[2] - '0');
+
+        if (code >= 0 && code <= 15)
+          cur_attr = (byte)((cur_attr & 0xF0u) | (byte)code);
+        else if (code <= 23)
+          cur_attr = (byte)((cur_attr & 0x0Fu) | (byte)((code - 16) << 4) | (cur_attr & 0x80u));
+        else if (code <= 31)
+          cur_attr = (byte)((cur_attr & 0x0Fu) | (byte)((code - 24) << 4) | 0x80u);
+
+        p += 3;
+        continue;
+      }
+
+      if (p[1] >= 'a' && p[1] <= 'z' && p[2] >= 'a' && p[2] <= 'z')
+      {
+        char slot[4] = { '|', (char)p[1], (char)p[2], '\0' };
+        cur_attr = Mci2Attr(slot, cur_attr);
+        p += 3;
+        continue;
+      }
+    }
+
     /* Ignore CR in a single-line normalization context. */
     if (*p == '\r')
     {

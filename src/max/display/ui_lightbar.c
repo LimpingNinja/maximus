@@ -71,6 +71,26 @@ static void near ui_lb_hide_cursor(int *did_hide)
   }
 }
 
+/**
+ * @brief Prepare a formatted row string for drawing within list width.
+ *
+ * For plain rows (no MCI pipe tokens), clamp to width to prevent spill.
+ * For MCI-colored rows, do not clamp by raw byte length because color tokens
+ * are non-visible and would otherwise crop visible text too early.
+ */
+static void ui_lb_prepare_row(char *row, int width)
+{
+  if (!row || width <= 0)
+    return;
+
+  if (!strchr(row, '|'))
+  {
+    int len = (int)strlen(row);
+    if (len > width)
+      row[width] = '\0';
+  }
+}
+
 static void near ui_lb_show_cursor(int did_hide)
 {
   if (!did_hide)
@@ -1396,14 +1416,17 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
   int did_hide_cursor = 0;
   int need_full_redraw = 1;
   char *row_buffer = NULL;
+  int row_buffer_size;
   int i;
   int ch;
 
   if (!list || !list->get_item || list->count <= 0 || list->height <= 0 || list->width <= 0)
     return -1;
 
-  /* Allocate buffer for formatting rows */
-  row_buffer = (char *)malloc(list->width + 1);
+  /* Allocate a larger formatting buffer to accommodate embedded MCI tokens
+   * that increase raw byte length without increasing visible width. */
+  row_buffer_size = (list->width * 8) + 1;
+  row_buffer = (char *)malloc((size_t)row_buffer_size);
   if (!row_buffer)
     return -1;
 
@@ -1439,11 +1462,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
 
         if (item_idx < list->count)
         {
-          if (list->get_item(list->ctx, item_idx, row_buffer, list->width + 1) == 0)
+          if (list->get_item(list->ctx, item_idx, row_buffer, row_buffer_size) == 0)
           {
-            int len = (int)strlen(row_buffer);
-            if (len > list->width)
-              row_buffer[list->width] = '\0';
+            ui_lb_prepare_row(row_buffer, list->width);
             ui_lb_draw_list_row(list, list->y + i, attr, row_buffer);
           }
           else
@@ -1479,6 +1500,18 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
         ui_lb_show_cursor(did_hide_cursor);
         return -1;
 
+      case K_LEFT:
+      case K_RIGHT:
+        if (list->passthrough_lr_keys && list->out_key)
+        {
+          *list->out_key = ch;
+          free(row_buffer);
+          ui_set_attr(Mci2Attr("|tx", 0x07));
+          ui_lb_show_cursor(did_hide_cursor);
+          return LB_LIST_KEY_PASSTHROUGH;
+        }
+        break;
+
       case K_DOWN:
         if (selected_index < list->count - 1)
         {
@@ -1513,11 +1546,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             int new_row = selected_index - top_index;
 
             /* Redraw old selected row as normal */
-            if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
+            if (list->get_item(list->ctx, old_selected, row_buffer, row_buffer_size) == 0)
             {
-              int len = (int)strlen(row_buffer);
-              if (len > list->width)
-                row_buffer[list->width] = '\0';
+              ui_lb_prepare_row(row_buffer, list->width);
               ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, row_buffer);
             }
             else
@@ -1526,11 +1557,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             }
 
             /* Redraw new selected row as selected */
-            if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
+            if (list->get_item(list->ctx, selected_index, row_buffer, row_buffer_size) == 0)
             {
-              int len = (int)strlen(row_buffer);
-              if (len > list->width)
-                row_buffer[list->width] = '\0';
+              ui_lb_prepare_row(row_buffer, list->width);
               ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, row_buffer);
             }
             else
@@ -1580,11 +1609,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             int new_row = selected_index - top_index;
 
             /* Redraw old selected row as normal */
-            if (list->get_item(list->ctx, old_selected, row_buffer, list->width + 1) == 0)
+            if (list->get_item(list->ctx, old_selected, row_buffer, row_buffer_size) == 0)
             {
-              int len = (int)strlen(row_buffer);
-              if (len > list->width)
-                row_buffer[list->width] = '\0';
+              ui_lb_prepare_row(row_buffer, list->width);
               ui_lb_draw_list_row(list, list->y + old_row, list->normal_attr, row_buffer);
             }
             else
@@ -1593,11 +1620,9 @@ int ui_lightbar_list_run(ui_lightbar_list_t *list)
             }
 
             /* Redraw new selected row as selected */
-            if (list->get_item(list->ctx, selected_index, row_buffer, list->width + 1) == 0)
+            if (list->get_item(list->ctx, selected_index, row_buffer, row_buffer_size) == 0)
             {
-              int len = (int)strlen(row_buffer);
-              if (len > list->width)
-                row_buffer[list->width] = '\0';
+              ui_lb_prepare_row(row_buffer, list->width);
               ui_lb_draw_list_row(list, list->y + new_row, list->selected_attr, row_buffer);
             }
             else

@@ -17,6 +17,20 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+/**
+ * @brief Emit msg_text_col as a full Avatar attribute set.
+ *
+ * Converts the pipe color string to a PC attribute byte via Mci2Attr,
+ * then emits it as \x16\x01<attr>.  This sets fg AND bg together,
+ * matching the original .mad COL_MSG_BODY behavior (\x16\x01\x03).
+ * Pipe codes like |03 only touch the fg nibble — this avoids that
+ * pitfall and properly resets background after blue status bars.
+ */
+#define EMIT_MSG_TEXT_COL() do { \
+  byte _a = Mci2Attr(msg_text_col, 0x07); \
+  Putc('\x16'); Putc('\x01'); Putc((int)_a); \
+} while (0)
+
 void BackSpace(void);
 void Delete_Char(void);
 void Delete_Line(int cx);

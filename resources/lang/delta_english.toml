@@ -62,6 +62,10 @@ blfmt1 = { params = [{name = "line_num", type = "string", desc = "Line number in
 # @merge
 br_area_banner = { params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
 # @merge
+br_list_foot = { params = [] }
+# @merge
+br_list_head1 = { params = [{name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
+# @merge
 br_in_the_xxx_fields = { params = [{name = "txt", type = "string", desc = "Field label", default = "To/From/Subject"}] }
 # @merge
 br_list_format = { params = [{name = "msg_num", type = "string", desc = "Message number", default = "100"}, {name = "status_flag", type = "string", desc = "New/Private indicator (* P or blank)", default = "*"}, {name = "from_color", type = "string", desc = "Sender name color code", default = "|14"}, {name = "sender", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "to_color", type = "string", desc = "Recipient name color code", default = "|10"}, {name = "recipient", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Hello World"}] }
@@ -1230,6 +1234,31 @@ br_which_areas = { text = "|prSearch which areas (use \"*\" as wildcard): |in", 
 
 # --- Batch 14: Highlighted prompts ---
 recv_attach_local = "|prEnter destination directory for attached file(s): |in"
+
+# --- NG message index: header, column header, and footer overrides ---
+br_list_head1 = { text = "|CL|br\xDA\xC4\xC4 |hiMessage Index Listing |br$D|!2\xC4 |hi|!1 |br\xC4\xBF\n", params = [{name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "45"}] }
+br_list_head2 = { text = "|br\xB3  |hd##   Subject                                From            To             |br\xB3\n|br\xC0$D77\xC4\xD9|cd" }
+br_list_format = { text = " |pr$L04|#1 |ok|!2 |hi$T39$R39|#5|tx$T16$R16|#3$T16$R16|#4", params = [{name = "msg_num", type = "string", desc = "Message number", default = "1"}, {name = "status_flag", type = "string", desc = "New/Private indicator (* - or blank)", default = "*"}, {name = "sender", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "recipient", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Hello World"}] }
+br_list_foot = { text = "|br $D78\xC4\n|lb|lf (|prArrows|lf)|hi Move    |lf(|prESC|lf)|hi Quit    |lf(|prENTER|lf)|hi Read    |lf(|prG|lf)|hi Goto Next Base    |lf(|pr?|lf)|hi Help|[K|cd", params = [] }
+
+br_msg_new = "*"
+br_msg_notnew = " "
+br_msg_pvt = "-"
+
+# --- NG reader prompts/status (remove hardcoded UI strings) ---
+ng_read_prompt = "\r\n|prRead|tx: |tx(|prF|tx)orward |tx(|prN|tx)ew |tx(|prB|tx)y You |tx(|prY|tx)ours |tx(|prS|tx)earch |tx(|prQ|tx)uit? |in"
+ng_read_from_prompt = { text = "|prFrom which message # (|hi|!1|pr in area): |in", params = [{name = "highest_msg", type = "string", desc = "Highest message number in current area", default = "1000"}] }
+ng_read_search_prompt = "|prSearch for: |in"
+ng_reader_delete_confirm = "|[K|prDelete this message"
+ng_reader_move_confirm = "|[K|prMove this message"
+ng_reader_footer = "|tb|[K|ac(|hkup|ac/|hkdown|ac) |hiScroll Msg|[X28|ac(|hkleft|ac/|hkright|ac) |hiLast/Next Msg|[X62|hiPress |hk?|hi for Help|cd"
+ng_no_messages_found = "\r\n|hiNo messages found.\r\n|cd"
+ng_no_messages_area = "\r\n|hiNo messages in this area.\r\n|cd"
+ng_no_messages_area_inline = "|[Y11|[X28|hiNo messages in this area.|cd|[Y12|[X22|dmUse Left/Right (or G) to change areas.|cd|[Y13|[X32|dmPress ESC to quit.|cd"
+ng_cannot_read_msg = { text = "\r\n|erCannot read message |!1.\r\n|cd", params = [{name = "msg_num", type = "string", desc = "Message number that failed to open", default = "1"}] }
+ng_err_build_index = "\r\n|erError building message index.\r\n|cd"
+ng_err_open_area = "\r\n|erCannot open area.\r\n|cd"
+ng_no_adjacent_area = "|hiNo message areas in this division beyond that direction.|cd"
 
 [maximusng-mexbank]
 

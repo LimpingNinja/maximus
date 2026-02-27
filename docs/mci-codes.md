@@ -486,13 +486,20 @@ stored in `colors.toml` under `[theme.colors]`.
 | `lf` | lightbar_fg   | Lightbar selected foreground       | `\|15`   |
 | `lb` | lightbar_bg   | Lightbar selected background       | `\|17`   |
 | `er` | error         | Error messages                     | `\|12`   |
-| `wn` | warning       | Warnings                           | `\|14`   |
+| `wn` | warning       | Warnings                           | `\|06`   |
 | `ok` | success       | Confirmations / success            | `\|10`   |
 | `dm` | dim           | De-emphasized / help text          | `\|08`   |
 | `fi` | file_info     | File area descriptions             | `\|03`   |
 | `sy` | sysop         | SysOp-only text                    | `\|13`   |
 | `qt` | quote         | Quoted message text                | `\|09`   |
-| `br` | border        | Box borders, dividers              | `\|01`   |
+| `br` | border        | Box borders                        | `\|01`   |
+| `hk` | hotkey        | Hotkey characters                  | `\|14`   |
+| `ac` | accent        | Decorative / cosmetic emphasis     | `\|11`   |
+| `ds` | disabled      | Unavailable / greyed items         | `\|08`   |
+| `nf` | info          | Informational data callouts        | `\|10`   |
+| `nt` | notice        | Attention-getting, non-error       | `\|13`   |
+| `dv` | divider       | Line separators, hr rules          | `\|05`   |
+| `la` | label         | Key half of key:value pairs        | `\|03`   |
 | `cd` | default       | Reset to theme default color       | `\|07`   |
 
 ### TOML Schema (`colors.toml`)
@@ -509,13 +516,20 @@ heading      = "|11"
 lightbar_fg  = "|15"
 lightbar_bg  = "|17"
 error        = "|12"
-warning      = "|14"
+warning      = "|06"
 success      = "|10"
 dim          = "|08"
 file_info    = "|03"
 sysop        = "|13"
 quote        = "|09"
 border       = "|01"
+hotkey       = "|14"
+accent       = "|11"
+disabled     = "|08"
+info         = "|10"
+notice       = "|13"
+divider      = "|05"
+label        = "|03"
 default      = "|07"
 ```
 

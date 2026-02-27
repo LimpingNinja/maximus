@@ -706,7 +706,7 @@ balance_adjusted = { text = "|12\nBalance adjusted by +|!1 cents to compensate f
 replying_to_area = { text = "* Replying to a message originally in area |!1\r\r", params = [{name = "orig_area", type = "string", desc = "Original area name", default = "General"}] }
 reader_more_prompt = { text = "More", flags = ["mex"], rip = "\r!|1K|Y00000100\n!|S0100|B008XHI9Q|c08|R018YHR9A\n!|c0F|R008XHQ99|S0107|B018YHQ99\n!|c01|@0A90More?\n!|1B1E080207PE0201080F000700020407000000\n!|1U1L9000002H00<>Yes<>Y\n!|1U349000002600<>No<>N\n!|1U4N9000001P00<>=Cont<>=\n!|1U669000001600<>*Again<>*\n!|1U7P9000002800<>Prev<>^@K\n!|1U989000001X00<>Next<>^@M\n!|1UAR9000001900<>-orig<>-\n!|1UCA9000001700<>+reply<>+\n!|1UDT9000002A00<>Reply<>R\n!|1B2A080207PE0200080F000700020407000000\n!|1UFC9000001100<>PvtReply<>%\n!|#|#\n" }
 reader_more_blank = { text = "\r|[K", flags = ["mex"], rip = "\r!|S0100|B008RHS9Q|#|#\n" }
-reader_box_top = { text = "|CL|[Y01|[X01|CD|11|17|[K� |14|17|!1: |!2 |11|17$D|!3�", rip = "\r!|S0100|B008GHR9P|w0007271110|Y00000100|1K\n!|c08|R0101HR0C|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TMsg Area |c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I|S0107|B010EHQ1I\n!|c08|L041EHL1E|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
+reader_box_top = { text = "|CL|[Y01|[X01|CD|br|tb|[K\xC4 |14|17|!1: |!2 |br|tb$D|!3\xC4", rip = "\r!|S0100|B008GHR9P|w0007271110|Y00000100|1K\n!|c08|R0101HR0C|c0F|R0000HQ0B|S0107|B0101HQ0B\n!|m0403|c02|TMsg Area |c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I|S0107|B010EHQ1I\n!|c08|L041EHL1E|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
 reader_box_mid = { text = "|[Y02|[X01|15|17|[KMsg#:       |15|17|!1|15|17", rip = "\r!|c08|c08|@040GMsg#:|c08|@2M0G|!1|#|#\n", params = [{name = "msg_counter", type = "string", desc = "Message counter display (e.g. 'of 500' or '(100-500)')", default = "of 500"}] }
 reader_box_from = { text = "|[Y03|[X01|15|17|[KFrom:", rip = "\r!|c08|@040OFrom:|#|#\n" }
 reader_box_to = { text = "|[Y04|[X01|15|17|[KTo:", rip = "\r!|c08|@040WTo:|#|#\n" }
@@ -1109,8 +1109,8 @@ br_ty_from = "\n|prStart displaying at which msg# (\"=\" for current): |in"
 br_display_verbose = "|14Display:\n\n|14R|07)ead (show entire message: default)\n|14L|07)ist (one per line)\n|14P|07)ack (QWK format)\n|14Q|07)uit\n\n"
 br_display = "Display: [R)ead (show whole msg), L)ist (one per line), P)ack (QWK), Q)uit]: "
 br_dispk = "RLPQ?"
-br_list_head1 = { text = "|CL|15Msg#   From                 To                   Subject\n", rip = "\r!|1K|Y00000100|S0100|B000GHR0V\n!|c08|R010HHR0T|c0F|R000GHQ0S|S0107|B010HHQ0S\n!|c01|@020HMsg#   From                 To                   Subject|#|#\n" }
-br_list_head2 = { text = "\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n", rip = "\r!|@020M\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4 \xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\n!|w0004271600|#|#\n|CL" }
+br_list_head1 = { text = "|CL|br\xDA\xC4\xC4 |hiMessage Index Listing |br$D|!2\xC4 |hi|!1 |br\xC4\xBF\n", params = [{name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "45"}] }
+br_list_head2 = { text = "|br\xB3  |hd##   Subject                                From            To             |br\xB3\n|br\xC0$D77\xC4\xD9|cd" }
 br_this = { text = "|10Area |13|!1|03: |!2\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
 br_s_where_verbose = "|14Search where?  (More than one letter may be entered.)\n\n|14T|07)o field\n|14F|07)rom field\n|14S|07)ubject field\n|14B|07)ody of message\n|14?|07)help\n|15"
 br_s_where = "Search where [any or all of T)o, F)rom, S)ubject, B)ody, or ?)help]: "
@@ -1131,8 +1131,8 @@ br_field_maybe_plural = " field(s)"
 br_comma = ", "
 br_then_or = "or "
 br_text_to_search = "|prText to search for: |in"
-br_list_format = { text = "|07$L06|!1|!2|!3$T20$R20|!4 |!5$T20$R20|!6 |11$T28|!7\n", params = [{name = "msg_num", type = "string", desc = "Message number", default = "100"}, {name = "status_flag", type = "string", desc = "New/Private indicator (* P or blank)", default = "*"}, {name = "from_color", type = "string", desc = "Sender name color code", default = "|14"}, {name = "sender", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "to_color", type = "string", desc = "Recipient name color code", default = "|10"}, {name = "recipient", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Hello World"}] }
-br_msg_new = "|12*"
+br_list_format = { text = " |pr$L04|#1 |ok|!2 |hi$T39$R39|#5|tx$T16$R16|#3$T16$R16|#4", params = [{name = "msg_num", type = "string", desc = "Message number", default = "1"}, {name = "status_flag", type = "string", desc = "New/Private indicator (* - or blank)", default = "*"}, {name = "sender", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "recipient", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Hello World"}] }
+br_msg_new = "*"
 br_msg_notnew = " "
 br_notfound = "|15No messages found.\n"
 br_area_banner = { text = "|10Area |13|!1: |07|!2\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}] }
@@ -1160,7 +1160,7 @@ qwk_local_rep = "|prEnter path/name of .REP file: |in"
 unknown_compr = "|erUnknown compression type.\n|cd"
 tossing_rep_packet = { text = "|pr\nTossing .REP packet |!1...\n\n|cd", params = [{name = "filename", type = "string", desc = "Filename (no path)", default = "FILE.ZIP"}] }
 rep_to_send = { text = "|hi\nPlease begin uploading |!1 now.\n|cd", params = [{name = "packet_name", type = "string", desc = "QWK .REP packet filename", default = "MYBBS.REP"}] }
-br_msg_pvt = "|04-"
+br_msg_pvt = "-"
 err_toss_qwk = { text = "|erError tossing from |!1!\n|cd", params = [{name = "msg_file", type = "string", desc = "QWK message filename being tossed", default = "001.MSG"}] }
 wait_doing_compr = "|prCompressing mail.  Please wait...\n|cd"
 qwk_update_lr = "|prPlease wait.  Updating lastread pointers...|cd"
@@ -1203,6 +1203,20 @@ browse_more_prompt = { text = "More", rip = "\r!|1K|S0100|B008XHR9Q|c08|R028Y6L9
 browse_more_blank = { text = "\r|[K", rip = "\r!|S0100|B008KHS90|#|#\n" }
 browse_rbox_top = { text = "|CL|[Y01|[X01|CD|br|tb|[K\xc4 |pr|tb|!1: |!2 |br|tb$D|!3\xc4", rip = "\r!|1K|S0100|B008GHR9P|w0007271110|Y00000100\n!|c08|R0101HR0C|c0F|R0000HQ0B\n!|S0107|B0101HQ0B|m0403|c02|TMsg Area \n!|c05|T|!1|c00|T: |c01|T|!2\n!|c08|R010EHR1J|c0F|R000DHQ1I\n!|S0107|B010EHQ1I|c08|L041EHL1E\n!|c0F|L051FHM1F|#|#\n", params = [{name = "area_name", type = "string", desc = "Message area name", default = "General"}, {name = "area_desc", type = "string", desc = "Message area description", default = "General Discussion"}, {name = "fill_width", type = "string", desc = "Box-drawing fill repeat count (zero-padded)", default = "75"}] }
 
+br_list_foot = { text = "|br $D78\xC4\n|lb|lf (|prArrows|lf)|hi Move    |lf(|prESC|lf)|hi Quit    |lf(|prENTER|lf)|hi Read    |lf(|prG|lf)|hi Goto Next Base    |lf(|pr?|lf)|hi Help|[K|cd", params = [] }
+ng_read_prompt = "\r\n|prRead|tx: |tx(|prF|tx)orward |tx(|prN|tx)ew |tx(|prB|tx)y You |tx(|prY|tx)ours |tx(|prS|tx)earch |tx(|prQ|tx)uit? |in"
+ng_read_from_prompt = { text = "|prFrom which message # (|hi|!1|pr in area): |in", params = [{name = "highest_msg", type = "string", desc = "Highest message number in current area", default = "1000"}] }
+ng_read_search_prompt = "|prSearch for: |in"
+ng_reader_delete_confirm = "|[K|prDelete this message"
+ng_reader_move_confirm = "|[K|prMove this message"
+ng_reader_footer = "|tb|[K|ac(|hkup|ac/|hkdown|ac) |hiScroll Msg|[X28|ac(|hkleft|ac/|hkright|ac) |hiLast/Next Msg|[X62|hiPress |hk?|hi for Help|cd"
+ng_no_messages_found = "\r\n|hiNo messages found.\r\n|cd"
+ng_no_messages_area = "\r\n|hiNo messages in this area.\r\n|cd"
+ng_no_messages_area_inline = "|[Y11|[X28|hiNo messages in this area.|cd|[Y12|[X22|dmUse Left/Right (or G) to change areas.|cd|[Y13|[X32|dmPress ESC to quit.|cd"
+ng_cannot_read_msg = { text = "\r\n|erCannot read message |!1.\r\n|cd", params = [{name = "msg_num", type = "string", desc = "Message number that failed to open", default = "1"}] }
+ng_err_build_index = "\r\n|erError building message index.\r\n|cd"
+ng_err_open_area = "\r\n|erCannot open area.\r\n|cd"
+ng_no_adjacent_area = "|hiNo message areas in this division beyond that direction.|cd"
 [max_wfc]
 wfc_waiting = "Waiting"
 wfc_hanging_up = "Hanging up"

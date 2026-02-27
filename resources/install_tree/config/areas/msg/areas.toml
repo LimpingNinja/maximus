@@ -1,4 +1,20 @@
 [[area]]
+name = "EMAIL"
+description = "System Email"
+acs = "Transient"
+menu = ""
+division = ""
+tag = ""
+path = "data/msgbase/email"
+owner = ""
+origin = ""
+attach_path = ""
+barricade = ""
+style = ["Squish", "Local", "Email"]
+renum_max = 500
+renum_days = 0
+
+[[area]]
 name = "1"
 description = "Comments to the SysOp"
 acs = "Transient"

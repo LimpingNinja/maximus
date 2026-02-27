@@ -4532,7 +4532,7 @@ static const struct {
     { "lf", "lightbar_fg", "|15",    "Lightbar selected foreground"   },
     { "lb", "lightbar_bg", "|17",    "Lightbar selected background"   },
     { "er", "error",       "|12",    "Error messages"                 },
-    { "wn", "warning",     "|14",    "Warnings"                       },
+    { "wn", "warning",     "|06",    "Warnings"                       },
     { "ok", "success",     "|10",    "Confirmations"                  },
     { "dm", "dim",         "|08",    "De-emphasized/help text"        },
     { "fi", "file_info",   "|03",    "File descriptions"              },
@@ -4540,6 +4540,12 @@ static const struct {
     { "qt", "quote",       "|09",    "Quoted message text"            },
     { "br", "border",      "|01",    "Box borders, dividers"          },
     { "hk", "hotkey",      "|14",    "Hotkey characters"              },
+    { "ac", "accent",      "|11",    "Decorative/cosmetic emphasis"   },
+    { "ds", "disabled",    "|08",    "Unavailable/greyed items"       },
+    { "nf", "info",        "|10",    "Informational data callouts"    },
+    { "nt", "notice",      "|13",    "Attention-getting, non-error"   },
+    { "dv", "divider",     "|05",    "Line separators, hr rules"      },
+    { "la", "label",       "|03",    "Key half of key:value pairs"    },
     { "cd", "default",     "|16|07", "Reset to default theme color"   },
 };
 

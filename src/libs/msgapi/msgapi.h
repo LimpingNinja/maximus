@@ -301,6 +301,20 @@ struct _xmsg
 
 
 
+/**
+ * @brief Entry returned by MsgScanHeaders() for bulk header scanning.
+ *
+ * Each entry represents one message's header data, collected without
+ * the overhead of individual MsgOpenMsg/MsgReadMsg/MsgCloseMsg calls.
+ */
+typedef struct _msgscan_entry
+{
+  dword  msgn;      /**< Message number (1-based, within area) */
+  UMSGID umsgid;    /**< Unique message ID (Squish) or msgn (SDM) */
+  XMSG   xmsg;      /**< Full message header (from/to/subj/date/attr/reply) */
+} MSGSCAN_ENTRY;
+
+
 /* This is a 'message area handle', as returned by MsgOpenArea(), and       *
  * required by calls to all other message functions.  This structure        *
  * must always be accessed through the API functions, and never             *
@@ -473,6 +487,22 @@ cpp_begin()
 
   void MAPIENTRY SquishSetMaxMsg(HAREA sq, dword max_msgs, dword skip_msgs, dword age);
   dword MAPIENTRY SquishHash(byte OS2FAR *f);
+
+  /**
+   * @brief Bulk-scan all message headers from an open area.
+   *
+   * For Squish areas, reads the .SQI index in one pass and scans .SQD
+   * headers in file-offset order for near-instant indexing even on
+   * areas with 90K+ messages.  For SDM areas, falls back to standard
+   * per-message reads (SDM areas are rarely large).
+   *
+   * @param ha           Open area handle (Squish or SDM).
+   * @param entries      Caller-allocated array of MSGSCAN_ENTRY.
+   * @param max_entries  Number of elements in entries[].
+   * @return Number of entries filled, or (dword)-1 on error.
+   */
+  dword MAPIENTRY MsgScanHeaders(HAREA ha, MSGSCAN_ENTRY *entries,
+                                 dword max_entries);
 
 
 

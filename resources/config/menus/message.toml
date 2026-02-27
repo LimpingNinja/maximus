@@ -41,6 +41,22 @@ key_poke = "]"
 modifiers = ["NoDsp"]
 
 [[option]]
+command = "Msg_CheckEmail"
+arguments = ""
+priv_level = "Demoted"
+description = "Show email"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_Email_Compose"
+arguments = ""
+priv_level = "Demoted"
+description = "Write email"
+key_poke = ""
+modifiers = []
+
+[[option]]
 command = "Read_Next"
 arguments = ""
 priv_level = "Demoted"
@@ -77,6 +93,22 @@ command = "Msg_Browse"
 arguments = ""
 priv_level = "Demoted"
 description = "Browse messages"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_NG_Read"
+arguments = ""
+priv_level = "Demoted"
+description = "%Read (NG index)"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Msg_NG_Find"
+arguments = ""
+priv_level = "Demoted"
+description = "&Find (NG search)"
 key_poke = ""
 modifiers = []
 

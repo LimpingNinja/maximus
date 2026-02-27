@@ -67,7 +67,7 @@ void MdmPipeFlush(void)
     return;
   }
 
-  if (g_mdm_pipe_state==2)
+  if (g_mdm_pipe_state==2 || g_mdm_pipe_state==3)
   {
     g_mdm_pipe_state=0;
     g_mdm_pipe_inhibit=1;
@@ -398,6 +398,15 @@ void Mdm_putc(int ch)
         return;
       }
 
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          ch >= 'a' && ch <= 'z')
+      {
+        g_mdm_pipe_d1=(byte)ch;
+        g_mdm_pipe_state=3;
+        return;
+      }
+
       g_mdm_pipe_inhibit=1;
       Mdm_putc('|');
       Mdm_putc(ch);
@@ -429,6 +438,29 @@ void Mdm_putc(int ch)
           Mdm_putc(attr);
           return;
         }
+      }
+
+      g_mdm_pipe_inhibit=1;
+      Mdm_putc('|');
+      Mdm_putc(g_mdm_pipe_d1);
+      Mdm_putc(ch);
+      return;
+    }
+    else if (g_mdm_pipe_state==3)
+    {
+      g_mdm_pipe_state=0;
+
+      if ((g_mci_parse_flags & MCI_PARSE_PIPE_COLORS) &&
+          (rip_state==-1 || rip_state==0) &&
+          g_mci_theme && ch >= 'a' && ch <= 'z')
+      {
+        char slot[4] = {'|', (char)g_mdm_pipe_d1, (char)ch, '\0'};
+        byte attr=(byte)((mdm_attr==-1) ? DEFAULT_ATTR : mdm_attr);
+        attr=Mci2Attr(slot, attr);
+        Mdm_putc(22);
+        Mdm_putc(1);
+        Mdm_putc(attr);
+        return;
       }
 
       g_mdm_pipe_inhibit=1;
@@ -729,7 +761,15 @@ void Mdm_putc(int ch)
             CMDM_PPUTcw(ch & 0x7f);
 
           if (usr.video==GRAPH_ANSI)
+          {
+            /* When transitioning from an unknown/unsynced attribute state,
+             * ensure we reset the terminal so backgrounds don't bleed into
+             * subsequent output.
+             */
+            if (mdm_attr == -1)
+              CMDM_PPUTs("\x1b[0m");
             CMDM_PPUTs(avt2ansi(ch, mdm_attr, strng));
+          }
 
           mdm_attr=(char)ch;
 
@@ -752,7 +792,14 @@ void Mdm_putc(int ch)
         if (usr.video==GRAPH_AVATAR)
           CMDM_PPUTcw(newattr);
         else if (usr.video==GRAPH_ANSI)
+        {
+          /* See state 1: if we're coming from an unknown attribute state,
+           * hard-reset first so we don't inherit prior background.
+           */
+          if (mdm_attr == -1)
+            CMDM_PPUTs("\x1b[0m");
           CMDM_PPUTs(avt2ansi(newattr, mdm_attr, strng));
+        }
 
         mdm_attr=newattr;
         state=-1;

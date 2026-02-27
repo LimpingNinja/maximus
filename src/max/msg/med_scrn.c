@@ -40,7 +40,7 @@ void Redraw_Text(void)
 
   /* Make the entire refresh buffer "dirty" */
   
-  PutsForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
 
   if (update_table)
     for (x=0; x < UPDATEBUF_LEN; x++)
@@ -67,7 +67,7 @@ void Redraw_StatusLine(void)
   Update_Position();
 
   Puts(CLEOL);
-  PutsForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
 
   Goto(cursor_x, cursor_y);
 }
@@ -89,7 +89,7 @@ void Redraw_Quote(void)
     Puts(CLEOL);
   }
 
-  PutsForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
   Goto(cursor_x,cursor_y);
 }
 
@@ -369,7 +369,7 @@ void Toggle_Insert(void)
   PutsForce(insert ? status_insert : insrt_ovrwrt);
 
   Goto(cursor_x, cursor_y);
-  PutsForce(msg_text_col);
+  EMIT_MSG_TEXT_COL();
 }
 
 

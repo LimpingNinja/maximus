@@ -552,7 +552,17 @@ static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah)
     }
     else
     {
-      debug_log("SaveMsgFromEditor[%lu]: line %d has zero length, skipping", call_id, (int)line);
+      /* Empty line — still emit a hard CR to preserve blank lines */
+      if (*((byte *)lineptr) == HARD_CR)
+      {
+        cr = '\r';
+        rc = MsgWriteMsg(msgh, TRUE, NULL, &cr, (long)sizeof(cr), total_len, 0L, NULL);
+        debug_log("SaveMsgFromEditor[%lu]: line %d empty HARD_CR, wrote CR rc=%d", call_id, (int)line, (int)rc);
+      }
+      else
+      {
+        debug_log("SaveMsgFromEditor[%lu]: line %d has zero length (soft), skipping", call_id, (int)line);
+      }
     }
   }
   
@@ -606,11 +616,12 @@ static void near CleanupAfterSave(int chg, XMSG *msg, long save_to,
             msg->dest.node, msg->dest.point);
   else *temp='\0';
 
-  logit(chg ? chgdmsg : msgto,
-        msg->to,
-        temp,
-        msgarea,
-        save_to);
+  { char _ib[32]; snprintf(_ib, sizeof(_ib), "%ld", (long)save_to);
+    logit(chg ? chgdmsg : msgto,
+          msg->to,
+          temp,
+          msgarea,
+          _ib); }
 
   Puts("\n" CLEOL);
 

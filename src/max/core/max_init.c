@@ -1586,6 +1586,72 @@ static void near Initialize_Colours(void)
 
 #endif /* !ORACLE */
 
+/**
+ * @brief Scan all message areas for exactly one MA2_EMAIL area.
+ *
+ * On success, caches the area name in g_email_area[].
+ * If no EMAIL area is found, g_email_area remains empty and a warning
+ * is logged (non-fatal — system runs without email support).
+ * If multiple EMAIL areas are found, logs an error and returns -1.
+ *
+ * @param  haf  Open message area file handle
+ * @return 0 on success, -1 on failure (multiple EMAIL areas)
+ */
+static int near validate_email_area_singleton(HAF haf)
+{
+  HAFF haff;
+  MAH ma;
+  int count = 0;
+  char found_name[MAX_ALEN];
+
+  memset(&ma, 0, sizeof ma);
+  found_name[0] = '\0';
+
+  haff = AreaFileFindOpen(haf, NULL, 0);
+  if (haff == NULL)
+  {
+    logit("!No message areas found — cannot validate EMAIL area");
+    return -1;
+  }
+
+  while (AreaFileFindNext(haff, &ma, FALSE) == 0)
+  {
+    if (ma.ma.attribs_2 & MA2_EMAIL)
+    {
+      count++;
+      if (count == 1)
+        strnncpy(found_name, MAS(ma, name), sizeof(found_name));
+    }
+    DisposeMah(&ma);
+    memset(&ma, 0, sizeof ma);
+  }
+
+  DisposeMah(&ma);
+  AreaFileFindClose(haff);
+
+  if (count == 0)
+  {
+    logit("*No message area with Email style configured; email commands disabled");
+    g_email_area[0] = '\0';
+    return 0;
+  }
+
+  if (count > 1)
+  {
+    logit("!FATAL: %d message areas have the Email style. "
+          "Only one area may be designated as Email.", count);
+    return -1;
+  }
+
+  /* Cache the EMAIL area name globally */
+  strnncpy(g_email_area, found_name, sizeof(g_email_area));
+
+  if (debuglog)
+    debug_log("validate_email_area_singleton: found '%s'", g_email_area);
+
+  return 0;
+}
+
 static void near OpenAreas(void)
 {
 #ifndef ORACLE
@@ -1643,6 +1709,15 @@ static void near OpenAreas(void)
     vbuf_flush();
     Local_Beep(3);
     maximus_exit(ERROR_FILE);
+  }
+
+  /* Validate EMAIL area singleton and populate g_email_area */
+  if (validate_email_area_singleton(ham) != 0)
+  {
+    logit("!FATAL: EMAIL area validation failed");
+    vbuf_flush();
+    Local_Beep(3);
+    maximus_exit(ERROR_CRITICAL);
   }
 
   if (haf==NULL)
@@ -1845,6 +1920,8 @@ static void near parse_msg_style(MaxCfgStrView style, word *attribs, word *attri
     {
       if (stricmp(s, "NoMailCheck") == 0)
         *attribs2 |= MA2_NOMCHK;
+      else if (stricmp(s, "Email") == 0)
+        *attribs2 |= MA2_EMAIL;
     }
 
     if (type)
@@ -1860,6 +1937,16 @@ static void near parse_msg_style(MaxCfgStrView style, word *attribs, word *attri
     *type = MSGTYPE_SQUISH;
   if (attribs && ((*attribs & (MA_PUB | MA_PVT)) == 0))
     *attribs |= MA_PUB;
+
+  /* EMAIL area implies private-only */
+  if (attribs2 && (*attribs2 & MA2_EMAIL))
+  {
+    if (attribs)
+    {
+      *attribs |= MA_PVT;
+      *attribs &= ~MA_PUB;
+    }
+  }
 }
 
 static word near parse_file_types(MaxCfgStrView types)

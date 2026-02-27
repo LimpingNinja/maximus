@@ -1,0 +1,23 @@
+|hdFull-Screen Message Reading Help|cd
+
+|txUse arrow/home/end/page up/page down keys to navigate around a single
+message while viewing message text.
+
+|hdThe following hot-key commands are available:|cd
+
+|hi(P)|tx Previous Message              |hi(N)|tx Next Message
+|hi([)|tx Previous Message in Thread    |hi(])|tx Next Message in Thread
+|hi(J)|tx Jump to Message Number        |hi(L)|tx Return to Lightbar List
+|hi(R)|tx Reply to Message              |hi(?)|tx Show This Help Screen
+|hi(G)|tx Goto Next Base in Scan        |hi(Esc)|tx Return to Message List
+
+|hdPrivileged operations:|cd
+|hi(D)|tx Delete Message                |hi(E)|tx Edit Message
+|hi(F)|tx Forward Message               |hi(M)|tx Move Message
+
+|hdNotes:|cd
+|tx- Left Arrow acts like |hiP|tx, Right Arrow acts like |hiN|tx.
+|tx- Up/Down, PgUp/PgDn, Home/End scroll within the current message body.
+|tx- Privileged operations are shown only for authorized users.
+
+|dmPress a key to return to the message reader.|cd

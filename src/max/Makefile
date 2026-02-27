@@ -50,7 +50,7 @@ m_hurl.obj      m_inq.obj       m_intrin.obj    m_isval.obj     \
 m_kill.obj      m_lread.obj     m_mdate.obj     m_node.obj      \
 m_read.obj      m_reply.obj     m_save.obj      m_scan.obj      \
 m_tag.obj       mb_novl.obj     m_upload.obj    m_xport.obj     \
-m_listtest.obj  \
+m_listtest.obj  m_email.obj     m_index.obj     m_ngread.obj    \
 me_misc.obj     m_edit.obj      m_misc.obj      m_restr.obj     \
 mb_read.obj     m_util.obj      m_attach.obj    l_attach.obj    \
 t_add.obj       t_disp.obj      t_kill.obj      max_clss.obj    \

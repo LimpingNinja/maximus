@@ -272,7 +272,7 @@ word DisplayMaxCode(DSTK *d)
         no_local_output=was_no_output;
       }
       break;
-      
+
     case 'd': /* ibmchars */
       if ((usr.bits2 & BITS2_IBMCHARS)==0)
         return SKIP_LINE;

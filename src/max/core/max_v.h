@@ -371,6 +371,8 @@ extrn char restart_system;              /* If restarting the current user  */
 extrn char erl;                         /* Errorlevel exited with          */
 extrn char in_file_xfer;                /* Force logit() calls to display  */
 extrn char in_mcheck;                   /* If we're in the mailchecker     */
+extrn char in_echeck;                   /* If we're in the email checker   */
+extrn char g_email_area[MAX_ALEN];      /* Area tag of singleton EMAIL area*/
 extrn char create_userbbs;              /* Create USER.BBS?                */
 extrn char this_logon_bad;              /* If user failed current logon    */
 extrn char inchat;                      /* If we're in sysop chat mode     */

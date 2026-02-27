@@ -198,6 +198,8 @@ reconfig:
 	@echo "reconfig complete (MAID removed — language strings now via TOML)"
 
 install: mkdirs squish_install sqafix_install max_install maxtel_install config_install
+	@echo "Propagating language files..."
+	@bash scripts/propagate_lang.sh
 
 build:	mkdirs install_libs squish sqafix max maxtel install_binaries
 	@[ -d "$(BIN)/lib" ] && cp -f $(LIB)/*.so $(BIN)/lib/ 2>/dev/null || true

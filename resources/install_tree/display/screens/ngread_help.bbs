@@ -1,0 +1,19 @@
+|15Full-Screen Message Reading Help
+
+|07Use arrow/home/end/page up/page down keys to navigate around a single
+message while viewing message text.
+
+|15The following hot-key commands are available:
+
+|14(P)|07 Previous Message              |14(N)|07 Next Message
+|14([)|07 Previous Message in Thread    |14(])|07 Next Message in Thread
+|14(R)|07 Reply to Message              |14(K)|07 Kill/Delete Message
+|14(G)|07 Goto Next Base in Scan        |14(Esc)|07 Return to Message List
+|14(?)|07 Show This Help Screen
+
+|15Notes:
+|07- Left Arrow acts like |14P|07, Right Arrow acts like |14N|07.
+|07- Up/Down, PgUp/PgDn, Home/End scroll within the current message body.
+|07- Kill/Delete follows standard privilege checks.
+
+|08Press a key to return to the message reader.

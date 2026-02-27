@@ -12,6 +12,7 @@ APIOBJS     :=  msgapi.obJ                                              \
                 sq_misc.obJ                                             \
                 sq_help.obJ                                             \
                 sq_idx.obJ                                              \
+                sq_scan.obJ                                             \
                                                                         \
                 api_sdm.obJ                                    \
                                                                         \

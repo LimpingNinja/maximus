@@ -76,6 +76,7 @@ static int near SearchArea(int search, char *input, PMAH pmahDest, BARINFO *pbi,
   while ((search==-1 ? AreaFileFindPrior : AreaFileFindNext)(haff, &ma, TRUE)==0)
   {
     if ((ma.ma.attribs & MA_HIDDN)==0 &&
+        (ma.ma.attribs_2 & MA2_EMAIL)==0 &&
         ValidMsgArea(NULL, &ma, VA_VAL | VA_PWD | VA_EXTONLY, pbi))
     {
       *piDidValid=TRUE;
@@ -398,7 +399,7 @@ static int near FoundOurMsgDivision(HAFF haff, char *division, PMAH pmah)
 
 /* Uncomment the next line to fill the lightbar with synthetic test data
  * instead of real message areas.  Rebuild and run — no areas needed. */
-#define LB_MAREA_TEST
+
 
 /** @brief One entry in the collected lightbar list. */
 typedef struct {
@@ -782,7 +783,8 @@ static int lb_collect_msg_areas(char *div_name, int do_tag,
       }
     }
 
-    if (show && (ma.ma.attribs & MA_HIDDN) == 0)
+    if (show && (ma.ma.attribs & MA_HIDDN) == 0
+        && (ma.ma.attribs_2 & MA2_EMAIL) == 0)
     {
       lb_marea_entry_t *e = &entries[count];
       char raw[PATHLEN];
@@ -1251,6 +1253,7 @@ int ListMsgAreas(char *div_name, int do_tag, int show_help, char *selected_out)
 
         if ((!div_name || ma.ma.division==this_div+1) &&
             (ma.ma.attribs & MA_HIDDN)==0 &&
+            (ma.ma.attribs_2 & MA2_EMAIL)==0 &&
             (((ma.ma.attribs & MA_DIVBEGIN) && PrivOK(MAS(ma, acs), TRUE)) ||
              ValidMsgArea(NULL, &ma, VA_NOVAL, &bi)))
         {

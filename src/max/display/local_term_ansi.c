@@ -21,6 +21,54 @@
 /** Current PC attribute (-1 = unknown / force next set_attr). */
 static int s_cur_attr = -1;
 
+/** Internal write buffer — batches output to minimize syscalls. */
+#define LT_BUF_SIZE 4096
+static char s_buf[LT_BUF_SIZE];
+static int  s_buf_len = 0;
+
+/**
+ * @brief Append bytes to the internal buffer, flushing if needed.
+ */
+static void buf_append(const char *data, int len)
+{
+  while (len > 0)
+  {
+    int avail = LT_BUF_SIZE - s_buf_len;
+    int chunk = (len < avail) ? len : avail;
+    memcpy(s_buf + s_buf_len, data, (size_t)chunk);
+    s_buf_len += chunk;
+    data += chunk;
+    len -= chunk;
+
+    if (s_buf_len >= LT_BUF_SIZE)
+    {
+      fwrite(s_buf, 1, (size_t)s_buf_len, stdout);
+      s_buf_len = 0;
+    }
+  }
+}
+
+/**
+ * @brief Append a single byte to the internal buffer.
+ */
+static void buf_putc(char ch)
+{
+  s_buf[s_buf_len++] = ch;
+  if (s_buf_len >= LT_BUF_SIZE)
+  {
+    fwrite(s_buf, 1, (size_t)s_buf_len, stdout);
+    s_buf_len = 0;
+  }
+}
+
+/**
+ * @brief Append a NUL-terminated string to the internal buffer.
+ */
+static void buf_puts(const char *s)
+{
+  buf_append(s, (int)strlen(s));
+}
+
 
 /* ------------------------------------------------------------------ */
 /* CP437 → UTF-8 translation table                                    */
@@ -177,7 +225,7 @@ static void emit_sgr(byte pc_attr)
   buf[pos++] = 'm';
   buf[pos] = '\0';
 
-  fwrite(buf, 1, (size_t)pos, stdout);
+  buf_append(buf, pos);
 }
 
 /**
@@ -187,7 +235,7 @@ static void emit_cp437(int ch)
 {
   const char *utf8 = cp437_to_utf8[(unsigned char)ch];
   if (utf8)
-    fputs(utf8, stdout);
+    buf_puts(utf8);
 }
 
 
@@ -198,15 +246,21 @@ static void emit_cp437(int ch)
 static void lt_ansi_init(void)
 {
   s_cur_attr = -1;
-  /* Ensure stdout is unbuffered for interactive use.
-   * Line-buffered is a reasonable compromise for performance. */
-  setvbuf(stdout, NULL, _IOLBF, 0);
+  s_buf_len = 0;
+  /* Fully buffered — we control flushes via lt_flush(). */
+  setvbuf(stdout, NULL, _IOFBF, 8192);
 }
 
 static void lt_ansi_fini(void)
 {
   /* Reset terminal attributes on shutdown. */
-  fputs("\x1b[0m", stdout);
+  buf_puts("\x1b[0m");
+  /* Drain buffer before exit. */
+  if (s_buf_len > 0)
+  {
+    fwrite(s_buf, 1, (size_t)s_buf_len, stdout);
+    s_buf_len = 0;
+  }
   fflush(stdout);
   s_cur_attr = -1;
 }
@@ -222,7 +276,9 @@ static void lt_ansi_set_attr(byte pc_attr)
 
 static void lt_ansi_goto_xy(int row, int col)
 {
-  fprintf(stdout, "\x1b[%d;%dH", row, col);
+  char tmp[24];
+  int n = sprintf(tmp, "\x1b[%d;%dH", row, col);
+  buf_append(tmp, n);
 }
 
 static void lt_ansi_putc(int ch)
@@ -232,7 +288,7 @@ static void lt_ansi_putc(int ch)
   /* Standard printable ASCII — fast path */
   if (uch >= 0x20 && uch < 0x7F)
   {
-    fputc(ch, stdout);
+    buf_putc((char)ch);
     return;
   }
 
@@ -246,28 +302,28 @@ static void lt_ansi_putc(int ch)
   /* Tab, CR — pass through */
   if (uch == '\t' || uch == '\r')
   {
-    fputc(ch, stdout);
+    buf_putc((char)ch);
     return;
   }
 
   /* LF — emit raw (caller sends CR+LF explicitly) */
   if (uch == '\n')
   {
-    fputc('\n', stdout);
+    buf_putc('\n');
     return;
   }
 
   /* Backspace */
   if (uch == 0x08)
   {
-    fputc(0x08, stdout);
+    buf_putc(0x08);
     return;
   }
 
   /* Bell */
   if (uch == 0x07)
   {
-    fputc(0x07, stdout);
+    buf_putc(0x07);
     return;
   }
 
@@ -295,7 +351,7 @@ static void lt_ansi_putc(int ch)
 
 static void lt_ansi_cls(void)
 {
-  fputs("\x1b[H\x1b[2J\x1b[J", stdout);
+  buf_puts("\x1b[H\x1b[2J\x1b[J");
   s_cur_attr = -1;  /* force re-emit after clear */
 }
 
@@ -304,32 +360,32 @@ static void lt_ansi_cleol(int row, int col, byte attr)
   (void)row;
   (void)col;
   (void)attr;
-  fputs("\x1b[K", stdout);
+  buf_puts("\x1b[K");
 }
 
 static void lt_ansi_cursor_up(void)
 {
-  fputs("\x1b[A", stdout);
+  buf_puts("\x1b[A");
 }
 
 static void lt_ansi_cursor_down(void)
 {
-  fputs("\x1b[B", stdout);
+  buf_puts("\x1b[B");
 }
 
 static void lt_ansi_cursor_left(void)
 {
-  fputs("\x1b[D", stdout);
+  buf_puts("\x1b[D");
 }
 
 static void lt_ansi_cursor_right(void)
 {
-  fputs("\x1b[C", stdout);
+  buf_puts("\x1b[C");
 }
 
 static void lt_ansi_set_blink(void)
 {
-  fputs("\x1b[5m", stdout);
+  buf_puts("\x1b[5m");
   if (s_cur_attr >= 0)
     s_cur_attr |= 0x80;
 }
@@ -337,11 +393,16 @@ static void lt_ansi_set_blink(void)
 static void lt_ansi_raw_write(const char *s, int len)
 {
   if (s && len > 0)
-    fwrite(s, 1, (size_t)len, stdout);
+    buf_append(s, len);
 }
 
 static void lt_ansi_flush(void)
 {
+  if (s_buf_len > 0)
+  {
+    fwrite(s_buf, 1, (size_t)s_buf_len, stdout);
+    s_buf_len = 0;
+  }
   fflush(stdout);
 }
 

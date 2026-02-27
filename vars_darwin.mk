@@ -28,13 +28,9 @@ endif
 CFLAGS		+= -fPIC
 CXXFLAGS	+= -fPIC
 
-# macOS linker uses -rpath syntax differently than Linux/Solaris
-# Use @executable_path/../lib so binaries find libs relative to install location
-# This works for any PREFIX since bin/ and lib/ are always siblings
-DARWIN_RPATH	= -Wl,-rpath,@executable_path/../lib
-
-# Also add build-time lib paths for linking during compilation
-DARWIN_LDFLAGS	= -L$(LIB) $(DARWIN_RPATH) $(foreach DIR, $(EXTRA_LD_LIBRARY_PATH), -L$(DIR))
+# NOTE: rpath and library link flags are set in vars_gcc.mk (the LDFLAGS block).
+# DARWIN_RPATH / DARWIN_LDFLAGS were previously defined here but never consumed.
+# Removed to avoid confusion — vars_gcc.mk is the single source of truth.
 
 # macOS shared library install name - use @rpath for relocatable libs
 # Libraries will be found via the rpath set in binaries

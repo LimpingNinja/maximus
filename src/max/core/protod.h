@@ -272,6 +272,15 @@ void Redraw_StatusLine(void);
 void Redraw_Quote(void);
 void Parse_Initials(char *msgfrom,char *initials);
 void Msg_Checkmail(char *menuname);
+void Msg_CheckEmail(char *menuname);
+void Email_Compose(char *to);
+void Email_Inbox(char *menuname);
+const char *Email_AreaName(void);
+int IsEmailArea(const char *aname);
+void Msg_NG_Read(void);
+void Msg_NG_Find(void);
+struct _msg_index;  /* forward decl; defined in m_index.h */
+int ng_msg_reader_loop(struct _msg_index *idx, int entry_index, int *out_index);
 void Msg_Scan(char *menuname);
 int Msg_List(char *menuname);
 void Msg_Kill(long n);

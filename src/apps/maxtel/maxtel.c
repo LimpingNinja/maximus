@@ -155,6 +155,7 @@ static char         base_path[512] = ".";
 static char         max_path[512] = "./bin/max";
 static char         config_path[512] = "config/maximus";
 static volatile int running = 1;
+static volatile int cleanup_done = 0;  /* Guard against double-cleanup (atexit + explicit) */
 static volatile int need_refresh = 1;
 static int          selected_node = 0;  /* Currently selected node (0-based) */
 static int          scroll_offset = 0;   /* For scrolling node list */
@@ -251,6 +252,7 @@ static void load_callers(void);
 static void load_prm_info(void);
 static void load_user_count(void);
 static void cleanup(void);
+static void fatal_signal_handler(int sig);
 static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode, int *term_cols, int *term_rows);
 static void sigwinch_handler(int sig);
 static void detect_layout(void);
@@ -281,12 +283,33 @@ static void setup_signals(void)
     sa.sa_handler = sigwinch_handler;
     sa.sa_flags = SA_RESTART;
     sigaction(SIGWINCH, &sa, NULL);
+    
+    /* Fatal signals - attempt cleanup before dying */
+    sa.sa_handler = fatal_signal_handler;
+    sa.sa_flags = SA_RESETHAND;  /* One-shot: restores default after first delivery */
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGBUS,  &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
+    sigaction(SIGHUP,  &sa, NULL);
 }
 
 static void signal_handler(int sig)
 {
     (void)sig;
     running = 0;
+}
+
+/**
+ * @brief Fatal signal handler — best-effort cleanup before death.
+ *
+ * SA_RESETHAND ensures the default handler is restored after we run,
+ * so re-raising the signal produces the expected core dump / exit.
+ */
+static void fatal_signal_handler(int sig)
+{
+    cleanup();
+    raise(sig);  /* Re-raise with default handler now restored */
 }
 
 static void sigchld_handler(int sig)
@@ -412,6 +435,9 @@ static int setup_listener(int port)
     }
     
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#ifdef SO_REUSEPORT
+    setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+#endif
     
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -430,8 +456,9 @@ static int setup_listener(int port)
         return -1;
     }
     
-    /* Non-blocking */
+    /* Non-blocking + close-on-exec so children don't inherit the listen socket */
     fcntl(fd, F_SETFL, O_NONBLOCK);
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
     
     return fd;
 }
@@ -1237,7 +1264,10 @@ static void handle_connection(int client_fd, struct sockaddr_in *addr)
     }
     
     if (pid == 0) {
-        /* Child - bridge process */
+        /* Child - bridge process: close inherited listen socket so we
+         * don't hold the port if the parent dies unexpectedly */
+        if (listen_fd >= 0)
+            close(listen_fd);
         bridge_connection(client_fd, node_idx);
         _exit(0);
     }
@@ -2569,6 +2599,10 @@ static void handle_input(int ch)
 
 static void cleanup(void)
 {
+    if (cleanup_done)
+        return;
+    cleanup_done = 1;
+
     DEBUG("Cleanup starting");
     
     /* Kill all nodes forcefully */
@@ -2691,6 +2725,7 @@ int main(int argc, char *argv[])
     load_user_count();
     
     setup_signals();
+    atexit(cleanup);
     
     /* Daemonize if requested */
     if (daemonize) {
