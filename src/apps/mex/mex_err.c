@@ -100,6 +100,8 @@ static struct _mexerr errtab[] =
   {MEXERR_FUNCMUSTRETURNVALUE,      "non-void function must return a value"},
   {MEXERR_INVALIDIDENTTYPE,         "invalid identifier type"},
   {MEXERR_WARN_MEANINGLESSEXPR,     "meaningless use of an expression"},
+  {MEXERR_WARN_UTF8CONVERTED,        "UTF-8 U+%04X converted to CP437 0x%02X"},
+  {MEXERR_WARN_UTF8UNMAPPED,         "UTF-8 U+%04X has no CP437 mapping, bytes passed through"},
   {MEXERR_ARRAYMUSTHAVEBOUNDS,      "declared array must have upper bound"},
   {MEXERR_SIZEOFBOUNDLESSARRAY,     "cannot apply sizeof() to a boundless array"},
   {MEXERR_CANTASSIGNSTRUCT,         "cannot assign one structure to another"},

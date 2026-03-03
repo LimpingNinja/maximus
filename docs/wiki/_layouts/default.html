@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en-US' }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    {% include head-custom.html %}
+    {% seo %}
+  </head>
+
+  <body>
+    <!-- CRT scanline overlay -->
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <!-- Header — extends hacker theme's header structure -->
+    <header>
+      <div class="container header-flex">
+        <a id="a-title" href="{{ '/' | relative_url }}">
+          <h1>{{ site.title | default: site.github.repository_name }}</h1>
+        </a>
+        <h2>{{ site.description | default: site.github.project_tagline }}</h2>
+
+        <section id="downloads">
+          <a href="{{ site.github.repository_url }}" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">
+          &#x2500;[ MENU ]&#x2500;
+        </button>
+      </div>
+    </header>
+
+    {% comment %}
+      Determine which menu to show. If the page has a 'section' front matter
+      matching a nav section key, show that section's sub-menu. Otherwise
+      show the Main Menu (all sections + their items).
+    {% endcomment %}
+    {% assign current_section = nil %}
+    {% if page.section %}
+      {% for sec in site.data.navigation %}
+        {% if sec.key == page.section %}
+          {% assign current_section = sec %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <!-- Two-column layout: sidebar + content -->
+    <div class="container site-columns">
+      <nav class="sidebar" id="sidebar">
+
+        {% if current_section %}
+        <!-- ===== SECTION SUB-MENU ===== -->
+        <div class="sidebar-title">{{ current_section.title }}</div>
+        <div class="sidebar-scroll">
+          {% for item in current_section.items %}
+            {% if item.children %}
+            <div class="nav-section">
+              <div class="nav-section-title {% if page.url == item.url %}active{% endif %}"><a href="{{ item.url | relative_url }}">{{ item.pre }}<span class="hotkey">{{ item.hotkey }}</span>{{ item.post }}</a></div>
+              <ul class="nav-list">
+                {% for child in item.children %}
+                <li class="nav-item nav-child {% if page.url == child.url %}active{% endif %}">
+                  <a href="{{ child.url | relative_url }}">{% if page.url == child.url %}<span class="nav-marker">&#x25BA;</span>{% else %}<span class="nav-marker">&nbsp;</span>{% endif %} {{ child.pre }}<span class="hotkey">{{ child.hotkey }}</span>{{ child.post }}</a>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% else %}
+            <ul class="nav-list">
+              <li class="nav-item {% if page.url == item.url %}active{% endif %}">
+                <a href="{{ item.url | relative_url }}">{% if page.url == item.url %}<span class="nav-marker">&#x25BA;</span>{% else %}<span class="nav-marker">&nbsp;</span>{% endif %} {{ item.pre }}<span class="hotkey">{{ item.hotkey }}</span>{{ item.post }}</a>
+              </li>
+            </ul>
+            {% endif %}
+          {% endfor %}
+          <ul class="nav-list nav-return">
+            <li class="nav-item">
+              <a href="{{ '/' | relative_url }}"><span class="nav-marker">&nbsp;</span> Return to <span class="hotkey">M</span>ain Menu</a>
+            </li>
+          </ul>
+          <div class="sidebar-footer">Maximus BBS NG</div>
+        </div>
+
+        {% else %}
+        <!-- ===== MAIN MENU ===== -->
+        <div class="sidebar-title">Main Menu</div>
+        <div class="sidebar-scroll">
+          {% for section in site.data.navigation %}
+          <div class="nav-section">
+            <div class="nav-section-title"><span class="section-label">{{ section.title }}</span></div>
+            <ul class="nav-list">
+              {% for item in section.items %}
+              <li class="nav-item {% if page.url == item.url %}active{% endif %}">
+                <a href="{{ item.url | relative_url }}">{% if page.url == item.url %}<span class="nav-marker">&#x25BA;</span>{% else %}<span class="nav-marker">&nbsp;</span>{% endif %} {{ item.pre }}<span class="hotkey">{{ item.hotkey }}</span>{{ item.post }}</a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+          <div class="sidebar-footer">Maximus BBS NG</div>
+        </div>
+        {% endif %}
+
+      </nav>
+
+      <section id="main_content">
+        {% if page.title %}
+        <div class="page-heading">
+          <h1>{{ page.title }}</h1>
+          {% if page.description %}
+          <p class="page-desc">{{ page.description }}</p>
+          {% endif %}
+        </div>
+        {% endif %}
+        {{ content }}
+      </section>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span class="footer-text">&#x2500;&#x2524; Originally by Scott J. Dudley &#x2502; NG by Kevin Morgan &#x251C;&#x2500;</span>
+      </div>
+    </footer>
+
+    <script>
+      /* Mobile sidebar toggle */
+      document.getElementById('sidebar-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('open');
+      });
+      document.querySelectorAll('.sidebar a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          document.getElementById('sidebar').classList.remove('open');
+        });
+      });
+
+      /* Keyboard hotkey navigation — BBS style */
+      (function() {
+        var hotkeys = {
+          {% if current_section %}
+            {% for item in current_section.items %}
+              '{{ item.hotkey | downcase }}': '{{ item.url | relative_url }}',
+              {% if item.children %}
+                {% for child in item.children %}
+                  '{{ child.hotkey | downcase }}': '{{ child.url | relative_url }}',
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+            'm': '{{ "/" | relative_url }}'
+          {% else %}
+            {% for section in site.data.navigation %}
+              {% for item in section.items %}
+                '{{ item.hotkey | downcase }}': '{{ item.url | relative_url }}'{% unless forloop.last and forloop.parentloop.last %},{% endunless %}
+              {% endfor %}
+            {% endfor %}
+          {% endif %}
+        };
+
+        document.addEventListener('keydown', function(e) {
+          var tag = (e.target || e.srcElement).tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+          if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+          var key = e.key.toLowerCase();
+          if (hotkeys[key]) {
+            e.preventDefault();
+            window.location.href = hotkeys[key];
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

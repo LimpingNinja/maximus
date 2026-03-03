@@ -20,7 +20,7 @@ This fork focuses on getting Maximus compiling and running on modern systems so 
 | Linux arm64 | Should work |
 | FreeBSD | Supported |
 
-**What works:** Full BBS operation via telnet access (MAXTEL), MEX scripting, all utilities (maid, mecca, mex compiler). Most features should continue to work as expected and are assumed to work unless otherwise noted (e.g. FidoNet messaging, file transfers).
+**What works:** Full BBS operation via telnet access (MAXTEL), MEX scripting, all utilities (mecca, mex compiler, maxcfg). Most features should continue to work as expected and are assumed to work unless otherwise noted (e.g. FidoNet messaging, file transfers).
 
 ## Quick Start: Running Your Own BBS
 
@@ -72,32 +72,43 @@ telnet localhost 2323
 
 ### Upgrading Your BBS
 
-When a new version is released, you only need to update the executables and libraries. Your configuration, message bases, and user data are preserved. If there are new configurations, scripts, display files, or help files these will be noted in the release notes and [CHANGES.md](CHANGES.md) file. 
+When a new release is available, update the executables, libraries, and
+optionally the display files and scripts. Your configuration, message bases,
+and user data are preserved.
 
 ```bash
 # Download and extract the new release
 tar -xzvf maximus-NEW-VERSION.tar.gz
 
-# Copy only bin/ and lib/ to your existing installation
+# Always: update binaries and libraries
 cp -r maximus-NEW-VERSION/bin/* /path/to/your/bbs/bin/
 cp -r maximus-NEW-VERSION/lib/* /path/to/your/bbs/lib/
 
-# Optionally update docs
-cp -r maximus-NEW-VERSION/docs/* /path/to/your/bbs/docs/
+# If not customized: update display files and scripts
+cp -r maximus-NEW-VERSION/display/* /path/to/your/bbs/display/
+cp -r maximus-NEW-VERSION/scripts/* /path/to/your/bbs/scripts/
+
+# Update and re-apply the language delta
+cp maximus-NEW-VERSION/config/lang/delta_english.toml \
+   /path/to/your/bbs/config/lang/delta_english.toml
+cd /path/to/your/bbs
+bin/maxcfg --apply-delta config/lang/english.toml --merge-only
 ```
 
-**What to update:**
-- `bin/` and `lib/` - Always safe, contains executables and libraries
+**Always update:**
+- `bin/` and `lib/` — executables and shared libraries
 
-**What to keep:**
-- `config/` - Your BBS configuration (TOML)
-- `etc/*.ctl` - Legacy CTL inputs (optional; only needed if you re-export to TOML)
-- `spool/` - Message bases and file areas
-- User database files
+**Always keep:**
+- `config/` — your TOML configuration (new keys get sane defaults at runtime)
+- `config/lang/english.toml` — your language strings (upgraded via delta)
+- `data/` — user database, message bases, file areas
 
-**Optional updates:**
-- `m/*.mex` - MEX scripts (only if you haven't customized them)
-- `etc/misc/`, `etc/help/` - Display files (only if you haven't customized them)
+**Update unless customized:**
+- `display/` — help screens, menu display files
+- `scripts/*.vm` — compiled MEX scripts
+
+See [CHANGES.md](CHANGES.md) for new features, configuration keys, and
+breaking changes in each release.
 
 ## Telnet: MAXTEL Supervisor
 

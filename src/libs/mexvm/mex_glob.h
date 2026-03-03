@@ -36,6 +36,7 @@ mex_extern long linenum;            /* Current line number of input file    */
 mex_extern char check_subs;         /* Check subscript bounds               */
 mex_extern unsigned n_errors;       /* number of errors in compile          */
 mex_extern unsigned n_warnings;     /* number of warns  in compile          */
+mex_extern char utf8_convert equ(TRUE); /* Convert UTF-8 to CP437 in strings */
 
 mex_extern VMADDR this_quad equ(0);
 

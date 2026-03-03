@@ -107,6 +107,8 @@
 #define MEXERR_WARN_CONSTANTTRUNCATED   3000
 #define MEXERR_WARN_IDENTTRUNCATED      3001
 #define MEXERR_WARN_MEANINGLESSEXPR     3002
+#define MEXERR_WARN_UTF8CONVERTED        3003
+#define MEXERR_WARN_UTF8UNMAPPED         3004
 
 /***************************** DEBUGGING **********************************/
 

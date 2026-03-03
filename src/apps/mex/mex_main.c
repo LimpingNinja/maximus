@@ -52,7 +52,8 @@ static void near usage(void)
 /*  "  -c       Emit subscript checking code\n"*/
     "  -h<size> Set heap size to <size> bytes\n"
     "  -s<size> Set stack size to <size> bytes\n"
-    "  -q       Quad output instead of writing .VM file\n";
+    "  -q       Quad output instead of writing .VM file\n"
+    "  -u       Disable UTF-8 to CP437 conversion in strings\n";
 
   puts(help);
   exit(0);
@@ -117,6 +118,10 @@ int _stdc main(int argc,char **argv)
 
         case 'q':
           vm_output=FALSE;
+          break;
+
+        case 'u':
+          utf8_convert=FALSE;
           break;
 
         default:

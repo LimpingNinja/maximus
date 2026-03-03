@@ -1,0 +1,466 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* ==========================================================================
+   Maximus BBS Wiki — Custom overrides on hacker theme
+   Two-column sidebar layout + BBS/ANSI terminal aesthetic
+   ========================================================================== */
+
+/* ---------- Layout: widen container, add flex columns ---------- */
+
+.container {
+  max-width: 1200px;
+}
+
+.site-columns {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
+  padding: 4px 10px 10px 12px;
+  margin-right: 30px;
+  font-size: 13px;
+  line-height: 1.6;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow: visible;
+  border: 2px solid #00AAAA;
+}
+
+.sidebar-scroll {
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
+
+/* Panel title overlaying the top border — BBS window style */
+.sidebar-title {
+  position: relative;
+  top: -11px;
+  margin-bottom: -7px;
+  margin-left: 4px;
+  padding: 0 6px;
+  display: inline-block;
+  background: #151515;
+  color: #FFFF55;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 0 5px rgba(255, 255, 85, 0.3);
+}
+
+/* Sidebar nav-marker (► or space) */
+.nav-marker {
+  color: #FFFF55;
+}
+
+.nav-section {
+  margin-bottom: 2px;
+}
+
+.nav-section-title {
+  font-size: 13px;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  margin: 0;
+  padding: 2px 0 0 0;
+  line-height: 1.6;
+  color: #FF5555;
+  text-shadow: 0 0 5px rgba(255, 85, 85, 0.3),
+               0 0 10px rgba(255, 85, 85, 0.1);
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.section-label {
+  color: #FF5555;
+}
+
+/* Clickable section titles in sub-menus — red base, lightbar on hover */
+.nav-section-title a {
+  display: block;
+  padding: 2px 4px;
+  color: #FF5555;
+  text-decoration: none;
+  text-shadow: none;
+  font-weight: normal;
+  transition: color 0.1s, background-color 0.1s;
+}
+
+.nav-section-title a .hotkey {
+  color: #FFFFFF;
+}
+
+.nav-section-title a:hover {
+  color: #FFFFFF;
+  background-color: #0000AA;
+  text-shadow: none;
+}
+
+.nav-section-title a:hover .hotkey {
+  color: #FFFF55;
+  text-shadow: none;
+}
+
+/* Active section title: lightbar highlight, no arrow */
+.nav-section-title.active a {
+  color: #FFFFFF;
+  background-color: #0000AA;
+  text-shadow: none;
+}
+
+.nav-section-title.active a .hotkey {
+  color: #FFFF55;
+  text-shadow: none;
+}
+
+/* Sub-menu child items — indented one extra level */
+.nav-child a {
+  padding-left: 12px;
+}
+
+/* Return to Main Menu separator */
+.nav-return {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #00AAAA;
+}
+
+.nav-list {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.nav-item {
+  list-style-image: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item a {
+  display: block;
+  padding: 2px 4px;
+  color: #AAAAAA;
+  text-decoration: none;
+  text-shadow: none;
+  white-space: nowrap;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 13px;
+  transition: color 0.1s, background-color 0.1s;
+}
+
+/* Hotkey letter: yellow like |14 */
+.hotkey {
+  color: #FFFF55;
+  text-shadow: 0 0 4px rgba(255, 255, 85, 0.3);
+}
+
+/* Lightbar hover: |15 white text on |17 blue background */
+.nav-item a:hover {
+  color: #FFFFFF;
+  background-color: #0000AA;
+  text-shadow: none;
+}
+
+.nav-item a:hover .hotkey {
+  color: #FFFF55;
+  text-shadow: none;
+}
+
+.nav-item a:hover .nav-marker {
+  color: #FFFF55;
+}
+
+/* Active item: lightbar style */
+.nav-item.active a {
+  color: #FFFFFF;
+  background-color: #0000AA;
+  text-shadow: none;
+}
+
+.nav-item.active a .hotkey {
+  color: #FFFF55;
+  text-shadow: none;
+}
+
+.nav-item.active a .nav-marker {
+  color: #FFFF55;
+}
+
+.sidebar-footer {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: #444;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+}
+
+/* ---------- Main content area ---------- */
+
+/* BBS ANSI logo — black background blends into page via lighten */
+.bbs-logo {
+  display: block;
+  max-width: 75%;
+  margin: 8px auto 16px auto;
+  mix-blend-mode: lighten;
+}
+
+#main_content {
+  flex: 1;
+  min-width: 0; /* allow content to shrink for code overflow */
+}
+
+.page-heading {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #00AAAA;
+}
+
+.page-desc {
+  color: #999;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Content list bullets: custom bullet.png image */
+#main_content ul li {
+  list-style-image: url("../images/bullet.png");
+}
+
+/* ---------- Header tweaks ---------- */
+
+.header-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-flex h2 {
+  flex: 1;
+}
+
+.sidebar-toggle {
+  display: none; /* hidden on desktop */
+  background: none;
+  border: 1px dashed #00AAAA;
+  color: #55FFFF;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 13px;
+  padding: 4px 12px;
+  cursor: pointer;
+  text-shadow: 0 0 5px rgba(85, 255, 255, 0.3);
+}
+
+.sidebar-toggle:hover {
+  background: rgba(85, 255, 255, 0.1);
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 1px dashed #333;
+  text-align: center;
+}
+
+.footer-text {
+  color: #444;
+  font-size: 12px;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+}
+
+/* ---------- CRT Scanline overlay ---------- */
+
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  opacity: 0.4;
+}
+
+/* ---------- Override hacker theme colors to BBS ANSI palette ---------- */
+
+/* Global BBS monospace font — everything should look like a terminal */
+body {
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+}
+
+/* Header: cyan title with cyan glow instead of green */
+header {
+  border-bottom-color: #00AAAA;
+}
+
+header h1 {
+  color: #FFFF55;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
+               0 0 5px rgba(255, 255, 85, 0.15),
+               0 0 10px rgba(255, 255, 85, 0.1);
+}
+
+/* Headings: yellow like |14 prompt, BBS monospace font */
+h1, h2, h3, h4, h5, h6 {
+  color: #FFFF55;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  margin: 16px 0 8px 0;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
+               0 0 5px rgba(255, 255, 85, 0.1),
+               0 0 10px rgba(255, 255, 85, 0.1);
+}
+
+/* Downsize content headings one level — site banner is the true h1 */
+#main_content h1 { font-size: 1.5em; }   /* h1 renders at h2 size */
+#main_content h2 { font-size: 1.17em; }  /* h2 renders at h3 size */
+#main_content h3 { font-size: 1.0em; }   /* h3 renders at h4 size */
+#main_content h4 { font-size: 0.92em; }  /* h4 renders at h5 size */
+#main_content h5 { font-size: 0.83em; }  /* h5 renders at h6 size */
+#main_content h6 { font-size: 0.75em; }  /* h6 stays small */
+
+/* Links: bright cyan to match BBS accent/info color |11 */
+a {
+  color: #55FFFF;
+  text-shadow: 0 0 5px rgba(85, 255, 255, 0.3);
+}
+
+a:hover {
+  color: #FFFFFF;
+  text-shadow: 0 0 8px rgba(85, 255, 255, 0.5);
+}
+
+/* Table/HR borders: dark cyan */
+th {
+  border-bottom-color: #00AAAA;
+}
+
+/* Hide thead in content area — markdown tables generate blank thead rows.
+   Content tables use bold text in tbody cells instead of real th headers. */
+#main_content thead {
+  display: none;
+}
+
+hr {
+  border-bottom-color: #00AAAA;
+  color: #00AAAA;
+}
+
+/* ---------- BBS ANSI enhancements ---------- */
+
+/* Subtle phosphor flicker on headers */
+@keyframes phosphor-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.85; }
+  94% { opacity: 1; }
+}
+
+header h1 {
+  animation: phosphor-flicker 8s infinite;
+}
+
+/* Cyan glow on code blocks — BBS terminal feel */
+pre {
+  border-color: rgba(0, 170, 170, 0.2);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5),
+              0 0 3px rgba(0, 170, 170, 0.05);
+}
+
+/* Table styling — box-drawing feel */
+th {
+  color: #55FFFF;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Scrollbar styling — ANSI block shading characters via CSS dither */
+.sidebar-scroll {
+  scrollbar-width: thin;                     /* Firefox fallback */
+  scrollbar-color: #888 #111;                /* Firefox: thumb track */
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 12px;
+}
+
+/* ░ Light shade track: dark grey on black, sparse dither */
+.sidebar-scroll::-webkit-scrollbar-track {
+  background:
+    repeating-conic-gradient(#333 0% 25%, #000 0% 50%)
+    0 0 / 4px 4px;
+}
+
+/* ▓ Dark shade thumb: light grey on mid-grey, dense dither */
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background:
+    repeating-conic-gradient(#AAA 0% 25%, #666 0% 50%)
+    0 0 / 2px 2px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background:
+    repeating-conic-gradient(#DDD 0% 25%, #888 0% 50%)
+    0 0 / 2px 2px;
+}
+
+/* ---------- Responsive: collapse sidebar on small screens ---------- */
+
+@media (max-width: 860px) {
+  .site-columns {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    max-height: 100vh;
+    background: rgba(10, 10, 10, 0.97);
+    border: 2px solid #00AAAA;
+    border-left: none;
+    z-index: 1000;
+    padding: 70px 15px 20px 15px;
+    margin-right: 0;
+    transition: left 0.25s ease;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-toggle {
+    display: inline-block;
+  }
+
+  #main_content {
+    width: 100%;
+  }
+}
