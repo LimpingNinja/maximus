@@ -8,13 +8,13 @@ description: "matrix.toml, message area types, nodelists, echotoss, and the Maxi
 This page covers the **Maximus side** of FidoNet-Technology Networking —
 the settings that tell your BBS how to interact with the FTN world.
 Squish handles the actual mail processing (see
-[Squish Tosser]({% link fidonet-squish.md %})), but Maximus needs to
+[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %})), but Maximus needs to
 know about your network identity, how to signal outbound mail, where
 nodelists live, and what privileges callers need for network-aware
 message features.
 
 If you haven't set up FTN yet, start with the
-[Joining a Network]({% link fidonet-joining-network.md %}) tutorial —
+[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %}) tutorial —
 it walks through all of this in context. This page is the reference for
 when you need to tune things later.
 
@@ -338,7 +338,7 @@ The path in `areas.toml` is relative to `sys_path`; the path in
 directory.
 
 For full area definition details, see
-[MaxCFG Areas]({% link maxcfg-areas.md %}).
+[MaxCFG Areas]({{ site.baseurl }}{% link maxcfg-areas.md %}).
 
 ---
 
@@ -364,6 +364,6 @@ All three paths are resolved relative to `sys_path`. The golden rule:
 **Maximus, Squish, and BinkD must all agree on where files go.** If
 your mail isn't flowing, mismatched paths are the first thing to check.
 
-See [Directory Structure]({% link directory-structure.md %}) for the
-full layout and [Core Settings]({% link config-core-settings.md %}) for
+See [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) for the
+full layout and [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) for
 details on `sys_path` and path resolution.

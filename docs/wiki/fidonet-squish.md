@@ -13,7 +13,7 @@ for `squish.cfg` — every keyword, organized by function rather than
 file order.
 
 If you're setting up Squish for the first time, the
-[Joining a Network]({% link fidonet-joining-network.md %}) tutorial
+[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %}) tutorial
 gives you a minimal working config. Come back here when you need to
 understand what all the knobs do.
 
@@ -214,7 +214,7 @@ Compress  /var/max/config/compress.cfg
 
 Paths to the routing control file and compression configuration. Both
 are always required. See
-[Netmail & Routing]({% link fidonet-netmail-routing.md %}) for full
+[Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %}) for full
 `route.cfg` details and [Compression & Packing](#compression) below
 for `compress.cfg`.
 
@@ -862,6 +862,6 @@ very old software (Opus 1.03 era). Not relevant for modern networks.
 ---
 
 For day-to-day maintenance of your Squish message bases, see the
-[Squish]({% link squish.md %}) utilities page (SQPACK, SQFIX, etc.).
+[Squish]({{ site.baseurl }}{% link squish.md %}) utilities page (SQPACK, SQFIX, etc.).
 For routing configuration, see
-[Netmail & Routing]({% link fidonet-netmail-routing.md %}).
+[Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %}).

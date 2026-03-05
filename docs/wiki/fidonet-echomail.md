@@ -7,7 +7,7 @@ description: "How echomail works under the hood — SEEN-BY, PATH, dupe preventi
 
 Echomail is the public messaging backbone of FTN — distributed
 conversations that span every BBS carrying a given echo. The
-[overview]({% link fidonet.md %}) introduced the concept; this page
+[overview]({{ site.baseurl }}{% link fidonet.md %}) introduced the concept; this page
 goes deeper into how echomail actually works, what the control
 information means, and how to manage your echo areas effectively.
 
@@ -15,7 +15,7 @@ This is the reference page for sysops who already have echomail flowing
 and want to understand the machinery — dupe checking tuning, security
 hardening, passthru relaying, and automated area management. If you're
 still setting up, the
-[Joining a Network]({% link fidonet-joining-network.md %}) tutorial
+[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %}) tutorial
 is a better starting point.
 
 ---
@@ -132,7 +132,7 @@ Within a single zone, SEEN-BY lines don't include the zone number
 (it's implied). When gating echoes between zones, SEEN-BYs must be
 stripped and rebuilt — that's what the `ZoneGate` keyword in
 `squish.cfg` handles. See
-[Zone Gating]({% link fidonet-squish.md %}#zone-gating).
+[Zone Gating]({{ site.baseurl }}{% link fidonet-squish.md %}#zone-gating).
 
 ### Controlling SEEN-BY size
 
@@ -148,7 +148,7 @@ This sends only the nodes defined for each area, keeping packets small.
 
 The per-area `-+<node>` flag adds a specific node to SEEN-BYs for one
 area. The global `AddToSeen` keyword adds a node to all areas. See
-[SEEN-BY & Control Info]({% link fidonet-squish.md %}#seenby) in the
+[SEEN-BY & Control Info]({{ site.baseurl }}{% link fidonet-squish.md %}#seenby) in the
 Squish reference.
 
 ---
@@ -362,7 +362,7 @@ these commands:
 ### For hub operators
 
 If you're running SqaFix on your own system (feeding downlinks), see
-the [SqaFix]({% link sqafix.md %}) utility page for full configuration
+the [SqaFix]({{ site.baseurl }}{% link sqafix.md %}) utility page for full configuration
 details — autocreate, area forwarding, access control, and more.
 
 ---
@@ -406,7 +406,7 @@ SQPACK purges expired messages, reclaims space in the Squish database
 files, and reindexes. Run it via cron — daily or weekly depending on
 message volume.
 
-See [Squish Utilities]({% link squish.md %}) for full SQPACK
+See [Squish Utilities]({{ site.baseurl }}{% link squish.md %}) for full SQPACK
 documentation.
 
 ### Recommended approach
@@ -465,6 +465,6 @@ If you suddenly get a flood of duplicate messages:
 ---
 
 For Squish configuration details, see the
-[Squish Tosser]({% link fidonet-squish.md %}) reference. For netmail
+[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %}) reference. For netmail
 and routing, see
-[Netmail & Routing]({% link fidonet-netmail-routing.md %}).
+[Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %}).

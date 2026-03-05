@@ -64,9 +64,9 @@ Press `Q` to shut down. MaxTel will terminate all running nodes gracefully
 before exiting.
 
 For details on the dashboard panels and what they show, see
-[The Dashboard]({% link maxtel-dashboard.md %}). For the sysop keyboard
+[The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %}). For the sysop keyboard
 commands (snoop, kick, restart, config), see
-[Sysop Features]({% link maxtel-sysop-features.md %}).
+[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}).
 
 ---
 
@@ -162,10 +162,10 @@ kill $(pgrep maxtel)
 
 ## See Also
 
-- [MaxTel]({% link maxtel.md %}) — overview, features, and getting started
-- [The Dashboard]({% link maxtel-dashboard.md %}) — UI panels and responsive
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — overview, features, and getting started
+- [The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %}) — UI panels and responsive
   layouts
-- [Sysop Features]({% link maxtel-sysop-features.md %}) — snoop, config,
+- [Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}) — snoop, config,
   kick, and restart
-- [Troubleshooting]({% link maxtel-troubleshooting.md %}) — common problems
+- [Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %}) — common problems
   and log files

@@ -162,4 +162,4 @@ Now that you know how to compile, the next page explains what goes *inside*
 a `.mex` file — the structure of a script, from includes to `main()` to
 everything in between.
 
-**[Script Structure →]({% link mex-script-structure.md %})**
+**[Script Structure →]({{ site.baseurl }}{% link mex-script-structure.md %})**

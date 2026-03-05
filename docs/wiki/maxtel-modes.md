@@ -8,4 +8,4 @@ redirect_to: /maxtel-running/
 ---
 
 *Headless and daemon modes are now documented in
-[Running MaxTel]({% link maxtel-running.md %}).*
+[Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}).*

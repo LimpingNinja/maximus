@@ -8,7 +8,7 @@ description: "Complete reference for every menu command — quick reference tabl
 This is the complete reference for every command you can assign to a menu
 option in Maximus. If you're looking for how menu files are structured and
 what each key in an `[[option]]` table means, start with
-[Menu Definitions]({% link config-menu-definitions.md %}).
+[Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %}).
 
 Each command listed here is a value you can put in the `command` field of a
 menu option. Command names are case-insensitive — `Display_Menu`,
@@ -286,7 +286,7 @@ false.
 ## External Programs {#external-programs}
 
 Commands for launching door games, utilities, and other external programs.
-For detailed setup guides, see [Door Games]({% link config-door-games.md %}).
+For detailed setup guides, see [Door Games]({{ site.baseurl }}{% link config-door-games.md %}).
 
 ### `Xtern_Run` — Run a stdio door
 
@@ -297,7 +297,7 @@ The workhorse door launcher. Forks a child process, sets up a PTY
 relay loop between the caller's socket and the PTY master. The door program
 reads stdin and writes stdout as if talking to a terminal.
 
-See [Door Games — stdio Doors]({% link config-door-games.md %}#stdio-doors)
+See [Door Games — stdio Doors]({{ site.baseurl }}{% link config-door-games.md %}#stdio-doors)
 for a full setup walkthrough.
 
 ### `Xtern_Door32` — Run a Door32 door
@@ -311,7 +311,7 @@ Maximus passes the caller's TCP socket file descriptor directly to the door
 process. The door reads the fd number from `door32.sys` and does its own I/O.
 This is faster and cleaner than stdio bridging — no PTY overhead.
 
-See [Door32 Support]({% link door32-support.md %}) for protocol details.
+See [Door32 Support]({{ site.baseurl }}{% link door32-support.md %}) for protocol details.
 
 ### `Xtern_Dos` — Run a shell command
 
@@ -942,9 +942,9 @@ function:
 
 ## See Also
 
-- [Menu Definitions]({% link config-menu-definitions.md %}) — how menu TOML
+- [Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %}) — how menu TOML
   files are structured
-- [Menu System]({% link config-menu-system.md %}) — the parent overview
-- [Door Games]({% link config-door-games.md %}) — door setup guides
-- [Security & Access]({% link config-security-access.md %}) — privilege
+- [Menu System]({{ site.baseurl }}{% link config-menu-system.md %}) — the parent overview
+- [Door Games]({{ site.baseurl }}{% link config-door-games.md %}) — door setup guides
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — privilege
   levels and flags for gating menu options

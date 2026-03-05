@@ -13,7 +13,7 @@ and press Enter to select.
 Lightbar mode is configured **per-menu** in the `[custom_menu]` table inside
 each menu's TOML file (`config/menus/*.toml`). It is separate from the
 area-list lightbar settings in `display.toml` — see
-[Lightbar Customization]({% link theming-lightbar.md %}) for those.
+[Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) for those.
 
 ---
 
@@ -105,19 +105,19 @@ option grid is arranged within the boundary:
 
 These are covered in full detail — with visual examples, recipes, and
 troubleshooting — on the
-[Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) page.
+[Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) page.
 
 ---
 
 ## See Also
 
-- [Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) — full
+- [Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) — full
   deep-dive on `[custom_menu]`: boundaries, layout modes, lightbar colors,
   recipes, and troubleshooting
-- [Menu System]({% link config-menu-system.md %}) — menu system overview
-- [Menu Definitions]({% link config-menu-definitions.md %}) — TOML menu file
+- [Menu System]({{ site.baseurl }}{% link config-menu-system.md %}) — menu system overview
+- [Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %}) — TOML menu file
   format and option commands
-- [Lightbar Customization]({% link theming-lightbar.md %}) — area-list and
+- [Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) — area-list and
   message reader lightbar settings in `display.toml`
-- [Theme Colors]({% link theme-colors.md %}) — `lightbar_fg` and
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — `lightbar_fg` and
   `lightbar_bg` theme slots used by area lightbars

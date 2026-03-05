@@ -77,8 +77,8 @@ Displays: `Price: $5.00`
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — overview and quick reference
-- [Color Codes]({% link mci-color-codes.md %}) — numeric and theme color codes
-- [Info Codes]({% link mci-info-codes.md %}) — dynamic data substitution codes
-- [Positional Parameters]({% link mci-positional-params.md %}) — language string parameters
-- [Terminal Control]({% link mci-terminal-control.md %}) — screen and cursor codes
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — overview and quick reference
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric and theme color codes
+- [Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %}) — dynamic data substitution codes
+- [Positional Parameters]({{ site.baseurl }}{% link mci-positional-params.md %}) — language string parameters
+- [Terminal Control]({{ site.baseurl }}{% link mci-terminal-control.md %}) — screen and cursor codes

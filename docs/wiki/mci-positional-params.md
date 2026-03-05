@@ -9,7 +9,7 @@ Language strings (in `english.toml`) can contain **positional parameters**
 that are filled in by the BBS at runtime. There are two expansion modes.
 
 > For a full guide to the language string system, see
-> [Language Files (TOML)]({% link lang-toml.md %}).
+> [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}).
 
 ---
 
@@ -64,15 +64,15 @@ user_line = { text = "$R20|#1 |!3" }
 
 **Note:** Positional parameters are primarily used in language file strings.
 Display files and menu titles typically use
-[info codes]({% link mci-info-codes.md %}) (`|XY`) instead.
+[info codes]({{ site.baseurl }}{% link mci-info-codes.md %}) (`|XY`) instead.
 
 ---
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — overview and quick reference
-- [Format Operators]({% link mci-format-operators.md %}) — padding, alignment,
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — overview and quick reference
+- [Format Operators]({{ site.baseurl }}{% link mci-format-operators.md %}) — padding, alignment,
   and repetition operators that interact with deferred parameters
-- [Language Files (TOML)]({% link lang-toml.md %}) — the language string system
-- [Info Codes]({% link mci-info-codes.md %}) — dynamic data codes for display
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — the language string system
+- [Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %}) — dynamic data codes for display
   files and menus

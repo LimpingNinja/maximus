@@ -11,9 +11,9 @@ fine-grained behavior that privilege levels alone can't express — things like
 "can this user see hidden files?" or "can they use the external editor?"
 
 If you're looking for the big picture of how access control works, start with
-[Security & Access]({% link config-security-access.md %}). For the full
+[Security & Access]({{ site.baseurl }}{% link config-security-access.md %}). For the full
 per-field reference of access level classes, see
-[Access Levels]({% link config-access-levels.md %}).
+[Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}).
 
 ---
 
@@ -68,7 +68,7 @@ handling behavior. They go in the `mail_flags` array.
 |------|-------------|
 | `ShowPvt` | User can read messages marked as Private in areas where private messages exist |
 | `Editor` | User can use the full-screen BORED/MAGNET message editor |
-| `LocalEditor` | User can use the external editor defined by `local_editor` in [Session & Login]({% link config-session-login.md %}) |
+| `LocalEditor` | User can use the external editor defined by `local_editor` in [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) |
 | `NetFree` | NetMail doesn't count against the user's message quotas |
 | `MsgAttrAny` | User can set any message attribute (Private, Crash, Hold, etc.) regardless of area restrictions |
 | `WriteRdOnly` | User can post messages in read-only areas |
@@ -124,9 +124,9 @@ The typical progression looks like this:
 
 ## See Also
 
-- [Security & Access]({% link config-security-access.md %}) — how the access
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — how the access
   system works
-- [Access Levels]({% link config-access-levels.md %}) — per-field reference
+- [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) — per-field reference
   for `access_levels.toml`
-- [Session & Login]({% link config-session-login.md %}) — `local_editor`,
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — `local_editor`,
   `alias_system`, and other policy settings

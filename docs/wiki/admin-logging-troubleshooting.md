@@ -84,7 +84,7 @@ You can change the log mode in MaxCFG under **Setup → System Settings**
 is required for the change to take effect.
 
 For the full configuration reference, see
-[Core Settings]({% link config-core-settings.md %}).
+[Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}).
 
 ---
 
@@ -309,7 +309,7 @@ If it worked yesterday and doesn't today, what changed?
 - **Config edits** — Did you save a TOML file recently? Check
   `git diff` if you're using version control on your config directory
   (and you should be — see
-  [Backup & Recovery]({% link admin-backup-recovery.md %})).
+  [Backup & Recovery]({{ site.baseurl }}{% link admin-backup-recovery.md %})).
 - **New MEX scripts** — A buggy script can crash a node.
 - **OS updates** — Library changes, permission changes, firewall rule
   resets.
@@ -336,8 +336,8 @@ Narrow the scope:
 - **One area:** Check the Squish base files for that area. Try
   `sqpack` to repack them.
 - **One user:** Check their account in the
-  [User Editor]({% link maxcfg-user-editor.md %}). Look for the
-  [BadLogon flag]({% link admin-user-management.md %}#bad-logon).
+  [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}). Look for the
+  [BadLogon flag]({{ site.baseurl }}{% link admin-user-management.md %}#bad-logon).
 - **All nodes:** It's probably a config problem or a system-level
   issue (disk, permissions, memory).
 
@@ -376,7 +376,7 @@ screen.
 3. Permissions on the `max` binary and per-node directories
 
 For more MaxTel-specific issues, see
-[MaxTel Troubleshooting]({% link maxtel-troubleshooting.md %}).
+[MaxTel Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %}).
 
 ### Message Area Errors
 
@@ -449,13 +449,13 @@ This is useful for:
 
 ## See Also
 
-- [General Administration]({% link admin-general.md %}) — the daily
+- [General Administration]({{ site.baseurl }}{% link admin-general.md %}) — the daily
   rhythm of running a board
-- [Backup & Recovery]({% link admin-backup-recovery.md %}) — protecting
+- [Backup & Recovery]({{ site.baseurl }}{% link admin-backup-recovery.md %}) — protecting
   your log archives
-- [Core Settings]({% link config-core-settings.md %}) — `log_file` and
+- [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) — `log_file` and
   `log_mode` configuration
-- [MaxTel Troubleshooting]({% link maxtel-troubleshooting.md %}) —
+- [MaxTel Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %}) —
   MaxTel-specific issues with deeper detail on node problems
-- [User Management]({% link admin-user-management.md %}) — the BadLogon
+- [User Management]({{ site.baseurl }}{% link admin-user-management.md %}) — the BadLogon
   flag and user-related diagnostics

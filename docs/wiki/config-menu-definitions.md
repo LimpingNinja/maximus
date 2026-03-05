@@ -13,7 +13,7 @@ and so on.
 This page walks through the anatomy of a menu file: what goes at the top,
 what each key means, and how options are defined. For the complete list of
 commands you can assign to an option, see
-[Menu Options]({% link config-menu-options.md %}).
+[Menu Options]({{ site.baseurl }}{% link config-menu-options.md %}).
 
 ---
 
@@ -28,7 +28,7 @@ A menu TOML file has two sections:
 
 Optionally, a `[custom_menu]` section can follow the options to enable
 lightbar navigation and precise screen positioning (see
-[Lightbar Menus]({% link config-lightbar-menus.md %})).
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %})).
 
 Here's a minimal example:
 
@@ -183,7 +183,7 @@ like `Display_Menu`, `Msg_Enter`, `File_Download`, or `Goodbye`. Command
 names are case-insensitive.
 
 For the full list of available commands and what each one does, see
-[Menu Options]({% link config-menu-options.md %}).
+[Menu Options]({{ site.baseurl }}{% link config-menu-options.md %}).
 
 ```toml
 command = "Display_Menu"
@@ -211,12 +211,12 @@ arguments = "MESSAGE"
 
 The minimum privilege level required to see and use this option. This is an
 access level name from your
-[access levels]({% link config-access-levels.md %}) — like `"Demoted"`,
+[access levels]({{ site.baseurl }}{% link config-access-levels.md %}) — like `"Demoted"`,
 `"Normal"`, `"Sysop"`, etc.
 
 Can also include key-flag gating with a `/` separator: `"Normal/1C"` means
 the caller needs Normal level **and** flags 1 and C set. See
-[Privileges & Flags]({% link config-privileges-flags.md %}) for details.
+[Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %}) for details.
 
 ```toml
 priv_level = "Demoted"
@@ -362,10 +362,10 @@ modifiers = ["Echo"]
 
 ## See Also
 
-- [Menu Options]({% link config-menu-options.md %}) — every command you can
+- [Menu Options]({{ site.baseurl }}{% link config-menu-options.md %}) — every command you can
   assign to an option, with detailed descriptions
-- [Lightbar Menus]({% link config-lightbar-menus.md %}) — the
+- [Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) — the
   `[custom_menu]` section for lightbar navigation and screen positioning
-- [Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) —
+- [Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) —
   auto-generated displays
-- [Menu System]({% link config-menu-system.md %}) — the parent overview
+- [Menu System]({{ site.baseurl }}{% link config-menu-system.md %}) — the parent overview

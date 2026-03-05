@@ -22,7 +22,7 @@ night, one idea at a time, fueled by curiosity and the faint glow of a
 terminal.
 
 You don't need prior programming experience. You don't need to read the
-[Language Guide]({% link mex-language-guide.md %}) first (though it's
+[Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %}) first (though it's
 there when you want the fine print). You just need a board, a text editor,
 and the willingness to try things and see what breaks.
 
@@ -39,13 +39,13 @@ something genuinely cool.
 You'll go from printing text to having a real conversation with your
 callers — and knowing exactly who you're talking to.
 
-- **[Your First Script]({% link mex-learn-first-script.md %})** —
+- **[Your First Script]({{ site.baseurl }}{% link mex-learn-first-script.md %})** —
   "Hello, Stranger." We're past hello-world. This time the board knows
   your caller's name, and it's not afraid to use it.
-- **[Talking to Your Callers]({% link mex-learn-input-output.md %})** —
+- **[Talking to Your Callers]({{ site.baseurl }}{% link mex-learn-input-output.md %})** —
   "Are You Still There?" Asking questions, hearing answers, and making
   your board feel like it's actually listening.
-- **[Know Your Caller]({% link mex-learn-user-record.md %})** —
+- **[Know Your Caller]({{ site.baseurl }}{% link mex-learn-user-record.md %})** —
   "Who Goes There?" Peeking behind the curtain at the user record.
   Name, access level, time left, how many times they've called — it's
   all there, and it's all yours.
@@ -54,13 +54,13 @@ callers — and knowing exactly who you're talking to.
 
 Your scripts learn to think, repeat, and remember.
 
-- **[Making Decisions]({% link mex-learn-decisions.md %})** —
+- **[Making Decisions]({{ site.baseurl }}{% link mex-learn-decisions.md %})** —
   "Choose Your Own Adventure." Your board becomes smarter than a light
   switch. If/else, conditions, and a trivia question that actually works.
-- **[Going in Rounds]({% link mex-learn-loops.md %})** —
+- **[Going in Rounds]({{ site.baseurl }}{% link mex-learn-loops.md %})** —
   "One More Time, With Feeling." Loops — the hamster wheel of programming,
   except this hamster builds a quote-of-the-day rotator.
-- **[Remembering Things]({% link mex-learn-file-io.md %})** —
+- **[Remembering Things]({{ site.baseurl }}{% link mex-learn-file-io.md %})** —
   "Dear Diary." Your board gets a memory. Read files, write files, build
   a guestbook that survives a reboot.
 
@@ -68,13 +68,13 @@ Your scripts learn to think, repeat, and remember.
 
 Now you're building features your callers will actually notice.
 
-- **[Building Menus]({% link mex-learn-menus.md %})** —
+- **[Building Menus]({{ site.baseurl }}{% link mex-learn-menus.md %})** —
   "Press Any Key to Be Amazing." Lightbar menus, selection prompts, and
   making your board feel like a place, not a command line.
-- **[The Message Base]({% link mex-learn-messages.md %})** —
+- **[The Message Base]({{ site.baseurl }}{% link mex-learn-messages.md %})** —
   "You've Got Mail (And We Can Read It)." Talking to the message base
   from MEX — reading posts, counting messages, maybe even posting one.
-- **[Reaching the Outside World]({% link mex-learn-networking.md %})** —
+- **[Reaching the Outside World]({{ site.baseurl }}{% link mex-learn-networking.md %})** —
   "Phone Home." Your BBS learns to talk to the internet. HTTP requests,
   JSON parsing, and pulling live data onto a text-mode screen like it's
   the most normal thing in the world.
@@ -83,7 +83,7 @@ Now you're building features your callers will actually notice.
 
 Everything comes together.
 
-- **[Your First Mini-Game]({% link mex-learn-mini-game.md %})** —
+- **[Your First Mini-Game]({{ site.baseurl }}{% link mex-learn-mini-game.md %})** —
   "Game Night." Variables, loops, files, menus, decisions — all of it,
   woven into a real game your callers can play. This is why you stayed
   up until 2 AM.
@@ -107,10 +107,10 @@ See what the compiler says. The error messages are pretty good, and
 understanding them is half the skill.
 
 When you want the deep reference — every function signature, every type
-rule, every edge case — the [Language Guide]({% link mex-language-guide.md %})
-and [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) are
+rule, every edge case — the [Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %})
+and [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) are
 waiting. But you don't need them yet.
 
 You just need Lesson 1 and a late night.
 
-**[Let's go →]({% link mex-learn-first-script.md %})**
+**[Let's go →]({{ site.baseurl }}{% link mex-learn-first-script.md %})**

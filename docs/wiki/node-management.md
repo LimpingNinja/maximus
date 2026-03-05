@@ -168,11 +168,11 @@ only what changed.
 
 ## See Also
 
-- **[Multi-Node Operation]({% link multi-node-operation.md %})** — the big
+- **[Multi-Node Operation]({{ site.baseurl }}{% link multi-node-operation.md %})** — the big
   picture of how multi-node works
-- **[IPC & Isolation]({% link node-ipc-isolation.md %})** — Unix sockets,
+- **[IPC & Isolation]({{ site.baseurl }}{% link node-ipc-isolation.md %})** — Unix sockets,
   bridge processes, PTY layer, and process isolation
-- **[Sysop Features]({% link maxtel-sysop-features.md %})** — kick, restart,
+- **[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %})** — kick, restart,
   snoop, and config
-- **[Troubleshooting]({% link maxtel-troubleshooting.md %})** — common
+- **[Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %})** — common
   problems and log files

@@ -269,4 +269,4 @@ what's happening.
 
 Next lesson: branching. The roads diverge. You get to pick.
 
-**[Lesson 4: "Choose Your Own Adventure" →]({% link mex-learn-decisions.md %})**
+**[Lesson 4: "Choose Your Own Adventure" →]({{ site.baseurl }}{% link mex-learn-decisions.md %})**

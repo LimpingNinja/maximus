@@ -60,7 +60,7 @@ file_area_list = ""
 
 ### Customizing the Look
 
-These format strings accept full [display codes]({% link display-codes.md %})
+These format strings accept full [display codes]({{ site.baseurl }}{% link display-codes.md %})
 including theme colors. A quick retheme:
 
 ```toml
@@ -193,12 +193,12 @@ Here are some high-impact changes you can make entirely in
 
 ## See Also
 
-- [Display Files]({% link display-files.md %}) — working with `.mec` source
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — working with `.mec` source
   and the MECCA compiler
-- [Display Codes]({% link display-codes.md %}) — pipe codes and info codes
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes and info codes
   used in format strings
-- [Lightbar Customization]({% link theming-lightbar.md %}) — lightbar mode
+- [Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) — lightbar mode
   for area lists
-- [Theme Colors]({% link theme-colors.md %}) — the semantic color system
-- [Theming & Modding]({% link theming-modding.md %}) — overview of all
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — the semantic color system
+- [Theming & Modding]({{ site.baseurl }}{% link theming-modding.md %}) — overview of all
   customization options

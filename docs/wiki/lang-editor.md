@@ -139,7 +139,7 @@ values too, not just key names.
 **Leave escape sequences alone unless you know what they do.** Sequences like
 `\x16\x19\x02` are legacy AVATAR cursor codes that were preserved during
 conversion. They still work — but if you are rewriting a string from scratch,
-use MCI cursor codes instead (see [Display Codes]({% link display-codes.md %})).
+use MCI cursor codes instead (see [Display Codes]({{ site.baseurl }}{% link display-codes.md %})).
 
 **Do not edit `[_legacy_map]` entries.** The browser hides them for a reason —
 they are auto-generated lookup tables, not user-facing strings.
@@ -152,12 +152,12 @@ effect.
 
 ## See Also
 
-- [MaxCFG TUI Editor]({% link maxcfg-tui.md %}) — the interactive editor that
+- [MaxCFG TUI Editor]({{ site.baseurl }}{% link maxcfg-tui.md %}) — the interactive editor that
   hosts the language browser
-- [Language Files (TOML)]({% link lang-toml.md %}) — format reference and
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — format reference and
   customization guide
-- [Display Codes]({% link display-codes.md %}) — color codes, formatting
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — color codes, formatting
   operators, and information codes
-- [Extending with MEX/C]({% link extending-mex-c.md %}) — adding your
+- [Extending with MEX/C]({{ site.baseurl }}{% link extending-mex-c.md %}) — adding your
   own custom strings
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — command-line reference for maxcfg
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — command-line reference for maxcfg

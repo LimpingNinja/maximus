@@ -18,7 +18,7 @@ file area listing), it looks for a matching `.bbs` file in the display
 directory. These files can contain:
 
 - **ANSI art** — color graphics and box-drawing characters
-- **Display codes** — [pipe codes]({% link display-codes.md %}) for dynamic
+- **Display codes** — [pipe codes]({{ site.baseurl }}{% link display-codes.md %}) for dynamic
   content (user name, time left, area names)
 - **MECCA control sequences** — conditional display, hotkeys, and screen
   positioning
@@ -52,24 +52,24 @@ The display path is configured in `config/maximus.toml` under
 3. **Reconnect or navigate to the screen again** — Maximus loads `.bbs` files
    fresh each time they're displayed, so there's no need to restart.
 
-See [MECCA Language]({% link mecca-language.md %}) for the full token
+See [MECCA Language]({{ site.baseurl }}{% link mecca-language.md %}) for the full token
 reference. For compiler flags and usage, see
-[MECCA Compiler]({% link mecca-compiler.md %}). For ANSI art workflows, see
-[ANSI Art & RIP Graphics]({% link display-ansi-rip.md %}).
+[MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}). For ANSI art workflows, see
+[ANSI Art & RIP Graphics]({{ site.baseurl }}{% link display-ansi-rip.md %}).
 
 ---
 
 ## See Also
 
-- [MECCA Language]({% link mecca-language.md %}) — complete MECCA token
+- [MECCA Language]({{ site.baseurl }}{% link mecca-language.md %}) — complete MECCA token
   reference for display files
-- [MECCA Compiler]({% link mecca-compiler.md %}) — compiling `.mec` source to
+- [MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}) — compiling `.mec` source to
   `.bbs`
-- [Display Codes]({% link display-codes.md %}) — pipe codes, info codes, and
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes, info codes, and
   formatting operators used in display files
-- [Screen Types]({% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
+- [Screen Types]({{ site.baseurl }}{% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
   terminal modes
-- [ANSI Art & RIP Graphics]({% link display-ansi-rip.md %}) — art creation
+- [ANSI Art & RIP Graphics]({{ site.baseurl }}{% link display-ansi-rip.md %}) — art creation
   workflows and RIP graphics status
-- [Directory Structure]({% link directory-structure.md %}) — where display
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — where display
   files live in the installation tree

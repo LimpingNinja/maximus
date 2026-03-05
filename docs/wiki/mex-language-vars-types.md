@@ -14,7 +14,7 @@ If you're coming from C, the type system will feel familiar with a few
 Pascal-flavored twists: declarations use a colon instead of prefix notation,
 arrays have explicit bounds, and strings are dynamic (no buffer sizing, no
 null terminators, no tears). If you're not coming from C, don't worry — the
-[lessons]({% link mex-learning.md %}) already walked you through most of this
+[lessons]({{ site.baseurl }}{% link mex-learning.md %}) already walked you through most of this
 by building real things. This page is the complete reference.
 
 ---
@@ -181,7 +181,7 @@ if (strlen(usr.city) = 0)
 ```
 
 The full set of string functions is covered in
-[String Operations]({% link mex-language-string-ops.md %}).
+[String Operations]({{ site.baseurl }}{% link mex-language-string-ops.md %}).
 
 ---
 
@@ -191,7 +191,7 @@ MEX does not implicitly convert between numeric types and strings. If you
 pass an `int` where a `string` is expected, the compiler will reject it.
 You need explicit conversion functions.
 
-This is the gotcha from [Lesson 3]({% link mex-learn-user-record.md %}) —
+This is the gotcha from [Lesson 3]({{ site.baseurl }}{% link mex-learn-user-record.md %}) —
 if your function takes a `string` parameter and you hand it `usr.times`
 (an `unsigned int`), you need `uitostr()`:
 
@@ -468,11 +468,11 @@ actual area. Use the area selection functions (`msgareaselect`,
 
 ## See Also
 
-- [Control Flow]({% link mex-language-control-flow.md %}) — `if`, `while`,
+- [Control Flow]({{ site.baseurl }}{% link mex-language-control-flow.md %}) — `if`, `while`,
   `for`, and friends
-- [Functions & Scope]({% link mex-language-functions-scope.md %}) — declaring
+- [Functions & Scope]({{ site.baseurl }}{% link mex-language-functions-scope.md %}) — declaring
   functions, `ref` parameters, scope rules
-- [String Operations]({% link mex-language-string-ops.md %}) — every string
+- [String Operations]({{ site.baseurl }}{% link mex-language-string-ops.md %}) — every string
   function
-- [User & Session Intrinsics]({% link mex-intrinsics-user-session.md %}) —
+- [User & Session Intrinsics]({{ site.baseurl }}{% link mex-intrinsics-user-session.md %}) —
   functions that operate on the user record and session

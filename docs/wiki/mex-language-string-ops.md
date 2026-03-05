@@ -14,7 +14,7 @@ This page covers every string operation available in MEX — from the basics
 (concatenation, length) to the functions you'll reach for when you need to
 slice, search, pad, or recase. If you're looking for the numeric-to-string
 conversion functions (`itostr`, `ltostr`, etc.), those live on the
-[Variables & Types]({% link mex-language-vars-types.md %}#type-conversions)
+[Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}#type-conversions)
 page since they're about type conversion rather than string manipulation.
 
 ---
@@ -402,9 +402,9 @@ automatically.
 
 ## See Also
 
-- [Variables & Types]({% link mex-language-vars-types.md %}) — type system,
+- [Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}) — type system,
   including numeric-to-string conversions
-- [Display & I/O Intrinsics]({% link mex-intrinsics-display-io.md %}) —
+- [Display & I/O Intrinsics]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %}) —
   `print()`, `input_str()`, and other I/O functions
-- [Control Flow]({% link mex-language-control-flow.md %}) — loops and
+- [Control Flow]({{ site.baseurl }}{% link mex-language-control-flow.md %}) — loops and
   conditionals for string processing

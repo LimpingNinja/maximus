@@ -8,8 +8,8 @@ description: "How the MEX virtual machine works — bytecode format, stack machi
 > **Audience note:** This page is for developers working on Maximus itself
 > or anyone curious about how MEX scripts actually execute under the hood.
 > You don't need any of this to *write* MEX scripts — the
-> [Language Guide]({% link mex-language-guide.md %}) and
-> [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) are what
+> [Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %}) and
+> [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) are what
 > you want for that.
 
 MEX is a compiled language. Your `.mex` source file goes through a compiler
@@ -303,9 +303,9 @@ to their CP437 codepoints for terminal display.
 
 ## See Also
 
-- [MEX Compiler]({% link mex-compiler.md %}) — compiling scripts, include
+- [MEX Compiler]({{ site.baseurl }}{% link mex-compiler.md %}) — compiling scripts, include
   paths, and command-line usage
-- [Language Guide]({% link mex-language-guide.md %}) — the user-facing
+- [Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %}) — the user-facing
   language reference
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — every
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — every
   built-in function available to MEX scripts

@@ -118,9 +118,9 @@ Use this when:
 
 ## See Also
 
-- [The Dashboard]({% link maxtel-dashboard.md %}) — understanding the UI
+- [The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %}) — understanding the UI
   panels and responsive layouts
-- [Running MaxTel]({% link maxtel-running.md %}) — command-line options and
+- [Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}) — command-line options and
   operating modes
-- [Troubleshooting]({% link maxtel-troubleshooting.md %}) — common problems
+- [Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %}) — common problems
   and log files

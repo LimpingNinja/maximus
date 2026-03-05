@@ -9,7 +9,7 @@ This page is the field-by-field reference for
 `config/security/access_levels.toml` — the file that defines your privilege
 classes. If you're looking for the big-picture overview of how levels, flags,
 and access strings work together, start with
-[Security & Access]({% link config-security-access.md %}).
+[Security & Access]({{ site.baseurl }}{% link config-security-access.md %}).
 
 Each entry in this file is an `[[access_level]]` table. You can have as many
 or as few classes as your board needs. Maximus loads them at startup and sorts
@@ -37,8 +37,8 @@ appear in the file.
 | `ratio_free` | int | `0` | KB the user can download before ratio kicks in |
 | `upload_reward` | int | `0` | Percent time credit returned for uploads |
 | `login_file` | string | `""` | Display file shown immediately after logon for this class |
-| `flags` | array | `[]` | General behavior flags (see [Privileges & Flags]({% link config-privileges-flags.md %})) |
-| `mail_flags` | array | `[]` | Mail/editor flags (see [Privileges & Flags]({% link config-privileges-flags.md %})) |
+| `flags` | array | `[]` | General behavior flags (see [Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %})) |
+| `mail_flags` | array | `[]` | Mail/editor flags (see [Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %})) |
 | `user_flags` | int | `0` | Sysop-defined bitfield for MEX scripts |
 | `oldpriv` | int | `0` | Legacy Maximus 2.x compatibility field |
 
@@ -91,7 +91,7 @@ Leave it empty to skip the per-class display.
 
 The `flags` and `mail_flags` arrays are where the real fine-grained control
 lives. These are documented in detail on the
-[Privileges & Flags]({% link config-privileges-flags.md %}) page. Here's a
+[Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %}) page. Here's a
 quick example of a co-sysop class:
 
 ```toml
@@ -155,18 +155,18 @@ oldpriv = 0
 ```
 
 Restart Maximus (or the affected node) for the new class to take effect. Then
-use the [User Editor]({% link maxcfg-user-editor.md %}) to promote users to
+use the [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) to promote users to
 the new level.
 
 ---
 
 ## See Also
 
-- [Security & Access]({% link config-security-access.md %}) — big-picture
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — big-picture
   overview of the access control system
-- [Privileges & Flags]({% link config-privileges-flags.md %}) — complete
+- [Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %}) — complete
   flag reference
-- [Session & Login]({% link config-session-login.md %}) — `logon_priv`
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — `logon_priv`
   (default level for new users)
-- [MaxCFG User Editor]({% link maxcfg-user-editor.md %}) — changing a
+- [MaxCFG User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — changing a
   user's privilege level

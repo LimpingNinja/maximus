@@ -81,7 +81,7 @@ cd /path/to/maximus
 
 That gives you 4 nodes on port 2323. You'll see the dashboard come up
 immediately. If you'd rather run headless, add `-H` — see
-[Running MaxTel]({% link maxtel-running.md %}) for all the options.
+[Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}) for all the options.
 
 ### Directory Layout
 
@@ -100,13 +100,13 @@ the base with `-d`):
 
 ## Where to Go Next
 
-- **[Running MaxTel]({% link maxtel-running.md %})** — command-line options,
+- **[Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %})** — command-line options,
   interactive mode, headless mode, and daemon mode
-- **[The Dashboard]({% link maxtel-dashboard.md %})** — understanding the UI
+- **[The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %})** — understanding the UI
   panels and responsive layouts
-- **[Sysop Features]({% link maxtel-sysop-features.md %})** — snoop mode,
+- **[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %})** — snoop mode,
   inline config editor, kicking and restarting nodes
-- **[Troubleshooting]({% link maxtel-troubleshooting.md %})** — common issues
+- **[Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %})** — common issues
   and log files
-- **[Building]({% link building.md %})** — compiling Maximus and MaxTel from
+- **[Building]({{ site.baseurl }}{% link building.md %})** — compiling Maximus and MaxTel from
   source

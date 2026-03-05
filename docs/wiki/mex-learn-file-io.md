@@ -332,4 +332,4 @@ scrolling text.
 
 Next lesson: the lightbar. It's where MEX gets fancy.
 
-**[Lesson 7: "Press Any Key to Be Amazing" →]({% link mex-learn-menus.md %})**
+**[Lesson 7: "Press Any Key to Be Amazing" →]({{ site.baseurl }}{% link mex-learn-menus.md %})**

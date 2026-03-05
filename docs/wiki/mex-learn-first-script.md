@@ -49,7 +49,7 @@ The interesting fields for right now:
 There are dozens more — video mode, help level, privilege level, screen
 dimensions, message stats — but these four are enough to make something
 that feels personal. We'll meet the rest in
-[Lesson 3]({% link mex-learn-user-record.md %}).
+[Lesson 3]({{ site.baseurl }}{% link mex-learn-user-record.md %}).
 
 ## Your First Real Script
 
@@ -94,7 +94,7 @@ int main()
 Entry point. Maximus starts here. The `{` opens the function body, and
 all your variable declarations would go right after it (we don't need any
 local variables in this script, but that's where they'd live — see
-[Script Structure]({% link mex-script-structure.md %}) if you need a
+[Script Structure]({{ site.baseurl }}{% link mex-script-structure.md %}) if you need a
 refresher).
 
 ### Line 5: print() With Variables
@@ -187,7 +187,7 @@ use it a lot at the end of colored output so the next thing on screen
 isn't accidentally bright magenta.
 
 For the full reference, see
-[Display Codes]({% link display-codes.md %}).
+[Display Codes]({{ site.baseurl }}{% link display-codes.md %}).
 
 ## Compile and Run
 
@@ -258,4 +258,4 @@ cooler. The learning is a side effect of the building.
 Your board can talk now. But it's doing all the talking. In the next
 lesson, you'll teach it to *listen*.
 
-**[Lesson 2: "Are You Still There?" →]({% link mex-learn-input-output.md %})**
+**[Lesson 2: "Are You Still There?" →]({{ site.baseurl }}{% link mex-learn-input-output.md %})**

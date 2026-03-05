@@ -85,7 +85,7 @@ A few things jump out from this list:
 
 This is a common misconception. A `.bbs` file *can* be compiled MECCA output
 (and usually is), but it can also be a plain text file containing
-[MCI display codes]({% link display-codes.md %}) — pipe color codes like
+[MCI display codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe color codes like
 `|15` and info codes like `|FN` (caller's first name) or `|TL` (time left).
 Maximus processes MCI codes in `.bbs` files regardless of whether the file
 went through the MECCA compiler.
@@ -445,7 +445,7 @@ files (either hand-crafted or compiled from `.mer` source), and patience
 for debugging code paths that haven't been exercised in years.
 
 The MECCA tokens are documented in the
-[MECCA Language Reference]({% link mecca-language.md %}#rip-graphics) if you
+[MECCA Language Reference]({{ site.baseurl }}{% link mecca-language.md %}#rip-graphics) if you
 want to dig in.
 
 ### For Everyone Else
@@ -459,13 +459,13 @@ to replace but never actually did.
 
 ## See Also
 
-- [Display Files]({% link display-files.md %}) — where display files live and
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — where display files live and
   how they're loaded
-- [MECCA Language]({% link mecca-language.md %}) — the complete token
+- [MECCA Language]({{ site.baseurl }}{% link mecca-language.md %}) — the complete token
   reference for display files
-- [Screen Types]({% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
+- [Screen Types]({{ site.baseurl }}{% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
   terminal modes
-- [Display Codes]({% link display-codes.md %}) — pipe codes for inline color
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes for inline color
   and data substitution
-- [MECCA Compiler]({% link mecca-compiler.md %}) — compiling `.mec` source to
+- [MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}) — compiling `.mec` source to
   `.bbs`

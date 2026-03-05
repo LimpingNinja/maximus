@@ -737,9 +737,9 @@ void main()
 
 ## See Also
 
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — the core
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — the core
   MEX functions for I/O, user data, and file access
-- [Display Codes]({% link display-codes.md %}) — pipe color codes and MCI
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe color codes and MCI
   formatting operators
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction
   to MEX scripting and the compiler

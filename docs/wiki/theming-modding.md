@@ -18,7 +18,7 @@ The semantic color system lets you define named color slots (`|pr` for prompt,
 applied everywhere — menus, prompts, status lines, area listings, and language
 strings.
 
-- [Theme Colors]({% link theme-colors.md %}) — how the color system works,
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — how the color system works,
   the 25-slot reference, `colors.toml` configuration, and editing colors in
   maxcfg
 
@@ -30,10 +30,10 @@ Every prompt, error message, status line, and menu label the BBS displays
 comes from a language TOML file. You can customize every string your callers
 see.
 
-- [Language Files (TOML)]({% link lang-toml.md %}) — the language string
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — the language string
   system, positional parameters, parameter metadata, and the delta overlay
   architecture
-- [Language Editor]({% link lang-editor.md %}) — editing strings
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — editing strings
   interactively in maxcfg
 
 ---
@@ -44,9 +44,9 @@ Lightbar mode gives your callers a modern, arrow-key-driven selection
 experience for area lists and the message reader. The `display.toml` settings
 covered here control area-list and reader lightbar — menus have their own
 per-menu lightbar settings under `[custom_menu]` (see
-[Lightbar Menus]({% link config-lightbar-menus.md %}) in Configuration).
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) in Configuration).
 
-- [Lightbar Customization]({% link theming-lightbar.md %}) — enabling and
+- [Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) — enabling and
   configuring lightbar mode in `display.toml`, highlight styles, boundaries,
   and custom screens
 
@@ -59,7 +59,7 @@ less-visible configuration points that control how area listings, headers,
 footers, date/time formats, and file listings are rendered. These live in
 `display_files.toml` and are easy to overlook.
 
-- [Display Customization]({% link theming-display-customization.md %}) — area
+- [Display Customization]({{ site.baseurl }}{% link theming-display-customization.md %}) — area
   list format strings, headers, footers, date/time formats, and other hidden
   configuration points in `display_files.toml`
 
@@ -70,17 +70,17 @@ footers, date/time formats, and file listings are rendered. These live in
 Display files are the compiled screens (login banners, menus, help pages) and
 display codes are the pipe sequences used inside them.
 
-- [Display Codes]({% link display-codes.md %}) — pipe codes, info codes, and
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes, info codes, and
   formatting operators
-- [Display Files]({% link display-files.md %}) — working with `.mec` source,
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — working with `.mec` source,
   MECCA compilation, and ANSI art
 
 ---
 
 ## See Also
 
-- [Color Codes]({% link mci-color-codes.md %}) — numeric pipe colors and
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric pipe colors and
   theme color code reference
-- [Configuration]({% link configuration.md %}) — core BBS settings
-- [Directory Structure]({% link directory-structure.md %}) — where
+- [Configuration]({{ site.baseurl }}{% link configuration.md %}) — core BBS settings
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — where
   configuration and display files live

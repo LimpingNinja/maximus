@@ -74,7 +74,7 @@ These directories are created on demand — you don't need to set them up
 manually. MaxTel cleans up stale socket and lock files on startup.
 
 For details on what each file does and how MaxTel uses them, see
-[Node Management]({% link node-management.md %}).
+[Node Management]({{ site.baseurl }}{% link node-management.md %}).
 
 ---
 
@@ -126,7 +126,7 @@ INACTIVE ──→ STARTING ──→ WFC ──→ CONNECTED ──→ WFC (rep
 | **WFC** | Socket exists, Maximus is listening. Ready for a caller. |
 | **Connected** | A bridge process is active — a caller is online. |
 | **Stopping** | Node is being shut down (kick, restart, or MaxTel exit). |
-| **Failed** | Node crashed repeatedly within a short window. MaxTel backs off retries. See [Node Management]({% link node-management.md %}) for failure handling. |
+| **Failed** | Node crashed repeatedly within a short window. MaxTel backs off retries. See [Node Management]({{ site.baseurl }}{% link node-management.md %}) for failure handling. |
 
 The important thing to understand: **the Maximus process persists across
 calls.** It doesn't exit after each caller — it returns to WFC and waits for
@@ -137,12 +137,12 @@ that connects the caller's TCP socket to the node's Unix socket.
 
 ## Where to Go Next
 
-- **[Node Management]({% link node-management.md %})** — node states, failure
+- **[Node Management]({{ site.baseurl }}{% link node-management.md %})** — node states, failure
   handling, per-node files, and how MaxTel tracks what's happening
-- **[IPC & Isolation]({% link node-ipc-isolation.md %})** — the Unix socket
+- **[IPC & Isolation]({{ site.baseurl }}{% link node-ipc-isolation.md %})** — the Unix socket
   architecture, bridge process details, PTY layer, and how nodes stay
   isolated from each other
-- **[The Dashboard]({% link maxtel-dashboard.md %})** — watching all of this
+- **[The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %})** — watching all of this
   in real time
-- **[Sysop Features]({% link maxtel-sysop-features.md %})** — snoop, kick,
+- **[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %})** — snoop, kick,
   restart, and config

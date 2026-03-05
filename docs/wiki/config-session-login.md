@@ -166,7 +166,7 @@ actually exists — a typo here means new users start in a nonexistent area.
 
 `logon_priv` sets the default privilege level for new accounts. If you use
 access levels to gate content, this is the "front door" level. The
-[Access Levels]({% link config-access-levels.md %}) page covers the privilege
+[Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) page covers the privilege
 system in detail.
 
 ### Input Timeout
@@ -178,7 +178,7 @@ Maximus handles idle timeout in two stages:
 
 Valid range is 1 to 127 minutes. Remote callers always have this timeout
 active. Local console sessions only time out if `local_input_timeout` is
-enabled in [Core Settings]({% link config-core-settings.md %}).
+enabled in [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}).
 
 ### External Editor
 
@@ -224,11 +224,11 @@ and these settings are ignored.
 
 ## See Also
 
-- [Core Settings]({% link config-core-settings.md %}) — system identity,
+- [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) — system identity,
   paths, and logging (`maximus.toml`)
-- [Equipment & Comm]({% link config-equipment-comm.md %}) — modem and
+- [Equipment & Comm]({{ site.baseurl }}{% link config-equipment-comm.md %}) — modem and
   connection settings (`equipment.toml`)
-- [Access Levels]({% link config-access-levels.md %}) — privilege level
+- [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) — privilege level
   configuration
-- [MaxCFG Setup & Tools]({% link maxcfg-setup-tools.md %}) — editing these
+- [MaxCFG Setup & Tools]({{ site.baseurl }}{% link maxcfg-setup-tools.md %}) — editing these
   settings through the TUI

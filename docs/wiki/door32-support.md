@@ -117,7 +117,7 @@ client.
 
 **Bottom line:** If the door supports Door32, use `xtern_door32`. If it's a
 simple program that reads stdin and writes stdout, use `xtern_run` (see
-[stdio doors]({% link config-door-games.md %}#stdio-doors)).
+[stdio doors]({{ site.baseurl }}{% link config-door-games.md %}#stdio-doors)).
 
 ---
 
@@ -164,9 +164,9 @@ int n = read(fd, buf, sizeof(buf));
 
 ## See Also
 
-- [Door Games]({% link config-door-games.md %}) — overview and stdio door
+- [Door Games]({{ site.baseurl }}{% link config-door-games.md %}) — overview and stdio door
   setup
-- [Dropfile Formats]({% link dropfile-formats.md %}) — all four dropfile
+- [Dropfile Formats]({{ site.baseurl }}{% link dropfile-formats.md %}) — all four dropfile
   formats in detail
-- [MaxTel]({% link maxtel.md %}) — the telnet supervisor that manages
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — the telnet supervisor that manages
   the socket Maximus passes to doors

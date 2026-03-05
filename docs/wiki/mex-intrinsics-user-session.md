@@ -12,7 +12,7 @@ through the `usr` global, and a set of functions for managing time,
 checking privileges, searching the user file, and reading the caller log.
 
 The `usr` struct itself is documented on the
-[Variables & Types]({% link mex-language-vars-types.md %}#user-record) page
+[Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}#user-record) page
 with every field listed. This page covers the *functions* that operate on
 users and sessions — the things that go beyond just reading fields.
 
@@ -556,9 +556,9 @@ if (not carrier())
 
 ## See Also
 
-- [Variables & Types — User Record]({% link mex-language-vars-types.md %}#user-record)
+- [Variables & Types — User Record]({{ site.baseurl }}{% link mex-language-vars-types.md %}#user-record)
   — every field in the `usr` struct
-- [Display & I/O]({% link mex-intrinsics-display-io.md %}) — output, input,
+- [Display & I/O]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %}) — output, input,
   and file functions
-- [Message & File Areas]({% link mex-intrinsics-message-file.md %}) — area
+- [Message & File Areas]({{ site.baseurl }}{% link mex-intrinsics-message-file.md %}) — area
   navigation and message access

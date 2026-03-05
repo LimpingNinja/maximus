@@ -230,5 +230,5 @@ an area, disable it instead of removing it. You can always bring it back.
 
 ## See Also
 
-- [TUI Editor]({% link maxcfg-tui.md %}) — navigation and key bindings
-- [Lightbar Customization]({% link theming-lightbar.md %}) — lightbar navigation in area lists
+- [TUI Editor]({{ site.baseurl }}{% link maxcfg-tui.md %}) — navigation and key bindings
+- [Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) — lightbar navigation in area lists

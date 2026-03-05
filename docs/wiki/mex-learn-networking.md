@@ -383,4 +383,4 @@ There's only one thing left to do: build something that uses *all of it*.
 Next lesson: a capstone mini-game. Everything you've learned, in one
 script. The grand finale of your 4 AM sysop session.
 
-**[Lesson 10: "Game Night" →]({% link mex-learn-mini-game.md %})**
+**[Lesson 10: "Game Night" →]({{ site.baseurl }}{% link mex-learn-mini-game.md %})**

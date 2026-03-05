@@ -89,7 +89,7 @@ Current message area: General
 ```
 
 Info codes can be combined with
-[format operators]({% link mci-format-operators.md %}) for aligned output:
+[format operators]({{ site.baseurl }}{% link mci-format-operators.md %}) for aligned output:
 
 ```
 $R30|UN          translates to: "Kevin Morgan                  "
@@ -99,7 +99,7 @@ $R30|UN          translates to: "Kevin Morgan                  "
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — overview and quick reference
-- [Color Codes]({% link mci-color-codes.md %}) — numeric and theme color codes
-- [Format Operators]({% link mci-format-operators.md %}) — padding, alignment, repetition
-- [Terminal Control]({% link mci-terminal-control.md %}) — screen and cursor codes
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — overview and quick reference
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric and theme color codes
+- [Format Operators]({{ site.baseurl }}{% link mci-format-operators.md %}) — padding, alignment, repetition
+- [Terminal Control]({{ site.baseurl }}{% link mci-terminal-control.md %}) — screen and cursor codes

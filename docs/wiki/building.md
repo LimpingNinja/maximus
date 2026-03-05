@@ -6,7 +6,7 @@ description: "Compiling Maximus BBS from source"
 ---
 
 Most sysops grab a release package and skip straight to
-[Quick Start]({% link quick-start.md %}). But if you want to build from source
+[Quick Start]({{ site.baseurl }}{% link quick-start.md %}). But if you want to build from source
 — whether you're hacking on the code, targeting an unusual platform, or just
 prefer to compile everything yourself — this page has you covered.
 
@@ -219,16 +219,16 @@ before running.
 
 Fresh installs ship with ready-to-use TOML files — no conversion needed.
 
-See [Legacy Migration]({% link legacy-migration.md %}) for the full guide
-covering both [CTL → TOML]({% link legacy-ctl-to-toml.md %}) configuration
-export and [MAD → TOML]({% link legacy-convert-mad.md %}) language conversion.
+See [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) for the full guide
+covering both [CTL → TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) configuration
+export and [MAD → TOML]({{ site.baseurl }}{% link legacy-convert-mad.md %}) language conversion.
 
 ---
 
 ## Post-Install
 
 After `make install`, you have a working BBS skeleton in your PREFIX directory.
-See [Directory Structure]({% link directory-structure.md %}) for the full
+See [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) for the full
 layout.
 
 ### Key Utilities
@@ -291,7 +291,7 @@ cd $PREFIX
 bin/maxtel -p 2323 -n 4         # Start 4 nodes on port 2323
 ```
 
-See [MaxTel (Telnet)]({% link maxtel.md %}) for full documentation including
+See [MaxTel (Telnet)]({{ site.baseurl }}{% link maxtel.md %}) for full documentation including
 headless and daemon modes.
 
 **Alternative: Direct execution**
@@ -465,11 +465,11 @@ dtruss ./bin/max -w -pt1     # macOS
 
 ## See Also
 
-- [Directory Structure]({% link directory-structure.md %}) — runtime directory
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — runtime directory
   layout after installation
-- [MaxTel (Telnet)]({% link maxtel.md %}) — running your BBS with the telnet
+- [MaxTel (Telnet)]({{ site.baseurl }}{% link maxtel.md %}) — running your BBS with the telnet
   supervisor
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — command-line configuration and
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — command-line configuration and
   legacy CTL → TOML conversion
-- [Updates & Changelog]({% link updates.md %}) — release notes and version
+- [Updates & Changelog]({{ site.baseurl }}{% link updates.md %}) — release notes and version
   history

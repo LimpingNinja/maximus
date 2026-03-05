@@ -271,4 +271,4 @@ whole pattern.
 You've seen the shape. Now let's fill it in — the next page walks you
 through writing, compiling, and running your first script from scratch.
 
-**[Hello World →]({% link mex-hello-world.md %})**
+**[Hello World →]({{ site.baseurl }}{% link mex-hello-world.md %})**

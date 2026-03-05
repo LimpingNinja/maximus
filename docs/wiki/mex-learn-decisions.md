@@ -325,4 +325,4 @@ Copy-paste? No.
 Next lesson: loops. Doing things more than once, without writing the same
 code more than once.
 
-**[Lesson 5: "One More Time, With Feeling" →]({% link mex-learn-loops.md %})**
+**[Lesson 5: "One More Time, With Feeling" →]({{ site.baseurl }}{% link mex-learn-loops.md %})**

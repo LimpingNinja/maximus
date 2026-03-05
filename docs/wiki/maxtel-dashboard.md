@@ -163,16 +163,16 @@ For large terminals:
 | `Q` | Quit MaxTel (shuts down all nodes gracefully) |
 
 For sysop commands (Snoop, Kick, Restart, Config), see
-[Sysop Features]({% link maxtel-sysop-features.md %}).
+[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}).
 
 ---
 
 ## See Also
 
-- [MaxTel]({% link maxtel.md %}) — overview, features, and getting started
-- [Running MaxTel]({% link maxtel-running.md %}) — command-line options and
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — overview, features, and getting started
+- [Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}) — command-line options and
   operating modes
-- [Sysop Features]({% link maxtel-sysop-features.md %}) — snoop, config,
+- [Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}) — snoop, config,
   kick, and restart
-- [Troubleshooting]({% link maxtel-troubleshooting.md %}) — common problems
+- [Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %}) — common problems
   and log files

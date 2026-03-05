@@ -381,4 +381,4 @@ from an API, and bring it back to the terminal?
 Next lesson: HTTP requests, JSON parsing, and bringing live data to
 your board.
 
-**[Lesson 9: "Phone Home" →]({% link mex-learn-networking.md %})**
+**[Lesson 9: "Phone Home" →]({{ site.baseurl }}{% link mex-learn-networking.md %})**

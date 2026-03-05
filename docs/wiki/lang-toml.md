@@ -110,7 +110,7 @@ Language strings support the standard set of escapes:
 ## Display Codes in Language Strings
 
 Language strings support the same display codes documented in
-[Display Codes]({% link display-codes.md %}). Here are the ones you'll run
+[Display Codes]({{ site.baseurl }}{% link display-codes.md %}). Here are the ones you'll run
 into most:
 
 **Colors** — `|00` through `|15` for foreground, `|16` through `|23` for
@@ -196,7 +196,7 @@ A few things to watch for:
 
 If you'd rather have a guided experience, maxcfg includes a built-in language
 string browser and editor. See
-[Language Editor]({% link lang-editor.md %}) for details.
+[Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) for details.
 
 ### What You Can Safely Change
 
@@ -282,7 +282,7 @@ maxcfg --convert-lang config/lang/legacy/english.mad \
        --lang-out-dir config/lang --merge-only
 ```
 
-For the full CLI reference, see [maxcfg CLI]({% link maxcfg-cli.md %}).
+For the full CLI reference, see [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}).
 
 ---
 
@@ -368,19 +368,19 @@ numeric IDs to key names, not to translated text.
 | Task | How |
 |------|-----|
 | Change a prompt | Edit `english.toml`, restart BBS |
-| Add a color | Insert `\|NN` color code (see [Display Codes]({% link display-codes.md %})) |
+| Add a color | Insert `\|NN` color code (see [Display Codes]({{ site.baseurl }}{% link display-codes.md %})) |
 | Reorder parameters | Swap `\|!1` and `\|!2` (keep suffixes) |
-| Edit via maxcfg | Content → Language Strings (see [Language Editor]({% link lang-editor.md %})) |
-| Add custom strings | See [Extending with MEX/C]({% link extending-mex-c.md %}) |
-| Convert from legacy | See [Language Conversion]({% link lang-conversion.md %}) |
-| CLI reference | See [maxcfg CLI]({% link maxcfg-cli.md %}) |
+| Edit via maxcfg | Content → Language Strings (see [Language Editor]({{ site.baseurl }}{% link lang-editor.md %})) |
+| Add custom strings | See [Extending with MEX/C]({{ site.baseurl }}{% link extending-mex-c.md %}) |
+| Convert from legacy | See [Language Conversion]({{ site.baseurl }}{% link lang-conversion.md %}) |
+| CLI reference | See [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) |
 
 ---
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — full reference for pipe colors, MCI codes, formatting operators, and terminal control
-- [Language Editor]({% link lang-editor.md %}) — interactive language string browser and editor in maxcfg
-- [Language Conversion]({% link lang-conversion.md %}) — converting legacy `.mad` files to TOML
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — command-line reference for delta application and conversion
-- [Theme Colors]({% link theme-colors.md %}) — the semantic color system that powers `|tx`, `|pr`, `|er` and friends
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — full reference for pipe colors, MCI codes, formatting operators, and terminal control
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — interactive language string browser and editor in maxcfg
+- [Language Conversion]({{ site.baseurl }}{% link lang-conversion.md %}) — converting legacy `.mad` files to TOML
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — command-line reference for delta application and conversion
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — the semantic color system that powers `|tx`, `|pr`, `|er` and friends

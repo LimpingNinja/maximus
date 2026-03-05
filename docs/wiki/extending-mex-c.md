@@ -14,7 +14,7 @@ language API from both MEX and C.
 
 This page covers the language extension system. For adding entirely new MEX
 intrinsic *functions* (the `word EXPENTRY fn(void)` pattern), see
-[Adding Intrinsics]({% link mex-adding-intrinsics.md %}).
+[Adding Intrinsics]({{ site.baseurl }}{% link mex-adding-intrinsics.md %}).
 
 ---
 
@@ -378,9 +378,9 @@ void main()
 
 ## See Also
 
-- [Adding Intrinsics]({% link mex-adding-intrinsics.md %}) — how to add
+- [Adding Intrinsics]({{ site.baseurl }}{% link mex-adding-intrinsics.md %}) — how to add
   new MEX functions backed by C code
-- [Language Files (TOML)]({% link lang-toml.md %}) — the main language file
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — the main language file
   format and built-in heaps
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction
   to MEX scripting

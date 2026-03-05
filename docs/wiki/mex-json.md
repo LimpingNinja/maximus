@@ -584,9 +584,9 @@ Run it from the MEX Scripts menu (option **E**) or compile it yourself:
 
 ## See Also
 
-- [MEX Sockets]({% link mex-sockets.md %}) — HTTP/HTTPS requests and raw TCP
+- [MEX Sockets]({{ site.baseurl }}{% link mex-sockets.md %}) — HTTP/HTTPS requests and raw TCP
   sockets that pair naturally with JSON
-- [Display Codes]({% link display-codes.md %}) — color codes for making your
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — color codes for making your
   script output look sharp
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction to
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction to
   MEX scripting

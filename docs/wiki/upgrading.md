@@ -13,7 +13,7 @@ whole process takes a few minutes.
 
 If you're coming from legacy Maximus 3.0 (with `.ctl` and `.mad` files), that's
 a migration, not an upgrade — see
-[Legacy Migration]({% link legacy-migration.md %}) instead.
+[Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) instead.
 
 ---
 
@@ -79,7 +79,7 @@ runtime default mechanism handles forward compatibility.
 ## Language Files: Delta Upgrades
 
 Language strings (`english.toml`) are upgraded via the
-[delta overlay system]({% link legacy-delta-overlays.md %}). Each release ships
+[delta overlay system]({{ site.baseurl }}{% link legacy-delta-overlays.md %}). Each release ships
 an updated `delta_english.toml` that may contain:
 
 - New parameter metadata (names, types, descriptions for the language editor)
@@ -109,7 +109,7 @@ an updated `delta_english.toml` that may contain:
 Your language customizations are preserved. The delta only touches metadata
 and (optionally) theme color mappings.
 
-See [Delta Overlays]({% link legacy-delta-overlays.md %}) for details on
+See [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) for details on
 the tier system and merge modes.
 
 ---
@@ -146,20 +146,20 @@ If you are upgrading from a classic Maximus 3.0 installation (with `.ctl`
 configuration files and `.mad` language files), this is not a version-to-version
 upgrade — it is a migration to a new configuration system.
 
-See [Legacy Migration]({% link legacy-migration.md %}) for the full guide
-covering [CTL → TOML]({% link legacy-ctl-to-toml.md %}) configuration export
-and [MAD → TOML]({% link legacy-convert-mad.md %}) language conversion.
+See [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) for the full guide
+covering [CTL → TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) configuration export
+and [MAD → TOML]({{ site.baseurl }}{% link legacy-convert-mad.md %}) language conversion.
 
 ---
 
 ## See Also
 
-- [Quick Start]({% link quick-start.md %}) — fresh install from a release
+- [Quick Start]({{ site.baseurl }}{% link quick-start.md %}) — fresh install from a release
   package
-- [Legacy Migration]({% link legacy-migration.md %}) — migrating from
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — migrating from
   Maximus 3.0
-- [Delta Overlays]({% link legacy-delta-overlays.md %}) — the delta overlay
+- [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) — the delta overlay
   system for language file upgrades
-- [Updates & Changelog]({% link updates.md %}) — release notes and change
+- [Updates & Changelog]({{ site.baseurl }}{% link updates.md %}) — release notes and change
   history
-- [Building Maximus]({% link building.md %}) — building from source
+- [Building Maximus]({{ site.baseurl }}{% link building.md %}) — building from source

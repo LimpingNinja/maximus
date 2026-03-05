@@ -150,7 +150,7 @@ When you press `S` to snoop a node, MaxTel reads from the PTY master (same
 as draining, but now it writes the output to your terminal) and writes your
 keystrokes to the PTY master (which Maximus reads as input). This is how
 you see exactly what the caller sees and can type into the session. See
-[Sysop Features]({% link maxtel-sysop-features.md %}) for the full snoop
+[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}) for the full snoop
 mode reference.
 
 ---
@@ -224,11 +224,11 @@ Bridge exits → MaxTel detects via SIGCHLD → node marked WFC
 
 ## See Also
 
-- **[Multi-Node Operation]({% link multi-node-operation.md %})** — the big
+- **[Multi-Node Operation]({{ site.baseurl }}{% link multi-node-operation.md %})** — the big
   picture, lifecycle, and how nodes are launched
-- **[Node Management]({% link node-management.md %})** — states, per-node
+- **[Node Management]({{ site.baseurl }}{% link node-management.md %})** — states, per-node
   files, and failure handling
-- **[Sysop Features]({% link maxtel-sysop-features.md %})** — snoop mode
+- **[Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %})** — snoop mode
   uses the PTY layer described here
-- **[Troubleshooting]({% link maxtel-troubleshooting.md %})** — when the
+- **[Troubleshooting]({{ site.baseurl }}{% link maxtel-troubleshooting.md %})** — when the
   plumbing breaks

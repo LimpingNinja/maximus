@@ -54,7 +54,7 @@ bin/maxcfg --export-nextgen /path/to/max.ctl --export-dir /tmp/ng-config
 The export is **one-way** — CTL in, TOML out. Your original `.ctl` files are
 not modified or deleted.
 
-See [maxcfg CLI]({% link maxcfg-cli.md %}) for the full flag reference.
+See [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) for the full flag reference.
 
 ---
 
@@ -89,7 +89,7 @@ Once the TOML files are generated:
    files. If your legacy install used different directory names (e.g., `etc/`
    vs. `config/`, `m/` vs. `scripts/`), you may need to update path values to
    match the Maximus NG
-   [directory structure]({% link directory-structure.md %}).
+   [directory structure]({{ site.baseurl }}{% link directory-structure.md %}).
 
 3. **Verify access levels.** Custom privilege levels and flag definitions should
    come through intact, but confirm the numeric mappings match your
@@ -121,13 +121,13 @@ Once the TOML files are generated:
 
 ## See Also
 
-- [Legacy Migration]({% link legacy-migration.md %}) — migration overview and
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — migration overview and
   the MAD → TOML language conversion path
-- [Convert Legacy MAD]({% link legacy-convert-mad.md %}) — converting language
+- [Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %}) — converting language
   files
-- [Delta Overlays]({% link legacy-delta-overlays.md %}) — the delta system for
+- [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) — the delta system for
   language file upgrades
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — full command-line reference for
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — full command-line reference for
   `--export-nextgen` and other flags
-- [Directory Structure]({% link directory-structure.md %}) — where files live
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — where files live
   after installation

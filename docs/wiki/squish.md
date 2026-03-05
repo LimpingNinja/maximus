@@ -36,22 +36,22 @@ Squish is deeply tied to FTN networking — its configuration only makes sense
 in that context. Rather than duplicate that material here, the FidoNet
 documentation covers everything you need:
 
-- **[FidoNet & FTN Networking]({% link fidonet.md %})** — what FTN is, how
+- **[FidoNet & FTN Networking]({{ site.baseurl }}{% link fidonet.md %})** — what FTN is, how
   mail flows, and where Squish fits in the stack
-- **[Joining a Network]({% link fidonet-joining-network.md %})** — the
+- **[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %})** — the
   step-by-step tutorial that walks you through setting up Squish as part of
   your first network connection
-- **[Squish Tosser]({% link fidonet-squish.md %})** — the full `squish.cfg`
+- **[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %})** — the full `squish.cfg`
   reference with all configuration directives
-- **[Echomail]({% link fidonet-echomail.md %})** — dupe checking, SEEN-BY
+- **[Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %})** — dupe checking, SEEN-BY
   lines, passthru areas, and echomail security
-- **[Netmail & Routing]({% link fidonet-netmail-routing.md %})** — private
+- **[Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %})** — private
   messaging and mail routing configuration
 
 ---
 
 ## See Also
 
-- [SqaFix]({% link sqafix.md %}) — automatic echomail area management
-- [MECCA Compiler]({% link mecca-compiler.md %}) — another tool in the
+- [SqaFix]({{ site.baseurl }}{% link sqafix.md %}) — automatic echomail area management
+- [MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}) — another tool in the
   Maximus suite

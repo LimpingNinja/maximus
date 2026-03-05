@@ -5,7 +5,7 @@ section: "administration"
 description: "What to back up, how often, where to put it, and how to get your board back when things go sideways"
 ---
 
-In the [General Administration]({% link admin-general.md %}) overview, we
+In the [General Administration]({{ site.baseurl }}{% link admin-general.md %}) overview, we
 said "a backup you've never restored from is a hope, not a plan." This page
 is about turning hope into a plan. We'll cover exactly what files matter,
 how to back them up safely, and — the part nobody likes to think about —
@@ -437,7 +437,7 @@ don't happen.
 ## Backup Schedule {#schedule}
 
 Here's a practical schedule aligned with the
-[General Administration]({% link admin-general.md %}) rhythm:
+[General Administration]({{ site.baseurl }}{% link admin-general.md %}) rhythm:
 
 | What | Frequency | Method |
 |------|-----------|--------|
@@ -574,11 +574,11 @@ desperately need them.
 
 ## See Also
 
-- [General Administration]({% link admin-general.md %}) — the daily rhythm
+- [General Administration]({{ site.baseurl }}{% link admin-general.md %}) — the daily rhythm
   and best practices overview
-- [User Management]({% link admin-user-management.md %}) — protecting and
+- [User Management]({{ site.baseurl }}{% link admin-user-management.md %}) — protecting and
   managing user accounts
-- [Directory Structure]({% link directory-structure.md %}) — the full
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — the full
   layout of files and paths
-- [MaxTel]({% link maxtel.md %}) — stopping and starting the BBS for
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — stopping and starting the BBS for
   maintenance windows

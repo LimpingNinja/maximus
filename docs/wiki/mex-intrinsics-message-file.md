@@ -71,7 +71,7 @@ reimplementing any of it.
 | Function | What It Does |
 |----------|-------------|
 | [`menu_cmd()`](#menu-cmd) | Execute any Maximus menu command |
-| [`display_file()`](#display-file-ref) | Display an ANSI/ASCII file (see [Display & I/O]({% link mex-intrinsics-display-io.md %})) |
+| [`display_file()`](#display-file-ref) | Display an ANSI/ASCII file (see [Display & I/O]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %})) |
 
 ---
 
@@ -361,7 +361,7 @@ void main()
 
 {: #display-file-ref}
 > **Note:** For displaying files, you can also use `display_file()` directly
-> — see [Display & I/O]({% link mex-intrinsics-display-io.md %}#display-file).
+> — see [Display & I/O]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %}#display-file).
 
 ---
 
@@ -475,11 +475,11 @@ These constants are defined in `max_menu.mh`. Include it when you use
 
 ## See Also
 
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — overview of
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — overview of
   all intrinsic categories
-- [Display & I/O]({% link mex-intrinsics-display-io.md %}) — output, input,
+- [Display & I/O]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %}) — output, input,
   and file functions
-- [User & Session]({% link mex-intrinsics-user-session.md %}) — user record
+- [User & Session]({{ site.baseurl }}{% link mex-intrinsics-user-session.md %}) — user record
   access and session management
-- [Variables & Types]({% link mex-language-vars-types.md %}#global-data) —
+- [Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}#global-data) —
   the `marea`, `farea`, `msg` global structs

@@ -59,7 +59,7 @@ You will need:
 
 If you are starting from a fresh install, Maximus ships with a pre-converted
 `english.toml` — you can skip straight to
-[Language Files (TOML)]({% link lang-toml.md %}).
+[Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}).
 
 ---
 
@@ -298,7 +298,7 @@ string directly in the `.toml` file or via the maxcfg language editor.
 
 ## See Also
 
-- [Language Files (TOML)]({% link lang-toml.md %}) — guide to the TOML language file system, customization, and delta overlays
-- [Language Editor]({% link lang-editor.md %}) — interactive language string browser and editor in maxcfg
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — full command-line reference for maxcfg
-- [Display Codes]({% link display-codes.md %}) — pipe color codes, MCI codes, and formatting operators used in language strings
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — guide to the TOML language file system, customization, and delta overlays
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — interactive language string browser and editor in maxcfg
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — full command-line reference for maxcfg
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe color codes, MCI codes, and formatting operators used in language strings

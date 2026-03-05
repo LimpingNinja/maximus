@@ -259,7 +259,7 @@ base. Copy it to your backup location alongside your TOML configuration.
 
 ## See Also
 
-- [TUI Editor]({% link maxcfg-tui.md %}) — navigation and key bindings
-- [User Management]({% link admin-user-management.md %}) — administrative guide
-- [Access Levels]({% link config-access-levels.md %}) — privilege level definitions
-- [Security & Access]({% link config-security-access.md %}) — access control system
+- [TUI Editor]({{ site.baseurl }}{% link maxcfg-tui.md %}) — navigation and key bindings
+- [User Management]({{ site.baseurl }}{% link admin-user-management.md %}) — administrative guide
+- [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) — privilege level definitions
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — access control system

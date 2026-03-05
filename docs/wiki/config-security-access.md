@@ -32,7 +32,7 @@ The level determines:
 - **Baud gates** — minimum connection speed to log on or transfer files
 - **Login file** — an optional display file shown at logon for that class
 
-See [Access Levels]({% link config-access-levels.md %}) for the full
+See [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) for the full
 reference.
 
 ### 2. Flags
@@ -47,7 +47,7 @@ Each access level class carries two sets of string flags:
 Flags are the fine-grained knobs. Two classes can have the same privilege level
 but different flags — one might see hidden files while the other can't.
 
-See [Privileges & Flags]({% link config-privileges-flags.md %}) for a
+See [Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %}) for a
 complete flag reference.
 
 ### 3. Access Control Strings (ACS)
@@ -84,9 +84,9 @@ Here's the flow when a caller logs on:
    within it.
 
 New users start at the level defined by `logon_priv` in
-[Session & Login]({% link config-session-login.md %}). You promote users by
+[Session & Login]({{ site.baseurl }}{% link config-session-login.md %}). You promote users by
 changing their privilege level in the
-[User Editor]({% link maxcfg-user-editor.md %}).
+[User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}).
 
 ---
 
@@ -129,11 +129,11 @@ logon if you're running MaxTel with hot-reload).
 
 ## See Also
 
-- [Access Levels]({% link config-access-levels.md %}) — per-field reference
+- [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) — per-field reference
   for `access_levels.toml`
-- [Privileges & Flags]({% link config-privileges-flags.md %}) — complete
+- [Privileges & Flags]({{ site.baseurl }}{% link config-privileges-flags.md %}) — complete
   flag reference with behavior descriptions
-- [Session & Login]({% link config-session-login.md %}) — `logon_priv` and
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — `logon_priv` and
   other policy settings
-- [MaxCFG User Editor]({% link maxcfg-user-editor.md %}) — promoting and
+- [MaxCFG User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — promoting and
   managing users

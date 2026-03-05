@@ -159,7 +159,7 @@ login screen, for example.
 Opens a category picker with four groups of color settings. These control the
 default colors your callers see for menus, file listings, message displays, and
 the full-screen reader. For more on how Maximus handles colors, see
-[Theme Colors]({% link theme-colors.md %}).
+[Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}).
 
 ![MaxCFG Default Colors Picker]({{ site.baseurl }}/assets/images/screenshots/maxcfg-default-color-picker.png)
 
@@ -366,8 +366,8 @@ your board's name. Same interface as Bad Users.
 
 ## See Also
 
-- [TUI Editor]({% link maxcfg-tui.md %}) — navigation and key bindings
-- [Menu Editor]({% link maxcfg-menu-editor.md %}) — BBS menu editing
-- [Area Editor]({% link maxcfg-areas.md %}) — message and file area management
-- [User Editor]({% link maxcfg-user-editor.md %}) — user account management
-- [Configuration]({% link configuration.md %}) — TOML configuration reference
+- [TUI Editor]({{ site.baseurl }}{% link maxcfg-tui.md %}) — navigation and key bindings
+- [Menu Editor]({{ site.baseurl }}{% link maxcfg-menu-editor.md %}) — BBS menu editing
+- [Area Editor]({{ site.baseurl }}{% link maxcfg-areas.md %}) — message and file area management
+- [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — user account management
+- [Configuration]({{ site.baseurl }}{% link configuration.md %}) — TOML configuration reference

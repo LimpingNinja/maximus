@@ -6,12 +6,12 @@ description: "Complete reference for the MECCA display file language — colors,
 permalink: /mecca-language/
 ---
 
-If [pipe codes]({% link display-codes.md %}) are the quick way to drop a
+If [pipe codes]({{ site.baseurl }}{% link display-codes.md %}) are the quick way to drop a
 username or splash of color into a prompt, MECCA is the power tool. It's the
 language behind every compiled display file on your board — the welcome
 screen, the menu art, the new-user questionnaire, the sysop-only status
 panel. A `.mec` source file is plain text with special tokens in square
-brackets. The [MECCA compiler]({% link mecca-compiler.md %}) turns it into a
+brackets. The [MECCA compiler]({{ site.baseurl }}{% link mecca-compiler.md %}) turns it into a
 `.bbs` binary that Maximus loads at runtime.
 
 MECCA gives you color, cursor positioning, conditional display based on
@@ -24,9 +24,9 @@ have to maintain separate ASCII and ANSI versions of the same screen.
 
 This page is the complete language reference. If you're looking for how to
 invoke the compiler itself, see
-[MECCA Compiler]({% link mecca-compiler.md %}). If you want pipe codes for
+[MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}). If you want pipe codes for
 inline use in prompts and language strings, see
-[Display Codes]({% link display-codes.md %}).
+[Display Codes]({{ site.baseurl }}{% link display-codes.md %}).
 
 ---
 
@@ -1126,7 +1126,7 @@ MECCA can launch external programs and commands directly from display files:
 ```
 
 `[menu_cmd]` is the Swiss army knife — it can invoke any command from the
-[Menu Options]({% link config-menu-options.md %}) reference. For example:
+[Menu Options]({{ site.baseurl }}{% link config-menu-options.md %}) reference. For example:
 
 ```
 [menu_cmd goodbye]
@@ -1321,13 +1321,13 @@ are documented and maintained.
 
 ## See Also
 
-- [MECCA Compiler]({% link mecca-compiler.md %}) — command-line usage, flags,
+- [MECCA Compiler]({{ site.baseurl }}{% link mecca-compiler.md %}) — command-line usage, flags,
   and error messages
-- [Display Files]({% link display-files.md %}) — where display files live and
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — where display files live and
   how they're loaded
-- [Display Codes]({% link display-codes.md %}) — pipe codes, info codes, and
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes, info codes, and
   formatting operators
-- [Screen Types]({% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
+- [Screen Types]({{ site.baseurl }}{% link display-screen-types.md %}) — TTY, ANSI, and AVATAR
   terminal modes
-- [ANSI Art & RIP Graphics]({% link display-ansi-rip.md %}) — art workflows
+- [ANSI Art & RIP Graphics]({{ site.baseurl }}{% link display-ansi-rip.md %}) — art workflows
   and RIP status

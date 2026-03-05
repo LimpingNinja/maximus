@@ -190,7 +190,7 @@ order based on the caller's terminal type:
 
 1. **RIP callers** — Maximus first checks for a `.rbs` file with the same
    base name. If found, it's displayed instead of the `.bbs` file. (See
-   [ANSI Art & RIP Graphics]({% link display-ansi-rip.md %}) for the state
+   [ANSI Art & RIP Graphics]({{ site.baseurl }}{% link display-ansi-rip.md %}) for the state
    of RIP support.)
 
 2. **All callers** — The `.bbs` file is displayed. Maximus handles the
@@ -237,11 +237,11 @@ columns wide — use it to conditionally show wider content.
 
 ## See Also
 
-- [Display Files]({% link display-files.md %}) — how display files work and
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — how display files work and
   where they live
-- [MECCA Language]({% link mecca-language.md %}) — the complete token
+- [MECCA Language]({{ site.baseurl }}{% link mecca-language.md %}) — the complete token
   reference, including `[color]`/`[nocolor]` blocks
-- [ANSI Art & RIP Graphics]({% link display-ansi-rip.md %}) — art creation
+- [ANSI Art & RIP Graphics]({{ site.baseurl }}{% link display-ansi-rip.md %}) — art creation
   workflows and RIP status
-- [Display Codes]({% link display-codes.md %}) — pipe codes for inline color
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes for inline color
   and data substitution

@@ -114,13 +114,13 @@ automatically.
 
 ## See Also
 
-- [Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %})
+- [Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %})
   — the full logging and troubleshooting guide, including log symbols,
   rotation, and a general troubleshooting playbook
-- [MaxTel]({% link maxtel.md %}) — overview, features, and getting started
-- [Running MaxTel]({% link maxtel-running.md %}) — command-line options and
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — overview, features, and getting started
+- [Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}) — command-line options and
   operating modes
-- [The Dashboard]({% link maxtel-dashboard.md %}) — UI panels and responsive
+- [The Dashboard]({{ site.baseurl }}{% link maxtel-dashboard.md %}) — UI panels and responsive
   layouts
-- [Sysop Features]({% link maxtel-sysop-features.md %}) — snoop, config,
+- [Sysop Features]({{ site.baseurl }}{% link maxtel-sysop-features.md %}) — snoop, config,
   kick, and restart

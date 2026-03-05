@@ -12,7 +12,7 @@ BBS experience — and it's entirely sysop-configurable.
 
 This page is the authoritative reference for all `[custom_menu]` settings.
 For a quick-start on enabling lightbar navigation specifically, see
-[Lightbar Menus]({% link config-lightbar-menus.md %}).
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}).
 
 ---
 
@@ -529,12 +529,12 @@ Suggested safe progression:
 
 ## See Also
 
-- [Lightbar Menus]({% link config-lightbar-menus.md %}) — quick-start for
+- [Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) — quick-start for
   enabling lightbar navigation
-- [Menu System]({% link config-menu-system.md %}) — menu system overview
-- [Menu Definitions]({% link config-menu-definitions.md %}) — TOML menu file
+- [Menu System]({{ site.baseurl }}{% link config-menu-system.md %}) — menu system overview
+- [Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %}) — TOML menu file
   format, option commands, and modifiers
-- [Lightbar Customization]({% link theming-lightbar.md %}) — area-list and
+- [Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}) — area-list and
   message reader lightbar settings in `display.toml`
-- [Theming & Modding]({% link theming-modding.md %}) — overview of all
+- [Theming & Modding]({{ site.baseurl }}{% link theming-modding.md %}) — overview of all
   customization options

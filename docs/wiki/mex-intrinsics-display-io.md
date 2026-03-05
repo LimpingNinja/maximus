@@ -216,7 +216,7 @@ print(COL_YELLOW, "Title\n", COL_GRAY);    // yellow heading
 ```
 
 For full-screen positioning and attribute control, use the
-[UI Primitives]({% link mex-ui-primitives.md %}) (`ui_goto`, `ui_set_attr`,
+[UI Primitives]({{ site.baseurl }}{% link mex-ui-primitives.md %}) (`ui_goto`, `ui_set_attr`,
 etc.).
 
 ---
@@ -716,11 +716,11 @@ Returns system path strings. `prm_string(0)` returns the BBS system name.
 
 ## See Also
 
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — overview of
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — overview of
   all intrinsic categories
-- [String Operations]({% link mex-language-string-ops.md %}) — string
+- [String Operations]({{ site.baseurl }}{% link mex-language-string-ops.md %}) — string
   manipulation functions
-- [UI Primitives]({% link mex-ui-primitives.md %}) — full-screen UI:
+- [UI Primitives]({{ site.baseurl }}{% link mex-ui-primitives.md %}) — full-screen UI:
   positioning, fields, lightbars, forms
-- [User & Session]({% link mex-intrinsics-user-session.md %}) — user record
+- [User & Session]({{ site.baseurl }}{% link mex-intrinsics-user-session.md %}) — user record
   access and session management

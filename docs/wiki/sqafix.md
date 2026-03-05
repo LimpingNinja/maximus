@@ -32,20 +32,20 @@ SqaFix can also handle:
 SqaFix is part of the FTN networking stack and its configuration lives
 alongside Squish's. The FidoNet documentation covers it in context:
 
-- **[FidoNet & FTN Networking]({% link fidonet.md %})** — the big picture
+- **[FidoNet & FTN Networking]({{ site.baseurl }}{% link fidonet.md %})** — the big picture
   of how FTN works and where area management fits in
-- **[Joining a Network]({% link fidonet-joining-network.md %})** —
+- **[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %})** —
   setting up your first network connection, including area subscriptions
-- **[Echomail]({% link fidonet-echomail.md %})** — echomail areas,
+- **[Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %})** — echomail areas,
   subscriptions, and how SqaFix automates area management
-- **[Squish Tosser]({% link fidonet-squish.md %})** — Squish
+- **[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %})** — Squish
   configuration, which SqaFix modifies when processing area requests
 
 ---
 
 ## See Also
 
-- [Squish]({% link squish.md %}) — the mail tosser that SqaFix works
+- [Squish]({{ site.baseurl }}{% link squish.md %}) — the mail tosser that SqaFix works
   alongside
-- [Netmail & Routing]({% link fidonet-netmail-routing.md %}) — how
+- [Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %}) — how
   areafix requests travel as netmail

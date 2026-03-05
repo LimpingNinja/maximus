@@ -79,11 +79,11 @@ output. The defaults (`["xon", "cts"]`) are appropriate for most setups.
 
 ## See Also
 
-- [Core Settings]({% link config-core-settings.md %}) — system identity,
+- [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) — system identity,
   paths, and logging (`maximus.toml`)
-- [Session & Login]({% link config-session-login.md %}) — user experience and
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — user experience and
   policy settings (`session.toml`)
-- [MaxTel]({% link maxtel.md %}) — the telnet supervisor that replaces
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — the telnet supervisor that replaces
   direct modem handling
-- [Running MaxTel]({% link maxtel-running.md %}) — starting MaxTel in
+- [Running MaxTel]({{ site.baseurl }}{% link maxtel-running.md %}) — starting MaxTel in
   various modes

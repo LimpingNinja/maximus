@@ -8,7 +8,7 @@ description: "Interactive text-mode configuration editor for Maximus BBS"
 If you've ever used RemoteAccess Config or KBBS Setup, MaxCFG's TUI will feel
 immediately familiar. It's an ncurses-based configuration editor — menus,
 forms, list pickers, tree views, color pickers, and a full menu editor with
-[live preview]({% link maxcfg-menu-editor.md %}#live-preview). Everything is
+[live preview]({{ site.baseurl }}{% link maxcfg-menu-editor.md %}#live-preview). Everything is
 keyboard-driven, and you can configure your entire BBS without touching a
 single config file by hand.
 
@@ -70,7 +70,7 @@ The Setup menu configures core system settings through form-based editors.
 | **Protocols** | — | External transfer protocol definitions (up to 64) |
 
 For details on each form, see
-[Setup & Tools]({% link maxcfg-setup-tools.md %}).
+[Setup & Tools]({{ site.baseurl }}{% link maxcfg-setup-tools.md %}).
 
 ### Content
 
@@ -82,8 +82,8 @@ For details on each form, see
 | **Reader Settings** | QWK offline reader configuration |
 | **Display Files** | Same as Setup → Display Files (convenience shortcut) |
 
-For the menu editor, see [Menu Editor]({% link maxcfg-menu-editor.md %}).
-For the language browser, see [Language Editor]({% link lang-editor.md %}).
+For the menu editor, see [Menu Editor]({{ site.baseurl }}{% link maxcfg-menu-editor.md %}).
+For the language browser, see [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}).
 
 ### Messages
 
@@ -93,7 +93,7 @@ For the language browser, see [Language Editor]({% link lang-editor.md %}).
 | **Message Divisions** | Flat list editor for divisions (edit/insert/toggle) |
 | **Message Areas** | Flat list editor for areas within a division |
 
-For details, see [Area Editor]({% link maxcfg-areas.md %}).
+For details, see [Area Editor]({{ site.baseurl }}{% link maxcfg-areas.md %}).
 
 ### Files
 
@@ -103,7 +103,7 @@ For details, see [Area Editor]({% link maxcfg-areas.md %}).
 | **File Divisions** | Flat list editor for divisions |
 | **File Areas** | Flat list editor for areas within a division |
 
-For details, see [Area Editor]({% link maxcfg-areas.md %}).
+For details, see [Area Editor]({{ site.baseurl }}{% link maxcfg-areas.md %}).
 
 ### Users
 
@@ -113,7 +113,7 @@ For details, see [Area Editor]({% link maxcfg-areas.md %}).
 | **Bad Users** | Text list of banned usernames |
 | **Reserved Names** | Text list of protected/reserved names |
 
-For details, see [User Editor]({% link maxcfg-user-editor.md %}).
+For details, see [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}).
 
 ### Tools
 
@@ -245,10 +245,10 @@ files are flagged with a warning indicator.
 
 ## See Also
 
-- [MaxCFG]({% link maxcfg.md %}) — overview of MaxCFG modes
-- [MaxCFG CLI]({% link maxcfg-cli.md %}) — command-line usage
-- [Setup & Tools]({% link maxcfg-setup-tools.md %}) — Setup menu details
-- [Menu Editor]({% link maxcfg-menu-editor.md %}) — BBS menu editing
-- [Area Editor]({% link maxcfg-areas.md %}) — message and file area management
-- [User Editor]({% link maxcfg-user-editor.md %}) — user account management
-- [Language Editor]({% link lang-editor.md %}) — language string browser
+- [MaxCFG]({{ site.baseurl }}{% link maxcfg.md %}) — overview of MaxCFG modes
+- [MaxCFG CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — command-line usage
+- [Setup & Tools]({{ site.baseurl }}{% link maxcfg-setup-tools.md %}) — Setup menu details
+- [Menu Editor]({{ site.baseurl }}{% link maxcfg-menu-editor.md %}) — BBS menu editing
+- [Area Editor]({{ site.baseurl }}{% link maxcfg-areas.md %}) — message and file area management
+- [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — user account management
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — language string browser

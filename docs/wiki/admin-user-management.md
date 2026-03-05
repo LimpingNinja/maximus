@@ -16,7 +16,7 @@ work, what happens when new callers show up, how to handle the ones who
 cause trouble, and the flags and tools that give you fine-grained control
 over individual users. For the MaxCFG editor interface itself — the screens,
 fields, and key bindings — see the
-[MaxCFG User Editor]({% link maxcfg-user-editor.md %}) page.
+[MaxCFG User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) page.
 
 ---
 
@@ -44,7 +44,7 @@ fixed-record `user.bbs` format: it's faster, it doesn't fragment, and you
 can inspect it with any SQLite tool if you ever need to.
 
 For day-to-day work, you'll use the
-[MaxCFG User Editor]({% link maxcfg-user-editor.md %}) to browse, search,
+[MaxCFG User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) to browse, search,
 and modify accounts. But it's worth knowing that the database is just a
 file — which means backing it up is as simple as copying `user.db` to your
 backup location. Do that regularly. Your user database is one of the few
@@ -84,14 +84,14 @@ access. The typical approach:
 3. You review the account — check the name, city, maybe their answers to
    a questionnaire MEX script — and if everything looks good, promote them
    to a regular access level using the
-   [User Editor]({% link maxcfg-user-editor.md %}).
+   [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}).
 
 This adds friction for new users, so use it judiciously. On a public board
 with lots of traffic, manual validation can become a bottleneck fast. On a
 smaller or more security-conscious board, it's a reasonable tradeoff.
 
 For the full session configuration reference, see
-[Session & Login]({% link config-session-login.md %}).
+[Session & Login]({{ site.baseurl }}{% link config-session-login.md %}).
 
 ---
 
@@ -130,8 +130,8 @@ A few tips:
   file area?"
 
 For the full access control reference, see
-[Security & Access]({% link config-security-access.md %}) and
-[Access Levels]({% link config-access-levels.md %}).
+[Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) and
+[Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}).
 
 ---
 
@@ -383,22 +383,22 @@ void main()
 }
 ```
 
-See [Examples & Recipes]({% link mex-examples-recipes.md %}) for more
+See [Examples & Recipes]({{ site.baseurl }}{% link mex-examples-recipes.md %}) for more
 patterns.
 
 ---
 
 ## See Also
 
-- [General Administration]({% link admin-general.md %}) — the daily
+- [General Administration]({{ site.baseurl }}{% link admin-general.md %}) — the daily
   rhythm of running a board
-- [MaxCFG User Editor]({% link maxcfg-user-editor.md %}) — the editor
+- [MaxCFG User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — the editor
   interface, fields, and key bindings
-- [Session & Login]({% link config-session-login.md %}) — registration
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — registration
   flow and session policy
-- [Security & Access]({% link config-security-access.md %}) — the
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — the
   privilege and access control system
-- [Access Levels]({% link config-access-levels.md %}) — defining and
+- [Access Levels]({{ site.baseurl }}{% link config-access-levels.md %}) — defining and
   configuring class levels
-- [Backup & Recovery]({% link admin-backup-recovery.md %}) — protecting
+- [Backup & Recovery]({{ site.baseurl }}{% link admin-backup-recovery.md %}) — protecting
   your user database

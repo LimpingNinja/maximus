@@ -333,4 +333,4 @@ its own users, its own little world. What if your scripts could read the
 
 That's where MEX stops being a toy and becomes infrastructure.
 
-**[Lesson 8: "You've Got Mail" →]({% link mex-learn-messages.md %})**
+**[Lesson 8: "You've Got Mail" →]({{ site.baseurl }}{% link mex-learn-messages.md %})**

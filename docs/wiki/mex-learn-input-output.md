@@ -247,4 +247,4 @@ something that shows the caller everything the board knows about them.
 
 It's a little bit creepy. It's a lot useful.
 
-**[Lesson 3: "Who Goes There?" →]({% link mex-learn-user-record.md %})**
+**[Lesson 3: "Who Goes There?" →]({{ site.baseurl }}{% link mex-learn-user-record.md %})**

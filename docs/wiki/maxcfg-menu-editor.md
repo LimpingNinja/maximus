@@ -86,8 +86,8 @@ If you've ever wanted the look of hand-crafted ANSI menus without maintaining
 them by hand every time you add an option — this is it.
 
 For the full deep-dive on how hybrid menus work, see
-[Lightbar Menus]({% link config-lightbar-menus.md %}) and
-[Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}).
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) and
+[Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}).
 
 ![MaxCFG Menu Customization Form]({{ site.baseurl }}/assets/images/screenshots/maxcfg-menu-customize.png)
 
@@ -325,16 +325,16 @@ customize its options all you want, just keep the menu itself.
 navigation yet, turn it on for your MAIN menu and see how it feels. Between
 the boundary system, layout options, and per-menu colors, you can make every
 menu on your BBS look and feel distinct. See
-[Lightbar Menus]({% link config-lightbar-menus.md %}) and
-[Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) for the
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) and
+[Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) for the
 full story on what's possible.
 
 ---
 
 ## See Also
 
-- [TUI Editor]({% link maxcfg-tui.md %}) — navigation keys and field types
-- [Menu System]({% link config-menu-system.md %}) — how the Maximus menu system works
-- [Menu Definitions]({% link config-menu-definitions.md %}) — menu TOML format reference
-- [Lightbar Menus]({% link config-lightbar-menus.md %}) — arrow-key navigation setup
-- [Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) — hybrid ANSI + auto-generated menus
+- [TUI Editor]({{ site.baseurl }}{% link maxcfg-tui.md %}) — navigation keys and field types
+- [Menu System]({{ site.baseurl }}{% link config-menu-system.md %}) — how the Maximus menu system works
+- [Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %}) — menu TOML format reference
+- [Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) — arrow-key navigation setup
+- [Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) — hybrid ANSI + auto-generated menus

@@ -581,4 +581,4 @@ Welcome to MEX. Welcome to sysop life.
 
 *This concludes the Learning MEX tutorial series. For detailed reference
 on every function mentioned in these lessons, see the
-[MEX Reference]({% link mex-getting-started.md %}).*
+[MEX Reference]({{ site.baseurl }}{% link mex-getting-started.md %}).*

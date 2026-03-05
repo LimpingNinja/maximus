@@ -131,10 +131,10 @@ the foundation everything else builds on.
 
 From here you have two paths:
 
-- **[Learning MEX]({% link mex-learning.md %})** — a hands-on,
+- **[Learning MEX]({{ site.baseurl }}{% link mex-learning.md %})** — a hands-on,
   lesson-by-lesson journey that builds real, useful things. Start here
   if you want the guided tour.
-- **[Language Guide]({% link mex-language-guide.md %})** — the full
+- **[Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %})** — the full
   reference for MEX syntax, types, and semantics. Start here if you
   already know how to program and just need the details.
 
@@ -142,4 +142,4 @@ Either way, the hard part is done. You have a working script on a
 running board. Everything from here is just making it do more interesting
 things.
 
-**[Start Learning MEX →]({% link mex-learning.md %})**
+**[Start Learning MEX →]({{ site.baseurl }}{% link mex-learning.md %})**

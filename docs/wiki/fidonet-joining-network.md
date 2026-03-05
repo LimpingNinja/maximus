@@ -5,7 +5,7 @@ section: "administration"
 description: "A practical, step-by-step tutorial for joining fsxNet — from application to your first posted message"
 ---
 
-So you read the [overview]({% link fidonet.md %}), you know what FTN is,
+So you read the [overview]({{ site.baseurl }}{% link fidonet.md %}), you know what FTN is,
 and now you want to actually *do* it. Good. This page walks you through
 the entire process of joining an FTN network and getting messages
 flowing to and from your Maximus BBS.
@@ -386,7 +386,7 @@ You can also add these areas through **MaxCFG** if you prefer a menu
 interface — go to **Areas → Message Areas** and add each echo there.
 
 For full details on area definitions, see
-[MaxCFG Areas]({% link maxcfg-areas.md %}).
+[MaxCFG Areas]({{ site.baseurl }}{% link maxcfg-areas.md %}).
 
 ---
 
@@ -436,7 +436,7 @@ If you don't see messages, check:
 - Did Squish find the packets? Check `squish.log`.
 - Are the area paths in `squish.cfg` and `areas.toml` pointing to the
   same locations?
-- See [Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %})
+- See [Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %})
   for general debugging guidance.
 
 ---
@@ -523,7 +523,7 @@ To add a new echo:
    ```
 
 For a full list of SqaFix commands, see
-[SqaFix]({% link sqafix.md %}) in the Tools section.
+[SqaFix]({{ site.baseurl }}{% link sqafix.md %}) in the Tools section.
 
 ---
 
@@ -598,20 +598,20 @@ are working.
 
 Here's where to go to learn more:
 
-- **[Network Configuration]({% link fidonet-configuration.md %})** —
+- **[Network Configuration]({{ site.baseurl }}{% link fidonet-configuration.md %})** —
   deep dive into `matrix.toml`, privilege levels, nodelist setup, and
   Maximus-side FTN settings.
-- **[Squish Tosser]({% link fidonet-squish.md %})** — the full
+- **[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %})** — the full
   `squish.cfg` reference. Every keyword, every flag, every option.
-- **[Echomail]({% link fidonet-echomail.md %})** — dupe checking,
+- **[Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %})** — dupe checking,
   security, SEEN-BY and PATH lines, passthru areas, and automated area
   management with SqaFix.
-- **[Netmail & Routing]({% link fidonet-netmail-routing.md %})** —
+- **[Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %})** —
   private messaging, `route.cfg`, mail flavors, schedules, and
   forwarding.
-- **[Squish Utilities]({% link squish.md %})** — SQPACK, SQFIX, and
+- **[Squish Utilities]({{ site.baseurl }}{% link squish.md %})** — SQPACK, SQFIX, and
   other tools for maintaining your message bases.
-- **[SqaFix]({% link sqafix.md %})** — automated area management
+- **[SqaFix]({{ site.baseurl }}{% link sqafix.md %})** — automated area management
   via netmail commands.
 
 ### Joining additional networks
@@ -638,7 +638,7 @@ If you run into trouble:
 
 - Post in **FSX_BBS** on fsxNet — it's full of sysops who've been
   through this and are happy to help.
-- Check the [Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %})
+- Check the [Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %})
   page for general debugging techniques.
 - Email the fsxNet coordinator at **avon@bbs.nz** for
   network-specific issues.

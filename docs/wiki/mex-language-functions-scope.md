@@ -347,7 +347,7 @@ string: saved;
 get_static_string("my_key", saved);
 ```
 
-See [Display & I/O Intrinsics]({% link mex-intrinsics-display-io.md %}) for
+See [Display & I/O Intrinsics]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %}) for
 the full static data API.
 
 ---
@@ -374,9 +374,9 @@ the better choice.
 
 ## See Also
 
-- [Variables & Types]({% link mex-language-vars-types.md %}) — the types
+- [Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}) — the types
   your parameters and return values can have
-- [Control Flow]({% link mex-language-control-flow.md %}) — `if`, `while`,
+- [Control Flow]({{ site.baseurl }}{% link mex-language-control-flow.md %}) — `if`, `while`,
   `for`, and `goto`
-- [MEX Compiler]({% link mex-compiler.md %}) — stack size flags and include
+- [MEX Compiler]({{ site.baseurl }}{% link mex-compiler.md %}) — stack size flags and include
   path behavior

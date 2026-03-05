@@ -40,7 +40,7 @@ menus directory and reference it from another menu using `Display_Menu` or
 ## How Callers Navigate
 
 When a caller logs in, Maximus loads the menu specified by the `first_menu`
-setting in your [Core Settings]({% link config-core-settings.md %}) (usually
+setting in your [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) (usually
 `MAIN`). From there, everything is driven by menu options:
 
 - **`Display_Menu`** — jump to another menu (flat; no automatic return)
@@ -95,18 +95,18 @@ that moves between options with arrow keys, just like a modern TUI. This is
 configured through the `[custom_menu]` section of a menu TOML file.
 
 For the full details on lightbar menus and bounded display areas, see
-[Lightbar Menus]({% link config-lightbar-menus.md %}).
+[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}).
 
 ---
 
 ## Where to Go Next
 
-- **[Menu Definitions]({% link config-menu-definitions.md %})** — how a menu
+- **[Menu Definitions]({{ site.baseurl }}{% link config-menu-definitions.md %})** — how a menu
   TOML file is structured: global properties, option keys, and what each
   field means
-- **[Menu Options]({% link config-menu-options.md %})** — the complete
+- **[Menu Options]({{ site.baseurl }}{% link config-menu-options.md %})** — the complete
   reference for every command you can put on a menu, grouped by category
-- **[Lightbar Menus]({% link config-lightbar-menus.md %})** — custom screen
+- **[Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %})** — custom screen
   positioning, boundary boxes, and arrow-key navigation
-- **[Canned & Bounded Menus]({% link config-canned-bounded-menus.md %})** —
+- **[Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %})** —
   auto-generated displays and how they interact with custom layouts

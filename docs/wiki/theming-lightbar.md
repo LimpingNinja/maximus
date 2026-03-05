@@ -17,8 +17,8 @@ keyboard controls.
 > **Menus have their own lightbar settings.** Per-menu lightbar navigation
 > (arrow-key highlight bar over the canned option list) is configured in
 > each menu's `[custom_menu]` table, not in `display.toml`. See
-> [Lightbar Menus]({% link config-lightbar-menus.md %}) for a quick overview
-> or [Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) for
+> [Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) for a quick overview
+> or [Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) for
 > the full deep-dive on boundaries, layout, and lightbar colors.
 
 ---
@@ -206,13 +206,13 @@ lightbar_back = ""
 
 ## See Also
 
-- [Lightbar Menus]({% link config-lightbar-menus.md %}) — enabling lightbar
+- [Lightbar Menus]({{ site.baseurl }}{% link config-lightbar-menus.md %}) — enabling lightbar
   navigation on menus
-- [Canned & Bounded Menus]({% link config-canned-bounded-menus.md %}) — full
+- [Canned & Bounded Menus]({{ site.baseurl }}{% link config-canned-bounded-menus.md %}) — full
   menu customization: boundaries, layout, lightbar colors, recipes
-- [Theme Colors]({% link theme-colors.md %}) — `lightbar_fg` and
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — `lightbar_fg` and
   `lightbar_bg` theme slots
-- [Display Customization]({% link theming-display-customization.md %}) —
+- [Display Customization]({{ site.baseurl }}{% link theming-display-customization.md %}) —
   area list format strings, headers, and footers
-- [Theming & Modding]({% link theming-modding.md %}) — overview of all
+- [Theming & Modding]({{ site.baseurl }}{% link theming-modding.md %}) — overview of all
   customization options

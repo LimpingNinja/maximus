@@ -11,9 +11,9 @@ run. They're organized by what you're trying to do, not by which language
 feature they demonstrate.
 
 If you're looking for a guided walkthrough that builds up concepts one at a
-time, start with the [Learning MEX]({% link mex-getting-started.md %})
+time, start with the [Learning MEX]({{ site.baseurl }}{% link mex-getting-started.md %})
 tutorial series instead. If you need the full reference for a specific
-function, the [Standard Intrinsics]({% link mex-standard-intrinsics.md %})
+function, the [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %})
 hub will point you to the right page.
 
 ---
@@ -597,10 +597,10 @@ void main()
 
 ## See Also
 
-- [Learning MEX]({% link mex-getting-started.md %}) — guided tutorial series
-- [Language Guide]({% link mex-language-guide.md %}) — variables, control
+- [Learning MEX]({{ site.baseurl }}{% link mex-getting-started.md %}) — guided tutorial series
+- [Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %}) — variables, control
   flow, functions, strings
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — all built-in
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — all built-in
   functions by category
-- [UI Primitives]({% link mex-ui-primitives.md %}) — screen control, fields,
+- [UI Primitives]({{ site.baseurl }}{% link mex-ui-primitives.md %}) — screen control, fields,
   lightbars, forms

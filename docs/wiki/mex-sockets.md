@@ -191,7 +191,7 @@ void main()
 
 This pattern — fetch, parse, extract, display — covers the vast majority of
 what you'll want to do with sockets in a BBS script. The
-[MEX JSON guide]({% link mex-json.md %}) has the full rundown on the JSON side.
+[MEX JSON guide]({{ site.baseurl }}{% link mex-json.md %}) has the full rundown on the JSON side.
 
 ---
 
@@ -617,9 +617,9 @@ Run it from the MEX Scripts menu (option **F**) or compile it yourself:
 
 ## See Also
 
-- [MEX JSON]({% link mex-json.md %}) — the JSON intrinsics that pair naturally
+- [MEX JSON]({{ site.baseurl }}{% link mex-json.md %}) — the JSON intrinsics that pair naturally
   with HTTP responses
-- [Display Codes]({% link display-codes.md %}) — color codes for making your
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — color codes for making your
   script output look sharp
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction to
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction to
   MEX scripting

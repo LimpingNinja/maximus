@@ -27,7 +27,7 @@ version of what changed.
 - No compilation step required
 - Direct runtime parsing of TOML
 - Legacy `.ctl` files can be converted via
-  [maxcfg --export-nextgen]({% link maxcfg-cli.md %})
+  [maxcfg --export-nextgen]({{ site.baseurl }}{% link maxcfg-cli.md %})
 
 ### Removed Components
 
@@ -398,7 +398,7 @@ of native C dropfile support.
 
 ## See Also
 
-- [Building Maximus]({% link building.md %}) — compiling from source
-- [Directory Structure]({% link directory-structure.md %}) — runtime layout
-- [Display Codes]({% link display-codes.md %}) — the MCI display code system
-- [Language Files (TOML)]({% link lang-toml.md %}) — the TOML language system
+- [Building Maximus]({{ site.baseurl }}{% link building.md %}) — compiling from source
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — runtime layout
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — the MCI display code system
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — the TOML language system

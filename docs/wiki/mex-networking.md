@@ -78,10 +78,10 @@ formatted display — in about 20 lines.
 
 | I want to... | Use |
 |--------------|-----|
-| Hit a web API and get a response | [HTTP/HTTPS Requests]({% link mex-http-https.md %}) |
-| Talk a custom protocol or keep a connection open | [Socket Programming]({% link mex-sockets.md %}) |
-| Parse a JSON string or API response | [JSON Processing]({% link mex-json.md %}) |
-| Build a JSON payload for a POST body | [JSON Processing]({% link mex-json.md %}) |
+| Hit a web API and get a response | [HTTP/HTTPS Requests]({{ site.baseurl }}{% link mex-http-https.md %}) |
+| Talk a custom protocol or keep a connection open | [Socket Programming]({{ site.baseurl }}{% link mex-sockets.md %}) |
+| Parse a JSON string or API response | [JSON Processing]({{ site.baseurl }}{% link mex-json.md %}) |
+| Build a JSON payload for a POST body | [JSON Processing]({{ site.baseurl }}{% link mex-json.md %}) |
 | Do all of the above in one script | Combine all three — they work together naturally |
 
 Most scripts only need `http_request` + JSON. Raw sockets are for custom
@@ -124,20 +124,20 @@ unauthorized requests.
 
 ## Sub-Pages
 
-- **[HTTP/HTTPS Requests]({% link mex-http-https.md %})** — the one-shot
+- **[HTTP/HTTPS Requests]({{ site.baseurl }}{% link mex-http-https.md %})** — the one-shot
   convenience function for web API calls
-- **[Socket Programming]({% link mex-sockets.md %})** — raw TCP sockets
+- **[Socket Programming]({{ site.baseurl }}{% link mex-sockets.md %})** — raw TCP sockets
   for custom protocols and persistent connections
-- **[JSON Processing]({% link mex-json.md %})** — parsing, navigating, and
+- **[JSON Processing]({{ site.baseurl }}{% link mex-json.md %})** — parsing, navigating, and
   building JSON data
 
 ---
 
 ## See Also
 
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction
   to MEX scripting
-- [Display Codes]({% link display-codes.md %}) — color codes for formatted
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — color codes for formatted
   output
-- [UI Primitives]({% link mex-ui-primitives.md %}) — interactive screen
+- [UI Primitives]({{ site.baseurl }}{% link mex-ui-primitives.md %}) — interactive screen
   controls for displaying fetched data

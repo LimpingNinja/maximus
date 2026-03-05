@@ -436,9 +436,9 @@ resources.
 
 ## See Also
 
-- [Extending with MEX/C]({% link extending-mex-c.md %}) — the language
+- [Extending with MEX/C]({{ site.baseurl }}{% link extending-mex-c.md %}) — the language
   string API (a simpler starting point)
-- [VM Architecture]({% link mex-vm-architecture.md %}) — how the MEX VM
+- [VM Architecture]({{ site.baseurl }}{% link mex-vm-architecture.md %}) — how the MEX VM
   executes bytecode and manages the stack
-- [Standard Intrinsics]({% link mex-standard-intrinsics.md %}) — the
+- [Standard Intrinsics]({{ site.baseurl }}{% link mex-standard-intrinsics.md %}) — the
   built-in intrinsic families

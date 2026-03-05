@@ -210,9 +210,9 @@ Language files are **TOML only** — no compilation step.
 
 ## See Also
 
-- [Building Maximus]({% link building.md %}) — compiling from source and
+- [Building Maximus]({{ site.baseurl }}{% link building.md %}) — compiling from source and
   post-install setup
-- [MaxTel (Telnet)]({% link maxtel.md %}) — the telnet supervisor that runs
+- [MaxTel (Telnet)]({{ site.baseurl }}{% link maxtel.md %}) — the telnet supervisor that runs
   your nodes
-- [Language Files (TOML)]({% link lang-toml.md %}) — the language file system
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — the language file system
   that lives under `config/lang/`

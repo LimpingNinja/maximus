@@ -12,9 +12,9 @@ message reference.*
 
 ## See Also
 
-- [MECCA Language]({% link mecca-language.md %}) — overview of MECCA display
+- [MECCA Language]({{ site.baseurl }}{% link mecca-language.md %}) — overview of MECCA display
   files and the full language token reference
-- [Display Files]({% link display-files.md %}) — working with display files
+- [Display Files]({{ site.baseurl }}{% link display-files.md %}) — working with display files
   in Maximus
-- [Display Codes]({% link display-codes.md %}) — pipe color codes, MCI codes,
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe color codes, MCI codes,
   and formatting operators

@@ -20,7 +20,7 @@ going strong.
 
 This page explains what FTN is, how it works, and what the pieces are.
 No config files yet — just concepts. When you're ready to actually set
-it up, the [Joining a Network]({% link fidonet-joining-network.md %})
+it up, the [Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %})
 tutorial walks you through the whole process step by step.
 
 ---
@@ -76,7 +76,7 @@ You can join multiple networks simultaneously — Maximus and Squish
 handle multiple addresses (called AKAs) just fine. But for your first
 network, we recommend **fsxNet**. It's designed to be approachable, the
 community is welcoming, and setup is straightforward. The
-[tutorial]({% link fidonet-joining-network.md %}) uses fsxNet as its
+[tutorial]({{ site.baseurl }}{% link fidonet-joining-network.md %}) uses fsxNet as its
 example for exactly this reason.
 
 ---
@@ -303,7 +303,7 @@ Here's the checklist for getting your Maximus BBS onto an FTN network:
 
 ### Ready?
 
-The **[Joining a Network]({% link fidonet-joining-network.md %})**
+The **[Joining a Network]({{ site.baseurl }}{% link fidonet-joining-network.md %})**
 tutorial walks you through the entire process using fsxNet as a
 real-world example — from applying for your node number to posting your
 first test message. It's friendly, it's practical, and it assumes you've
@@ -311,11 +311,11 @@ never done this before.
 
 Once you're up and running, the reference pages go deeper:
 
-- [Network Configuration]({% link fidonet-configuration.md %}) —
+- [Network Configuration]({{ site.baseurl }}{% link fidonet-configuration.md %}) —
   `matrix.toml` and Maximus-side FTN settings
-- [Squish Tosser]({% link fidonet-squish.md %}) — full `squish.cfg`
+- [Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %}) — full `squish.cfg`
   reference
-- [Echomail]({% link fidonet-echomail.md %}) — dupe checking, security,
+- [Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %}) — dupe checking, security,
   SEEN-BY, passthru areas
-- [Netmail & Routing]({% link fidonet-netmail-routing.md %}) — private
+- [Netmail & Routing]({{ site.baseurl }}{% link fidonet-netmail-routing.md %}) — private
   messaging and mail routing

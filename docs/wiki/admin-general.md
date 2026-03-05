@@ -90,7 +90,7 @@ so you manage it through Maximus tools (MaxCFG's user editor, or MEX
 scripts), not by hand-editing. Back it up. Seriously.
 
 For the full details on user operations, see
-[User Management]({% link admin-user-management.md %}).
+[User Management]({{ site.baseurl }}{% link admin-user-management.md %}).
 
 ---
 
@@ -127,7 +127,7 @@ a plan. Once a month, pick a backup and verify you can actually bring a
 system back from it.
 
 For backup procedures and scripts, see
-[Backup & Recovery]({% link admin-backup-recovery.md %}).
+[Backup & Recovery]({{ site.baseurl }}{% link admin-backup-recovery.md %}).
 
 ---
 
@@ -161,7 +161,7 @@ what's happening on your board — logs are where you start.
   have the space.
 
 For log locations, formats, and troubleshooting techniques, see
-[Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %}).
+[Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %}).
 
 ---
 
@@ -206,18 +206,18 @@ It will. Here's the short version of the troubleshooting playbook:
    didn't).
 
 For detailed troubleshooting procedures and common issues, see
-[Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %}).
+[Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %}).
 
 ---
 
 ## See Also
 
-- [User Management]({% link admin-user-management.md %}) — creating,
+- [User Management]({{ site.baseurl }}{% link admin-user-management.md %}) — creating,
   editing, and removing user accounts
-- [Backup & Recovery]({% link admin-backup-recovery.md %}) — backup
+- [Backup & Recovery]({{ site.baseurl }}{% link admin-backup-recovery.md %}) — backup
   strategies, scripts, and restore procedures
-- [Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %})
+- [Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %})
   — log formats, rotation, and debugging techniques
-- [MaxTel]({% link maxtel.md %}) — the telnet server and node management
-- [Security & Access]({% link config-security-access.md %}) — access
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — the telnet server and node management
+- [Security & Access]({{ site.baseurl }}{% link config-security-access.md %}) — access
   levels, privileges, and flags

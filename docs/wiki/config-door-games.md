@@ -15,9 +15,9 @@ This page covers the basics of how doors work in Maximus, what you need to
 know about modern vs. legacy doors, and how to set up the most common door
 type — **stdio doors** that read stdin and write stdout. For the more advanced
 **Door32 protocol** (direct socket-passing), see
-[Door32 Support]({% link door32-support.md %}). For details on the dropfile
+[Door32 Support]({{ site.baseurl }}{% link door32-support.md %}). For details on the dropfile
 formats Maximus generates, see
-[Dropfile Formats]({% link dropfile-formats.md %}).
+[Dropfile Formats]({{ site.baseurl }}{% link dropfile-formats.md %}).
 
 ---
 
@@ -236,18 +236,18 @@ The `arguments` field supports `%` substitutions:
 - **Time enforcement:** The caller's remaining time is passed to the door
   via dropfiles. Well-behaved doors enforce this; badly-behaved ones don't.
   If `strict_xfer` is enabled in
-  [Session & Login]({% link config-session-login.md %}), Maximus will kill
+  [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}), Maximus will kill
   the door when time runs out.
 
 ---
 
 ## See Also
 
-- [Dropfile Formats]({% link dropfile-formats.md %}) — all four dropfile
+- [Dropfile Formats]({{ site.baseurl }}{% link dropfile-formats.md %}) — all four dropfile
   formats, field-by-field
-- [Door32 Support]({% link door32-support.md %}) — native socket-passing
+- [Door32 Support]({{ site.baseurl }}{% link door32-support.md %}) — native socket-passing
   for Door32-aware doors
-- [Core Settings]({% link config-core-settings.md %}) — `temp_path`,
+- [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) — `temp_path`,
   `doors_path` configuration
-- [Session & Login]({% link config-session-login.md %}) — `strict_xfer`
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — `strict_xfer`
   and timeout settings

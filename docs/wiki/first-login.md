@@ -39,7 +39,7 @@ and the login screen, exactly as a caller would see it.
 3. **Answer the profile questions.** Location, terminal type, screen size —
    the usual new-user prompts. Don't overthink these; you can change them all
    later from the Change Settings menu or from MaxCFG's
-   [User Editor]({% link maxcfg-user-editor.md %}).
+   [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}).
 
 4. **Log off cleanly.** Press **G** (Goodbye) from the main menu. This
    ensures your account is fully written to the database.
@@ -85,8 +85,8 @@ Your BBS is live.
 
 ## See Also
 
-- [Quick Start]({% link quick-start.md %}) — the full four-step setup guide
-- [MaxTel]({% link maxtel.md %}) — the telnet supervisor for remote access
-- [User Editor]({% link maxcfg-user-editor.md %}) — managing user accounts
+- [Quick Start]({{ site.baseurl }}{% link quick-start.md %}) — the full four-step setup guide
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — the telnet supervisor for remote access
+- [User Editor]({{ site.baseurl }}{% link maxcfg-user-editor.md %}) — managing user accounts
   from MaxCFG
-- [Upgrading]({% link upgrading.md %}) — updating to a new release
+- [Upgrading]({{ site.baseurl }}{% link upgrading.md %}) — updating to a new release

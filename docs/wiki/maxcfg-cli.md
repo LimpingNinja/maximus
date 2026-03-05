@@ -33,7 +33,7 @@ location or the first positional argument.
 These flags convert your legacy CTL configuration files to next-gen TOML
 format. This is a one-way upgrade—CTL in, TOML out. For background on what
 the legacy pipeline was and what to review after export, see
-[CTL to TOML]({% link legacy-ctl-to-toml.md %}).
+[CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}).
 
 | Flag | Argument | Description |
 |------|----------|-------------|
@@ -56,7 +56,7 @@ maxcfg --export-nextgen /opt/max/etc/max.ctl --export-dir /tmp/ng-config
 
 Got a legacy `.mad` language file? These flags convert it to TOML. For the
 full migration story and step-by-step walkthrough, see
-[Convert Legacy MAD]({% link legacy-convert-mad.md %}).
+[Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %}).
 
 | Flag | Argument | Description |
 |------|----------|-------------|
@@ -191,17 +191,17 @@ maxcfg --apply-delta config/lang/english.toml --merge-only
 
 ## See Also
 
-- [Legacy Migration]({% link legacy-migration.md %}) — overview of the
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — overview of the
   migration from Maximus 3.0 to NG
-- [CTL to TOML]({% link legacy-ctl-to-toml.md %}) — detailed guide to
+- [CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) — detailed guide to
   configuration file conversion
-- [Convert Legacy MAD]({% link legacy-convert-mad.md %}) — detailed guide to
+- [Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %}) — detailed guide to
   language file conversion
-- [Delta Overlays]({% link legacy-delta-overlays.md %}) — the tier system for
+- [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) — the tier system for
   language file upgrades
-- [Language Files (TOML)]({% link lang-toml.md %}) — how the language file
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — how the language file
   system works after migration
-- [Language Conversion HOWTO]({% link lang-conversion.md %}) — step-by-step
+- [Language Conversion HOWTO]({{ site.baseurl }}{% link lang-conversion.md %}) — step-by-step
   conversion walkthrough
-- [Language Editor]({% link lang-editor.md %}) — interactive language string
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — interactive language string
   editor in maxcfg

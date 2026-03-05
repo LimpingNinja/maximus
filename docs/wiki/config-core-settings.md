@@ -211,7 +211,7 @@ need to touch this file.
 This file tells Maximus where to find external file transfer protocol
 definitions (Zmodem, etc.). The actual protocol entries are defined in the
 legacy `.ctl` or `.max` files referenced here. You can also configure protocols
-through MaxCFG's [Setup & Tools]({% link maxcfg-setup-tools.md %}) screen.
+through MaxCFG's [Setup & Tools]({{ site.baseurl }}{% link maxcfg-setup-tools.md %}) screen.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -233,7 +233,7 @@ colors, list boundaries, and header/footer anchoring.
 
 For a full walkthrough of what each setting does and how to set up lightbar
 navigation, see
-[Lightbar Customization]({% link theming-lightbar.md %}).
+[Lightbar Customization]({{ site.baseurl }}{% link theming-lightbar.md %}).
 
 ### General
 
@@ -276,8 +276,8 @@ MEX scripts that make network calls (weather lookups, API integrations,
 inter-BBS messaging), these settings let you tune performance and security.
 
 For full details on MEX networking, see
-[MEX Networking]({% link mex-networking.md %}). For socket programming
-specifics, see [Socket Programming]({% link mex-sockets.md %}).
+[MEX Networking]({{ site.baseurl }}{% link mex-networking.md %}). For socket programming
+specifics, see [Socket Programming]({{ site.baseurl }}{% link mex-sockets.md %}).
 
 ### `[sockets]` Section
 
@@ -306,11 +306,11 @@ If no rules are defined, all outgoing connections are allowed.
 
 ## See Also
 
-- [Session & Login]({% link config-session-login.md %}) — user experience and
+- [Session & Login]({{ site.baseurl }}{% link config-session-login.md %}) — user experience and
   policy settings (`session.toml`)
-- [Equipment & Comm]({% link config-equipment-comm.md %}) — modem and
+- [Equipment & Comm]({{ site.baseurl }}{% link config-equipment-comm.md %}) — modem and
   connection settings (`equipment.toml`)
-- [Directory Structure]({% link directory-structure.md %}) — full runtime
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — full runtime
   layout reference
-- [Configuration Overview]({% link configuration.md %}) — top-level config
+- [Configuration Overview]({{ site.baseurl }}{% link configuration.md %}) — top-level config
   guide

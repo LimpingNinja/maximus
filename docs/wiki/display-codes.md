@@ -14,8 +14,8 @@ you will feel right at home. Maximus uses the same `|` (pipe) prefix for
 colors and information codes, and the same `$` prefix for formatting operators.
 
 > **Related pages:**
-> [Theme Colors]({% link theme-colors.md %}) covers the semantic color system
-> in depth. [Language Files (TOML)]({% link lang-toml.md %}) explains how
+> [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) covers the semantic color system
+> in depth. [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) explains how
 > display codes interact with language strings and parameter substitution.
 
 ---
@@ -51,17 +51,17 @@ Display codes can be used in:
 Each category has its own reference page with full tables, examples, and usage
 notes:
 
-- **[Color Codes]({% link mci-color-codes.md %})** — pipe color codes
+- **[Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %})** — pipe color codes
   (`|00`–`|31`) for foreground, background, and blink; plus semantic theme
   color codes (`|xx`) that map to named slots in `colors.toml`.
-- **[Info Codes]({% link mci-info-codes.md %})** — two-letter uppercase codes
+- **[Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %})** — two-letter uppercase codes
   (`|UN`, `|BN`, `|TL`, etc.) that expand to live user, system, area, and
   date/time data.
-- **[Terminal Control]({% link mci-terminal-control.md %})** — screen clear,
+- **[Terminal Control]({{ site.baseurl }}{% link mci-terminal-control.md %})** — screen clear,
   cursor movement, save/restore, and other terminal manipulation codes.
-- **[Format Operators]({% link mci-format-operators.md %})** — `$`-prefix
+- **[Format Operators]({{ site.baseurl }}{% link mci-format-operators.md %})** — `$`-prefix
   operators for padding, alignment, trimming, and character repetition.
-- **[Positional Parameters]({% link mci-positional-params.md %})** — `|!N`
+- **[Positional Parameters]({{ site.baseurl }}{% link mci-positional-params.md %})** — `|!N`
   (early) and `|#N` (deferred) parameter slots used in language strings.
 
 ---
@@ -126,11 +126,11 @@ layer that operates on plain-text strings at runtime.
 
 ## See Also
 
-- [Color Codes]({% link mci-color-codes.md %}) — numeric and theme color codes
-- [Info Codes]({% link mci-info-codes.md %}) — dynamic data substitution codes
-- [Terminal Control]({% link mci-terminal-control.md %}) — screen and cursor codes
-- [Format Operators]({% link mci-format-operators.md %}) — padding, alignment, repetition
-- [Positional Parameters]({% link mci-positional-params.md %}) — language string parameters
-- [Theme Colors]({% link theme-colors.md %}) — configuring the 25 semantic color slots
-- [Language Files (TOML)]({% link lang-toml.md %}) — language string system and display code usage
-- [Language Editor]({% link lang-editor.md %}) — editing language strings interactively in maxcfg
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric and theme color codes
+- [Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %}) — dynamic data substitution codes
+- [Terminal Control]({{ site.baseurl }}{% link mci-terminal-control.md %}) — screen and cursor codes
+- [Format Operators]({{ site.baseurl }}{% link mci-format-operators.md %}) — padding, alignment, repetition
+- [Positional Parameters]({{ site.baseurl }}{% link mci-positional-params.md %}) — language string parameters
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — configuring the 25 semantic color slots
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — language string system and display code usage
+- [Language Editor]({{ site.baseurl }}{% link lang-editor.md %}) — editing language strings interactively in maxcfg

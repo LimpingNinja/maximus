@@ -13,9 +13,9 @@ the destination system.
 
 This page covers how netmail works, how routing is configured in
 `route.cfg`, and how to manage mail flavors, schedules, and forwarding.
-For the echomail side, see [Echomail]({% link fidonet-echomail.md %}).
+For the echomail side, see [Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %}).
 For the full `squish.cfg` reference, see
-[Squish Tosser]({% link fidonet-squish.md %}).
+[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %}).
 
 ---
 
@@ -580,7 +580,7 @@ If you're forwarding mail and messages are piling up:
 ---
 
 For the full `squish.cfg` reference, see
-[Squish Tosser]({% link fidonet-squish.md %}). For echomail specifics,
-see [Echomail]({% link fidonet-echomail.md %}). For general debugging
+[Squish Tosser]({{ site.baseurl }}{% link fidonet-squish.md %}). For echomail specifics,
+see [Echomail]({{ site.baseurl }}{% link fidonet-echomail.md %}). For general debugging
 techniques, see
-[Logging & Troubleshooting]({% link admin-logging-troubleshooting.md %}).
+[Logging & Troubleshooting]({{ site.baseurl }}{% link admin-logging-troubleshooting.md %}).

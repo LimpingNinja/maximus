@@ -149,7 +149,7 @@ multi-platform doors that support CHAIN.TXT as an alternative.
 ### DOOR32.SYS
 
 The modern telnet-aware format. This is what you should use for any door that
-supports it — see [Door32 Support]({% link door32-support.md %}) for the full
+supports it — see [Door32 Support]({{ site.baseurl }}{% link door32-support.md %}) for the full
 story.
 
 | Line | Content | Example |
@@ -170,7 +170,7 @@ story.
 caller's TCP socket. Door32 doors use this fd directly for I/O instead of
 reading/writing through a PTY. This is what makes Door32 the cleanest
 approach for telnet-era doors. See
-[Door32 Support]({% link door32-support.md %}) for how this works under
+[Door32 Support]({{ site.baseurl }}{% link door32-support.md %}) for how this works under
 the hood.
 
 ---
@@ -191,9 +191,9 @@ whichever one it's configured to look for.
 
 ## See Also
 
-- [Door Games]({% link config-door-games.md %}) — overview of running doors
+- [Door Games]({{ site.baseurl }}{% link config-door-games.md %}) — overview of running doors
   on Maximus
-- [Door32 Support]({% link door32-support.md %}) — native Door32 protocol
+- [Door32 Support]({{ site.baseurl }}{% link door32-support.md %}) — native Door32 protocol
   and socket-passing
-- [Core Settings]({% link config-core-settings.md %}) — `temp_path` and
+- [Core Settings]({{ site.baseurl }}{% link config-core-settings.md %}) — `temp_path` and
   `node_path` configuration

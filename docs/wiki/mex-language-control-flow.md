@@ -385,9 +385,9 @@ scope.
 
 ## See Also
 
-- [Variables & Types]({% link mex-language-vars-types.md %}) — what you're
+- [Variables & Types]({{ site.baseurl }}{% link mex-language-vars-types.md %}) — what you're
   comparing and computing with
-- [Functions & Scope]({% link mex-language-functions-scope.md %}) — organizing
+- [Functions & Scope]({{ site.baseurl }}{% link mex-language-functions-scope.md %}) — organizing
   code into callable pieces
-- [String Operations]({% link mex-language-string-ops.md %}) — string
+- [String Operations]({{ site.baseurl }}{% link mex-language-string-ops.md %}) — string
   comparisons and manipulation

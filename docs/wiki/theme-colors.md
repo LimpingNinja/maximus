@@ -80,7 +80,7 @@ lightbar_fg = "|15|17"   # White text on blue background
 ## Slot Reference
 
 Every slot has a two-letter code, a descriptive name, and a default value.
-See also [Color Codes]({% link mci-color-codes.md %}#slot-reference) for the
+See also [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}#slot-reference) for the
 same table in the Display Codes context.
 
 | Code | Name | Default | Purpose |
@@ -148,9 +148,9 @@ files automatically adapt when the theme changes.
 
 ## See Also
 
-- [Color Codes]({% link mci-color-codes.md %}) — numeric pipe colors and
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric pipe colors and
   theme code slot table
-- [Display Codes]({% link display-codes.md %}) — pipe codes, info codes, and
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — pipe codes, info codes, and
   formatting operators
-- [Theming & Modding]({% link theming-modding.md %}) — overview of all
+- [Theming & Modding]({{ site.baseurl }}{% link theming-modding.md %}) — overview of all
   customization options

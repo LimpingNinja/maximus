@@ -9,7 +9,7 @@ This page gets you from zero to a running BBS in four steps. No compiling
 required — just grab a release package.
 
 If you want to build from source instead, see
-[Building Maximus]({% link building.md %}).
+[Building Maximus]({{ site.baseurl }}{% link building.md %}).
 
 ---
 
@@ -35,7 +35,7 @@ The archive contains a complete BBS installation tree:
 | `scripts/` | Compiled MEX scripts and includes |
 | `data/` | User database, message bases, file areas |
 
-See [Directory Structure]({% link directory-structure.md %}) for the full
+See [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) for the full
 layout.
 
 ---
@@ -66,7 +66,7 @@ Enter your sysop name (matching what you set during install), create a
 password, and exit with **G** (Goodbye). Remote connections will fail until
 this step is complete.
 
-See [First Login & Sysop Account]({% link first-login.md %}) for details on
+See [First Login & Sysop Account]({{ site.baseurl }}{% link first-login.md %}) for details on
 privilege setup and what happens during first login.
 
 ---
@@ -86,7 +86,7 @@ nodes. Connect with any telnet client:
 telnet localhost 2323
 ```
 
-See [MaxTel]({% link maxtel.md %}) for headless mode, daemon mode, and the
+See [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) for headless mode, daemon mode, and the
 full ncurses dashboard.
 
 ---
@@ -95,26 +95,26 @@ full ncurses dashboard.
 
 - **Customize your BBS** — edit TOML files in `config/` directly. No compile
   step; changes take effect on restart. See
-  [Configuration Overview]({% link configuration.md %}).
+  [Configuration Overview]({{ site.baseurl }}{% link configuration.md %}).
 - **Edit language strings** — modify `config/lang/english.toml` or use the
   interactive editor via `bin/maxcfg`. See
-  [Language Files (TOML)]({% link lang-toml.md %}).
+  [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}).
 - **Recompile display files** — if you edit `.mec` source files, run
-  `bin/recompile.sh` or see [Building Maximus]({% link building.md %}).
+  `bin/recompile.sh` or see [Building Maximus]({{ site.baseurl }}{% link building.md %}).
 - **Upgrade later** — when a new release drops, see
-  [Upgrading]({% link upgrading.md %}).
+  [Upgrading]({{ site.baseurl }}{% link upgrading.md %}).
 - **Migrate from Maximus 3.0** — if you have legacy CTL/MAD files, see
-  [Legacy Migration]({% link legacy-migration.md %}).
+  [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}).
 
 ---
 
 ## See Also
 
-- [First Login & Sysop Account]({% link first-login.md %}) — sysop account
+- [First Login & Sysop Account]({{ site.baseurl }}{% link first-login.md %}) — sysop account
   setup and first-run details
-- [Upgrading]({% link upgrading.md %}) — how to update to a new release
-- [Directory Structure]({% link directory-structure.md %}) — where files live
-- [Building Maximus]({% link building.md %}) — building from source
-- [MaxTel]({% link maxtel.md %}) — telnet supervisor documentation
-- [Legacy Migration]({% link legacy-migration.md %}) — upgrading from
+- [Upgrading]({{ site.baseurl }}{% link upgrading.md %}) — how to update to a new release
+- [Directory Structure]({{ site.baseurl }}{% link directory-structure.md %}) — where files live
+- [Building Maximus]({{ site.baseurl }}{% link building.md %}) — building from source
+- [MaxTel]({{ site.baseurl }}{% link maxtel.md %}) — telnet supervisor documentation
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — upgrading from
   Maximus 3.0

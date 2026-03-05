@@ -309,4 +309,4 @@ quote-of-the-day file.
 Next lesson: files. Reading them, writing them, and finally giving your
 board a memory that survives between calls.
 
-**[Lesson 6: "Dear Diary" →]({% link mex-learn-file-io.md %})**
+**[Lesson 6: "Dear Diary" →]({{ site.baseurl }}{% link mex-learn-file-io.md %})**

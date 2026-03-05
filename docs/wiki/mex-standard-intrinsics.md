@@ -45,7 +45,7 @@ Not sure where to look? Here's the cheat sheet:
 {: #display-io}
 ### Display & I/O
 
-[Full Reference →]({% link mex-intrinsics-display-io.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-intrinsics-display-io.md %})
 
 Output, input, file I/O, string manipulation, and the utility functions that
 every script needs. This is the biggest category — it covers `print()`,
@@ -58,7 +58,7 @@ constants, and all the string functions (`strlen`, `substr`, `strfind`,
 {: #user-session}
 ### User & Session
 
-[Full Reference →]({% link mex-intrinsics-user-session.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-intrinsics-user-session.md %})
 
 Everything about the current caller and the session they're in. The `usr`
 struct gives you the caller's name, alias, city, privilege level, help level,
@@ -70,7 +70,7 @@ management, privilege checking, class lookups, and the caller log.
 {: #msg-file}
 ### Message & File Areas
 
-[Full Reference →]({% link mex-intrinsics-message-file.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-intrinsics-message-file.md %})
 
 Reading messages, scanning areas, navigating between areas, file area search,
 download queue management, and the `menu_cmd()` dispatch that lets your script
@@ -81,7 +81,7 @@ invoke any menu command programmatically.
 {: #ui-prims}
 ### UI Primitives
 
-[Full Reference →]({% link mex-ui-primitives.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-ui-primitives.md %})
 
 Cursor positioning, color attributes, bounded input fields, lightbar menus
 (vertical and 2D positioned), inline select prompts, multi-field forms, and
@@ -93,7 +93,7 @@ interfaces.
 {: #networking}
 ### Networking (Sockets & HTTP)
 
-[Full Reference →]({% link mex-sockets.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-sockets.md %})
 
 Outgoing TCP connections, raw socket I/O, and the `http_request()` convenience
 function for HTTP/HTTPS GET and POST. Includes timeout control so a dead
@@ -104,7 +104,7 @@ server can't hang your caller's session.
 {: #json}
 ### JSON Processing
 
-[Full Reference →]({% link mex-json.md %})
+[Full Reference →]({{ site.baseurl }}{% link mex-json.md %})
 
 Parsing JSON strings, reading values with path accessors or cursor navigation,
 building JSON from scratch, and the type constants. Backed by cJSON under
@@ -116,9 +116,9 @@ the hood.
 
 ## See Also
 
-- [Language Guide]({% link mex-language-guide.md %}) — the MEX language itself
+- [Language Guide]({{ site.baseurl }}{% link mex-language-guide.md %}) — the MEX language itself
   (types, operators, control flow, functions)
-- [MEX Compiler]({% link mex-compiler.md %}) — compiling and running scripts
-- [Learning MEX]({% link mex-learning.md %}) — the 10-lesson tutorial series
-- [Examples & Recipes]({% link mex-examples-recipes.md %}) — copy-paste
+- [MEX Compiler]({{ site.baseurl }}{% link mex-compiler.md %}) — compiling and running scripts
+- [Learning MEX]({{ site.baseurl }}{% link mex-learning.md %}) — the 10-lesson tutorial series
+- [Examples & Recipes]({{ site.baseurl }}{% link mex-examples-recipes.md %}) — copy-paste
   starting points for common tasks

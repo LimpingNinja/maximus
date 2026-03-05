@@ -63,7 +63,7 @@ positions the cursor at column 10, then prints in light cyan.
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — overview and quick reference
-- [Color Codes]({% link mci-color-codes.md %}) — numeric and theme color codes
-- [Info Codes]({% link mci-info-codes.md %}) — dynamic data substitution codes
-- [Format Operators]({% link mci-format-operators.md %}) — padding, alignment, repetition
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — overview and quick reference
+- [Color Codes]({{ site.baseurl }}{% link mci-color-codes.md %}) — numeric and theme color codes
+- [Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %}) — dynamic data substitution codes
+- [Format Operators]({{ site.baseurl }}{% link mci-format-operators.md %}) — padding, alignment, repetition

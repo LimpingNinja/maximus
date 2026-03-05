@@ -13,8 +13,8 @@ reading the response, and following redirects. You don't touch sockets
 at all.
 
 If you need persistent connections, custom protocols, or chunked streaming,
-see [Socket Programming]({% link mex-sockets.md %}). For parsing the JSON
-that most APIs return, see [JSON Processing]({% link mex-json.md %}).
+see [Socket Programming]({{ site.baseurl }}{% link mex-sockets.md %}). For parsing the JSON
+that most APIs return, see [JSON Processing]({{ site.baseurl }}{% link mex-json.md %}).
 
 ```mex
 #include <socket.mh>
@@ -118,7 +118,7 @@ else
 ### JSON POST
 
 For APIs that expect JSON, set the content type and build your payload
-with the [JSON intrinsics]({% link mex-json.md %}):
+with the [JSON intrinsics]({{ site.baseurl }}{% link mex-json.md %}):
 
 ```mex
 #include <max.mh>
@@ -305,7 +305,7 @@ A few things to keep in mind:
 
 - **No streaming.** The entire response is buffered before returning. You
   can't read headers separately or process chunks as they arrive. For
-  that, use [raw sockets]({% link mex-sockets.md %}).
+  that, use [raw sockets]({{ site.baseurl }}{% link mex-sockets.md %}).
 
 - **Sysop access control.** Socket access (including `http_request`) can
   be restricted via TOML configuration. The sysop controls which scripts
@@ -335,11 +335,11 @@ A few things to keep in mind:
 
 ## See Also
 
-- [Socket Programming]({% link mex-sockets.md %}) — raw TCP sockets for
+- [Socket Programming]({{ site.baseurl }}{% link mex-sockets.md %}) — raw TCP sockets for
   custom protocols and persistent connections
-- [JSON Processing]({% link mex-json.md %}) — parsing and building JSON
+- [JSON Processing]({{ site.baseurl }}{% link mex-json.md %}) — parsing and building JSON
   for API payloads
-- [Display Codes]({% link display-codes.md %}) — color codes for making
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — color codes for making
   your script output look sharp
-- [MEX Getting Started]({% link mex-getting-started.md %}) — introduction
+- [MEX Getting Started]({{ site.baseurl }}{% link mex-getting-started.md %}) — introduction
   to MEX scripting

@@ -69,7 +69,7 @@ instead of binary output:
 | **Heap sections** | Each `:heapname` becomes a TOML table (`[heapname]`) |
 | **Legacy map** | A `[_legacy_map]` table preserves old numeric IDs for backward compat |
 
-If a [delta overlay]({% link legacy-delta-overlays.md %}) file is found, it is
+If a [delta overlay]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) file is found, it is
 applied automatically during conversion.
 
 ---
@@ -86,7 +86,7 @@ bin/maxcfg --convert-lang /path/to/english.mad \
 ```
 
 This applies only Tier 1 (parameter metadata) from the delta, leaving your
-color choices intact. See [Delta Overlays]({% link legacy-delta-overlays.md %})
+color choices intact. See [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %})
 for details on the tier system.
 
 ---
@@ -119,21 +119,21 @@ legacy includes live in `resources/lang/legacy/`.
 For the complete step-by-step guide — including batch conversion, delta
 overlay details, type suffixes, width/padding operators, troubleshooting,
 and upgrade workflows — see
-[Language Conversion HOWTO]({% link lang-conversion.md %}).
+[Language Conversion HOWTO]({{ site.baseurl }}{% link lang-conversion.md %}).
 
 ---
 
 ## See Also
 
-- [Language Conversion HOWTO]({% link lang-conversion.md %}) — detailed
+- [Language Conversion HOWTO]({{ site.baseurl }}{% link lang-conversion.md %}) — detailed
   step-by-step conversion guide
-- [Legacy Migration]({% link legacy-migration.md %}) — migration overview and
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — migration overview and
   the CTL → TOML configuration path
-- [CTL to TOML]({% link legacy-ctl-to-toml.md %}) — converting configuration
+- [CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) — converting configuration
   files
-- [Delta Overlays]({% link legacy-delta-overlays.md %}) — the delta overlay
+- [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) — the delta overlay
   system for language files
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — full command-line reference for
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — full command-line reference for
   `--convert-lang` and other flags
-- [Language Files (TOML)]({% link lang-toml.md %}) — how the TOML language
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — how the TOML language
   system works after migration

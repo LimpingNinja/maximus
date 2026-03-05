@@ -82,7 +82,7 @@ These flags control which tiers get applied. They work with `--apply-delta`,
 | `--merge-only` | ✓ | ✗ | User migration — keeps your colors untouched |
 | `--ng-only` | ✗ | ✓ | Add the NG theme to an already-enriched file |
 
-See [maxcfg CLI]({% link maxcfg-cli.md %}) for the full flag reference and
+See [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) for the full flag reference and
 examples.
 
 ---
@@ -182,14 +182,14 @@ If you have not customized any strings, simply replace both `english.toml` and
 
 ## See Also
 
-- [Legacy Migration]({% link legacy-migration.md %}) — migration overview
-- [Convert Legacy MAD]({% link legacy-convert-mad.md %}) — the MAD → TOML
+- [Legacy Migration]({{ site.baseurl }}{% link legacy-migration.md %}) — migration overview
+- [Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %}) — the MAD → TOML
   conversion that produces the base file deltas apply to
-- [CTL to TOML]({% link legacy-ctl-to-toml.md %}) — converting configuration
+- [CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) — converting configuration
   files (separate from language deltas)
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — full command-line reference for
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — full command-line reference for
   `--apply-delta`, `--delta`, and mode flags
-- [Language Files (TOML)]({% link lang-toml.md %}) — how the TOML language
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — how the TOML language
   system works after migration
-- [Language Conversion HOWTO]({% link lang-conversion.md %}) — detailed
+- [Language Conversion HOWTO]({{ site.baseurl }}{% link lang-conversion.md %}) — detailed
   conversion walkthrough including delta application

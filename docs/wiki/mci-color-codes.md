@@ -134,7 +134,7 @@ through normal color processing.
 | `\|cd`  | default       | Reset to the theme's default color   | `\|16\|07` |
 
 > For full details on configuring slots, creating custom themes, and editing
-> colors interactively, see [Theme Colors]({% link theme-colors.md %}).
+> colors interactively, see [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}).
 
 ### Examples
 
@@ -161,7 +161,7 @@ Displays "ERROR:" in the error color, then the description in normal text.
 
 ## See Also
 
-- [Display Codes]({% link display-codes.md %}) — overview and quick reference
-- [Theme Colors]({% link theme-colors.md %}) — full theme configuration guide
-- [Info Codes]({% link mci-info-codes.md %}) — dynamic data substitution codes
-- [Terminal Control]({% link mci-terminal-control.md %}) — screen and cursor codes
+- [Display Codes]({{ site.baseurl }}{% link display-codes.md %}) — overview and quick reference
+- [Theme Colors]({{ site.baseurl }}{% link theme-colors.md %}) — full theme configuration guide
+- [Info Codes]({{ site.baseurl }}{% link mci-info-codes.md %}) — dynamic data substitution codes
+- [Terminal Control]({{ site.baseurl }}{% link mci-terminal-control.md %}) — screen and cursor codes

@@ -50,7 +50,7 @@ bin/maxcfg --export-nextgen /path/to/max.ctl
 This is a one-way export — CTL in, TOML out. Your original files are not
 modified.
 
-**→ [CTL to TOML]({% link legacy-ctl-to-toml.md %})** — full walkthrough of
+**→ [CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %})** — full walkthrough of
 what gets converted, what to review, and edge cases.
 
 ### 2. Language: MAD → TOML
@@ -66,7 +66,7 @@ bin/maxcfg --convert-lang /path/to/english.mad \
 The converter handles AVATAR-to-MCI color translation, `#include`/`#define`
 resolution, and printf-to-positional parameter mapping automatically.
 
-**→ [Convert Legacy MAD]({% link legacy-convert-mad.md %})** — full walkthrough
+**→ [Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %})** — full walkthrough
 including custom language files and the conversion pipeline.
 
 ---
@@ -80,7 +80,7 @@ prompt overrides, and optionally the NG semantic theme colors.
 The delta system has two tiers so you can pick up new metadata without losing
 your color customizations.
 
-**→ [Delta Overlays]({% link legacy-delta-overlays.md %})** — how the tier
+**→ [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %})** — how the tier
 system works, merge vs. replace, and upgrade workflows.
 
 ---
@@ -89,7 +89,7 @@ system works, merge vs. replace, and upgrade workflows.
 
 If you don't have legacy files to migrate, none of this applies. The shipped
 TOML configuration and `english.toml` language file are ready to use out of the
-box. See [Building Maximus]({% link building.md %}) for build and install
+box. See [Building Maximus]({{ site.baseurl }}{% link building.md %}) for build and install
 instructions.
 
 ---
@@ -98,20 +98,20 @@ instructions.
 
 All conversion operations use `maxcfg` on the command line. For the full flag
 reference — export options, delta modes, output directories — see
-[maxcfg CLI]({% link maxcfg-cli.md %}).
+[maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}).
 
 ---
 
 ## See Also
 
-- [CTL to TOML]({% link legacy-ctl-to-toml.md %}) — converting legacy
+- [CTL to TOML]({{ site.baseurl }}{% link legacy-ctl-to-toml.md %}) — converting legacy
   configuration files
-- [Convert Legacy MAD]({% link legacy-convert-mad.md %}) — converting legacy
+- [Convert Legacy MAD]({{ site.baseurl }}{% link legacy-convert-mad.md %}) — converting legacy
   language files
-- [Delta Overlays]({% link legacy-delta-overlays.md %}) — the delta overlay
+- [Delta Overlays]({{ site.baseurl }}{% link legacy-delta-overlays.md %}) — the delta overlay
   system for language files
-- [maxcfg CLI]({% link maxcfg-cli.md %}) — command-line reference for all
+- [maxcfg CLI]({{ site.baseurl }}{% link maxcfg-cli.md %}) — command-line reference for all
   conversion flags
-- [Language Files (TOML)]({% link lang-toml.md %}) — how the TOML language
+- [Language Files (TOML)]({{ site.baseurl }}{% link lang-toml.md %}) — how the TOML language
   system works after migration
-- [Building Maximus]({% link building.md %}) — building from source
+- [Building Maximus]({{ site.baseurl }}{% link building.md %}) — building from source
