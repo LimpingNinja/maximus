@@ -1,0 +1,70 @@
+// learn-user-record.mex — MEX Learn Tutorial: Lesson 3 - User Record
+// Source: docs/wiki/mex-learn-user-record.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+
+void row(string: label, string: value)
+{
+  print("|03  ", label, ": |15", value, "|07\n");
+}
+
+string video_name(char: mode)
+{
+  if (mode = VIDEO_ANSI)
+    return "ANSI";
+  else if (mode = VIDEO_AVATAR)
+    return "Avatar";
+
+  return "TTY";
+}
+
+string help_name(char: level)
+{
+  if (level = HELP_NOVICE)
+    return "Novice";
+  else if (level = HELP_EXPERT)
+    return "Expert";
+
+  return "Regular";
+}
+
+int main()
+{
+  // Header
+  print("\n|11╔══════════════════════════════════════╗\n");
+  print("|11║ |14Caller Profile              |11║\n");
+  print("|11╠══════════════════════════════════════╣|07\n");
+
+  // Identity
+  row("Name",     usr.name);
+  if (usr.alias <> "")
+    row("Alias",  usr.alias);
+  row("City",     usr.city);
+
+  // Session
+  print("|11║                                      ║|07\n");
+  row("Calls",    uitostr(usr.times));
+  row("Today",    uitostr(usr.call));
+  row("Online",   uitostr(usr.time) + " min");
+  row("Posted",   ltostr(usr.msgs_posted));
+  row("Read",     ltostr(usr.msgs_read));
+
+  // Transfer stats
+  print("|11║                                      ║|07\n");
+  row("Files up",   ultostr(usr.nup));
+  row("Files down", ultostr(usr.ndown));
+  row("KB up",      ultostr(usr.up));
+  row("KB down",    ultostr(usr.down));
+
+  // Settings
+  print("|11║                                      ║|07\n");
+  row("Video",    video_name(usr.video));
+  row("Help",     help_name(usr.help));
+  row("Screen",   itostr((int)usr.width) + "x" + itostr((int)usr.len));
+
+  // Footer
+  print("|11╚══════════════════════════════════════╝|07\n\n");
+
+  return 0;
+}

@@ -1,0 +1,68 @@
+// learn-networking.mex — MEX Learn Tutorial: Lesson 9 - Networking
+// Source: docs/wiki/mex-learn-networking.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+#include <socket.mh>
+#include <json.mh>
+
+int main()
+{
+  int: status;
+  int: jh;
+  string: body;
+  string: setup;
+  string: punch;
+
+  print("\n|11═══════════════════════════════════════\n");
+  print("|14  Joke of the Day\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+
+  print("|03Reaching out to the internet...\n");
+
+  status := http_request(
+    "https://official-joke-api.appspot.com/random_joke",
+    "GET", "", "", body, 5000
+  );
+
+  if (status = -1)
+  {
+    print("|12Couldn't connect.|07 The tubes are clogged.\n\n");
+    return 0;
+  }
+
+  if (status <> 200)
+  {
+    print("|12API returned ", status, ".|07 Try again later.\n\n");
+    return 0;
+  }
+
+  jh := json_open(body);
+
+  if (jh = -1)
+  {
+    print("|12Couldn't parse response.|07 Blame the API.\n\n");
+    return 0;
+  }
+
+  // The API returns: {"type":"...", "setup":"...", "punchline":"..."}
+  setup := json_get_str(jh, "setup");
+  punch := json_get_str(jh, "punchline");
+
+  json_close(jh);
+
+  if (setup = "")
+  {
+    print("|12No joke found.|07 The irony.\n\n");
+    return 0;
+  }
+
+  // Display with dramatic pause
+  print("\n|15", setup, "|07\n\n");
+  print("|08(press any key for the punchline)|07");
+  getch();
+  print("\r                                    \r");
+  print("|10", punch, "|07\n\n");
+
+  return 0;
+}

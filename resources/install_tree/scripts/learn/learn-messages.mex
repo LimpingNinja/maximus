@@ -1,0 +1,94 @@
+// learn-messages.mex — MEX Learn Tutorial: Lesson 8 - Messages
+// Source: docs/wiki/mex-learn-messages.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+#include <max_menu.mh>
+
+#define MAX_AREAS 50
+
+int main()
+{
+  struct _marea: ma;
+  string: saved_area;
+  string: area_name;
+  int: total_areas;
+  long: total_msgs;
+  long: busiest_count;
+  string: busiest_name;
+  int: ch;
+
+  saved_area := marea.name;
+
+  total_areas := 0;
+  total_msgs := 0;
+  busiest_count := 0;
+  busiest_name := "(none)";
+
+  print("\n|11═══════════════════════════════════════\n");
+  print("|14  Board Pulse\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+
+  print("|03Scanning message areas...\n\n");
+
+  // Iterate every message area
+  if (msgareafindfirst(ma, "", AFFO_NODIV))
+  {
+    do
+    {
+      // Try to select this area to get msg stats
+      if (msgareaselect(ma.name))
+      {
+        total_areas := total_areas + 1;
+        total_msgs := total_msgs + msg.num;
+
+        // Print area line
+        if (msg.num > 0)
+        {
+          print("|14  ", strpad(marea.descript, 28, ' '),
+                " |15", strpadleft(ltostr(msg.num), 5, ' '),
+                " |03msgs\n");
+        }
+        else
+        {
+          print("|08  ", strpad(marea.descript, 28, ' '),
+                "     0 msgs\n");
+        }
+
+        // Track the busiest area
+        if (msg.num > busiest_count)
+        {
+          busiest_count := msg.num;
+          busiest_name := marea.descript;
+        }
+      }
+    }
+    while (msgareafindnext(ma));
+
+    msgareafindclose();
+  }
+
+  // Restore the caller's original area
+  msgareaselect(saved_area);
+
+  // Summary
+  print("\n|11═══════════════════════════════════════|07\n");
+  print("|03  Areas:    |15", total_areas, "\n");
+  print("|03  Messages: |15", total_msgs, "\n");
+  print("|03  Busiest:  |15", busiest_name,
+        " |03(|15", busiest_count, "|03)\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+
+  // Offer to check mail
+  print("|14Check your mail? |11[|15Y|11/|15N|11] ");
+  ch := input_ch(CINPUT_DISPLAY + CINPUT_ACCEPTABLE, "YyNn");
+
+  if (ch = 'Y' or ch = 'y')
+  {
+    print("\n\n");
+    menu_cmd(MNU_MSG_CHECKMAIL, "");
+  }
+
+  print("\n");
+  return 0;
+}

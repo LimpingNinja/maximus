@@ -1,0 +1,369 @@
+// learn-mini-game.mex — MEX Learn Tutorial: Lesson 10 - Mini Game
+// Source: docs/wiki/mex-learn-mini-game.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+#include <maxui.mh>
+#include <rand.mh>
+
+#define SCORE_FILE "dungeon_scores.txt"
+
+// Room constants
+#define ROOM_ENTRY   1
+#define ROOM_ARCHIVE 2
+#define ROOM_SERVER  3
+
+// Game state
+int: current_room;
+int: has_key;
+int: boss_defeated;
+int: moves;
+int: game_over;
+
+void show_scores()
+{
+  int: fd;
+  int: count;
+  string: line;
+
+  fd := open(SCORE_FILE, IOPEN_READ);
+
+  if (fd = -1)
+    return;
+
+  print("|11─── High Scores ───|07\n");
+  count := 0;
+
+  while (readln(fd, line) = 0 and count < 5)
+  {
+    print("|03  ", line, "\n");
+    count := count + 1;
+  }
+
+  close(fd);
+  print("|11───────────────────|07\n\n");
+}
+
+void save_score()
+{
+  int: fd;
+  string: entry;
+
+  entry := usr.name + " — " + itostr(moves) + " moves";
+
+  fd := open(SCORE_FILE, IOPEN_APPEND + IOPEN_CREATE);
+
+  if (fd <> -1)
+  {
+    writeln(fd, entry);
+    close(fd);
+  }
+}
+
+void describe_room()
+{
+  print("\f");
+  print("|11═══════════════════════════════════════\n");
+
+  if (current_room = ROOM_ENTRY)
+  {
+    print("|14  The Entry Hall\n");
+    print("|11═══════════════════════════════════════|07\n\n");
+    print("|03You stand in a dim hallway. The walls are lined\n");
+    print("with faded printouts of login screens from boards\n");
+    print("that no longer exist.\n\n");
+    print("|07A |15note|07 on the wall reads:\n");
+    print("|06  \"The server room holds the way out.\n");
+    print("   But you'll need the key.\"\n\n");
+    print("|03There is a passage |14east|03 to the Archive Room.\n");
+  }
+  else if (current_room = ROOM_ARCHIVE)
+  {
+    print("|14  The Archive Room\n");
+    print("|11═══════════════════════════════════════|07\n\n");
+    print("|03Shelves sag under the weight of a thousand\n");
+    print("floppy disks. The labels are all handwritten.\n");
+    print("Someone organized these by |15vibe|03.\n\n");
+
+    if (has_key = 0)
+    {
+      print("|07A |15brass key|07 glints on the floor between the\n");
+      print("shelves.\n\n");
+    }
+    else
+      print("|08(The key is gone. You have it.)|07\n\n");
+
+    print("|03Passages lead |14west|03 (Entry Hall) and\n");
+    print("|14north|03 (Server Room).\n");
+  }
+  else if (current_room = ROOM_SERVER)
+  {
+    print("|14  The Server Room\n");
+    print("|11═══════════════════════════════════════|07\n\n");
+
+    if (boss_defeated)
+    {
+      print("|10The terminal is dark. The door is open.\n");
+      print("You can see daylight beyond it.|07\n\n");
+    }
+    else
+    {
+      print("|03A massive CRT terminal hums in the center of\n");
+      print("the room. Green text scrolls across its face.\n\n");
+      print("|15It's waiting for you to answer its question.|07\n\n");
+    }
+
+    print("|03A passage leads |14south|03 (Archive Room).\n");
+  }
+
+  print("\n|08Moves: ", moves, "|07\n");
+}
+
+int room_menu()
+{
+  struct ui_lightbar_style: style;
+  int: choice;
+
+  ui_lightbar_style_default(style);
+  style.normal_attr   := ui_make_attr(UI_CYAN, UI_BLACK);
+  style.selected_attr := ui_make_attr(UI_WHITE, UI_BLUE);
+  style.wrap := 1;
+  style.show_brackets := UI_BRACKET_SQUARE;
+
+  if (current_room = ROOM_ENTRY)
+  {
+    array [1..2] of string: items;
+    items[1] := "Go East (Archive Room)";
+    items[2] := "Look around";
+    choice := ui_lightbar(items, 2, 3, 18, 28, style);
+    return choice;
+  }
+  else if (current_room = ROOM_ARCHIVE)
+  {
+    if (has_key = 0)
+    {
+      array [1..4] of string: items;
+      items[1] := "Go West (Entry Hall)";
+      items[2] := "Go North (Server Room)";
+      items[3] := "Pick up the key";
+      items[4] := "Look around";
+      choice := ui_lightbar(items, 4, 3, 18, 28, style);
+      return choice + 10;
+    }
+    else
+    {
+      array [1..3] of string: items;
+      items[1] := "Go West (Entry Hall)";
+      items[2] := "Go North (Server Room)";
+      items[3] := "Look around";
+      choice := ui_lightbar(items, 3, 3, 18, 28, style);
+      // Remap: 1=11, 2=12, 3=14
+      if (choice = 3)
+        return 14;
+      return choice + 10;
+    }
+  }
+  else if (current_room = ROOM_SERVER)
+  {
+    if (boss_defeated)
+    {
+      array [1..2] of string: items;
+      items[1] := "Go South (Archive Room)";
+      items[2] := "Walk through the exit";
+      choice := ui_lightbar(items, 2, 3, 18, 28, style);
+      return choice + 20;
+    }
+    else
+    {
+      array [1..2] of string: items;
+      items[1] := "Go South (Archive Room)";
+      items[2] := "Approach the terminal";
+      choice := ui_lightbar(items, 2, 3, 18, 28, style);
+      return choice + 20;
+    }
+  }
+
+  return 0;
+}
+
+void boss_fight()
+{
+  array [1..3] of string: questions;
+  array [1..3] of string: answers;
+  int: q;
+  string: reply;
+
+  questions[1] := "What does BBS stand for?";
+  answers[1]   := "BULLETIN BOARD SYSTEM";
+
+  questions[2] := "What year was FidoNet created?";
+  answers[2]   := "1984";
+
+  questions[3] := "What BBS software are you running right now?";
+  answers[3]   := "MAXIMUS";
+
+  q := (rand() % 3) + 1;
+
+  print("\n|15The terminal flickers. Text appears:\n\n");
+  print("|14  \"ANSWER MY QUESTION TO PASS.\"\n\n");
+  print("|07  ", questions[q], "\n\n");
+  input_str(reply, INPUT_NLB_LINE, 0, 60, "|11> |15");
+
+  if (strupper(reply) = answers[q])
+  {
+    print("\n|10The terminal goes dark. A door slides open behind it.\n");
+    print("A draft of fresh air hits your face.|07\n\n");
+    boss_defeated := 1;
+  }
+  else
+  {
+    print("\n|12\"INCORRECT.\"\n");
+    print("|03The terminal buzzes angrily. You step back.|07\n\n");
+  }
+
+  print("|08(press any key)|07");
+  getch();
+}
+
+int main()
+{
+  int: action;
+
+  srand(time());
+
+  current_room := ROOM_ENTRY;
+  has_key := 0;
+  boss_defeated := 0;
+  moves := 0;
+  game_over := 0;
+
+  print("\f");
+  print("|11═══════════════════════════════════════\n");
+  print("|14  The Dungeon of Forgotten Logins\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+  print("|03Welcome, |15", usr.name, "|03.\n\n");
+  print("|07You wake up in a hallway that smells like\n");
+  print("warm electronics and forgotten passwords.\n");
+  print("There is no going back. Only forward.\n\n");
+
+  show_scores();
+
+  print("|08(press any key to begin)|07");
+  getch();
+
+  // === Main game loop ===
+  while (game_over = 0)
+  {
+    describe_room();
+    action := room_menu();
+
+    if (action = 0)
+    {
+      // Escape pressed — confirm quit
+      print("\n|14Quit the game? |11[|15Y|11/|15N|11] ");
+
+      if (input_ch(CINPUT_DISPLAY + CINPUT_ACCEPTABLE, "YyNn") = 'Y')
+      {
+        game_over := 1;
+      }
+      else
+        print("\n");
+    }
+    // Entry Hall actions
+    else if (action = 1)
+    {
+      current_room := ROOM_ARCHIVE;
+      moves := moves + 1;
+    }
+    else if (action = 2)
+    {
+      print("\n|03The printouts are mostly login prompts.\n");
+      print("One says: |06\"SysOp: CALL BACK AFTER 6PM\"|07\n");
+      print("|08(press any key)|07");
+      getch();
+    }
+    // Archive Room actions
+    else if (action = 11)
+    {
+      current_room := ROOM_ENTRY;
+      moves := moves + 1;
+    }
+    else if (action = 12)
+    {
+      if (has_key = 0)
+      {
+        print("\n|12The door to the Server Room won't budge.\n");
+        print("|03Maybe you need something...|07\n");
+        print("|08(press any key)|07");
+        getch();
+      }
+      else
+      {
+        print("\n|10The brass key turns. The door opens.|07\n");
+        print("|08(press any key)|07");
+        getch();
+        current_room := ROOM_SERVER;
+        moves := moves + 1;
+      }
+    }
+    else if (action = 13)
+    {
+      print("\n|10You pick up the brass key.|07\n");
+      print("|03It's warm. Engraved on it: |06\"ENTER\"|07\n");
+      print("|08(press any key)|07");
+      getch();
+      has_key := 1;
+      moves := moves + 1;
+    }
+    else if (action = 14)
+    {
+      print("\n|03The floppy labels read things like:\n");
+      print("|06  \"DOOM (disk 7 of 12)\"");
+      print("  \"TAX STUFF??\"");
+      print("  \"DO NOT FORMAT\"|07\n");
+      print("|08(press any key)|07");
+      getch();
+    }
+    // Server Room actions
+    else if (action = 21)
+    {
+      current_room := ROOM_ARCHIVE;
+      moves := moves + 1;
+    }
+    else if (action = 22)
+    {
+      if (boss_defeated)
+      {
+        // Walk through the exit — you win!
+        game_over := 1;
+        moves := moves + 1;
+
+        print("\f");
+        print("|11═══════════════════════════════════════\n");
+        print("|10  YOU ESCAPED!\n");
+        print("|11═══════════════════════════════════════|07\n\n");
+        print("|03Congratulations, |15", usr.name, "|03.\n\n");
+        print("|07You made it out of the Dungeon of Forgotten\n");
+        print("Logins in |15", moves, "|07 moves.\n\n");
+
+        save_score();
+        print("|10Score saved!|07\n\n");
+        show_scores();
+      }
+      else
+      {
+        moves := moves + 1;
+        boss_fight();
+      }
+    }
+  }
+
+  if (boss_defeated = 0)
+  {
+    print("\n|06You leave the dungeon unfinished.\n");
+    print("|03The terminal will remember you, |15",
+          usr.name, "|03.\n\n|07");
+  }
+
+  return 0;
+}

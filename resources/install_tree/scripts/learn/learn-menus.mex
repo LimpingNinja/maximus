@@ -1,0 +1,72 @@
+// learn-menus.mex — MEX Learn Tutorial: Lesson 7 - Menus
+// Source: docs/wiki/mex-learn-menus.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+#include <maxui.mh>
+
+#define NUM_ITEMS  5
+
+void draw_header()
+{
+  // 0xCD = CP437 code for "═" (double horizontal line)
+  // You could use '═' directly — this just shows that hex codes work.
+  ui_fill_rect(1, 1, 40, 1, 0xCD, ui_make_attr(UI_LCYAN, UI_BLACK));
+  ui_write_padded(2, 1, 40, "  Sysop Toolbox", ui_make_attr(UI_YELLOW, UI_BLACK));
+  ui_fill_rect(3, 1, 40, 1, 0xCD, ui_make_attr(UI_LCYAN, UI_BLACK));
+}
+
+void draw_footer(int: row)
+{
+  ui_goto(row, 1);
+  ui_set_attr(ui_make_attr(UI_DKGRAY, UI_BLACK));
+  print("Arrow keys move, Enter selects, Esc quits");
+  ui_set_attr(ui_make_attr(UI_GRAY, UI_BLACK));
+}
+
+int main()
+{
+  array [1..NUM_ITEMS] of string: items;
+  struct ui_lightbar_style: style;
+  int: choice;
+
+  items[1] := " View Profile    ";
+  items[2] := " Sign Guestbook  ";
+  items[3] := " BBS Trivia      ";
+  items[4] := " Number Game     ";
+  items[5] := " Exit            ";
+
+  ui_lightbar_style_default(style);
+  style.normal_attr   := ui_make_attr(UI_CYAN, UI_BLACK);
+  style.selected_attr := ui_make_attr(UI_WHITE, UI_BLUE);
+  style.wrap := 1;
+  style.enable_hotkeys := 1;
+  style.show_brackets := UI_BRACKET_NONE;
+
+  choice := 1;
+
+  while (choice <> 0)
+  {
+    // Clear and draw the chrome
+    print("\f");
+    draw_header();
+    draw_footer(5 + NUM_ITEMS + 2);
+
+    // Show the lightbar — starts at row 5, column 5
+    choice := ui_lightbar(items, NUM_ITEMS, 5, 5, 20, style);
+
+    if (choice = 1)
+      shell(0, ":profile");
+    else if (choice = 2)
+      shell(0, ":guestbook");
+    else if (choice = 3)
+      shell(0, ":trivia");
+    else if (choice = 4)
+      shell(0, ":guess");
+    else if (choice = 5 or choice = 0)
+      choice := 0;
+  }
+
+  print("\f|07");
+  return 0;
+}

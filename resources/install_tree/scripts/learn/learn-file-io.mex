@@ -1,0 +1,102 @@
+// learn-file-io.mex — MEX Learn Tutorial: Lesson 6 - File I/O
+// Source: docs/wiki/mex-learn-file-io.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+
+#define GUESTBOOK "guestbook.txt"
+#define MAX_SHOW  10
+
+void show_entries()
+{
+  int: fd;
+  int: count;
+  string: line;
+
+  fd := open(GUESTBOOK, IOPEN_READ);
+
+  if (fd = -1)
+  {
+    print("|06No entries yet. You'll be the first!\n\n");
+    return;
+  }
+
+  // Count total lines
+  count := 0;
+
+  while (readln(fd, line) = 0)
+    count := count + 1;
+
+  close(fd);
+
+  // Reopen and skip to the last MAX_SHOW entries
+  fd := open(GUESTBOOK, IOPEN_READ);
+
+  if (count > MAX_SHOW)
+  {
+    int: skip;
+    skip := count - MAX_SHOW;
+
+    while (skip > 0)
+    {
+      readln(fd, line);
+      skip := skip - 1;
+    }
+
+    print("|03Showing last |15", MAX_SHOW, "|03 of |15",
+          count, "|03 entries:\n\n");
+  }
+  else
+    print("|03All |15", count, "|03 entries:\n\n");
+
+  // Display the remaining lines
+  while (readln(fd, line) = 0)
+    print("|07  ", line, "\n");
+
+  close(fd);
+  print("\n");
+}
+
+void add_entry()
+{
+  int: fd;
+  string: message;
+  string: entry;
+
+  print("|14Leave a message (or just press Enter to skip):\n");
+  input_str(message, INPUT_NLB_LINE, 0, 60, "|11> |15");
+
+  if (message = "")
+  {
+    print("|06Maybe next time.\n\n");
+    return;
+  }
+
+  // Build the entry: "Name — message"
+  entry := usr.name + " — " + message;
+
+  fd := open(GUESTBOOK, IOPEN_APPEND + IOPEN_CREATE);
+
+  if (fd = -1)
+  {
+    print("|12Error: couldn't open guestbook for writing.\n");
+    return;
+  }
+
+  writeln(fd, entry);
+  close(fd);
+
+  print("|10Signed!|07 Thanks, ", usr.name, ".\n\n");
+}
+
+int main()
+{
+  print("\n|11═══════════════════════════════════════\n");
+  print("|14  The Guestbook\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+
+  show_entries();
+  add_entry();
+
+  return 0;
+}

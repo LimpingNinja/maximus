@@ -1,0 +1,103 @@
+// learn-loops.mex — MEX Learn Tutorial: Lesson 5 - Loops
+// Source: docs/wiki/mex-learn-loops.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+#include <rand.mh>
+
+int play_round()
+{
+  int: secret;
+  int: guess;
+  int: attempts;
+  string: answer;
+
+  secret := (rand() % 50) + 1;
+  attempts := 0;
+
+  print("\n|14I'm thinking of a number between 1 and 50.\n");
+  print("|03Good luck, |15", usr.name, "|03.\n\n");
+
+  // while loop — keep guessing until they get it
+  guess := 0;
+
+  while (guess <> secret)
+  {
+    print("|14Your guess? ");
+    input_str(answer, INPUT_NLB_LINE, 0, 5, "|11> |15");
+
+    if (answer = "")
+    {
+      print("|12Come on, guess something.\n");
+    }
+    else
+    {
+      guess := strtoi(answer);
+      attempts := attempts + 1;
+
+      if (guess < secret)
+        print("|06Too low.\n");
+      else if (guess > secret)
+        print("|06Too high.\n");
+    }
+  }
+
+  print("\n|10Got it!|07 The number was |15", secret, "|07.\n");
+  print("|03You got it in |14", attempts, "|03 guess");
+
+  if (attempts <> 1)
+    print("es");
+
+  print(".|07\n");
+
+  return attempts;
+}
+
+int main()
+{
+  int: best;
+  int: rounds;
+  int: result;
+  int: choice;
+
+  srand(time());
+
+  best := 999;
+  rounds := 0;
+
+  print("\n|11═══════════════════════════════════════\n");
+  print("|14  The Number Game\n");
+  print("|11═══════════════════════════════════════|07\n");
+
+  // do..while — always play at least one round
+  do
+  {
+    result := play_round();
+    rounds := rounds + 1;
+
+    if (result < best)
+      best := result;
+
+    print("\n|14Play again? |11[|15Y|11/|15N|11] ");
+    choice := input_ch(CINPUT_DISPLAY + CINPUT_ACCEPTABLE, "YyNn");
+    print("\n");
+  }
+  while (choice = 'Y' or choice = 'y');
+
+  // for loop — draw a results banner
+  print("\n|11");
+  for (result := 1; result <= 39; result := result + 1)
+    print("═");
+  print("|07\n");
+
+  print("|14  Game Over\n");
+  print("|03  Rounds played: |15", rounds, "\n");
+  print("|03  Best score:    |15", best, " guesses\n");
+
+  print("|11");
+  for (result := 1; result <= 39; result := result + 1)
+    print("═");
+  print("|07\n\n");
+
+  return 0;
+}

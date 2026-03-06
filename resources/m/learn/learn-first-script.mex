@@ -1,0 +1,18 @@
+// learn-first-script.mex — MEX Learn Tutorial: Lesson 1 - Your First Script
+// Source: docs/wiki/mex-learn-first-script.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+
+int main()
+{
+  print("\n|11Hello, |15", usr.name, "|11.\n\n");
+  print("|03You've called |14", usr.times, "|03 time");
+
+  if (usr.times <> 1)
+    print("s");
+
+  print(".|07\n\n");
+
+  return 0;
+}

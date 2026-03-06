@@ -1,0 +1,55 @@
+// learn-input-output.mex — MEX Learn Tutorial: Lesson 2 - Input and Output
+// Source: docs/wiki/mex-learn-input-output.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+
+int main()
+{
+  string: fav_board;
+  string: best_memory;
+  int: choice;
+
+  // The opening
+  print("\n|11═══════════════════════════════════\n");
+  print("|14  The Late-Night Interview\n");
+  print("|11═══════════════════════════════════|07\n\n");
+
+  print("|03Hey |15", usr.name, "|03.\n");
+  print("|03Quick — three questions. No wrong answers.\n\n");
+
+  // Question 1: text input
+  print("|14What's your favorite BBS (besides this one)?\n");
+  input_str(fav_board, INPUT_NLB_LINE, 0, 40, "|11> |15");
+
+  if (fav_board = "")
+    fav_board := "the silent type, huh?";
+
+  // Question 2: text input
+  print("\n|14Best memory from the BBS days?\n");
+  input_str(best_memory, INPUT_NLB_LINE, 0, 60, "|11> |15");
+
+  if (best_memory = "")
+    best_memory := "(stares wistfully into the distance)";
+
+  // Question 3: single keypress
+  print("\n|14Would you run a BBS again if it were easy? |11[|15Y|11/|15N|11] ");
+  choice := input_ch(CINPUT_DISPLAY + CINPUT_ACCEPTABLE, "YyNn");
+
+  // The response
+  print("\n\n|11═══════════════════════════════════\n");
+  print("|14  Your Answers\n");
+  print("|11═══════════════════════════════════|07\n\n");
+
+  print("|03Favorite board:  |15", fav_board, "\n");
+  print("|03Best memory:     |15", best_memory, "\n");
+  print("|03Run one again?   |15");
+
+  if (choice = 'Y' OR choice = 'y')
+    print("Yes — and honestly, you already are.\n");
+  else
+    print("No — but you're calling one at 2 AM, so...\n");
+
+  print("|07\n");
+  return 0;
+}

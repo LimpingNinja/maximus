@@ -1,0 +1,77 @@
+// learn-decisions.mex — MEX Learn Tutorial: Lesson 4 - Decisions
+// Source: docs/wiki/mex-learn-decisions.md
+// This script accompanies the Maximus wiki tutorial series.
+
+#include <max.mh>
+
+int main()
+{
+  string: answer;
+  int: score;
+
+  score := 0;
+
+  print("\n|11═══════════════════════════════════════\n");
+  print("|14  BBS Trivia: How Well Do You Know\n");
+  print("|14  Your History, |15", usr.name, "|14?\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+  print("|03Three questions. No lifelines. Let's go.\n\n");
+
+  // Question 1
+  print("|14Q1: |07What BBS software shares its name with\n");
+  print("    a Roman general? (Hint: you're using it.)\n");
+  input_str(answer, INPUT_NLB_LINE, 0, 40, "|11> |15");
+
+  if (strupper(answer) = "MAXIMUS")
+  {
+    print("|10Correct!|07 You're on it right now.\n\n");
+    score := score + 1;
+  }
+  else
+    print("|12Nope.|07 It's Maximus. You're literally using it.\n\n");
+
+  // Question 2
+  print("|14Q2: |07What network connected BBSes worldwide\n");
+  print("    using store-and-forward message routing?\n");
+  input_str(answer, INPUT_NLB_LINE, 0, 40, "|11> |15");
+
+  if (strupper(answer) = "FIDONET" or strupper(answer) = "FIDO NET"
+      or strupper(answer) = "FIDO")
+  {
+    print("|10Correct!|07 FidoNet — the original social network.\n\n");
+    score := score + 1;
+  }
+  else
+    print("|12Nope.|07 FidoNet. Est. 1984. Still running.\n\n");
+
+  // Question 3
+  print("|14Q3: |07What does BBS stand for?\n");
+  input_str(answer, INPUT_NLB_LINE, 0, 60, "|11> |15");
+
+  if (strfind(strupper(answer), "BULLETIN") <> -1
+      and strfind(strupper(answer), "BOARD") <> -1
+      and strfind(strupper(answer), "SYSTEM") <> -1)
+  {
+    print("|10Correct!|07 Bulletin Board System.\n\n");
+    score := score + 1;
+  }
+  else
+    print("|12Nope.|07 Bulletin Board System.\n\n");
+
+  // Results
+  print("|11═══════════════════════════════════════\n");
+  print("|14  Score: |15", score, "|14 out of 3\n");
+  print("|11═══════════════════════════════════════|07\n\n");
+
+  if (score = 3)
+    print("|10Perfect score! |07You are a true sysop.\n");
+  else if (score = 2)
+    print("|14Two out of three.|07 Respectable showing.\n");
+  else if (score = 1)
+    print("|06One out of three.|07 The spirit is willing.\n");
+  else
+    print("|12Zero.|07 ...are you sure you meant to call a BBS?\n");
+
+  print("\n");
+  return 0;
+}

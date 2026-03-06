@@ -1,0 +1,105 @@
+name = "MEX-LEARN"
+title = "MEX LEARN TUTORIALS (%t mins)"
+header_file = "display/screens/mexinfo"
+header_types = ["Novice", "Regular", "Expert"]
+menu_file = ""
+menu_types = []
+menu_length = 0
+menu_color = -1
+option_width = 0
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-first-script"
+priv_level = "Demoted"
+description = "1 Lesson 1: First Script"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-input-output"
+priv_level = "Demoted"
+description = "2 Lesson 2: Input & Output"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-user-record"
+priv_level = "Demoted"
+description = "3 Lesson 3: User Record"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-decisions"
+priv_level = "Demoted"
+description = "4 Lesson 4: Decisions"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-loops"
+priv_level = "Demoted"
+description = "5 Lesson 5: Loops"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-file-io"
+priv_level = "Demoted"
+description = "6 Lesson 6: File I/O"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-menus"
+priv_level = "Demoted"
+description = "7 Lesson 7: Menus"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-messages"
+priv_level = "Demoted"
+description = "8 Lesson 8: Messages"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-networking"
+priv_level = "Demoted"
+description = "9 Lesson 9: Networking"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "MEX"
+arguments = "scripts/learn/learn-mini-game"
+priv_level = "Demoted"
+description = "0 Lesson 10: Mini-Game"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Goodbye"
+arguments = ""
+priv_level = "Demoted"
+description = "Goodbye"
+key_poke = ""
+modifiers = []
+
+[[option]]
+command = "Display_Menu"
+arguments = "MEX"
+priv_level = "Demoted"
+description = "Back"
+key_poke = ""
+modifiers = []
