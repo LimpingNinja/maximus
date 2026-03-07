@@ -8,6 +8,9 @@ ifneq ($(PLATFORM),darwin)
 CFLAGS += -funsigned-bitfields
 endif
 CFLAGS += -Wcast-align
+# Disable glibc _FORTIFY_SOURCE (auto-enabled by GCC 13.3+ / Ubuntu 24.04)
+# which causes buffer-overflow aborts for legacy path buffers < PATH_MAX.
+CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 
 BUILD:=$(strip $(BUILD))
 

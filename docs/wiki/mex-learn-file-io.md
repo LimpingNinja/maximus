@@ -57,13 +57,14 @@ You can combine modes with `+`:
 
 ```c
 // Open for appending; create if it doesn't exist yet
-fd := open("guestbook.txt", IOPEN_APPEND + IOPEN_CREATE);
+fd := open("guestbook.txt", IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE);
 ```
 
 This is the most common pattern for files that grow over time — logs,
-guestbooks, score tables. `IOPEN_APPEND` means every `writeln()` goes to
-the end of the file. `IOPEN_CREATE` means the first caller to run the
-script creates the file automatically.
+guestbooks, score tables. `IOPEN_WRITE` enables write access.
+`IOPEN_APPEND` means every `writeln()` goes to the end of the file.
+`IOPEN_CREATE` means the first caller to run the script creates the file
+automatically. Combine flags with `|` (bitwise OR).
 
 ### Reading Lines
 
@@ -80,7 +81,7 @@ The typical pattern — read every line in a loop:
 ```c
 string: line;
 
-while (readln(fd, line) = 0)
+while (readln(fd, line) <> -1)
 {
   print(line, "\n");
 }
@@ -145,7 +146,7 @@ void show_entries()
   // Count total lines
   count := 0;
 
-  while (readln(fd, line) = 0)
+  while (readln(fd, line) <> -1)
     count := count + 1;
 
   close(fd);
@@ -171,7 +172,7 @@ void show_entries()
     print("|03All |15", count, "|03 entries:\n\n");
 
   // Display the remaining lines
-  while (readln(fd, line) = 0)
+  while (readln(fd, line) <> -1)
     print("|07  ", line, "\n");
 
   close(fd);
@@ -193,10 +194,10 @@ void add_entry()
     return;
   }
 
-  // Build the entry: "Name — message"
-  entry := usr.name + " — " + message;
+  // Build the entry: "Name -- message"
+  entry := usr.name + " -- " + message;
 
-  fd := open(GUESTBOOK, IOPEN_APPEND + IOPEN_CREATE);
+  fd := open(GUESTBOOK, IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE);
 
   if (fd = -1)
   {
@@ -240,21 +241,21 @@ simplest approach — MEX files are small, and the double-read is
 instantaneous. You `close()` after counting, then `open()` again for
 display.
 
-**`readln()` in a loop.** The `while (readln(fd, line) = 0)` pattern is
+**`readln()` in a loop.** The `while (readln(fd, line) <> -1)` pattern is
 the idiomatic way to process a text file in MEX. Each call to `readln()`
-reads one line. When it hits end-of-file, it returns non-zero and the
-loop exits.
+reads one line and returns the string length on success. When it hits
+end-of-file, it returns `-1` and the loop exits.
 
 **String concatenation for the entry.** The line
-`entry := usr.name + " — " + message` builds the guestbook entry from
-the caller's name and their message, connected with an em dash. This is
+`entry := usr.name + " -- " + message` builds the guestbook entry from
+the caller's name and their message, connected with a double dash. This is
 the `+` operator doing string concatenation, same as you saw in Lesson 3.
 
-**`IOPEN_APPEND + IOPEN_CREATE`** is the golden mode for files that grow.
-`APPEND` means writes go to the end — you never overwrite existing entries.
-`CREATE` means the file springs into existence if it doesn't already exist.
-Together, they make a file that "just works" whether it's the first call
-or the thousandth.
+**`IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE`** is the golden mode for
+files that grow. `WRITE` enables write access. `APPEND` means writes go to
+the end — you never overwrite existing entries. `CREATE` means the file
+springs into existence if it doesn't already exist. Together, they make a
+file that "just works" whether it's the first call or the thousandth.
 
 ## Compile and Run
 
@@ -312,10 +313,10 @@ land, and make sure the directory exists before you try to write to it.
   descriptor, close it when done.
 - **`readln()` and `writeln()`** — line-oriented text I/O. The bread and
   butter of MEX file handling.
-- **File modes** — `IOPEN_READ`, `IOPEN_APPEND + IOPEN_CREATE`, and
-  friends. Combine with `+`.
+- **File modes** — `IOPEN_READ`, `IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE`,
+  and friends. Combine with `|`.
 - **Error handling** — check for `fd = -1` after every `open()`.
-- **The `while (readln(...) = 0)` pattern** — the standard way to read
+- **The `while (readln(...) <> -1)` pattern** — the standard way to read
   a file line by line.
 - **`fileexists()`** — check before you open, if you prefer.
 - **`#define`** for constants keeps your code flexible and readable.

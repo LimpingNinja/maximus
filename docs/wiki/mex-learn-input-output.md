@@ -124,7 +124,7 @@ int main()
   print("|11═══════════════════════════════════|07\n\n");
 
   print("|03Hey |15", usr.name, "|03.\n");
-  print("|03Quick — three questions. No wrong answers.\n\n");
+  print("|03Quick -- three questions. No wrong answers.\n\n");
 
   // Question 1: text input
   print("|14What's your favorite BBS (besides this one)?\n");
@@ -154,9 +154,9 @@ int main()
   print("|03Run one again?   |15");
 
   if (choice = 'Y' OR choice = 'y')
-    print("Yes — and honestly, you already are.\n");
+    print("Yes -- and honestly, you already are.\n");
   else
-    print("No — but you're calling one at 2 AM, so...\n");
+    print("No -- but you're calling one at 2 AM, so...\n");
 
   print("|07\n");
   return 0;

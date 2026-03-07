@@ -1,4 +1,4 @@
-// learn-file-io.mex — MEX Learn Tutorial: Lesson 6 - File I/O
+// learn-file-io.mex -- MEX Learn Tutorial: Lesson 6 - File I/O
 // Source: docs/wiki/mex-learn-file-io.md
 // This script accompanies the Maximus wiki tutorial series.
 
@@ -24,7 +24,7 @@ void show_entries()
   // Count total lines
   count := 0;
 
-  while (readln(fd, line) = 0)
+  while (readln(fd, line) <> -1)
     count := count + 1;
 
   close(fd);
@@ -50,7 +50,7 @@ void show_entries()
     print("|03All |15", count, "|03 entries:\n\n");
 
   // Display the remaining lines
-  while (readln(fd, line) = 0)
+  while (readln(fd, line) <> -1)
     print("|07  ", line, "\n");
 
   close(fd);
@@ -72,10 +72,10 @@ void add_entry()
     return;
   }
 
-  // Build the entry: "Name — message"
-  entry := usr.name + " — " + message;
+  // Build the entry: "Name -- message"
+  entry := usr.name + " -- " + message;
 
-  fd := open(GUESTBOOK, IOPEN_APPEND + IOPEN_CREATE);
+  fd := open(GUESTBOOK, IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE);
 
   if (fd = -1)
   {

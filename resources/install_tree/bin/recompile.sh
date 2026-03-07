@@ -14,7 +14,7 @@ cd "$BASE_DIR"
 
 export LD_LIBRARY_PATH="${BASE_DIR}/lib:$LD_LIBRARY_PATH"
 export DYLD_LIBRARY_PATH="${BASE_DIR}/lib:$DYLD_LIBRARY_PATH"
-export MEX_INCLUDE="${BASE_DIR}/m"
+export MEX_INCLUDE="${BASE_DIR}/scripts/include"
 
 echo "=== Recompiling Maximus Configuration ==="
 echo
@@ -33,7 +33,17 @@ for f in etc/misc/*.mec; do
 done
 
 echo "Step 4: Compiling MEX scripts (.mex -> .vm)..."
-(cd m && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
+(cd scripts && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
+
+echo "Step 4b: Compiling MEX scripts in subdirectories..."
+for dir in scripts/*/; do
+    [ -d "$dir" ] || continue
+    subdir=$(basename "$dir")
+    case "$subdir" in include|weather-icons) continue;; esac
+    ls "$dir"*.mex >/dev/null 2>&1 || continue
+    echo "  Compiling scripts/$subdir/"
+    (cd "$dir" && for f in *.mex; do [ -f "$f" ] && ../../bin/mex "$f" 2>&1 || true; done)
+done
 
 echo "Step 5: Re-linking language file..."
 (cd etc/lang && ../../bin/maid english -d -s -p../max)

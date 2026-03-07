@@ -1,13 +1,101 @@
-// learn-user-record.mex — MEX Learn Tutorial: Lesson 3 - User Record
+// learn-user-record.mex -- MEX Learn Tutorial: Lesson 3 - User Record
 // Source: docs/wiki/mex-learn-user-record.md
 // This script accompanies the Maximus wiki tutorial series.
+//
+// Demonstrates: user record fields, helper functions, AVATAR cursor
+// positioning, CP437 box drawing.
+//
+// Approach — "Option B":
+//   Phase 1: Draw the complete box frame (borders + empty interior)
+//   Phase 2: Use AVATAR_GOTO to position the cursor at exact (row, col)
+//            coordinates, then print labels and values into the box.
+//
+// This avoids MCI $X padding entirely.  The borders are already in
+// place, so data placement never affects alignment.
 
 #include <max.mh>
 
-void row(string: label, string: value)
+#define BOX_WIDTH   40        // total columns: left ║ + 38 interior + right ║
+#define BOX_INNER   38        // interior character count
+#define DATA_COL     4        // col where labels start (2-space indent from ║)
+
+// ------------------------------------------------------------------
+// Cursor helper — move to absolute screen (row, col), 1-based
+// ------------------------------------------------------------------
+
+void goto_rc(int: r, int: c)
 {
-  print("|03  ", label, ": |15", value, "|07\n");
+  print(AVATAR_GOTO, (char)r, (char)c);
 }
+
+// ------------------------------------------------------------------
+// Box-drawing helpers
+// ------------------------------------------------------------------
+
+// Draw the complete 23-row box frame.
+//
+// Layout (40 cols wide, 23 rows tall):
+//   Row  1  ╔══════════════════════════════════════╗
+//   Row  2  ║ Caller Profile                       ║
+//   Row  3  ╠══════════════════════════════════════╣
+//   Row  4  ║ (blank)                              ║
+//   Rows 5-7   identity fields
+//   Row  8  ║ (blank)                              ║
+//   Rows 9-13  session / message stats
+//   Row 14  ║ (blank)                              ║
+//   Rows 15-18 transfer stats
+//   Row 19  ║ (blank)                              ║
+//   Rows 20-22 settings
+//   Row 23  ╚══════════════════════════════════════╝
+
+void draw_box()
+{
+  int: i;
+  string: hbar, blank;
+
+  // Build the horizontal bar: 38 ═ characters
+  hbar := "";
+  for (i := 0; i < BOX_INNER; i := i + 1)
+    hbar := hbar + "\xCD";
+
+  // Build the blank interior fill: 38 spaces
+  blank := strpad("", BOX_INNER, ' ');
+
+  // Row 1: top border  ╔═══╗
+  print("|11\xC9", hbar, "\xBB\n");
+
+  // Row 2: header      ║ Caller Profile ... ║
+  //   " Caller Profile" = 15 visible chars → 38 − 15 = 23 pad spaces
+  print("\xBA |14Caller Profile", strpad("", 23, ' '), "|11\xBA\n");
+
+  // Row 3: separator   ╠═══╣
+  print("\xCC", hbar, "\xB9\n");
+
+  // Rows 4–22: 19 empty interior rows  ║ (spaces) ║
+  for (i := 0; i < 19; i := i + 1)
+    print("\xBA", blank, "\xBA\n");
+
+  // Row 23: bottom border  ╚═══╝
+  print("\xC8", hbar, "\xBC|07\n");
+}
+
+// ------------------------------------------------------------------
+// Data-placement helper
+// ------------------------------------------------------------------
+
+// Print a labelled field at a given row inside the pre-drawn box.
+// The cursor jumps to (r, DATA_COL), prints label + value, then
+// resets color.  No padding needed — the box frame is already there.
+
+void field(int: r, string: label, string: value)
+{
+  goto_rc(r, DATA_COL);
+  print("|03", label, ": |15", value, "|07");
+}
+
+// ------------------------------------------------------------------
+// Enum-to-string converters
+// ------------------------------------------------------------------
 
 string video_name(char: mode)
 {
@@ -29,42 +117,46 @@ string help_name(char: level)
   return "Regular";
 }
 
+// ------------------------------------------------------------------
+// Entry point
+// ------------------------------------------------------------------
+
 int main()
 {
-  // Header
-  print("\n|11╔══════════════════════════════════════╗\n");
-  print("|11║ |14Caller Profile              |11║\n");
-  print("|11╠══════════════════════════════════════╣|07\n");
+  // Clear the screen — puts cursor at row 1, col 1
+  print(AVATAR_CLS);
+
+  // ── Phase 1: draw the complete box frame ──────────────────────
+  draw_box();
+
+  // ── Phase 2: fill data with cursor positioning ────────────────
 
   // Identity
-  row("Name",     usr.name);
-  if (usr.alias <> "")
-    row("Alias",  usr.alias);
-  row("City",     usr.city);
+  field(5,  "Name",       usr.name);
+  field(6,  "Alias",      usr.alias);
+  field(7,  "City",       usr.city);
 
-  // Session
-  print("|11║                                      ║|07\n");
-  row("Calls",    uitostr(usr.times));
-  row("Today",    uitostr(usr.call));
-  row("Online",   uitostr(usr.time) + " min");
-  row("Posted",   ltostr(usr.msgs_posted));
-  row("Read",     ltostr(usr.msgs_read));
+  // Session & messages
+  field(9,  "Calls",      uitostr(usr.times));
+  field(10, "Today",      uitostr(usr.call));
+  field(11, "Online",     uitostr(usr.time) + " min");
+  field(12, "Posted",     ltostr(usr.msgs_posted));
+  field(13, "Read",       ltostr(usr.msgs_read));
 
   // Transfer stats
-  print("|11║                                      ║|07\n");
-  row("Files up",   ultostr(usr.nup));
-  row("Files down", ultostr(usr.ndown));
-  row("KB up",      ultostr(usr.up));
-  row("KB down",    ultostr(usr.down));
+  field(15, "Files up",   ultostr(usr.nup));
+  field(16, "Files down", ultostr(usr.ndown));
+  field(17, "KB up",      ultostr(usr.up));
+  field(18, "KB down",    ultostr(usr.down));
 
   // Settings
-  print("|11║                                      ║|07\n");
-  row("Video",    video_name(usr.video));
-  row("Help",     help_name(usr.help));
-  row("Screen",   itostr((int)usr.width) + "x" + itostr((int)usr.len));
+  field(20, "Video",  video_name(usr.video));
+  field(21, "Help",   help_name(usr.help));
+  field(22, "Screen", itostr((int)usr.width) + "x" + itostr((int)usr.len));
 
-  // Footer
-  print("|11╚══════════════════════════════════════╝|07\n\n");
+  // Move cursor below the box
+  goto_rc(24, 1);
+  print("|07\n");
 
   return 0;
 }

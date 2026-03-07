@@ -188,7 +188,7 @@ caller quits. Call it `toolbox.mex`:
 void draw_header()
 {
   // 0xCD = CP437 code for "═" (double horizontal line)
-  // You could use '═' directly — this just shows that hex codes work.
+  // You could use '═' directly -- this just shows that hex codes work.
   ui_fill_rect(1, 1, 40, 1, 0xCD, ui_make_attr(UI_LCYAN, UI_BLACK));
   ui_write_padded(2, 1, 40, "  Sysop Toolbox", ui_make_attr(UI_YELLOW, UI_BLACK));
   ui_fill_rect(3, 1, 40, 1, 0xCD, ui_make_attr(UI_LCYAN, UI_BLACK));
@@ -230,17 +230,17 @@ int main()
     draw_header();
     draw_footer(5 + NUM_ITEMS + 2);
 
-    // Show the lightbar — starts at row 5, column 5
+    // Show the lightbar -- starts at row 5, column 5
     choice := ui_lightbar(items, NUM_ITEMS, 5, 5, 20, style);
 
     if (choice = 1)
-      shell(0, ":profile");
+      shell(0, ":learn/learn-user-record");
     else if (choice = 2)
-      shell(0, ":guestbook");
+      shell(0, ":learn/learn-file-io");
     else if (choice = 3)
-      shell(0, ":trivia");
+      shell(0, ":learn/learn-decisions");
     else if (choice = 4)
-      shell(0, ":guess");
+      shell(0, ":learn/learn-loops");
     else if (choice = 5 or choice = 0)
       choice := 0;
   }
@@ -272,9 +272,10 @@ chrome.
 **`\f` (formfeed)** clears the screen. We do this at the top of each loop
 iteration so the menu redraws cleanly after returning from a sub-script.
 
-**`shell(0, ":profile")`** runs another MEX script from within your
-script. The `:` prefix tells Maximus to treat the argument as a MEX
-script name (without the `.vm` extension). When the sub-script finishes,
+**`shell(0, ":learn/learn-user-record")`** runs another MEX script from
+within your script. The `:` prefix tells Maximus to treat the argument as
+a MEX script name (without the `.vm` extension). The `learn/` subdirectory
+prefix matches the scripts directory layout. When the sub-script finishes,
 control returns to your menu loop.
 
 **The menu loop.** The `while (choice <> 0)` loop keeps the menu alive.
@@ -322,7 +323,7 @@ Because it is one.
 - **`ui_make_attr()`** — combine foreground and background colors.
 - **Arrays** — `array [1..N] of type`. 1-indexed. Declared at the top of
   the function like all variables.
-- **`shell(0, ":scriptname")`** — run another MEX script and return.
+- **`shell(0, ":path/scriptname")`** — run another MEX script and return.
 - **Menu loops** — draw, select, act, repeat. The fundamental UI pattern.
 
 ## Next

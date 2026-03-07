@@ -73,9 +73,16 @@ case "$SCRIPT_FILE" in
   *) SCRIPT_FILE="${SCRIPT_FILE}.mex" ;;
 esac
 
+# Support subdirectory paths (e.g., learn/learn-first-script)
+SCRIPT_SUBDIR=""
+if [[ "$SCRIPT_FILE" == */* ]]; then
+    SCRIPT_SUBDIR="$(dirname "$SCRIPT_FILE")/"
+    SCRIPT_FILE="$(basename "$SCRIPT_FILE")"
+fi
+
 SCRIPT_BASENAME="${SCRIPT_FILE%.mex}"
-MEX_SOURCE_PATH="$MEX_SRC_DIR/$SCRIPT_FILE"
-VM_OUTPUT_PATH="$MEX_SRC_DIR/${SCRIPT_BASENAME}.vm"
+MEX_SOURCE_PATH="$MEX_SRC_DIR/${SCRIPT_SUBDIR}$SCRIPT_FILE"
+VM_OUTPUT_PATH="$MEX_SRC_DIR/${SCRIPT_SUBDIR}${SCRIPT_BASENAME}.vm"
 
 if [ ! -f "$MEX_SOURCE_PATH" ]; then
   echo "Error: MEX source not found: $MEX_SOURCE_PATH"
@@ -87,17 +94,20 @@ if [ ! -x "$MEX_COMPILER" ]; then
   exit 1
 fi
 
-mkdir -p "$BUILD_SCRIPTS_DIR"
-mkdir -p "$INSTALL_SCRIPTS_DIR"
+mkdir -p "$BUILD_SCRIPTS_DIR/${SCRIPT_SUBDIR}"
+mkdir -p "$INSTALL_SCRIPTS_DIR/${SCRIPT_SUBDIR}"
 
 if [ "$DEPLOY" -eq 1 ]; then
-  cp -f "$MEX_SOURCE_PATH" "$BUILD_SCRIPTS_DIR/$SCRIPT_FILE"
-  cp -f "$MEX_SOURCE_PATH" "$INSTALL_SCRIPTS_DIR/$SCRIPT_FILE"
+  cp -f "$MEX_SOURCE_PATH" "$BUILD_SCRIPTS_DIR/${SCRIPT_SUBDIR}$SCRIPT_FILE"
+  cp -f "$MEX_SOURCE_PATH" "$INSTALL_SCRIPTS_DIR/${SCRIPT_SUBDIR}$SCRIPT_FILE"
 fi
 
 (
-  cd "$MEX_SRC_DIR"
-  ../../build/bin/mex "$SCRIPT_FILE"
+  cd "$MEX_SRC_DIR/${SCRIPT_SUBDIR:-.}"
+  if [ -n "$SCRIPT_SUBDIR" ]; then
+    export MEX_INCLUDE="$PROJECT_ROOT/resources/m/include"
+  fi
+  "$MEX_COMPILER" "$SCRIPT_FILE"
 )
 
 if [ ! -f "$VM_OUTPUT_PATH" ]; then
@@ -105,15 +115,15 @@ if [ ! -f "$VM_OUTPUT_PATH" ]; then
   exit 1
 fi
 
-cp -f "$VM_OUTPUT_PATH" "$BUILD_SCRIPTS_DIR/${SCRIPT_BASENAME}.vm"
+cp -f "$VM_OUTPUT_PATH" "$BUILD_SCRIPTS_DIR/${SCRIPT_SUBDIR}${SCRIPT_BASENAME}.vm"
 
 if [ "$DEPLOY" -eq 1 ]; then
-  cp -f "$VM_OUTPUT_PATH" "$INSTALL_SCRIPTS_DIR/${SCRIPT_BASENAME}.vm"
+  cp -f "$VM_OUTPUT_PATH" "$INSTALL_SCRIPTS_DIR/${SCRIPT_SUBDIR}${SCRIPT_BASENAME}.vm"
 fi
 
-echo "Done: compiled $SCRIPT_FILE"
-echo " - VM copied to: $BUILD_SCRIPTS_DIR/${SCRIPT_BASENAME}.vm"
+echo "Done: compiled ${SCRIPT_SUBDIR}$SCRIPT_FILE"
+echo " - VM copied to: $BUILD_SCRIPTS_DIR/${SCRIPT_SUBDIR}${SCRIPT_BASENAME}.vm"
 if [ "$DEPLOY" -eq 1 ]; then
-  echo " - Deployed MEX to: $INSTALL_SCRIPTS_DIR/$SCRIPT_FILE"
-  echo " - Deployed VM to:  $INSTALL_SCRIPTS_DIR/${SCRIPT_BASENAME}.vm"
+  echo " - Deployed MEX to: $INSTALL_SCRIPTS_DIR/${SCRIPT_SUBDIR}$SCRIPT_FILE"
+  echo " - Deployed VM to:  $INSTALL_SCRIPTS_DIR/${SCRIPT_SUBDIR}${SCRIPT_BASENAME}.vm"
 fi

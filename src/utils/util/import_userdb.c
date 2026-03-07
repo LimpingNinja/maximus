@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,11 +38,11 @@ static const char *resolve_install_path(const char *argv0, char *out, size_t out
 
   if (argv0 && *argv0 && out && out_sz > 0)
   {
-    char exe_path[1024];
+    char exe_path[PATH_MAX];
     if (realpath(argv0, exe_path) != NULL)
     {
-      char tmp1[1024];
-      char tmp2[1024];
+      char tmp1[PATH_MAX];
+      char tmp2[PATH_MAX];
       const char *bin_dir;
       const char *prefix_dir;
 

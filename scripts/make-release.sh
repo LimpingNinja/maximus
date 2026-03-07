@@ -206,6 +206,20 @@ create_release_package() {
     log_info "Copying compiled MEX files..."
     cp -f "${BUILD_DIR}/scripts/"*.vm "$release_path/scripts/" 2>/dev/null || true
     
+    # Copy subdirectory .vm files (learn/, etc.)
+    for subdir in "${BUILD_DIR}/scripts"/*/; do
+        if [ -d "$subdir" ]; then
+            dirname=$(basename "$subdir")
+            # Skip non-script subdirectories
+            case "$dirname" in
+                include|weather-icons|xtra-samples) continue ;;
+            esac
+            mkdir -p "$release_path/scripts/$dirname"
+            cp -f "$subdir"*.vm "$release_path/scripts/$dirname/" 2>/dev/null || true
+            cp -f "$subdir"*.mex "$release_path/scripts/$dirname/" 2>/dev/null || true
+        fi
+    done
+    
     # Copy documentation
     log_info "Copying documentation..."
     mkdir -p "$release_path/docs"
@@ -254,6 +268,16 @@ echo "Step 2: Compiling screen display files (.mec -> .bbs)..."
 
 echo "Step 3: Compiling MEX scripts (.mex -> .vm)..."
 (cd scripts && for f in *.mex; do ../bin/mex "$f" 2>&1 || true; done)
+
+echo "Step 4: Compiling MEX scripts in subdirectories..."
+for dir in scripts/*/; do
+    [ -d "$dir" ] || continue
+    subdir=$(basename "$dir")
+    case "$subdir" in include|weather-icons) continue;; esac
+    ls "$dir"*.mex >/dev/null 2>&1 || continue
+    echo "  Compiling scripts/$subdir/"
+    (cd "$dir" && for f in *.mex; do [ -f "$f" ] && ../../bin/mex "$f" 2>&1 || true; done)
+done
 
 echo
 echo "=== Recompilation complete ==="

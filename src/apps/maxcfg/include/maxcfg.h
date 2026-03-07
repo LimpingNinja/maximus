@@ -31,6 +31,7 @@
 #  include <ncurses.h>
 #endif
 #include <stdbool.h>
+#include <limits.h>
 #include "libmaxcfg.h"
 
 #define MAXCFG_VERSION "1.0"
@@ -48,7 +49,7 @@
 /* Maximum string lengths */
 #define MAX_MENU_ITEMS  20
 #define MAX_MENU_LABEL  32
-#define MAX_PATH_LEN    256
+#define MAX_PATH_LEN    PATH_MAX
 
 /* Global state */
 typedef struct {

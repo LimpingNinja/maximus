@@ -199,9 +199,26 @@ reconfig:
 	@echo " - Syncing MEX sources and includes"
 	@cp -f resources/m/*.mex $(PREFIX)/scripts/ 2>/dev/null || true
 	@cp -f resources/m/*.mh resources/m/*.lh $(PREFIX)/scripts/include/ 2>/dev/null || true
+	@for dir in resources/m/*/; do \
+		[ -d "$$dir" ] || continue; \
+		subdir=$$(basename "$$dir"); \
+		mkdir -p $(PREFIX)/scripts/$$subdir; \
+		cp -f $$dir/*.mex $(PREFIX)/scripts/$$subdir/ 2>/dev/null || true; \
+		cp -f $$dir/*.mh $$dir/*.lh $(PREFIX)/scripts/include/ 2>/dev/null || true; \
+	done
 
 	@echo " - Compiling MEX files"
 	@(cd $(PREFIX)/scripts && export MEX_INCLUDE=$(PREFIX)/scripts/include && for f in *.mex; do ../bin/mex "$$f" 2>&1 || true; done)
+	@echo " - Compiling MEX files in subdirectories"
+	@for dir in $(PREFIX)/scripts/*/; do \
+		[ -d "$$dir" ] || continue; \
+		subdir=$$(basename "$$dir"); \
+		case "$$subdir" in include|weather-icons) continue;; esac; \
+		ls "$$dir"*.mex >/dev/null 2>&1 || continue; \
+		echo "   Compiling scripts/$$subdir/"; \
+		(cd "$$dir" && export MEX_INCLUDE=$(PREFIX)/scripts/include && \
+		for f in *.mex; do [ -f "$$f" ] && ../../bin/mex "$$f" 2>&1 || true; done); \
+	done
 
 	@echo
 	@echo "reconfig complete (MAID removed — language strings now via TOML)"

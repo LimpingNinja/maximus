@@ -2,7 +2,7 @@
 layout: default
 title: "Your First Mini-Game: Game Night"
 section: "mex"
-description: "Lesson 10 — The capstone: build a real game your callers can play"
+description: "Lesson 10 -- The capstone: build a real game your callers can play"
 ---
 
 *Lesson 10 of Learning MEX*
@@ -103,33 +103,56 @@ void show_scores()
   if (fd = -1)
     return;
 
-  print("|11─── High Scores ───|07\n");
+  // First pass: count total lines
   count := 0;
 
-  while (readln(fd, line) = 0 and count < 5)
-  {
-    print("|03  ", line, "\n");
+  while (readln(fd, line) <> -1)
     count := count + 1;
-  }
 
   close(fd);
-  print("|11───────────────────|07\n\n");
+
+  if (count = 0)
+    return;
+
+  // Second pass: skip to the last 5 entries
+  fd := open(SCORE_FILE, IOPEN_READ);
+
+  if (count > 5)
+  {
+    int: skip;
+    skip := count - 5;
+
+    while (skip > 0)
+    {
+      readln(fd, line);
+      skip := skip - 1;
+    }
+  }
+
+  print("|11--- High Scores ---|07\n");
+
+  while (readln(fd, line) <> -1)
+    print("|03  ", line, "\n");
+
+  close(fd);
+  print("|11-------------------|07\n\n");
 }
 
-void save_score()
+int save_score()
 {
   int: fd;
   string: entry;
 
-  entry := usr.name + " — " + itostr(moves) + " moves";
+  entry := usr.name + " -- " + itostr(moves) + " moves";
 
-  fd := open(SCORE_FILE, IOPEN_APPEND + IOPEN_CREATE);
+  fd := open(SCORE_FILE, IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE);
 
-  if (fd <> -1)
-  {
-    writeln(fd, entry);
-    close(fd);
-  }
+  if (fd = -1)
+    return 0;
+
+  writeln(fd, entry);
+  close(fd);
+  return 1;
 }
 
 void describe_room()
@@ -331,7 +354,7 @@ int main()
 
     if (action = 0)
     {
-      // Escape pressed — confirm quit
+      // Escape pressed -- confirm quit
       print("\n|14Quit the game? |11[|15Y|11/|15N|11] ");
 
       if (input_ch(CINPUT_DISPLAY + CINPUT_ACCEPTABLE, "YyNn") = 'Y')
@@ -406,7 +429,7 @@ int main()
     {
       if (boss_defeated)
       {
-        // Walk through the exit — you win!
+        // Walk through the exit -- you win!
         game_over := 1;
         moves := moves + 1;
 
@@ -418,8 +441,10 @@ int main()
         print("|07You made it out of the Dungeon of Forgotten\n");
         print("Logins in |15", moves, "|07 moves.\n\n");
 
-        save_score();
-        print("|10Score saved!|07\n\n");
+        if (save_score())
+          print("|10Score saved!|07\n\n");
+        else
+          print("|12Could not save score.|07\n\n");
         show_scores();
       }
       else
@@ -505,8 +530,9 @@ arrays use syntax from Lesson 7.
 ### High Scores (Lesson 6)
 
 `save_score()` appends one line to `dungeon_scores.txt` using
-`IOPEN_APPEND + IOPEN_CREATE`. `show_scores()` reads the first five
-lines and displays them. Both functions are straight from Lesson 6's
+`IOPEN_WRITE | IOPEN_APPEND | IOPEN_CREATE` and returns `1` on success or `0` on
+failure. `show_scores()` uses a two-pass read to display the *last*
+five entries (most recent scores). Both functions build on Lesson 6's
 guestbook pattern.
 
 ### Personalization (Lesson 3)
