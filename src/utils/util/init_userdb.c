@@ -1,3 +1,23 @@
+/*
+ * init_userdb.c — SQLite user database initializer
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <errno.h>
 #include <libgen.h>
 #include <limits.h>
@@ -10,6 +30,14 @@
 
 #include <sqlite3.h>
 
+/**
+ * @brief Determine the BBS install root from environment or argv[0].
+ *
+ * @param argv0   Program path from argv[0]
+ * @param out     Output buffer for resolved path
+ * @param out_sz  Size of the output buffer
+ * @return Pointer to the resolved install path string
+ */
 static const char *resolve_install_path(const char *argv0, char *out, size_t out_sz)
 {
   const char *s = getenv("MAX_INSTALL_PATH");
@@ -48,6 +76,11 @@ static const char *resolve_install_path(const char *argv0, char *out, size_t out
   return ".";
 }
 
+/**
+ * @brief Print usage information to stderr.
+ *
+ * @param argv0  Program name from argv[0]
+ */
 static void usage(const char *argv0)
 {
   fprintf(stderr,
@@ -55,12 +88,24 @@ static void usage(const char *argv0)
           argv0);
 }
 
+/**
+ * @brief Check if a file exists.
+ *
+ * @param path  Path to check
+ * @return 1 if exists, 0 otherwise
+ */
 static int file_exists(const char *path)
 {
   struct stat st;
   return stat(path, &st) == 0;
 }
 
+/**
+ * @brief Recursively create directories (like mkdir -p).
+ *
+ * @param dir  Directory path to create
+ * @return 0 on success, -1 on failure
+ */
 static int mkdir_p(const char *dir)
 {
   char *tmp;
@@ -97,6 +142,12 @@ static int mkdir_p(const char *dir)
   return 0;
 }
 
+/**
+ * @brief Ensure the parent directory of a file path exists.
+ *
+ * @param path  File path whose parent directory should be created
+ * @return 0 on success, -1 on failure
+ */
 static int ensure_parent_dir(const char *path)
 {
   char *copy;
@@ -130,6 +181,13 @@ static int ensure_parent_dir(const char *path)
   return 0;
 }
 
+/**
+ * @brief Read an entire file into a malloc'd buffer.
+ *
+ * @param path     Path to the file
+ * @param out_len  Output: file size in bytes (may be NULL)
+ * @return Allocated buffer with file contents (NUL-terminated), or NULL
+ */
 static char *read_entire_file(const char *path, size_t *out_len)
 {
   FILE *fp;
@@ -182,6 +240,15 @@ static char *read_entire_file(const char *path, size_t *out_len)
   return buf;
 }
 
+/**
+ * @brief Entry point for the SQLite user database initializer.
+ *
+ * Creates a new user database from the schema SQL file.
+ *
+ * @param argc  Argument count
+ * @param argv  Argument vector
+ * @return 0 on success, 1 on error, 2 on usage error
+ */
 int main(int argc, char **argv)
 {
   const char *prefix = NULL;

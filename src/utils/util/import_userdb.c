@@ -1,3 +1,23 @@
+/*
+ * import_userdb.c — Legacy user data to SQLite importer
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -17,6 +37,11 @@
 #include "libmaxdb.h"
 #include "libmaxcfg.h"
 
+/**
+ * @brief Print usage information to stderr.
+ *
+ * @param argv0  Program name from argv[0]
+ */
 static void usage(const char *argv0)
 {
   fprintf(stderr,
@@ -28,6 +53,17 @@ static void usage(const char *argv0)
           argv0);
 }
 
+/**
+ * @brief Determine the BBS install root from environment or argv[0].
+ *
+ * Checks MAX_INSTALL_PATH, then MAXIMUS env vars, then falls back
+ * to the grandparent directory of the executable.
+ *
+ * @param argv0   Program path from argv[0]
+ * @param out     Output buffer for resolved path
+ * @param out_sz  Size of the output buffer
+ * @return Pointer to the resolved install path string
+ */
 static const char *resolve_install_path(const char *argv0, char *out, size_t out_sz)
 {
   const char *s = getenv("MAX_INSTALL_PATH");
@@ -66,6 +102,12 @@ static const char *resolve_install_path(const char *argv0, char *out, size_t out
   return ".";
 }
 
+/**
+ * @brief Check if a path is absolute (starts with / or drive letter).
+ *
+ * @param path  Path string to test
+ * @return 1 if absolute, 0 otherwise
+ */
 static int path_is_absolute(const char *path)
 {
   if (!path || !*path)
@@ -77,6 +119,13 @@ static int path_is_absolute(const char *path)
   return 0;
 }
 
+/**
+ * @brief Resolve the user file root path, stripping extensions and joining to sys_path.
+ *
+ * @param sys_path  System base path for resolving relative paths
+ * @param raw       Raw path value from config (may include extension)
+ * @return Allocated string with the resolved root path, or NULL on failure
+ */
 static char *resolve_userfile_root(const char *sys_path, const char *raw)
 {
   const char *p;
@@ -129,6 +178,13 @@ static char *resolve_userfile_root(const char *sys_path, const char *raw)
   }
 }
 
+/**
+ * @brief Load the user file root path from TOML configuration.
+ *
+ * @param sys_path  System path to resolve relative config values
+ * @param out_root  Output: allocated path string (caller must free)
+ * @return 1 on success, 0 on failure
+ */
 static int load_userfile_root_from_config(const char *sys_path, char **out_root)
 {
   char maximus_path[1024];
@@ -164,12 +220,25 @@ static int load_userfile_root_from_config(const char *sys_path, char **out_root)
   return (*out_root != NULL);
 }
 
+/**
+ * @brief Check if a file exists.
+ *
+ * @param path  Path to check
+ * @return 1 if exists, 0 otherwise
+ */
 static int file_exists(const char *path)
 {
   struct stat st;
   return (path && *path && stat(path, &st) == 0);
 }
 
+/**
+ * @brief Convert a legacy _usr struct to a MaxDBUser struct for SQLite import.
+ *
+ * @param usr     Source legacy user record
+ * @param dbuser  Destination database user record (zeroed and populated)
+ * @param id      User ID to assign
+ */
 static void usr_to_dbuser(const struct _usr *usr, MaxDBUser *dbuser, int id)
 {
   memset(dbuser, 0, sizeof(MaxDBUser));
@@ -262,6 +331,13 @@ static void usr_field_to_cstr(const unsigned char *src, size_t src_len,
   dst[n] = '\0';
 }
 
+/**
+ * @brief Entry point for the legacy-to-SQLite user database importer.
+ *
+ * @param argc  Argument count
+ * @param argv  Argument vector
+ * @return 0 on success, 1 on import error, 2 on usage/setup error
+ */
 int main(int argc, char **argv)
 {
   const char *src_root = NULL;

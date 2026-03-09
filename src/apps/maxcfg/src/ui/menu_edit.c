@@ -1,3 +1,23 @@
+/*
+ * menu_edit.c — Menu definition editor
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -5,11 +25,13 @@
 #include <stdio.h>
 #include "menu_edit.h"
 
+/** @brief Duplicate a string safely, returning NULL for NULL input. */
 static char *safe_strdup(const char *s)
 {
     return s ? strdup(s) : NULL;
 }
 
+/** @brief Convert a "Yes"/"No" string to a boolean integer (1/0). */
 static int bool_from_yesno(const char *s)
 {
     if (s == NULL) {
@@ -18,11 +40,13 @@ static int bool_from_yesno(const char *s)
     return (strcasecmp(s, "Yes") == 0) ? 1 : 0;
 }
 
+/** @brief Convert a boolean to "Yes" or "No" string. */
 static const char *yesno_from_bool(bool v)
 {
     return v ? "Yes" : "No";
 }
 
+/** @brief Parse an option justification string ("Left"/"Center"/"Right") to int. */
 static int option_justify_from_string(const char *s)
 {
     if (s == NULL || *s == '\0') {
@@ -33,6 +57,7 @@ static int option_justify_from_string(const char *s)
     return 0;
 }
 
+/** @brief Convert an option justification int to display string. */
 static const char *option_justify_to_string(int v)
 {
     if (v == 1) return "Center";
@@ -40,6 +65,7 @@ static const char *option_justify_to_string(int v)
     return "Left";
 }
 
+/** @brief Parse a boundary layout string to int. */
 static int boundary_layout_from_string(const char *s)
 {
     if (s == NULL || *s == '\0') {
@@ -52,6 +78,7 @@ static int boundary_layout_from_string(const char *s)
     return 0;
 }
 
+/** @brief Convert a boundary layout int to display string. */
 static const char *boundary_layout_to_string(int v)
 {
     if (v == 1) return "Tight";
@@ -61,6 +88,7 @@ static const char *boundary_layout_to_string(int v)
     return "Grid";
 }
 
+/** @brief Convert horizontal and vertical justification ints to a combined string. */
 static const char *boundary_justify_to_string(int hj, int vj)
 {
     const char *h = (hj == 2) ? "Right" : (hj == 1) ? "Center" : "Left";
@@ -77,6 +105,7 @@ static const char *boundary_justify_to_string(int hj, int vj)
     return "Left Top";
 }
 
+/** @brief Parse a combined boundary justification string into h/v components. */
 static void boundary_justify_from_string(const char *s, int *hj, int *vj)
 {
     if (hj) *hj = 0;
@@ -111,6 +140,7 @@ static void boundary_justify_from_string(const char *s, int *hj, int *vj)
     if (vj) *vj = out_v;
 }
 
+/** @brief Check if a string represents a default/empty value. */
 static bool is_default_value(const char *s)
 {
     if (s == NULL) {
@@ -122,6 +152,7 @@ static bool is_default_value(const char *s)
     return (strcasecmp(s, "(default)") == 0);
 }
 
+/** @brief Free and replace a heap-allocated string pointer. */
 static void set_owned_string(char **dst, const char *src)
 {
     if (dst == NULL) {
@@ -134,7 +165,12 @@ static void set_owned_string(char **dst, const char *src)
     }
 }
 
-/* DOS color name to value (0-15) */
+/**
+ * @brief Convert a DOS color name to its numeric value (0-15).
+ *
+ * @param name Color name string (e.g. "Blue", "LightCyan").
+ * @return Color value 0-15, or -1 if unrecognized.
+ */
 static int color_name_to_value(const char *name)
 {
     if (!name || !*name) return -1;
@@ -157,7 +193,12 @@ static int color_name_to_value(const char *name)
     return -1;
 }
 
-/* DOS color value (0-15) to name */
+/**
+ * @brief Convert a DOS color value (0-15) to its display name.
+ *
+ * @param val Color value.
+ * @return Static color name string.
+ */
 static const char *color_value_to_name(int val)
 {
     static const char *names[] = {
@@ -168,7 +209,13 @@ static const char *color_value_to_name(int val)
     return "Gray";
 }
 
-/* Format a human-readable color pair string like "Gray on Black" */
+/**
+ * @brief Format a human-readable color pair string like "Gray on Black".
+ *
+ * @param fg Foreground color name (may be NULL for default).
+ * @param bg Background color name (may be NULL for default).
+ * @return Heap-allocated formatted string.
+ */
 static char *format_color_pair(const char *fg, const char *bg)
 {
     char buf[64];
@@ -184,6 +231,7 @@ static char *format_color_pair(const char *fg, const char *bg)
     return strdup(buf);
 }
 
+/** @brief Check if a whitespace-delimited token exists in a string. */
 static bool token_has(const char *str, const char *token)
 {
     if (!str || !*str || !token || !*token) return false;
@@ -210,6 +258,13 @@ static bool token_has(const char *str, const char *token)
 #define MENU_TYPE_FOOTER 1
 #define MENU_TYPE_BODY   2
 
+/**
+ * @brief Convert menu type flags to a human-readable token string.
+ *
+ * @param flags Menu type flags bitmask.
+ * @param kind  MENU_TYPE_HEADER, MENU_TYPE_FOOTER, or MENU_TYPE_BODY.
+ * @return Heap-allocated space-separated token string.
+ */
 static char *types_string_from_flags(word flags, int kind)
 {
     char buf[64];
@@ -250,6 +305,13 @@ static char *types_string_from_flags(word flags, int kind)
     return strdup(buf);
 }
 
+/**
+ * @brief Parse a type token string back into menu type flags.
+ *
+ * @param str  Space-separated tokens (e.g. "Novice Regular").
+ * @param kind MENU_TYPE_HEADER, MENU_TYPE_FOOTER, or MENU_TYPE_BODY.
+ * @return Bitmask of parsed flags.
+ */
 static word types_flags_from_string(const char *str, int kind)
 {
     word flags = 0;
@@ -276,6 +338,12 @@ static word types_flags_from_string(const char *str, int kind)
     return flags;
 }
 
+/**
+ * @brief Free an array of heap-allocated form value strings.
+ *
+ * @param values Array of string pointers.
+ * @param count  Number of entries to free.
+ */
 void menu_free_values(char **values, int count)
 {
     if (!values) return;
@@ -285,6 +353,12 @@ void menu_free_values(char **values, int count)
     }
 }
 
+/**
+ * @brief Load menu properties into form value strings for editing.
+ *
+ * @param menu   Menu definition to read from.
+ * @param values Output array of heap-allocated strings (caller frees).
+ */
 void menu_load_properties_form(MenuDefinition *menu, char **values)
 {
     if (!menu || !values) return;
@@ -314,6 +388,13 @@ void menu_load_properties_form(MenuDefinition *menu, char **values)
     }
 }
 
+/**
+ * @brief Save edited form values back into a MenuDefinition.
+ *
+ * @param menu   Menu definition to update.
+ * @param values Array of form value strings.
+ * @return true if any field was modified.
+ */
 bool menu_save_properties_form(MenuDefinition *menu, char **values)
 {
     if (!menu || !values) return false;
@@ -392,6 +473,12 @@ bool menu_save_properties_form(MenuDefinition *menu, char **values)
     return modified;
 }
 
+/**
+ * @brief Load menu customization (lightbar) settings into form values.
+ *
+ * @param menu   Menu definition to read from.
+ * @param values Output array of heap-allocated strings.
+ */
 void menu_load_customization_form(MenuDefinition *menu, char **values)
 {
     if (!menu || !values) return;
@@ -445,6 +532,13 @@ void menu_load_customization_form(MenuDefinition *menu, char **values)
     values[23] = safe_strdup(boundary_layout_to_string(menu->cm_boundary_layout));
 }
 
+/**
+ * @brief Save edited customization form values back into a MenuDefinition.
+ *
+ * @param menu   Menu definition to update.
+ * @param values Array of form value strings.
+ * @return true if any field was modified.
+ */
 bool menu_save_customization_form(MenuDefinition *menu, char **values)
 {
     if (!menu || !values) return false;
@@ -525,6 +619,13 @@ bool menu_save_customization_form(MenuDefinition *menu, char **values)
     return modified;
 }
 
+/**
+ * @brief Convert option modifier flags and area type to a token string.
+ *
+ * @param flags    Option modifier flags bitmask.
+ * @param areatype Area type flags byte.
+ * @return Heap-allocated space-separated token string.
+ */
 static char *modifier_string_from_flags(word flags, byte areatype)
 {
     char buf[128];
@@ -552,6 +653,13 @@ static char *modifier_string_from_flags(word flags, byte areatype)
     return strdup(buf);
 }
 
+/**
+ * @brief Parse a modifier token string back into flags and area type.
+ *
+ * @param str      Space-separated modifier tokens.
+ * @param flags    Output option flags bitmask.
+ * @param areatype Output area type byte.
+ */
 static void modifier_flags_from_string(const char *str, word *flags, byte *areatype)
 {
     *flags = 0;
@@ -576,6 +684,12 @@ static void modifier_flags_from_string(const char *str, word *flags, byte *areat
     if (token_has(str, "Conf")) *areatype |= ATYPE_CONF;
 }
 
+/**
+ * @brief Load a menu option's properties into form value strings.
+ *
+ * @param opt    Menu option to read from.
+ * @param values Output array of heap-allocated strings.
+ */
 void menu_load_option_form(MenuOption *opt, char **values)
 {
     if (!opt || !values) return;
@@ -588,6 +702,13 @@ void menu_load_option_form(MenuOption *opt, char **values)
     values[5] = safe_strdup(opt->key_poke ? opt->key_poke : "");
 }
 
+/**
+ * @brief Save edited option form values back into a MenuOption.
+ *
+ * @param opt    Menu option to update.
+ * @param values Array of form value strings.
+ * @return true if any field was modified.
+ */
 bool menu_save_option_form(MenuOption *opt, char **values)
 {
     if (!opt || !values) return false;

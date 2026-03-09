@@ -1,7 +1,28 @@
+/*
+ * privilege_picker.c — Privilege level picker dialog
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <string.h>
 #include "maxcfg.h"
 #include "ui.h"
 
+/** @brief Static table of Maximus privilege levels with descriptions. */
 static const PickerOption privilege_options[] = {
     { "Twit", "Lowest access level. User has minimal privileges and restricted access to system features.", NULL },
     { "Disgrace", "Disgraced user. Limited access, typically used as punishment or probation status.", NULL },
@@ -18,6 +39,12 @@ static const PickerOption privilege_options[] = {
     { NULL, NULL, NULL }
 };
 
+/**
+ * @brief Display the privilege level picker dialog and return the selected index.
+ *
+ * @param current_idx Currently selected privilege index, or -1 for none.
+ * @return Selected privilege index, or -1 if cancelled.
+ */
 int privilege_picker_show(int current_idx)
 {
     int num_options = 0;
@@ -28,6 +55,12 @@ int privilege_picker_show(int current_idx)
     return picker_with_help_show("Select Privilege Level", privilege_options, num_options, current_idx);
 }
 
+/**
+ * @brief Get the privilege level name string for a given option index.
+ *
+ * @param index Zero-based index into the privilege options table.
+ * @return Privilege level name string, or NULL if index is out of range.
+ */
 const char *privilege_picker_get_name(int index)
 {
     int count = 0;

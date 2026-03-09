@@ -2,6 +2,7 @@
 build/
 release/
 docs/code-docs/
+plans/
 tmp/
 notorious_doorkit/
 

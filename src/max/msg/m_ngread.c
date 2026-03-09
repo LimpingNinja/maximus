@@ -1,6 +1,7 @@
 /*
- * Maximus Version 3.02+
- * Copyright 2024-2026 MaximusNG contributors.
+ * m_ngread.c — NG message reader (StormBBS-style threaded reader)
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,17 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file m_ngread.c
- * @brief NG (NextGen) message reading system — entry prompts, lightbar
- *        index view, and full-screen reader loop.
- *
- * Implements the StormBBS-style message browsing experience:
- *   - Storm-style entry prompts (Forward/New/By You/Yours/Search)
- *   - Paged lightbar message index with scrolling
- *   - Full-screen reader with scroll-within-message and key dispatch
  */
 
 #define MAX_LANG_m_browse

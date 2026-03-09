@@ -1,7 +1,28 @@
+/*
+ * modifier_picker.c — Privilege modifier picker
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <string.h>
 #include "maxcfg.h"
 #include "ui.h"
 
+/** @brief Static table of menu option modifier flags with descriptions. */
 static const PickerOption modifier_options[] = {
     { "(None)", "No modifier. Option displays normally for all users.", NULL },
     { "NoDsp", "Don't display on menu (hidden). Useful for creating hotkey bindings without showing the option to users.", NULL },
@@ -22,6 +43,12 @@ static const PickerOption modifier_options[] = {
     { NULL, NULL, NULL }
 };
 
+/**
+ * @brief Display the modifier picker dialog and return the selected index.
+ *
+ * @param current_idx Currently selected modifier index, or -1 for none.
+ * @return Selected modifier index, or -1 if cancelled.
+ */
 int modifier_picker_show(int current_idx)
 {
     int num_options = 0;
@@ -32,6 +59,12 @@ int modifier_picker_show(int current_idx)
     return picker_with_help_show("Select Modifier", modifier_options, num_options, current_idx);
 }
 
+/**
+ * @brief Get the modifier name string for a given option index.
+ *
+ * @param index Zero-based index into the modifier options table.
+ * @return Modifier name string, or NULL if index is out of range.
+ */
 const char *modifier_picker_get_name(int index)
 {
     int count = 0;

@@ -1,3 +1,23 @@
+/*
+ * libmaxcfg.c — TOML config parser/emitter, area management
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include "libmaxcfg.h"
 
 #include <ctype.h>
@@ -9,6 +29,7 @@
 
 #include <sys/stat.h>
 
+/** @brief Case-insensitive string comparison (NULL-safe). */
 static int ng_stricmp(const char *a, const char *b)
 {
     unsigned char ca;
@@ -31,6 +52,14 @@ static int ng_stricmp(const char *a, const char *b)
     }
 }
 
+/**
+ * @brief Convert a DOS color name string to its numeric index (0–15).
+ *
+ * Strips spaces, tabs, underscores, and hyphens before comparison.
+ *
+ * @param s  Color name (e.g. "blue", "light_green"). Case-insensitive.
+ * @return Color index 0–15, or -1 if unrecognized.
+ */
 int maxcfg_dos_color_from_name(const char *s)
 {
     char buf[64];
@@ -71,6 +100,12 @@ int maxcfg_dos_color_from_name(const char *s)
     return -1;
 }
 
+/**
+ * @brief Convert a numeric DOS color index to its display name.
+ *
+ * @param color  Color index (0–15).
+ * @return Human-readable color name, or "" if out of range.
+ */
 const char *maxcfg_dos_color_to_name(int color)
 {
     static const char *names[16] = {
@@ -98,16 +133,29 @@ const char *maxcfg_dos_color_to_name(int color)
     return names[color];
 }
 
+/**
+ * @brief Build a DOS attribute byte from foreground and background colors.
+ *
+ * @param fg  Foreground color (0–15).
+ * @param bg  Background color (0–15).
+ * @return Combined attribute byte.
+ */
 unsigned char maxcfg_make_attr(int fg, int bg)
 {
     return (unsigned char)((fg & 0x0f) | ((bg & 0x0f) << 4));
 }
 
+/**
+ * @brief Return the library ABI version number.
+ *
+ * @return Current ABI version (LIBMAXCFG_ABI_VERSION).
+ */
 int maxcfg_abi_version(void)
 {
     return LIBMAXCFG_ABI_VERSION;
 }
 
+/** @brief Read a boolean from a TOML table, falling back to a default. */
 static MaxCfgStatus ng_tbl_get_bool_default(const MaxCfgVar *tbl, const char *key, bool *out, bool def)
 {
     if (out == NULL) {
@@ -133,6 +181,7 @@ static MaxCfgStatus ng_tbl_get_bool_default(const MaxCfgVar *tbl, const char *ke
     return MAXCFG_OK;
 }
 
+/** @brief Read an integer array view from a TOML table. */
 static MaxCfgStatus ng_tbl_get_int_array_view(const MaxCfgVar *tbl, const char *key, MaxCfgIntView *out)
 {
     if (out == NULL) {
@@ -322,6 +371,7 @@ static void toml_kv_uint(FILE *fp, const char *key, unsigned int value);
 static void toml_kv_string_array(FILE *fp, const char *key, char **items, size_t count);
 static void toml_kv_int_array(FILE *fp, const char *key, int *items, size_t count);
 
+/** @brief Free a heap string and set the pointer to NULL. */
 static void maxcfg_free_and_null(char **p)
 {
     if (p == NULL || *p == NULL) {
@@ -332,6 +382,7 @@ static void maxcfg_free_and_null(char **p)
     *p = NULL;
 }
 
+/** @brief Free the loaded-file tracking array in a TOML handle. */
 static void maxcfg_free_loaded_files(MaxCfgToml *toml)
 {
     if (toml == NULL || toml->loaded_files == NULL) {
@@ -352,6 +403,7 @@ static void maxcfg_free_loaded_files(MaxCfgToml *toml)
     toml->loaded_file_capacity = 0;
 }
 
+/** @brief Ensure capacity in the loaded-file tracking array. */
 static MaxCfgStatus maxcfg_loaded_files_ensure_capacity(MaxCfgToml *toml, size_t want)
 {
     if (toml == NULL) {
@@ -375,6 +427,7 @@ static MaxCfgStatus maxcfg_loaded_files_ensure_capacity(MaxCfgToml *toml, size_t
     return MAXCFG_OK;
 }
 
+/** @brief Check whether a filesystem path is absolute. */
 static bool maxcfg_path_is_absolute(const char *path)
 {
     if (path == NULL || path[0] == '\0') {
@@ -392,6 +445,18 @@ static bool maxcfg_path_is_absolute(const char *path)
     return false;
 }
 
+/**
+ * @brief Resolve a path relative to a base directory.
+ *
+ * Absolute paths are returned unchanged; relative paths are joined
+ * to base_dir with a separator.
+ *
+ * @param base_dir       Base directory for resolution.
+ * @param path           Path to resolve (absolute or relative).
+ * @param out_path       Output buffer for the resolved path.
+ * @param out_path_size  Size of the output buffer.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_resolve_path(const char *base_dir,
                                 const char *path,
                                 char *out_path,
@@ -442,6 +507,7 @@ MaxCfgStatus maxcfg_resolve_path(const char *base_dir,
     return MAXCFG_OK;
 }
 
+/** @brief Case-insensitive string equality test (NULL-safe). */
 static bool maxcfg_str_eq_ci(const char *a, const char *b)
 {
     if (a == NULL || b == NULL) {
@@ -461,6 +527,14 @@ static bool maxcfg_str_eq_ci(const char *a, const char *b)
     }
 }
 
+/**
+ * @brief Parse a video mode string into numeric constants.
+ *
+ * @param s             Mode name ("bios", "ibm", "ibm/snow", "dos", "fast", "fossil").
+ * @param out_video     Receives the VIDEO_* constant.
+ * @param out_has_snow  Optionally receives the snow flag.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_video_mode(const char *s, int *out_video, bool *out_has_snow)
 {
     bool snow = false;
@@ -494,6 +568,13 @@ MaxCfgStatus maxcfg_ng_parse_video_mode(const char *s, int *out_video, bool *out
     return MAXCFG_OK;
 }
 
+/**
+ * @brief Parse a log mode string ("terse", "verbose", "trace") or numeric.
+ *
+ * @param s             Mode name or numeric string.
+ * @param out_log_mode  Receives the LOG_* constant.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_log_mode(const char *s, int *out_log_mode)
 {
     if (s == NULL || out_log_mode == NULL) {
@@ -520,6 +601,13 @@ MaxCfgStatus maxcfg_ng_parse_log_mode(const char *s, int *out_log_mode)
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/**
+ * @brief Parse a multitasker name string into its numeric constant.
+ *
+ * @param s                Multitasker name or numeric string.
+ * @param out_multitasker  Receives the MULTITASKER_* constant.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_multitasker(const char *s, int *out_multitasker)
 {
     if (s == NULL || out_multitasker == NULL) {
@@ -578,6 +666,13 @@ MaxCfgStatus maxcfg_ng_parse_multitasker(const char *s, int *out_multitasker)
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/**
+ * @brief Parse a single handshaking token ("xon", "cts", "dsr") to bit flags.
+ *
+ * @param s         Token string.
+ * @param out_bits  Receives the FLOW_* bit(s).
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_handshaking_token(const char *s, int *out_bits)
 {
     if (s == NULL || out_bits == NULL) {
@@ -600,6 +695,14 @@ MaxCfgStatus maxcfg_ng_parse_handshaking_token(const char *s, int *out_bits)
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/**
+ * @brief Parse a charset name into its numeric constant and high-bit flag.
+ *
+ * @param s                  Charset name ("swedish", "chinese", or "").
+ * @param out_charset        Receives the CHARSET_* constant.
+ * @param out_global_high_bit  Optionally receives the high-bit flag.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_charset(const char *s, int *out_charset, bool *out_global_high_bit)
 {
     if (s == NULL || out_charset == NULL) {
@@ -631,6 +734,13 @@ MaxCfgStatus maxcfg_ng_parse_charset(const char *s, int *out_charset, bool *out_
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/**
+ * @brief Parse a nodelist version string ("5", "6", "7", "fd").
+ *
+ * @param s          Version string.
+ * @param out_nlver  Receives the NLVER_* constant.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_INVALID_ARGUMENT if unrecognized.
+ */
 MaxCfgStatus maxcfg_ng_parse_nodelist_version(const char *s, int *out_nlver)
 {
     if (s == NULL || out_nlver == NULL) {
@@ -661,6 +771,7 @@ MaxCfgStatus maxcfg_ng_parse_nodelist_version(const char *s, int *out_nlver)
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/** @brief Read and parse the video mode from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_video_mode(const MaxCfgToml *toml, int *out_video, bool *out_has_snow)
 {
     MaxCfgVar v;
@@ -688,6 +799,7 @@ MaxCfgStatus maxcfg_ng_get_video_mode(const MaxCfgToml *toml, int *out_video, bo
     return got_any ? MAXCFG_OK : MAXCFG_ERR_NOT_FOUND;
 }
 
+/** @brief Read and parse the log mode from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_log_mode(const MaxCfgToml *toml, int *out_log_mode)
 {
     MaxCfgVar v;
@@ -711,6 +823,7 @@ MaxCfgStatus maxcfg_ng_get_log_mode(const MaxCfgToml *toml, int *out_log_mode)
     return maxcfg_ng_parse_log_mode(v.v.s, out_log_mode);
 }
 
+/** @brief Read and parse the multitasker setting from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_multitasker(const MaxCfgToml *toml, int *out_multitasker)
 {
     MaxCfgVar v;
@@ -734,6 +847,7 @@ MaxCfgStatus maxcfg_ng_get_multitasker(const MaxCfgToml *toml, int *out_multitas
     return maxcfg_ng_parse_multitasker(v.v.s, out_multitasker);
 }
 
+/** @brief Read and combine handshaking flags from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_handshake_mask(const MaxCfgToml *toml, int *out_mask)
 {
     MaxCfgVar v;
@@ -772,6 +886,7 @@ MaxCfgStatus maxcfg_ng_get_handshake_mask(const MaxCfgToml *toml, int *out_mask)
     return MAXCFG_OK;
 }
 
+/** @brief Read and parse the charset from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_charset(const MaxCfgToml *toml, int *out_charset)
 {
     MaxCfgVar v;
@@ -795,6 +910,7 @@ MaxCfgStatus maxcfg_ng_get_charset(const MaxCfgToml *toml, int *out_charset)
     return maxcfg_ng_parse_charset(v.v.s, out_charset, NULL);
 }
 
+/** @brief Read and parse the nodelist version from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_nodelist_version(const MaxCfgToml *toml, int *out_nlver)
 {
     MaxCfgVar v;
@@ -818,6 +934,7 @@ MaxCfgStatus maxcfg_ng_get_nodelist_version(const MaxCfgToml *toml, int *out_nlv
     return maxcfg_ng_parse_nodelist_version(v.v.s, out_nlver);
 }
 
+/** @brief Read a string from a TOML table, falling back to a default. */
 static MaxCfgStatus ng_tbl_get_string_default(const MaxCfgVar *tbl, const char *key, const char **out, const char *def)
 {
     if (out == NULL) {
@@ -843,6 +960,7 @@ static MaxCfgStatus ng_tbl_get_string_default(const MaxCfgVar *tbl, const char *
     return MAXCFG_OK;
 }
 
+/** @brief Read an integer from a TOML table, falling back to a default. */
 static MaxCfgStatus ng_tbl_get_int_default(const MaxCfgVar *tbl, const char *key, int *out, int def)
 {
     if (out == NULL) {
@@ -872,6 +990,7 @@ static MaxCfgStatus ng_tbl_get_int_default(const MaxCfgVar *tbl, const char *key
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/** @brief Read a string array view from a TOML table. */
 static MaxCfgStatus ng_tbl_get_string_array_view(const MaxCfgVar *tbl, const char *key, MaxCfgStrView *out)
 {
     if (out == NULL) {
@@ -899,6 +1018,15 @@ static MaxCfgStatus ng_tbl_get_string_array_view(const MaxCfgVar *tbl, const cha
     return MAXCFG_OK;
 }
 
+/**
+ * @brief Parse message area definitions (divisions + areas) from TOML.
+ *
+ * @param toml       TOML store handle.
+ * @param prefix     Dotted prefix to the message area config section.
+ * @param divisions  Receives parsed division list.
+ * @param areas      Receives parsed message area list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_msg_areas(const MaxCfgToml *toml, const char *prefix,
                                     MaxCfgNgDivisionList *divisions, MaxCfgNgMsgAreaList *areas)
 {
@@ -1079,6 +1207,15 @@ fail_msg_areas:
     return st;
 }
 
+/**
+ * @brief Parse file area definitions (divisions + areas) from TOML.
+ *
+ * @param toml       TOML store handle.
+ * @param prefix     Dotted prefix to the file area config section.
+ * @param divisions  Receives parsed division list.
+ * @param areas      Receives parsed file area list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_file_areas(const MaxCfgToml *toml, const char *prefix,
                                      MaxCfgNgDivisionList *divisions, MaxCfgNgFileAreaList *areas)
 {
@@ -1243,6 +1380,7 @@ fail_file_areas:
     return st;
 }
 
+/** @brief strdup wrapper returning MAXCFG_OK/OOM (NULL input → NULL output). */
 static MaxCfgStatus ng_strdup_safe(char **out, const char *in)
 {
     if (out == NULL) {
@@ -1262,6 +1400,7 @@ static MaxCfgStatus ng_strdup_safe(char **out, const char *in)
     return MAXCFG_OK;
 }
 
+/** @brief Deep-copy a string array view into a freshly allocated array. */
 static MaxCfgStatus ng_copy_strv_from_view(char ***out_items, size_t *out_count, const MaxCfgStrView *in)
 {
     if (out_items == NULL || out_count == NULL || in == NULL) {
@@ -1304,6 +1443,14 @@ static void ng_custom_menu_set_location_from_view(int *out_row, int *out_col, co
 static void ng_custom_menu_parse_lightbar_color_pair(const MaxCfgVar *tbl, const char *key,
                                                      unsigned char *out_attr, bool *out_has);
 
+/**
+ * @brief Parse a menu definition from TOML.
+ *
+ * @param toml    TOML store handle.
+ * @param prefix  Dotted prefix to the menu config section.
+ * @param menu    Receives the parsed menu.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxCfgNgMenu *menu)
 {
     if (toml == NULL || menu == NULL) {
@@ -1525,6 +1672,7 @@ fail_menu:
     return st;
 }
 
+/** @brief Read an unsigned integer from a TOML table, falling back to a default. */
 static MaxCfgStatus ng_tbl_get_uint_default(const MaxCfgVar *tbl, const char *key, unsigned int *out, unsigned int def)
 {
     if (out == NULL) {
@@ -1554,6 +1702,14 @@ static MaxCfgStatus ng_tbl_get_uint_default(const MaxCfgVar *tbl, const char *ke
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/**
+ * @brief Parse access level definitions from TOML.
+ *
+ * @param toml    TOML store handle.
+ * @param prefix  Dotted prefix to the access level config section.
+ * @param levels  Receives the parsed access level list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_access_levels(const MaxCfgToml *toml, const char *prefix, MaxCfgNgAccessLevelList *levels)
 {
     if (toml == NULL || levels == NULL) {
@@ -1696,6 +1852,7 @@ fail_access_levels:
     return st;
 }
 
+/** @brief strdup wrapper returning MAXCFG_OK/OOM (NULL input → NULL output). */
 static MaxCfgStatus maxcfg_strdup_safe(char **out, const char *in)
 {
     if (out == NULL) {
@@ -1715,6 +1872,7 @@ static MaxCfgStatus maxcfg_strdup_safe(char **out, const char *in)
     return MAXCFG_OK;
 }
 
+/** @brief Allocate a new TOML node with the given type. */
 static TomlNode *toml_node_new(MaxCfgVarType type)
 {
     TomlNode *n = (TomlNode *)calloc(1, sizeof(*n));
@@ -1730,6 +1888,7 @@ static void toml_array_free(TomlArray *a);
 static void toml_table_clear(TomlTable *t);
 static MaxCfgStatus toml_table_unset_node(TomlTable *t, const char *key);
 
+/** @brief Recursively free a TOML node and all child data. */
 static void toml_node_free(TomlNode *n)
 {
     if (n == NULL) {
@@ -1766,6 +1925,7 @@ static void toml_node_free(TomlNode *n)
     free(n);
 }
 
+/** @brief Free a TOML table and all its entries. */
 static void toml_table_free(TomlTable *t)
 {
     if (t == NULL) {
@@ -1780,6 +1940,7 @@ static void toml_table_free(TomlTable *t)
     free(t);
 }
 
+/** @brief Clear all entries from a TOML table without freeing the table itself. */
 static void toml_table_clear(TomlTable *t)
 {
     if (t == NULL) {
@@ -1796,6 +1957,7 @@ static void toml_table_clear(TomlTable *t)
     t->capacity = 0;
 }
 
+/** @brief Remove a single entry from a TOML table by key. */
 static MaxCfgStatus toml_table_unset_node(TomlTable *t, const char *key)
 {
     if (t == NULL || key == NULL) {
@@ -1820,6 +1982,7 @@ static MaxCfgStatus toml_table_unset_node(TomlTable *t, const char *key)
     return MAXCFG_ERR_NOT_FOUND;
 }
 
+/** @brief Free a TOML array and all its elements. */
 static void toml_array_free(TomlArray *a)
 {
     if (a == NULL) {
@@ -1837,6 +2000,7 @@ static void toml_array_free(TomlArray *a)
 static TomlTable *toml_table_new(void);
 static MaxCfgStatus toml_array_ensure_capacity(TomlArray *a, size_t want);
 
+/** @brief Resize a table array, creating or destroying table nodes as needed. */
 static MaxCfgStatus toml_array_set_count_table(TomlArray *a, size_t count)
 {
     if (a == NULL) {
@@ -1869,6 +2033,7 @@ static MaxCfgStatus toml_array_set_count_table(TomlArray *a, size_t count)
     return MAXCFG_OK;
 }
 
+/** @brief Resize a string array node, allocating empty strings for new slots. */
 static MaxCfgStatus toml_string_array_set_count(TomlNode *n, size_t count)
 {
     if (n == NULL || n->type != MAXCFG_VAR_STRING_ARRAY) {
@@ -1923,16 +2088,19 @@ static MaxCfgStatus toml_string_array_set_count(TomlNode *n, size_t count)
     return MAXCFG_OK;
 }
 
+/** @brief Allocate an empty TOML table. */
 static TomlTable *toml_table_new(void)
 {
     return (TomlTable *)calloc(1, sizeof(TomlTable));
 }
 
+/** @brief Allocate an empty TOML array. */
 static TomlArray *toml_array_new(void)
 {
     return (TomlArray *)calloc(1, sizeof(TomlArray));
 }
 
+/** @brief Grow a TOML table's backing storage if needed. */
 static MaxCfgStatus toml_table_ensure_capacity(TomlTable *t, size_t want)
 {
     if (t == NULL) {
@@ -1958,6 +2126,7 @@ static MaxCfgStatus toml_table_ensure_capacity(TomlTable *t, size_t want)
     return MAXCFG_OK;
 }
 
+/** @brief Grow a TOML array's backing storage if needed. */
 static MaxCfgStatus toml_array_ensure_capacity(TomlArray *a, size_t want)
 {
     if (a == NULL) {
@@ -1983,6 +2152,7 @@ static MaxCfgStatus toml_array_ensure_capacity(TomlArray *a, size_t want)
     return MAXCFG_OK;
 }
 
+/** @brief Look up a node in a TOML table by key (linear scan). */
 static TomlNode *toml_table_get_node(const TomlTable *t, const char *key)
 {
     if (t == NULL || key == NULL) {
@@ -1998,6 +2168,7 @@ static TomlNode *toml_table_get_node(const TomlTable *t, const char *key)
     return NULL;
 }
 
+/** @brief Insert or replace a key/value node in a TOML table. */
 static MaxCfgStatus toml_table_set_node(TomlTable *t, const char *key, TomlNode *value)
 {
     if (t == NULL || key == NULL || value == NULL) {
@@ -2026,6 +2197,7 @@ static MaxCfgStatus toml_table_set_node(TomlTable *t, const char *key, TomlNode 
     return MAXCFG_OK;
 }
 
+/** @brief Append a node to a TOML array. */
 static MaxCfgStatus toml_array_add_node(TomlArray *a, TomlNode *value)
 {
     if (a == NULL || value == NULL) {
@@ -2041,6 +2213,7 @@ static MaxCfgStatus toml_array_add_node(TomlArray *a, TomlNode *value)
     return MAXCFG_OK;
 }
 
+/** @brief Skip leading whitespace in a string. */
 static const char *skip_ws(const char *p)
 {
     while (p && *p && isspace((unsigned char)*p)) {
@@ -2049,6 +2222,7 @@ static const char *skip_ws(const char *p)
     return p;
 }
 
+/** @brief Trim leading and trailing whitespace in-place. */
 static char *str_trim_inplace(char *s)
 {
     if (s == NULL) {
@@ -2068,6 +2242,7 @@ static char *str_trim_inplace(char *s)
     return s;
 }
 
+/** @brief Strip TOML-style comments from a line (handles quoted strings). */
 static char *strip_comment(char *line)
 {
     if (line == NULL) {
@@ -2106,6 +2281,7 @@ static char *strip_comment(char *line)
     return line;
 }
 
+/** @brief Parse a TOML double-quoted string, advancing the cursor. */
 static MaxCfgStatus parse_string(const char **p_io, char **out)
 {
     const char *p = p_io ? *p_io : NULL;
@@ -2191,6 +2367,7 @@ static MaxCfgStatus parse_string(const char **p_io, char **out)
     return MAXCFG_OK;
 }
 
+/** @brief Parse a TOML integer array (e.g. [1, 2, 3]) into a node. */
 static MaxCfgStatus parse_int_array(const char **p_io, TomlNode **out)
 {
     /* Parse a TOML array of integers: [1, 2, 3]
@@ -2260,6 +2437,7 @@ static MaxCfgStatus parse_int_array(const char **p_io, TomlNode **out)
 
 static MaxCfgStatus parse_value(const char **p_io, TomlNode **out);
 
+/** @brief Parse a TOML inline table (e.g. {key = "val"}) into a node. */
 static MaxCfgStatus parse_inline_table(const char **p_io, TomlNode **out)
 {
     const char *p = p_io ? *p_io : NULL;
@@ -2342,6 +2520,7 @@ static MaxCfgStatus parse_inline_table(const char **p_io, TomlNode **out)
     return MAXCFG_OK;
 }
 
+/** @brief Parse a TOML string array (e.g. ["a", "b"]) into a node. */
 static MaxCfgStatus parse_string_array(const char **p_io, TomlNode **out)
 {
     const char *p = p_io ? *p_io : NULL;
@@ -2422,6 +2601,7 @@ static MaxCfgStatus parse_string_array(const char **p_io, TomlNode **out)
     return MAXCFG_OK;
 }
 
+/** @brief Parse any TOML value (string, bool, int, array, inline table). */
 static MaxCfgStatus parse_value(const char **p_io, TomlNode **out)
 {
     const char *p = p_io ? *p_io : NULL;
@@ -2576,6 +2756,7 @@ static MaxCfgStatus parse_value(const char **p_io, TomlNode **out)
     return MAXCFG_ERR_IO;
 }
 
+/** @brief Walk a dotted path, creating intermediate tables as needed. */
 static MaxCfgStatus table_get_or_create_table(TomlTable *root, const char *path, TomlTable **out)
 {
     if (root == NULL || path == NULL || out == NULL) {
@@ -2640,6 +2821,7 @@ static MaxCfgStatus table_get_or_create_table(TomlTable *root, const char *path,
     return MAXCFG_OK;
 }
 
+/** @brief Parse an entire TOML file into a fresh table tree. */
 static MaxCfgStatus file_parse_into_table(const char *path, TomlTable **out_root)
 {
     if (path == NULL || out_root == NULL) {
@@ -2798,6 +2980,7 @@ static MaxCfgStatus file_parse_into_table(const char *path, TomlTable **out_root
     return MAXCFG_OK;
 }
 
+/** @brief Allocate and initialize a TOML store handle. */
 MaxCfgStatus maxcfg_toml_init(MaxCfgToml **out_toml)
 {
     if (out_toml == NULL) {
@@ -2839,6 +3022,7 @@ MaxCfgStatus maxcfg_toml_init(MaxCfgToml **out_toml)
     return MAXCFG_OK;
 }
 
+/** @brief Free a TOML store handle and all loaded data. */
 void maxcfg_toml_free(MaxCfgToml *toml)
 {
     if (toml == NULL) {
@@ -2851,6 +3035,7 @@ void maxcfg_toml_free(MaxCfgToml *toml)
     free(toml);
 }
 
+/** @brief Load a TOML file into the store under an optional dotted prefix. */
 MaxCfgStatus maxcfg_toml_load_file(MaxCfgToml *toml, const char *path, const char *prefix)
 {
     if (toml == NULL || toml->root == NULL || toml->root->type != MAXCFG_VAR_TABLE || path == NULL) {
@@ -2941,6 +3126,7 @@ MaxCfgStatus maxcfg_toml_load_file(MaxCfgToml *toml, const char *path, const cha
     return MAXCFG_OK;
 }
 
+/** @brief Walk a dotted path from a root node, returning the target. */
 static const TomlNode *toml_get_node_base(const TomlNode *root, const char *path)
 {
     if (root == NULL || path == NULL) {
@@ -3003,6 +3189,7 @@ static const TomlNode *toml_get_node_base(const TomlNode *root, const char *path
     return cur;
 }
 
+/** @brief Deep-clone a TOML node and all its children. */
 static TomlNode *toml_node_clone(const TomlNode *src)
 {
     if (src == NULL) {
@@ -3109,6 +3296,7 @@ static TomlNode *toml_node_clone(const TomlNode *src)
     return dst;
 }
 
+/** @brief Set a value node at a dotted path, creating intermediates as needed. */
 static MaxCfgStatus toml_set_path_node(TomlTable *root, const char *path, TomlNode *value)
 {
     if (root == NULL || path == NULL || value == NULL) {
@@ -3243,6 +3431,7 @@ static MaxCfgStatus toml_set_path_node(TomlTable *root, const char *path, TomlNo
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/** @brief Emit a single TOML key/value pair to a file stream. */
 static void toml_emit_key(FILE *fp, const char *key, const TomlNode *n)
 {
     if (fp == NULL || key == NULL || n == NULL) {
@@ -3273,6 +3462,7 @@ static void toml_emit_key(FILE *fp, const char *key, const TomlNode *n)
     }
 }
 
+/** @brief Recursively emit an entire TOML table (with sub-tables and arrays). */
 static void toml_emit_table(FILE *fp, const TomlTable *t, const char *section)
 {
     if (fp == NULL || t == NULL) {
@@ -3347,6 +3537,7 @@ static void toml_emit_table(FILE *fp, const TomlTable *t, const char *section)
     }
 }
 
+/** @brief Atomically write a prefix subtree to a file (write-to-tmp + rename). */
 static MaxCfgStatus maxcfg_toml_write_atomic_prefix_to_path(const MaxCfgToml *toml, const char *prefix, const char *path)
 {
     if (toml == NULL || toml->root == NULL || toml->root->type != MAXCFG_VAR_TABLE || path == NULL) {
@@ -3389,6 +3580,7 @@ static MaxCfgStatus maxcfg_toml_write_atomic_prefix_to_path(const MaxCfgToml *to
     return MAXCFG_OK;
 }
 
+/** @brief Find a loaded file by exact prefix match. */
 static const TomlLoadedFile *maxcfg_find_loaded_file_for_prefix(const MaxCfgToml *toml, const char *prefix)
 {
     if (toml == NULL || toml->loaded_files == NULL || prefix == NULL) {
@@ -3403,6 +3595,7 @@ static const TomlLoadedFile *maxcfg_find_loaded_file_for_prefix(const MaxCfgToml
     return NULL;
 }
 
+/** @brief Find the best-matching loaded file for a dotted key path. */
 static const TomlLoadedFile *maxcfg_find_best_loaded_file_for_path(const MaxCfgToml *toml, const char *path)
 {
     if (toml == NULL || toml->loaded_files == NULL || path == NULL) {
@@ -3436,6 +3629,7 @@ static const TomlLoadedFile *maxcfg_find_best_loaded_file_for_path(const MaxCfgT
     return best;
 }
 
+/** @brief Save all loaded files back to disk (with overrides merged). */
 MaxCfgStatus maxcfg_toml_save_loaded_files(const MaxCfgToml *toml)
 {
     if (toml == NULL) {
@@ -3459,6 +3653,7 @@ MaxCfgStatus maxcfg_toml_save_loaded_files(const MaxCfgToml *toml)
     return MAXCFG_OK;
 }
 
+/** @brief Save only the file(s) matching a given prefix. */
 MaxCfgStatus maxcfg_toml_save_prefix(const MaxCfgToml *toml, const char *prefix)
 {
     if (toml == NULL || prefix == NULL) {
@@ -3473,6 +3668,7 @@ MaxCfgStatus maxcfg_toml_save_prefix(const MaxCfgToml *toml, const char *prefix)
     return maxcfg_toml_write_atomic_prefix_to_path(toml, prefix, lf->path);
 }
 
+/** @brief Persist a single override into the base TOML data. */
 MaxCfgStatus maxcfg_toml_persist_override(MaxCfgToml *toml, const char *path)
 {
     if (toml == NULL || toml->root == NULL || toml->root->type != MAXCFG_VAR_TABLE || toml->overrides == NULL || path == NULL) {
@@ -3499,6 +3695,7 @@ MaxCfgStatus maxcfg_toml_persist_override(MaxCfgToml *toml, const char *path)
     return MAXCFG_OK;
 }
 
+/** @brief Persist a single override and immediately save its file. */
 MaxCfgStatus maxcfg_toml_persist_override_and_save(MaxCfgToml *toml, const char *path)
 {
     if (toml == NULL || path == NULL) {
@@ -3518,6 +3715,7 @@ MaxCfgStatus maxcfg_toml_persist_override_and_save(MaxCfgToml *toml, const char 
     return maxcfg_toml_write_atomic_prefix_to_path(toml, lf->prefix, lf->path);
 }
 
+/** @brief qsort comparator for sorted key persistence. */
 static int cmp_keys(const void *a, const void *b)
 {
     const char *ka = *(const char * const *)a;
@@ -3528,6 +3726,7 @@ static int cmp_keys(const void *a, const void *b)
     return strcmp(ka, kb);
 }
 
+/** @brief Persist all pending overrides into the base TOML data. */
 MaxCfgStatus maxcfg_toml_persist_overrides(MaxCfgToml *toml)
 {
     if (toml == NULL || toml->overrides == NULL) {
@@ -3567,6 +3766,7 @@ MaxCfgStatus maxcfg_toml_persist_overrides(MaxCfgToml *toml)
     return MAXCFG_OK;
 }
 
+/** @brief Persist all pending overrides and save all affected files. */
 MaxCfgStatus maxcfg_toml_persist_overrides_and_save(MaxCfgToml *toml)
 {
     if (toml == NULL) {
@@ -3581,6 +3781,7 @@ MaxCfgStatus maxcfg_toml_persist_overrides_and_save(MaxCfgToml *toml)
     return maxcfg_toml_save_loaded_files(toml);
 }
 
+/** @brief Convert an internal TomlNode to a public MaxCfgVar. */
 static MaxCfgStatus var_from_node(const TomlNode *n, MaxCfgVar *out)
 {
     if (out == NULL) {
@@ -3629,6 +3830,7 @@ static MaxCfgStatus var_from_node(const TomlNode *n, MaxCfgVar *out)
     return MAXCFG_OK;
 }
 
+/** @brief Parse a path segment like "name" or "name[3]" into name + optional index. */
 static MaxCfgStatus parse_segment(const char *seg, char *name_out, size_t name_out_sz, bool *has_index, size_t *index_out)
 {
     if (seg == NULL || name_out == NULL || name_out_sz == 0 || has_index == NULL || index_out == NULL) {
@@ -3667,6 +3869,7 @@ static MaxCfgStatus parse_segment(const char *seg, char *name_out, size_t name_o
     return MAXCFG_OK;
 }
 
+/** @brief Retrieve a value from the TOML store by dotted path (checking overrides first). */
 MaxCfgStatus maxcfg_toml_get(const MaxCfgToml *toml, const char *path, MaxCfgVar *out)
 {
     if (toml == NULL || toml->root == NULL || toml->root->type != MAXCFG_VAR_TABLE || path == NULL || out == NULL) {
@@ -3746,6 +3949,7 @@ MaxCfgStatus maxcfg_toml_get(const MaxCfgToml *toml, const char *path, MaxCfgVar
     return var_from_node(cur, out);
 }
 
+/** @brief Set an integer override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_int(MaxCfgToml *toml, const char *path, int v)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3765,6 +3969,7 @@ MaxCfgStatus maxcfg_toml_override_set_int(MaxCfgToml *toml, const char *path, in
     return st;
 }
 
+/** @brief Set an unsigned integer override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_uint(MaxCfgToml *toml, const char *path, unsigned int v)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3784,6 +3989,7 @@ MaxCfgStatus maxcfg_toml_override_set_uint(MaxCfgToml *toml, const char *path, u
     return st;
 }
 
+/** @brief Set a boolean override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_bool(MaxCfgToml *toml, const char *path, bool v)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3803,6 +4009,7 @@ MaxCfgStatus maxcfg_toml_override_set_bool(MaxCfgToml *toml, const char *path, b
     return st;
 }
 
+/** @brief Set a string override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_string(MaxCfgToml *toml, const char *path, const char *v)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3827,6 +4034,7 @@ MaxCfgStatus maxcfg_toml_override_set_string(MaxCfgToml *toml, const char *path,
     return st;
 }
 
+/** @brief Set a string array override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_string_array(MaxCfgToml *toml, const char *path, const char **items, size_t count)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3861,6 +4069,7 @@ MaxCfgStatus maxcfg_toml_override_set_string_array(MaxCfgToml *toml, const char 
     return st;
 }
 
+/** @brief Set an empty table array override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_table_array_empty(MaxCfgToml *toml, const char *path)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3884,6 +4093,7 @@ MaxCfgStatus maxcfg_toml_override_set_table_array_empty(MaxCfgToml *toml, const 
     return st;
 }
 
+/** @brief Remove an override at the given path. */
 MaxCfgStatus maxcfg_toml_override_unset(MaxCfgToml *toml, const char *path)
 {
     if (toml == NULL || toml->overrides == NULL || path == NULL) {
@@ -3893,6 +4103,7 @@ MaxCfgStatus maxcfg_toml_override_unset(MaxCfgToml *toml, const char *path)
     return toml_table_unset_node(toml->overrides, path);
 }
 
+/** @brief Clear all overrides from the TOML store. */
 void maxcfg_toml_override_clear(MaxCfgToml *toml)
 {
     if (toml == NULL || toml->overrides == NULL) {
@@ -3902,6 +4113,7 @@ void maxcfg_toml_override_clear(MaxCfgToml *toml)
     toml_table_clear(toml->overrides);
 }
 
+/** @brief Look up a key within a table-type MaxCfgVar. */
 MaxCfgStatus maxcfg_toml_table_get(const MaxCfgVar *table, const char *key, MaxCfgVar *out)
 {
     if (table == NULL || out == NULL || key == NULL) {
@@ -3919,6 +4131,7 @@ MaxCfgStatus maxcfg_toml_table_get(const MaxCfgVar *table, const char *key, MaxC
     return var_from_node(n, out);
 }
 
+/** @brief Access an element by index within an array-type MaxCfgVar. */
 MaxCfgStatus maxcfg_toml_array_get(const MaxCfgVar *array, size_t index, MaxCfgVar *out)
 {
     if (array == NULL || out == NULL) {
@@ -3954,6 +4167,7 @@ MaxCfgStatus maxcfg_toml_array_get(const MaxCfgVar *array, size_t index, MaxCfgV
     return MAXCFG_ERR_INVALID_ARGUMENT;
 }
 
+/** @brief Get the element count of an array or table variable. */
 MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count)
 {
     if (out_count == NULL) {
@@ -3992,6 +4206,7 @@ MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count)
     }
 }
 
+/** @brief Write a TOML-escaped double-quoted string to a file stream. */
 static void toml_write_escaped(FILE *fp, const char *s)
 {
     fputc('"', fp);
@@ -4015,6 +4230,7 @@ static void toml_write_escaped(FILE *fp, const char *s)
     fputc('"', fp);
 }
 
+/** @brief Write a TOML key = "string" pair. */
 static void toml_kv_string(FILE *fp, const char *key, const char *value)
 {
     fprintf(fp, "%s = ", key);
@@ -4022,16 +4238,19 @@ static void toml_kv_string(FILE *fp, const char *key, const char *value)
     fputc('\n', fp);
 }
 
+/** @brief Write a TOML key = int pair. */
 static void toml_kv_int(FILE *fp, const char *key, int value)
 {
     fprintf(fp, "%s = %d\n", key, value);
 }
 
+/** @brief Write a TOML key = bool pair. */
 static void toml_kv_bool(FILE *fp, const char *key, bool value)
 {
     fprintf(fp, "%s = %s\n", key, value ? "true" : "false");
 }
 
+/** @brief Write a TOML key = "mci_color" pair from a MaxCfgNgColor. */
 static void toml_kv_color(FILE *fp, const char *key, const MaxCfgNgColor *c)
 {
     char mci[32];
@@ -4040,11 +4259,13 @@ static void toml_kv_color(FILE *fp, const char *key, const MaxCfgNgColor *c)
     fprintf(fp, "%s = \"%s\"\n", key, mci);
 }
 
+/** @brief Write a TOML key = uint pair. */
 static void toml_kv_uint(FILE *fp, const char *key, unsigned int value)
 {
     fprintf(fp, "%s = %u\n", key, value);
 }
 
+/** @brief Write a TOML key = ["str", ...] array pair. */
 static void toml_kv_string_array(FILE *fp, const char *key, char **items, size_t count)
 {
     fprintf(fp, "%s = [", key);
@@ -4057,6 +4278,7 @@ static void toml_kv_string_array(FILE *fp, const char *key, char **items, size_t
     fputs("]\n", fp);
 }
 
+/** @brief Write a TOML key = [int, ...] array pair. */
 static void toml_kv_int_array(FILE *fp, const char *key, int *items, size_t count)
 {
     fprintf(fp, "%s = [", key);
@@ -4069,6 +4291,7 @@ static void toml_kv_int_array(FILE *fp, const char *key, int *items, size_t coun
     fprintf(fp, "]\n");
 }
 
+/** @brief Free a string vector (array of heap strings) and reset pointers. */
 static void maxcfg_free_strv(char ***items_io, size_t *count_io)
 {
     if (items_io == NULL || *items_io == NULL) {
@@ -4093,6 +4316,7 @@ static void maxcfg_free_strv(char ***items_io, size_t *count_io)
     *items_io = NULL;
 }
 
+/** @brief Deep-copy a string vector from source to destination. */
 static MaxCfgStatus maxcfg_copy_strv(char ***out_items, size_t *out_count, char **in_items, size_t in_count)
 {
     if (out_items == NULL || out_count == NULL) {
@@ -4127,6 +4351,7 @@ static MaxCfgStatus maxcfg_copy_strv(char ***out_items, size_t *out_count, char 
     return MAXCFG_OK;
 }
 
+/** @brief Verify that a base directory path exists and is a directory. */
 static MaxCfgStatus ensure_base_dir_is_dir(const char *base_dir)
 {
     struct stat st;
@@ -4149,6 +4374,7 @@ static MaxCfgStatus ensure_base_dir_is_dir(const char *base_dir)
     return MAXCFG_OK;
 }
 
+/** @brief Open a config context rooted at the given base directory. */
 MaxCfgStatus maxcfg_open(MaxCfg **out_cfg, const char *base_dir)
 {
     MaxCfg *cfg;
@@ -4180,6 +4406,7 @@ MaxCfgStatus maxcfg_open(MaxCfg **out_cfg, const char *base_dir)
     return MAXCFG_OK;
 }
 
+/** @brief Close a config context and free all associated memory. */
 void maxcfg_close(MaxCfg *cfg)
 {
     if (cfg == NULL) {
@@ -4190,6 +4417,7 @@ void maxcfg_close(MaxCfg *cfg)
     free(cfg);
 }
 
+/** @brief Return the base directory path for a config handle. */
 const char *maxcfg_base_dir(const MaxCfg *cfg)
 {
     if (cfg == NULL) {
@@ -4199,6 +4427,7 @@ const char *maxcfg_base_dir(const MaxCfg *cfg)
     return cfg->base_dir;
 }
 
+/** @brief Return a human-readable string for a status code. */
 const char *maxcfg_status_string(MaxCfgStatus st)
 {
     switch (st) {
@@ -4221,6 +4450,7 @@ const char *maxcfg_status_string(MaxCfgStatus st)
     }
 }
 
+/** @brief Initialize an NgSystem struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_system_init(MaxCfgNgSystem *sys)
 {
     if (sys == NULL) {
@@ -4236,6 +4466,7 @@ MaxCfgStatus maxcfg_ng_system_init(MaxCfgNgSystem *sys)
     return MAXCFG_OK;
 }
 
+/** @brief Free all heap memory owned by an NgSystem struct. */
 void maxcfg_ng_system_free(MaxCfgNgSystem *sys)
 {
     if (sys == NULL) {
@@ -4385,6 +4616,7 @@ void maxcfg_ng_general_display_files_free(MaxCfgNgGeneralDisplayFiles *files)
  * Display UI config (general.display) — lightbar area settings
  * ============================================================================ */
 
+/** @brief Reset a display area config to built-in defaults. */
 static void ng_display_area_cfg_defaults(MaxCfgNgDisplayAreaCfg *a)
 {
     a->lightbar_area = false;
@@ -4686,6 +4918,7 @@ void maxcfg_ng_menu_free(MaxCfgNgMenu *menu)
     memset(menu, 0, sizeof(*menu));
 }
 
+/** @brief Reset a custom menu config to built-in defaults. */
 static void ng_custom_menu_set_defaults(MaxCfgNgCustomMenu *cm)
 {
     if (cm == NULL) {
@@ -4711,6 +4944,7 @@ static void ng_custom_menu_set_defaults(MaxCfgNgCustomMenu *cm)
     cm->boundary_layout = 0;
 }
 
+/** @brief Parse an option_justify string ("left", "center", "right"). */
 static void ng_custom_menu_parse_justify(MaxCfgNgCustomMenu *cm, const char *s)
 {
     if (cm == NULL || s == NULL || *s == '\0') {
@@ -4725,6 +4959,7 @@ static void ng_custom_menu_parse_justify(MaxCfgNgCustomMenu *cm, const char *s)
     }
 }
 
+/** @brief Parse a boundary_justify string ("left [top]", "center [center]", etc). */
 static void ng_custom_menu_parse_boundary_justify(MaxCfgNgCustomMenu *cm, const char *s)
 {
     char buf[64];
@@ -4781,6 +5016,7 @@ static void ng_custom_menu_parse_boundary_justify(MaxCfgNgCustomMenu *cm, const 
     }
 }
 
+/** @brief Parse a boundary_layout string ("grid", "tight", "spread", etc). */
 static void ng_custom_menu_parse_boundary_layout(MaxCfgNgCustomMenu *cm, const char *s)
 {
     if (cm == NULL || s == NULL || *s == '\0') {
@@ -4799,6 +5035,7 @@ static void ng_custom_menu_parse_boundary_layout(MaxCfgNgCustomMenu *cm, const c
     }
 }
 
+/** @brief Extract a [row, col] pair from an integer array view. */
 static void ng_custom_menu_set_location_from_view(int *out_row, int *out_col, const MaxCfgIntView *v)
 {
     if (out_row == NULL || out_col == NULL || v == NULL) {
@@ -4814,6 +5051,7 @@ static void ng_custom_menu_set_location_from_view(int *out_row, int *out_col, co
     }
 }
 
+/** @brief Parse a lightbar color pair (["fg_name", "bg_name"]) into an attribute byte. */
 static void ng_custom_menu_parse_lightbar_color_pair(const MaxCfgVar *tbl, const char *key,
                                                      unsigned char *out_attr, bool *out_has)
 {
@@ -4840,6 +5078,7 @@ static void ng_custom_menu_parse_lightbar_color_pair(const MaxCfgVar *tbl, const
     *out_has = true;
 }
 
+/** @brief Grow the menu options array if needed. */
 static MaxCfgStatus maxcfg_ng_menu_ensure_capacity(MaxCfgNgMenu *menu, size_t want)
 {
     if (menu == NULL) {

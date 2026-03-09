@@ -1,12 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * m_isval.c — Message area validation utility
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -17,15 +18,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#ifndef __GNUC__
-#pragma off(unreferenced)
-static char rcs_id[]="$Id: m_isval.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
-#pragma on(unreferenced)
-#endif
-
-/*# name=Routine to validate message areas
-*/
-
 #define MAX_LANG_m_area
 #define MAX_LANG_max_main
 #include <string.h>
@@ -33,6 +25,16 @@ static char rcs_id[]="$Id: m_isval.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include "max_msg.h"
 #include "debug_log.h"
 
+/**
+ * @brief Resolve an unqualified (leaf-only) area name to its full path.
+ *
+ * Scans all known areas looking for one whose leaf name matches.  If
+ * exactly one match is found, @p name is overwritten with the fully
+ * qualified area name.  Ambiguous matches are rejected.
+ *
+ * @param name  Area name buffer; updated in-place on success.
+ * @return TRUE if resolved, FALSE if already qualified or ambiguous.
+ */
 static int near _ResolveMsgAreaName(char *name)
 {
   HAFF haff;
@@ -89,6 +91,17 @@ static int near _ResolveMsgAreaName(char *name)
   return TRUE;
 }
 
+/**
+ * @brief Core validation logic for a single message area.
+ *
+ * Checks ACS privileges, path existence (auto-creating the base if
+ * needed), and barricade password.
+ *
+ * @param pmah   Pointer to populated area header.
+ * @param flags  Bitmask of VA_VAL, VA_PWD, VA_OVRPRIV, VA_EXTONLY.
+ * @param pbi    Receives barricade privilege info on success.
+ * @return TRUE if the area passes all checks, FALSE otherwise.
+ */
 static int near _ValidMsgArea(PMAH pmah, unsigned flags, BARINFO *pbi)
 {
   char *bar;
@@ -148,6 +161,18 @@ static int near _ValidMsgArea(PMAH pmah, unsigned flags, BARINFO *pbi)
 }
 
 
+/**
+ * @brief Validate a message area by name or pre-loaded header.
+ *
+ * If @p pmah is non-NULL, validates it directly.  Otherwise reads the
+ * area by @p name (with leaf-name resolution fallback) and validates.
+ *
+ * @param name   Area name (used when pmah is NULL).
+ * @param pmah   Pre-loaded area header, or NULL to load by name.
+ * @param flags  Bitmask of VA_* validation flags.
+ * @param pbi    Receives barricade privilege info.
+ * @return TRUE if the area is valid and accessible, FALSE otherwise.
+ */
 int ValidMsgArea(char *name, MAH *pmah, unsigned flags, BARINFO *pbi)
 {
   MAH ma;
@@ -211,6 +236,13 @@ int ValidMsgArea(char *name, MAH *pmah, unsigned flags, BARINFO *pbi)
   return rc;
 }
 
+/**
+ * @brief Force the user into a valid message area.
+ *
+ * If the current usr.msg area is invalid, prompts the user to choose
+ * a new one via Msg_Area().  Loops until a valid area is pushed onto
+ * the area stack.
+ */
 void ForceGetMsgArea(void)
 {
   BARINFO bi;

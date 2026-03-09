@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * main.c — MaxCFG application entry point
  *
- * main.c - Entry point for Maximus Configuration Editor
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -25,7 +37,7 @@ unsigned short dosProc_exitCode = 0;
 /* Resize flag set by SIGWINCH */
 static volatile int need_resize = 0;
 
-/* SIGWINCH handler */
+/** @brief SIGWINCH handler — sets the resize flag for the main loop. */
 static void sigwinch_handler(int sig)
 {
     (void)sig;
@@ -43,7 +55,12 @@ static char g_cli_apply_delta_path[MAX_PATH_LEN] = { 0 };
 static char g_cli_delta_file[MAX_PATH_LEN] = { 0 };
 static LangDeltaMode g_cli_delta_mode = LANG_DELTA_FULL;
 
-/* Request terminal to resize (xterm-compatible) */
+/**
+ * @brief Request the terminal emulator to resize (xterm escape sequence).
+ *
+ * @param cols  Desired column count.
+ * @param rows  Desired row count.
+ */
 static void request_terminal_size(int cols, int rows)
 {
     /* Use xterm escape sequence to resize */
@@ -51,7 +68,7 @@ static void request_terminal_size(int cols, int rows)
     fflush(stdout);
 }
 
-/* Setup signal handlers */
+/** @brief Install signal handlers (SIGWINCH for terminal resize). */
 static void setup_signals(void)
 {
     struct sigaction sa;
@@ -65,7 +82,7 @@ static void setup_signals(void)
     sigaction(SIGWINCH, &sa, NULL);
 }
 
-/* Handle terminal resize */
+/** @brief Process a pending terminal resize by refreshing ncurses. */
 static void handle_resize(void)
 {
     endwin();
@@ -86,6 +103,7 @@ MaxCfg *g_maxcfg = NULL;
 MaxCfgToml *g_maxcfg_toml = NULL;
 MaxCfgThemeColors g_theme_colors;
 
+/** @brief Free the global TOML config and libmaxcfg handles. */
 static void maxcfg_toml_cleanup(void)
 {
     if (g_maxcfg_toml) {
@@ -98,6 +116,15 @@ static void maxcfg_toml_cleanup(void)
     }
 }
 
+/**
+ * @brief Load all TOML configuration files from the system path.
+ *
+ * Opens libmaxcfg, initialises the TOML store, and loads maximus.toml
+ * plus all general/*.toml and matrix.toml files.
+ *
+ * @param sys_path  Maximus system base directory.
+ * @return 1 on success, 0 on failure (error printed to stderr).
+ */
 static int load_toml_config(const char *sys_path)
 {
     if (sys_path == NULL || sys_path[0] == '\0') {
@@ -237,6 +264,11 @@ static int load_toml_config(const char *sys_path)
     return 1;
 }
 
+/**
+ * @brief Print command-line usage information to stderr.
+ *
+ * @param prog  Program name (argv[0]).
+ */
 static void print_usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [sys_path] [options]\n", prog);
@@ -260,6 +292,7 @@ static void print_usage(const char *prog)
     fprintf(stderr, "\nIf sys_path is not specified, it will be derived from argv[0] or the first positional argument.\n");
 }
 
+/** @brief Print version and copyright information to stdout. */
 static void print_version(void)
 {
     printf("MAXCFG - Maximus Configuration Editor\n");
@@ -268,6 +301,12 @@ static void print_version(void)
     printf("License: GPL-2.0-or-later\n");
 }
 
+/**
+ * @brief Parse command-line arguments into global state flags.
+ *
+ * @param argc  Argument count.
+ * @param argv  Argument vector.
+ */
 static void parse_args(int argc, char *argv[])
 {
     for (int i = 1; i < argc; i++) {
@@ -362,6 +401,17 @@ static void parse_args(int argc, char *argv[])
     }
 }
 
+/**
+ * @brief Derive the system path from the executable location (argv[0]).
+ *
+ * Resolves the real path of the binary, then strips the trailing
+ * /bin/<exe> component to get the installation prefix.
+ *
+ * @param argv0   Program path from argv[0].
+ * @param out     Buffer for the resolved system path.
+ * @param out_sz  Size of the output buffer.
+ * @return true if the path was successfully resolved.
+ */
 static bool resolve_sys_path_from_argv0(const char *argv0, char *out, size_t out_sz)
 {
     char exe_path[MAX_PATH_LEN];
@@ -398,7 +448,11 @@ static bool resolve_sys_path_from_argv0(const char *argv0, char *out, size_t out
     return true;
 }
 
-/* Check if we should offer to save before exiting */
+/**
+ * @brief Prompt the user to save unsaved changes before exiting.
+ *
+ * @return true if the application should exit, false to cancel.
+ */
 static bool handle_exit_prompt(void)
 {
     if (!dialog_confirm("Exit", "Are you sure you want to exit?")) {
@@ -435,6 +489,7 @@ static bool handle_exit_prompt(void)
     return true;
 }
 
+/** @brief Run the main ncurses event loop (draw/input cycle). */
 static void main_loop(void)
 {
     int ch;
@@ -502,6 +557,17 @@ static void main_loop(void)
     }
 }
 
+/**
+ * @brief MaxCFG application entry point.
+ *
+ * Parses CLI arguments, handles batch operations (export, convert),
+ * loads TOML configuration, initialises ncurses, and enters the
+ * interactive main loop.
+ *
+ * @param argc  Argument count.
+ * @param argv  Argument vector.
+ * @return Exit status (0 = success).
+ */
 int main(int argc, char *argv[])
 {
     /* Set locale for proper character handling */

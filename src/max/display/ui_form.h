@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_form.h — Form runner header
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -77,7 +75,14 @@ typedef struct ui_form_style
   byte required_attr;        /* splash color */
 } ui_form_style_t;
 
-/* Form runner */
+/**
+ * @brief Run an interactive form with keyboard navigation and field editing.
+ *
+ * @param fields      Array of form field definitions.
+ * @param field_count Number of fields.
+ * @param style       Form style configuration.
+ * @return            1 = saved, 0 = cancelled, -1 = error.
+ */
 int ui_form_run(
     ui_form_field_t *fields,
     int field_count,
@@ -90,7 +95,11 @@ int ui_form_run(
  *  -1 = error
  */
 
-/* Initialize style struct with defaults */
+/**
+ * @brief Initialize a ui_form_style_t with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_form_style_default(ui_form_style_t *style);
 
 #endif /* __UI_FORM_H_DEFINED */

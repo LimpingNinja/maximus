@@ -1,6 +1,7 @@
 /*
- * Maximus Version 3.02+
- * Copyright 2024-2026 MaximusNG contributors.
+ * m_index.c — In-memory message index for the NG message browser
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,15 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file m_index.c
- * @brief In-memory message index provider for the NG message browser.
- *
- * Builds a compact per-message summary array using MsgScanHeaders()
- * for bulk I/O.  Supports filtered builds (New, By You, Yours, Search,
- * Forward-from-N) and provides a format callback for the paged lightbar.
  */
 
 #define MAX_LANG_m_browse
@@ -104,12 +96,36 @@ static int has_substr(const char *haystack, const char *needle)
 
 /* --- Public API --- */
 
+/**
+ * @brief Build an unfiltered index of all visible messages in the area.
+ *
+ * Convenience wrapper around msg_index_build_filtered() with MI_FILTER_ALL.
+ *
+ * @param idx   Index struct to populate (zeroed on entry).
+ * @param ha    Open area handle.
+ * @param pmah  Area header (for description, access checks).
+ * @return Number of entries, or -1 on error.
+ */
 int msg_index_build(msg_index_t *idx, HAREA ha, PMAH pmah)
 {
   return msg_index_build_filtered(idx, ha, pmah, MI_FILTER_ALL, 0, NULL);
 }
 
 
+/**
+ * @brief Build a filtered message index using bulk header scanning.
+ *
+ * Scans all headers via MsgScanHeaders(), applies visibility and filter
+ * checks, and populates idx->entries with matching messages.
+ *
+ * @param idx           Index struct to populate.
+ * @param ha            Open area handle.
+ * @param pmah          Area header.
+ * @param filter_flags  Bitmask of MI_FILTER_* flags.
+ * @param start_msgn    Starting message number (for MI_FILTER_FROM).
+ * @param search_str    Search string (for MI_FILTER_SEARCH), or NULL.
+ * @return Number of entries, or -1 on error.
+ */
 int msg_index_build_filtered(msg_index_t *idx, HAREA ha, PMAH pmah,
                              word filter_flags, dword start_msgn,
                              const char *search_str)
@@ -211,6 +227,11 @@ int msg_index_build_filtered(msg_index_t *idx, HAREA ha, PMAH pmah,
 }
 
 
+/**
+ * @brief Free all memory associated with a message index.
+ *
+ * @param idx  Index to release; entries pointer is set to NULL.
+ */
 void msg_index_free(msg_index_t *idx)
 {
   if (idx->entries)
@@ -223,6 +244,18 @@ void msg_index_free(msg_index_t *idx)
 }
 
 
+/**
+ * @brief Lightbar get_item callback — format one index row for display.
+ *
+ * Binds message fields into lang params and runs MciExpand() to produce
+ * a fixed-width terminal-ready string from the br_list_format template.
+ *
+ * @param ctx     Pointer to msg_index_t.
+ * @param index   0-based index into entries[].
+ * @param out     Output buffer for the formatted row.
+ * @param out_sz  Size of output buffer.
+ * @return 0 on success, -1 if index is out of range.
+ */
 int msg_index_format_row(void *ctx, int index, char *out, size_t out_sz)
 {
   msg_index_t *idx = (msg_index_t *)ctx;
@@ -281,6 +314,16 @@ int msg_index_format_row(void *ctx, int index, char *out, size_t out_sz)
 }
 
 
+/**
+ * @brief Append a single message to an existing index.
+ *
+ * Reads the header, checks visibility, and grows the array if needed.
+ *
+ * @param idx   Index to append to.
+ * @param ha    Open area handle.
+ * @param msgn  Message number to add.
+ * @return 0-based index of the new entry, or -1 on error/not visible.
+ */
 int msg_index_append_msg(msg_index_t *idx, HAREA ha, dword msgn)
 {
   HMSG hmsg;
@@ -332,6 +375,15 @@ int msg_index_append_msg(msg_index_t *idx, HAREA ha, dword msgn)
 }
 
 
+/**
+ * @brief Find the entries[] index for a given message number.
+ *
+ * Linear scan; suitable for typical BBS area sizes.
+ *
+ * @param idx   The index to search.
+ * @param msgn  Message number to find.
+ * @return 0-based index, or -1 if not found.
+ */
 int msg_index_find_msgn(msg_index_t *idx, dword msgn)
 {
   int i;

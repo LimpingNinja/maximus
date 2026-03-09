@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * text_list_editor.c — Multi-line text list editor
  *
- * text_list_editor.c - Simple text list editor for Bad Users and Reserved Names
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -24,6 +36,7 @@ typedef struct {
     int header_count;
 } TextList;
 
+/** @brief Allocate and initialize an empty TextList. */
 static TextList *text_list_create(void)
 {
     TextList *list = malloc(sizeof(TextList));
@@ -47,6 +60,7 @@ static TextList *text_list_create(void)
     return list;
 }
 
+/** @brief Free a TextList and all its contents. */
 static void text_list_free(TextList *list)
 {
     if (!list) return;
@@ -61,6 +75,13 @@ static void text_list_free(TextList *list)
     free(list);
 }
 
+/**
+ * @brief Append an item string to the text list, growing capacity as needed.
+ *
+ * @param list Text list to append to.
+ * @param item String to add (duplicated internally).
+ * @return true on success.
+ */
 static bool text_list_add(TextList *list, const char *item)
 {
     if (!list || !item) return false;
@@ -79,6 +100,13 @@ static bool text_list_add(TextList *list, const char *item)
     return true;
 }
 
+/**
+ * @brief Load a text list from a file, preserving header comments.
+ *
+ * @param list     Text list to populate.
+ * @param filepath Path to the file to load.
+ * @return true on success.
+ */
 static bool text_list_load(TextList *list, const char *filepath)
 {
     FILE *f = fopen(filepath, "r");
@@ -120,6 +148,13 @@ static bool text_list_load(TextList *list, const char *filepath)
     return true;
 }
 
+/**
+ * @brief Save a text list back to a file, including preserved header comments.
+ *
+ * @param list     Text list to save.
+ * @param filepath Path to write to.
+ * @return true on success.
+ */
 static bool text_list_save(TextList *list, const char *filepath)
 {
     FILE *f = fopen(filepath, "w");
@@ -141,6 +176,16 @@ static bool text_list_save(TextList *list, const char *filepath)
     return true;
 }
 
+/**
+ * @brief Open an interactive list editor for a text file (e.g. Bad Users).
+ *
+ * Supports add, edit, delete operations. Prompts to save on exit if modified.
+ *
+ * @param title     Dialog title.
+ * @param filepath  Path to the text file to edit.
+ * @param help_text Help string shown in add/edit dialogs.
+ * @return true if the file was modified and saved.
+ */
 bool text_list_editor(const char *title, const char *filepath, const char *help_text)
 {
     TextList *list = text_list_create();

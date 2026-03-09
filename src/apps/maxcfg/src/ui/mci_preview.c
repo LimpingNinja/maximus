@@ -1,14 +1,21 @@
-/**
- * @file mci_preview.c
- * @brief Shared MCI interpreter for preview rendering in maxcfg.
+/*
+ * mci_preview.c — MCI preview/expand renderer
  *
- * Implements the full MCI expansion pipeline used by both the language
- * string editor and the menu editor previews.  The interpreter mirrors
- * the authoritative MciExpand() in src/max/display/mci.c, but targets
- * a generic virtual-screen buffer instead of a terminal output stream.
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 #include <ctype.h>
 #include <stdbool.h>
@@ -38,6 +45,11 @@ const char *mci_pos_mocks[15] = {
 /* State / screen helpers                                                   */
 /* ======================================================================== */
 
+/**
+ * @brief Initialize an MCI interpreter state to defaults.
+ *
+ * @param st State struct to initialize.
+ */
 void mci_state_init(MciState *st)
 {
     st->cx = 0;
@@ -50,6 +62,11 @@ void mci_state_init(MciState *st)
     st->pending_pad_space = 0;
 }
 
+/**
+ * @brief Clear a virtual screen buffer to spaces with default attribute.
+ *
+ * @param vs Virtual screen to clear.
+ */
 void mci_vs_clear(MciVScreen *vs)
 {
     memset(vs->ch,   ' ',  (size_t)(vs->rows * vs->cols));
@@ -60,6 +77,14 @@ void mci_vs_clear(MciVScreen *vs)
 /* Mock data loader                                                         */
 /* ======================================================================== */
 
+/**
+ * @brief Load mock user/system data for MCI preview rendering.
+ *
+ * Populates sensible defaults, then overrides with values from the
+ * loaded TOML config and the first user in the user database.
+ *
+ * @param m Mock data struct to populate.
+ */
 void mci_mock_load(MciMockData *m)
 {
     /* Hardcoded defaults */
@@ -298,6 +323,17 @@ static const char *expand_info(char a, char b, const MciMockData *mock)
 /* Main interpreter                                                         */
 /* ======================================================================== */
 
+/**
+ * @brief Expand an MCI-encoded text string into a virtual screen buffer.
+ *
+ * Interprets pipe color codes, cursor control, format operators, positional
+ * parameters, theme color slots, and info code substitutions.
+ *
+ * @param vs   Virtual screen buffer to render into.
+ * @param st   Interpreter state (cursor position, current attribute, etc.).
+ * @param mock Mock data for info code expansion (may be NULL).
+ * @param text The MCI-encoded input string.
+ */
 void mci_preview_expand(MciVScreen *vs, MciState *st,
                         const MciMockData *mock, const char *text)
 {

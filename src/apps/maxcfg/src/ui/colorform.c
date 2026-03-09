@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * colorform.c — Color attribute form editor
  *
- * colorform.c - Color editing form for maxcfg
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <string.h>
@@ -82,6 +94,13 @@ static ColorFieldDef fsr_colors[] = {
 };
 #define NUM_FSR_COLORS (sizeof(fsr_colors) / sizeof(fsr_colors[0]))
 
+/**
+ * @brief Run a command silently, redirecting stdout/stderr to /dev/null.
+ *
+ * @param path Absolute path to the executable.
+ * @param argv NULL-terminated argument vector.
+ * @return true if the child exited with status 0.
+ */
 static bool run_cmd_silent(const char *path, char *const argv[])
 {
     posix_spawn_file_actions_t fa;
@@ -113,6 +132,13 @@ static bool run_cmd_silent(const char *path, char *const argv[])
     return false;
 }
 
+/**
+ * @brief Extract the directory component of the global config path.
+ *
+ * @param out   Output buffer for the directory string.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_config_dir(char *out, size_t out_sz)
 {
     const char *slash = strrchr(g_state.config_path, '/');
@@ -135,6 +161,13 @@ static bool build_config_dir(char *out, size_t out_sz)
     return snprintf(out, out_sz, "%s", dir) < (int)out_sz;
 }
 
+/**
+ * @brief Determine the BBS root directory (parent of config dir, or sys_path).
+ *
+ * @param out   Output buffer for the root directory path.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_bbs_root_dir(char *out, size_t out_sz)
 {
     /* Get sys_path from TOML configuration */
@@ -182,6 +215,13 @@ static bool build_bbs_root_dir(char *out, size_t out_sz)
     return true;
 }
 
+/**
+ * @brief Extract the base filename from the global config path.
+ *
+ * @param out   Output buffer for the basename.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_config_basename(char *out, size_t out_sz)
 {
     const char *slash = strrchr(g_state.config_path, '/');
@@ -229,6 +269,13 @@ static bool resolve_lang_path(char *out, size_t out_sz)
                     cfg_rel ? cfg_rel : "config") < (int)out_sz;
 }
 
+/**
+ * @brief Build the full path to colors.lh inside the language directory.
+ *
+ * @param out   Output buffer for the resolved path.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_colors_lh_path(char *out, size_t out_sz)
 {
     char lang_dir[MAX_PATH_LEN];
@@ -236,11 +283,25 @@ static bool build_colors_lh_path(char *out, size_t out_sz)
     return snprintf(out, out_sz, "%s/colors.lh", lang_dir) < (int)out_sz;
 }
 
+/**
+ * @brief Build the resolved language directory path.
+ *
+ * @param out   Output buffer.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_lang_dir(char *out, size_t out_sz)
 {
     return resolve_lang_path(out, out_sz);
 }
 
+/**
+ * @brief Build the path to the maid utility binary.
+ *
+ * @param out   Output buffer.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_maid_path(char *out, size_t out_sz)
 {
     char root[MAX_PATH_LEN];
@@ -263,6 +324,13 @@ static bool build_maid_path(char *out, size_t out_sz)
     return snprintf(out, out_sz, "%s/bin/maid", root) < (int)out_sz;
 }
 
+/**
+ * @brief Build the path to the silt utility binary.
+ *
+ * @param out   Output buffer.
+ * @param out_sz Size of the output buffer.
+ * @return true on success.
+ */
 static bool build_silt_path(char *out, size_t out_sz)
 {
     char root[MAX_PATH_LEN];
@@ -285,6 +353,14 @@ static bool build_silt_path(char *out, size_t out_sz)
     return snprintf(out, out_sz, "%s/bin/silt", root) < (int)out_sz;
 }
 
+/**
+ * @brief Look up a ColorFieldDef by its #define name across all color groups.
+ *
+ * @param define_name  The C define name to search for (e.g. "COL_MNU_NAME").
+ * @param out_fields   Receives a pointer to the matching group array.
+ * @param out_index    Receives the index within that group.
+ * @return true if found.
+ */
 static bool colorslh_find_field(const char *define_name, ColorFieldDef **out_fields, int *out_index)
 {
     ColorFieldDef *groups[] = {
@@ -312,6 +388,13 @@ static bool colorslh_find_field(const char *define_name, ColorFieldDef **out_fie
     return false;
 }
 
+/**
+ * @brief Parse a DOS color attribute byte from a colors.lh #define line.
+ *
+ * @param line     The line containing the \x16\x01\xNN sequence.
+ * @param out_attr Receives the parsed attribute byte.
+ * @return true if a valid attribute was extracted.
+ */
 static bool parse_attr_from_define_line(const char *line, unsigned *out_attr)
 {
     const char *p = strstr(line, "\\x16\\x01\\x");
@@ -337,6 +420,9 @@ static bool parse_attr_from_define_line(const char *line, unsigned *out_attr)
     return true;
 }
 
+/**
+ * @brief Load current color values from colors.lh into the in-memory field arrays.
+ */
 static void colorslh_load_into_fields(void)
 {
     char path[MAX_PATH_LEN];
@@ -378,6 +464,11 @@ static void colorslh_load_into_fields(void)
     fclose(fp);
 }
 
+/**
+ * @brief Write the current in-memory color field values back to colors.lh.
+ *
+ * @return true on success.
+ */
 static bool colorslh_write_from_fields(void)
 {
     char path[MAX_PATH_LEN];
@@ -438,6 +529,13 @@ static bool colorslh_write_from_fields(void)
     return true;
 }
 
+/**
+ * @brief Run MAID + SILT to rebuild language/config after color changes.
+ *
+ * @param debug    Optional buffer to receive diagnostic info on failure.
+ * @param debug_sz Size of the debug buffer.
+ * @return true if all rebuild steps succeeded.
+ */
 static bool rebuild_after_colors(char *debug, size_t debug_sz)
 {
     if (debug && debug_sz > 0) debug[0] = '\0';
@@ -573,6 +671,13 @@ typedef struct {
 
 #define MAX_VISIBLE_FIELDS 10  /* Max fields before scrolling */
 
+/**
+ * @brief Calculate dialog geometry for the color editing form.
+ *
+ * @param title       Dialog title (affects minimum width).
+ * @param field_count Number of color fields to display.
+ * @return Computed geometry struct.
+ */
 static ColorFormGeometry calc_color_geometry(const char *title, int field_count)
 {
     ColorFormGeometry g;
@@ -607,6 +712,12 @@ static ColorFormGeometry calc_color_geometry(const char *title, int field_count)
     return g;
 }
 
+/**
+ * @brief Draw the bordered color form window chrome.
+ *
+ * @param g     Precomputed geometry.
+ * @param title Dialog title to embed in the top border.
+ */
 static void draw_color_window(const ColorFormGeometry *g, const char *title)
 {
     int x = g->win_x;
@@ -653,6 +764,11 @@ static void draw_color_window(const ColorFormGeometry *g, const char *title)
     attroff(COLOR_PAIR(CP_FORM_BG));
 }
 
+/**
+ * @brief Draw the help/keybinding separator line in the color form.
+ *
+ * @param g Precomputed geometry.
+ */
 static void draw_color_help_separator(const ColorFormGeometry *g)
 {
     int y = g->help_y;
@@ -694,6 +810,14 @@ static void draw_color_help_separator(const ColorFormGeometry *g)
     attroff(COLOR_PAIR(CP_DIALOG_BORDER));
 }
 
+/**
+ * @brief Draw a single color field row with label, preview swatch, and value.
+ *
+ * @param g        Precomputed geometry.
+ * @param idx      Display row index (0-based within visible area).
+ * @param field    The color field definition to render.
+ * @param selected true if this field is currently highlighted.
+ */
 static void draw_color_field(const ColorFormGeometry *g, int idx, ColorFieldDef *field, bool selected)
 {
     int y = g->field_y + idx;
@@ -749,7 +873,14 @@ static void draw_color_field(const ColorFormGeometry *g, int idx, ColorFieldDef 
     }
 }
 
-/* Edit a color category */
+/**
+ * @brief Edit a color category in a scrollable form with color picker support.
+ *
+ * @param title       Category title for the dialog.
+ * @param fields      Array of ColorFieldDef entries to edit.
+ * @param field_count Number of entries in fields[].
+ * @return true if the user saved changes.
+ */
 static bool colorform_edit(const char *title, ColorFieldDef *fields, int field_count)
 {
     int selected = 0;
@@ -1075,7 +1206,9 @@ static bool themeform_edit(void)
     return saved;
 }
 
-/* Action for Default Colors menu item - shows category picker */
+/**
+ * @brief Action handler for Default Colors — shows category picker then edits.
+ */
 void action_default_colors(void)
 {
     colorslh_load_into_fields();
@@ -1238,19 +1371,25 @@ void action_default_colors(void)
     }
 }
 
-/* Action for File Colors */
+/**
+ * @brief Action handler for File Area color editing.
+ */
 void action_file_colors(void)
 {
     colorform_edit("File Area Colors", file_colors, NUM_FILE_COLORS);
 }
 
-/* Action for Message Colors */
+/**
+ * @brief Action handler for Message color editing.
+ */
 void action_msg_colors(void)
 {
     colorform_edit("Message Colors", msg_colors, NUM_MSG_COLORS);
 }
 
-/* Action for Full Screen Reader Colors */
+/**
+ * @brief Action handler for Full Screen Reader color editing.
+ */
 void action_fsr_colors(void)
 {
     colorform_edit("Full Screen Reader Colors", fsr_colors, NUM_FSR_COLORS);

@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * area_parse.c — Area definition parser
  *
- * area_parse.c - Message and file area CTL parser
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <ctype.h>
@@ -14,7 +26,12 @@
 #include <unistd.h>
 #include "area_parse.h"
 
-/* Helper: trim whitespace from both ends */
+/**
+ * @brief Trim whitespace (including NBSP) from both ends of a string.
+ *
+ * @param str  String to trim in-place.
+ * @return Pointer into str past leading whitespace.
+ */
 static char *trim(char *str)
 {
     char *end;
@@ -26,6 +43,14 @@ static char *trim(char *str)
     return str;
 }
 
+/**
+ * @brief Check if a line begins with a keyword and extract the value after it.
+ *
+ * @param line       Input line to test.
+ * @param kw         Keyword to match (case-insensitive).
+ * @param out_value  Receives pointer to the value portion after the keyword.
+ * @return true if the keyword was found at the start of the line.
+ */
 static bool kw_value(const char *line, const char *kw, const char **out_value)
 {
     if (line == NULL || kw == NULL) {
@@ -52,6 +77,11 @@ static bool kw_value(const char *line, const char *kw, const char **out_value)
     return true;
 }
 
+/**
+ * @brief Free a DivisionData structure and its owned strings.
+ *
+ * @param data  Division data to free (may be NULL).
+ */
 void division_data_free(DivisionData *data)
 {
     if (!data) return;
@@ -60,6 +90,12 @@ void division_data_free(DivisionData *data)
     free(data);
 }
 
+/**
+ * @brief Recursively free area/division data attached to tree nodes.
+ *
+ * @param node    Root of the subtree to free.
+ * @param is_msg  true for message areas, false for file areas.
+ */
 static void free_tree_data_recursive(TreeNode *node, bool is_msg)
 {
     if (!node) return;
@@ -78,6 +114,12 @@ static void free_tree_data_recursive(TreeNode *node, bool is_msg)
     }
 }
 
+/**
+ * @brief Free a message area tree (roots array and all attached data).
+ *
+ * @param roots  Array of root TreeNode pointers.
+ * @param count  Number of roots.
+ */
 void free_msg_tree(TreeNode **roots, int count)
 {
     if (!roots) return;
@@ -88,6 +130,12 @@ void free_msg_tree(TreeNode **roots, int count)
     free(roots);
 }
 
+/**
+ * @brief Free a file area tree (roots array and all attached data).
+ *
+ * @param roots  Array of root TreeNode pointers.
+ * @param count  Number of roots.
+ */
 void free_file_tree(TreeNode **roots, int count)
 {
     if (!roots) return;
@@ -98,7 +146,12 @@ void free_file_tree(TreeNode **roots, int count)
     free(roots);
 }
 
-/* Helper: parse Style keyword into flags */
+/**
+ * @brief Parse a space-separated Style keyword string into a bitmask.
+ *
+ * @param style_str  Style keywords (e.g. "Squish Local Pub").
+ * @return Bitmask of MSGSTYLE_* flags.
+ */
 static unsigned int parse_style(const char *style_str)
 {
     unsigned int flags = 0;
@@ -132,7 +185,15 @@ static unsigned int parse_style(const char *style_str)
     return flags;
 }
 
-/* Parse msgarea.ctl */
+/**
+ * @brief Parse msgarea.ctl into a tree of message area and division nodes.
+ *
+ * @param sys_path  System path (msgarea.ctl is at <sys_path>/etc/msgarea.ctl).
+ * @param count     Receives the number of root nodes.
+ * @param err       Buffer for error message on failure.
+ * @param err_sz    Size of the error buffer.
+ * @return Array of root TreeNode pointers, or NULL on error.
+ */
 TreeNode **parse_msgarea_ctl(const char *sys_path, int *count, char *err, size_t err_sz)
 {
     char path[512];
@@ -318,7 +379,15 @@ TreeNode **parse_msgarea_ctl(const char *sys_path, int *count, char *err, size_t
     return roots;
 }
 
-/* Parse filearea.ctl */
+/**
+ * @brief Parse filearea.ctl into a tree of file area and division nodes.
+ *
+ * @param sys_path  System path (filearea.ctl is at <sys_path>/etc/filearea.ctl).
+ * @param count     Receives the number of root nodes.
+ * @param err       Buffer for error message on failure.
+ * @param err_sz    Size of the error buffer.
+ * @return Array of root TreeNode pointers, or NULL on error.
+ */
 TreeNode **parse_filearea_ctl(const char *sys_path, int *count, char *err, size_t err_sz)
 {
     char path[512];
@@ -494,7 +563,11 @@ TreeNode **parse_filearea_ctl(const char *sys_path, int *count, char *err, size_
     return roots;
 }
 
-/* Free area data */
+/**
+ * @brief Free a MsgAreaData structure and its owned strings.
+ *
+ * @param data  Message area data to free (may be NULL).
+ */
 void msgarea_data_free(MsgAreaData *data)
 {
     if (!data) return;
@@ -511,6 +584,11 @@ void msgarea_data_free(MsgAreaData *data)
     free(data);
 }
 
+/**
+ * @brief Free a FileAreaData structure and its owned strings.
+ *
+ * @param data  File area data to free (may be NULL).
+ */
 void filearea_data_free(FileAreaData *data)
 {
     if (!data) return;

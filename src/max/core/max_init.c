@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * max_init.c — Main application initialization
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -195,6 +193,12 @@ static int near build_area_dats_from_toml(char *out_marea_base, size_t out_marea
                                          char *out_farea_base, size_t out_farea_base_sz);
 
 
+/**
+ * @brief Retrieve a raw string value from the TOML configuration.
+ *
+ * @param toml_path  Dotted TOML key path (e.g. "maximus.system_name")
+ * @return Pointer to the string value, or "" if not found
+ */
 const char *ngcfg_get_string_raw(const char *toml_path)
 {
   MaxCfgVar v;
@@ -207,6 +211,15 @@ const char *ngcfg_get_string_raw(const char *toml_path)
   return "";
 }
 
+/**
+ * @brief Append a string to the access-level heap, growing as needed.
+ *
+ * @param heap      Pointer to heap buffer pointer (may be reallocated)
+ * @param heap_cap  Pointer to current heap capacity
+ * @param heap_len  Pointer to current heap usage
+ * @param s         String to add (NULL treated as "")
+ * @return Offset of the added string within the heap
+ */
 static zstr near access_heap_add(char **heap, size_t *heap_cap, size_t *heap_len, const char *s)
 {
   size_t need;
@@ -238,6 +251,12 @@ static zstr near access_heap_add(char **heap, size_t *heap_cap, size_t *heap_len
   return ofs;
 }
 
+/**
+ * @brief Parse a TOML string array into access-level flag bits.
+ *
+ * @param arr  TOML array variable containing flag name strings
+ * @return Bitmask of CFLAGA_* flags
+ */
 static dword near access_flags_from_list(const MaxCfgVar *arr)
 {
   MaxCfgVar it;
@@ -278,6 +297,12 @@ static dword near access_flags_from_list(const MaxCfgVar *arr)
   return flags;
 }
 
+/**
+ * @brief Parse a TOML string array into mail-permission flag bits.
+ *
+ * @param arr  TOML array variable containing mail flag name strings
+ * @return Bitmask of CFLAGM_* flags
+ */
 static dword near mail_flags_from_list(const MaxCfgVar *arr)
 {
   MaxCfgVar it;
@@ -314,6 +339,9 @@ static dword near mail_flags_from_list(const MaxCfgVar *arr)
   return flags;
 }
 
+/**
+ * @brief qsort comparator for CLSREC structures, ordered by usLevel.
+ */
 static int near cmp_clsrec_level(const void *a, const void *b)
 {
   const CLSREC *A = (const CLSREC *)a;
@@ -323,6 +351,13 @@ static int near cmp_clsrec_level(const void *a, const void *b)
   return 0;
 }
 
+/**
+ * @brief Build an access.dat binary from TOML security configuration.
+ *
+ * @param out_access_base     Output buffer for the base path of generated file
+ * @param out_access_base_sz  Size of the output buffer
+ * @return 0 on success, -1 on failure
+ */
 static int near build_access_dat_from_toml(char *out_access_base, size_t out_access_base_sz)
 {
   MaxCfgVar levels;
@@ -504,6 +539,12 @@ fail:
   return -1;
 }
 
+/**
+ * @brief Retrieve a string value from config, returning "" if empty or absent.
+ *
+ * @param toml_path  Dotted TOML key path
+ * @return Pointer to the string value, or "" if not found/empty
+ */
 const char *ngcfg_get_string(const char *toml_path)
 {
   const char *s = ngcfg_get_string_raw(toml_path);
@@ -512,6 +553,15 @@ const char *ngcfg_get_string(const char *toml_path)
   return "";
 }
 
+/**
+ * @brief Retrieve a filesystem path from config, resolving relative paths.
+ *
+ * Relative paths are joined to maximus.sys_path. Directories get a
+ * trailing separator appended automatically.
+ *
+ * @param toml_path  Dotted TOML key path
+ * @return Resolved path string (static buffer — not thread-safe)
+ */
 const char *ngcfg_get_path(const char *toml_path)
 {
   const char *s;
@@ -578,6 +628,12 @@ const char *ngcfg_get_path(const char *toml_path)
   return buf;
 }
 
+/**
+ * @brief Retrieve an integer value from TOML configuration.
+ *
+ * @param toml_path  Dotted TOML key path
+ * @return Integer value, or 0 if not found
+ */
 int ngcfg_get_int(const char *toml_path)
 {
   MaxCfgVar v;
@@ -594,6 +650,12 @@ int ngcfg_get_int(const char *toml_path)
   return 0;
 }
 
+/**
+ * @brief Retrieve a boolean value from TOML configuration.
+ *
+ * @param toml_path  Dotted TOML key path
+ * @return 1 if true, 0 if false or not found
+ */
 int ngcfg_get_bool(const char *toml_path)
 {
   MaxCfgVar v;
@@ -608,6 +670,14 @@ int ngcfg_get_bool(const char *toml_path)
   return 0;
 }
 
+/**
+ * @brief Retrieve a 2-element integer array from TOML configuration.
+ *
+ * @param toml_path  Dotted TOML key path
+ * @param out_a      Output for the first element
+ * @param out_b      Output for the second element
+ * @return 1 on success, 0 if not found or fewer than 2 elements
+ */
 int ngcfg_get_int_array_2(const char *toml_path, int *out_a, int *out_b)
 {
   MaxCfgVar v;
@@ -625,6 +695,11 @@ int ngcfg_get_int_array_2(const char *toml_path, int *out_a, int *out_b)
   return 0;
 }
 
+/**
+ * @brief Get the configured log mode as an integer.
+ *
+ * @return Log mode value, or 0 if not configured
+ */
 int ngcfg_get_log_mode_int(void)
 {
   int iv;
@@ -633,6 +708,11 @@ int ngcfg_get_log_mode_int(void)
   return 0;
 }
 
+/**
+ * @brief Get the configured multitasker type as an integer.
+ *
+ * @return Multitasker constant, or 0 if not configured
+ */
 int ngcfg_get_multitasker_int(void)
 {
   int iv;
@@ -641,6 +721,12 @@ int ngcfg_get_multitasker_int(void)
   return 0;
 }
 
+/**
+ * @brief Get the configured video mode and snow flag.
+ *
+ * @param out_has_snow  Output flag for CGA snow compensation (may be NULL)
+ * @return Video mode constant, or 0 if not configured
+ */
 int ngcfg_get_video_mode_int(int *out_has_snow)
 {
   int iv;
@@ -656,6 +742,11 @@ int ngcfg_get_video_mode_int(int *out_has_snow)
   return 0;
 }
 
+/**
+ * @brief Check if CGA snow compensation is enabled.
+ *
+ * @return 1 if enabled, 0 otherwise
+ */
 int ngcfg_get_has_snow(void)
 {
   MaxCfgVar v;
@@ -666,6 +757,11 @@ int ngcfg_get_has_snow(void)
   return 0;
 }
 
+/**
+ * @brief Get the serial handshake mask from configuration.
+ *
+ * @return Handshake mask value, or 0 if not configured
+ */
 int ngcfg_get_handshake_mask_int(void)
 {
   int iv;
@@ -674,6 +770,11 @@ int ngcfg_get_handshake_mask_int(void)
   return 0;
 }
 
+/**
+ * @brief Get the configured character set identifier.
+ *
+ * @return Character set constant, or 0 if not configured
+ */
 int ngcfg_get_charset_int(void)
 {
   int iv;
@@ -682,6 +783,11 @@ int ngcfg_get_charset_int(void)
   return 0;
 }
 
+/**
+ * @brief Get the configured nodelist version.
+ *
+ * @return Nodelist version constant, or 0 if not configured
+ */
 int ngcfg_get_nodelist_version_int(void)
 {
   int iv;
@@ -690,6 +796,13 @@ int ngcfg_get_nodelist_version_int(void)
   return 0;
 }
 
+/**
+ * @brief Convert a TOML variable to an integer if possible.
+ *
+ * @param v    TOML variable to convert
+ * @param out  Output integer value
+ * @return 1 on success, 0 if not an integer type
+ */
 static int near toml_var_to_int(const MaxCfgVar *v, int *out)
 {
   if (v == NULL || out == NULL)
@@ -707,6 +820,11 @@ static int near toml_var_to_int(const MaxCfgVar *v, int *out)
   return 0;
 }
 
+/**
+ * @brief Get the number of FTN matrix addresses configured.
+ *
+ * @return Number of addresses, or 0 if none configured
+ */
 size_t ngcfg_get_matrix_address_count(void)
 {
   MaxCfgVar v;
@@ -723,6 +841,12 @@ size_t ngcfg_get_matrix_address_count(void)
   return 0;
 }
 
+/**
+ * @brief Retrieve a specific FTN matrix address by index.
+ *
+ * @param idx  Zero-based index into the address array
+ * @return NETADDR structure (zeroed if index is out of range)
+ */
 NETADDR ngcfg_get_matrix_address_at(size_t idx)
 {
   MaxCfgVar arr;
@@ -823,6 +947,9 @@ static void near load_menu_tomls(void)
 #endif
 }
 
+/**
+ * @brief Initialize all global runtime variables to safe defaults.
+ */
 void Init_Variables(void)
 {
   int x;
@@ -955,6 +1082,9 @@ void Init_Variables(void)
 #endif
 }
 
+/**
+ * @brief Fatal file-error exit: flush output, beep, and quit.
+ */
 static void near quitfile()
 {
   vbuf_flush();
@@ -963,6 +1093,14 @@ static void near quitfile()
   quit(ERROR_FILE);
 }
 
+/**
+ * @brief Perform main BBS startup sequence.
+ *
+ * Handles config loading, area file opening, fossil init, MsgAPI init,
+ * and event processing.
+ *
+ * @return Key buffer pointer (KEY builds) or NULL
+ */
 char * Startup(void)
 {
 #ifdef KEY
@@ -1377,6 +1515,9 @@ char * Startup(void)
 #endif
 }
 
+/**
+ * @brief Load the main TOML configuration files into ng_cfg.
+ */
 void Read_Cfg(void)
 {
   MaxCfgVar v;
@@ -1455,6 +1596,9 @@ void Read_Cfg(void)
 
 }
 
+/**
+ * @brief Load the access-level (class) database from TOML or legacy .dat.
+ */
 void Read_Access()
 {
   char temp[PATHLEN];
@@ -1524,6 +1668,9 @@ void Read_Access()
 #endif
 }
 
+/**
+ * @brief Load the colour scheme from colours.dat.
+ */
 static void near Initialize_Colours(void)
 {
   char temp[PATHLEN];
@@ -1657,6 +1804,11 @@ static int near validate_email_area_singleton(HAF haf)
   return 0;
 }
 
+/**
+ * @brief Open message and file area data files.
+ *
+ * Tries TOML-generated .dat files first, then falls back to legacy paths.
+ */
 static void near OpenAreas(void)
 {
 #ifndef ORACLE
@@ -1735,6 +1887,12 @@ static void near OpenAreas(void)
 #endif
 }
 
+/**
+ * @brief Check whether a path string is absolute.
+ *
+ * @param s  Path to test
+ * @return TRUE if absolute, FALSE otherwise
+ */
 static int near is_abs_path(const char *s)
 {
   if (s == NULL || *s == '\0')
@@ -1749,6 +1907,11 @@ static int near is_abs_path(const char *s)
   return FALSE;
 }
 
+/**
+ * @brief Ensure a directory path has a trailing PATH_DELIM.
+ *
+ * @param s  Path string to modify in place
+ */
 static void near ensure_trailing_delim(char *s)
 {
   size_t n;

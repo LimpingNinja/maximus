@@ -1,3 +1,23 @@
+/*
+ * menu_preview.c — Menu preview renderer
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -10,6 +30,12 @@
 #include "menu_preview.h"
 #include "mci_preview.h"
 
+/**
+ * @brief Map an ANSI SGR color index (0-7) to the DOS palette index.
+ *
+ * @param ansi ANSI color index (0=black, 1=red, ..., 7=white).
+ * @return Corresponding DOS color index.
+ */
 static int ansi_color_to_dos_color(int ansi)
 {
     /*
@@ -35,6 +61,12 @@ static int ansi_color_to_dos_color(int ansi)
     return map[ansi];
 }
 
+/**
+ * @brief Convert a CP437 byte to its Unicode equivalent for terminal display.
+ *
+ * @param b CP437 byte value.
+ * @return Unicode wide character.
+ */
 wchar_t cp437_to_unicode(unsigned char b)
 {
     /* Map common CP437 graphics used by ANSI art to Unicode equivalents. */
@@ -79,6 +111,7 @@ wchar_t cp437_to_unicode(unsigned char b)
     }
 }
 
+/** @brief Clear the virtual screen buffer to a fill character with default attr. */
 static void vs_clear(MenuPreviewVScreen *s, char fill)
 {
     if (!s) return;
@@ -90,6 +123,7 @@ static void vs_clear(MenuPreviewVScreen *s, char fill)
     }
 }
 
+/** @brief Put a character at (x,y) in the virtual screen (no attr change). */
 static void vs_put(MenuPreviewVScreen *s, int x, int y, char c)
 {
     if (!s) return;
@@ -97,6 +131,7 @@ static void vs_put(MenuPreviewVScreen *s, int x, int y, char c)
     s->ch[y][x] = c;
 }
 
+/** @brief Put a character with attribute at (x,y) in the virtual screen. */
 static void vs_put_attr(MenuPreviewVScreen *s, int x, int y, char c, uint8_t attr)
 {
     if (!s) return;
@@ -105,6 +140,7 @@ static void vs_put_attr(MenuPreviewVScreen *s, int x, int y, char c, uint8_t att
     s->attr[y][x] = attr;
 }
 
+/** @brief Write up to n characters at (x,y) without attribute change. */
 static void vs_putn(MenuPreviewVScreen *s, int x, int y, const char *str, int n)
 {
     if (!s || !str) return;
@@ -125,6 +161,7 @@ static void vs_putn(MenuPreviewVScreen *s, int x, int y, const char *str, int n)
     }
 }
 
+/** @brief Write up to n characters with a given attribute at (x,y). */
 static void vs_putn_attr(MenuPreviewVScreen *s, int x, int y, const char *str, int n, uint8_t attr)
 {
     if (!s || !str) return;
@@ -146,12 +183,14 @@ static void vs_putn_attr(MenuPreviewVScreen *s, int x, int y, const char *str, i
     }
 }
 
+/** @brief Write a NUL-terminated string at (x,y) without attribute change. */
 static void vs_puts(MenuPreviewVScreen *s, int x, int y, const char *str)
 {
     if (!s || !str) return;
     vs_putn(s, x, y, str, (int)strlen(str));
 }
 
+/** @brief Convert a DOS color name to its numeric value (0-15). */
 static int color_name_to_value(const char *name)
 {
     if (!name || !*name) return -1;
@@ -177,6 +216,7 @@ static int color_name_to_value(const char *name)
     return -1;
 }
 
+/** @brief Build a DOS attribute byte from foreground/background color names. */
 static uint8_t make_dos_attr(const char *fg_name, const char *bg_name)
 {
     int fg = color_name_to_value(fg_name);
@@ -380,6 +420,13 @@ static void ansi_load_file(MenuPreviewVScreen *vs, const char *filepath)
     fclose(fp);
 }
 
+/**
+ * @brief Allocate layout items array for menu preview navigation.
+ *
+ * @param layout Layout struct to initialize.
+ * @param count  Number of option items.
+ * @return true on success.
+ */
 static bool layout_alloc(MenuPreviewLayout *layout, int count)
 {
     if (!layout) return false;
@@ -404,6 +451,11 @@ static bool layout_alloc(MenuPreviewLayout *layout, int count)
     return true;
 }
 
+/**
+ * @brief Free a menu preview layout's items array.
+ *
+ * @param layout Layout to free (struct itself is not freed).
+ */
 void menu_preview_layout_free(MenuPreviewLayout *layout)
 {
     if (!layout) return;
@@ -413,6 +465,14 @@ void menu_preview_layout_free(MenuPreviewLayout *layout)
     layout->cols = 0;
 }
 
+/**
+ * @brief Find the layout item index matching a hotkey character.
+ *
+ * @param layout    Layout to search.
+ * @param hotkey    Key character to match (case-insensitive).
+ * @param out_index Receives the matching index, or -1.
+ * @return true if a matching hotkey was found.
+ */
 bool menu_preview_hotkey_to_index(const MenuPreviewLayout *layout, int hotkey, int *out_index)
 {
     if (out_index) *out_index = -1;
@@ -428,6 +488,7 @@ bool menu_preview_hotkey_to_index(const MenuPreviewLayout *layout, int hotkey, i
     return false;
 }
 
+/** @brief Set a layout item's position, width, hotkey, and description. */
 static void add_item(MenuPreviewLayout *layout, int idx, int x, int y, int w, int hotkey, const char *desc)
 {
     if (!layout || !layout->items) return;
@@ -439,6 +500,11 @@ static void add_item(MenuPreviewLayout *layout, int idx, int x, int y, int w, in
     layout->items[idx].desc = desc;
 }
 
+/**
+ * @brief Render one menu option cell into the virtual screen buffer.
+ *
+ * Applies lightbar margins, justification, and highlight/normal colors.
+ */
 static void render_option_cell(const MenuDefinition *menu,
                                MenuPreviewVScreen *vs,
                                int px,
@@ -522,6 +588,18 @@ static void render_option_cell(const MenuDefinition *menu,
     }
 }
 
+/**
+ * @brief Render a full menu preview into the virtual screen buffer.
+ *
+ * Loads ANSI header/menu files, lays out option cells with boundary/
+ * spread calculations, and optionally populates a navigation layout.
+ *
+ * @param menu           Menu definition to render.
+ * @param sys_path       BBS system directory for resolving display file paths.
+ * @param vs             Virtual screen buffer to render into.
+ * @param layout         Optional layout struct for interactive navigation.
+ * @param selected_index Currently selected option index (for lightbar highlight).
+ */
 void menu_preview_render(const MenuDefinition *menu, const char *sys_path, MenuPreviewVScreen *vs, MenuPreviewLayout *layout, int selected_index)
 {
     if (!menu || !vs) return;
@@ -784,6 +862,7 @@ void menu_preview_render(const MenuDefinition *menu, const char *sys_path, MenuP
     }
 }
 
+/** @brief Draw a highlight bar for the selected item (unused legacy helper). */
 static void draw_selected_item(int x, int y, int w)
 {
     if (w < 1) return;
@@ -797,6 +876,12 @@ static void draw_selected_item(int x, int y, int w)
     attroff(COLOR_PAIR(CP_DROPDOWN_HIGHLIGHT) | A_BOLD);
 }
 
+/**
+ * @brief Map a DOS color index (0-7 base) to an ncurses COLOR_* constant.
+ *
+ * @param dos_color DOS color index (low 3 bits used).
+ * @return ncurses COLOR_* value.
+ */
 int dos_color_to_ncurses(int dos_color)
 {
     /* DOS colors: 0=Black, 1=Blue, 2=Green, 3=Cyan, 4=Red, 5=Magenta, 6=Brown, 7=Gray
@@ -840,6 +925,16 @@ void menu_preview_pairs_reset(void);
  * This allocates from a dedicated pair-number pool (above the color picker's
  * dynamic range) to avoid collisions. Allocation is lazy: only combinations
  * encountered during a blit are assigned a pair.
+ */
+/**
+ * @brief Get an ncurses pair number for a DOS fg/bg combination.
+ *
+ * Allocates from a dedicated pair-number pool (above the color picker's
+ * dynamic range) to avoid collisions. Allocation is lazy.
+ *
+ * @param fg DOS foreground color (0-15).
+ * @param bg DOS background color (0-7).
+ * @return ncurses color pair number.
  */
 int dos_pair_for_fg_bg(int fg, int bg)
 {
@@ -914,6 +1009,20 @@ void menu_preview_pairs_reset(void)
     g_menu_preview_next_pair = g_menu_preview_pool_start;
 }
 
+/**
+ * @brief Blit the virtual screen buffer to the ncurses display.
+ *
+ * Maps each DOS attribute to an ncurses color pair and renders the
+ * character at the appropriate screen position. Handles CP437-to-Unicode
+ * conversion when wide curses is available.
+ *
+ * @param menu           Menu definition (for selected-item color overrides).
+ * @param vs             Virtual screen buffer to blit.
+ * @param layout         Optional layout (for determining selected cell bounds).
+ * @param selected_index Currently selected item index, or -1.
+ * @param x              Screen x offset for the preview area.
+ * @param y              Screen y offset for the preview area.
+ */
 void menu_preview_blit(const MenuDefinition *menu,
                        const MenuPreviewVScreen *vs,
                        const MenuPreviewLayout *layout,

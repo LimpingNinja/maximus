@@ -1,7 +1,28 @@
+/*
+ * command_picker.c — Menu command picker dialog
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <string.h>
 #include "maxcfg.h"
 #include "ui.h"
 
+/** @brief Static table of all available menu command options with descriptions. */
 static const PickerOption command_options[] = {
     { "Chat_CB", "Invoke internal multinode chat facility in CB simulator mode. See section 7.2 for more information.", "Chat" },
     { "Chat_Page", "Prompt user for node number to page, send chat request, then place user in multinode chat until other user responds. See section 7.2.", "Chat" },
@@ -104,6 +125,12 @@ static const PickerOption command_options[] = {
     { NULL, NULL, NULL }
 };
 
+/**
+ * @brief Display the command picker dialog and return the selected index.
+ *
+ * @param current_idx Currently selected command index, or -1 for none.
+ * @return Selected command index, or -1 if cancelled.
+ */
 int command_picker_show(int current_idx)
 {
     int num_options = 0;
@@ -114,6 +141,12 @@ int command_picker_show(int current_idx)
     return picker_with_help_show("Select Command", command_options, num_options, current_idx);
 }
 
+/**
+ * @brief Get the command name string for a given option index.
+ *
+ * @param index Zero-based index into the command options table.
+ * @return Command name string, or NULL if index is out of range.
+ */
 const char *command_picker_get_name(int index)
 {
     int count = 0;

@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * area_toml.c — Area TOML serializer
  *
- * area_toml.c - Message and file area TOML loader/saver
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -16,7 +28,7 @@
 #include "area_parse.h"
 #include "treeview.h"
 
-/* Helper to set error message */
+/** @brief Copy an error message into the caller's buffer. */
 static void set_err(char *err, size_t err_sz, const char *msg)
 {
     if (err && err_sz > 0) {
@@ -25,13 +37,19 @@ static void set_err(char *err, size_t err_sz, const char *msg)
     }
 }
 
-/* Helper to duplicate string or return NULL */
+/** @brief Duplicate a string, returning NULL for empty or NULL input. */
 static char *dup_str_or_null(const char *s)
 {
     return (s && s[0]) ? strdup(s) : NULL;
 }
 
-/* Convert message area style strings to bitmask */
+/**
+ * @brief Convert an array of style name strings to a MSGSTYLE bitmask.
+ *
+ * @param styles  Array of style name strings.
+ * @param count   Number of elements.
+ * @return Combined MSGSTYLE_* bitmask.
+ */
 static unsigned int msg_style_from_strings(char **styles, size_t count)
 {
     unsigned int mask = 0;
@@ -294,7 +312,15 @@ static bool build_file_areas_recursive(MaxCfgNgFileAreaList *areas, TreeNode *no
     return true;
 }
 
-/* Load message areas from TOML */
+/**
+ * @brief Load message areas from TOML config into a tree structure.
+ *
+ * @param toml    TOML config handle with areas.msg loaded.
+ * @param count   Receives the number of root nodes.
+ * @param err     Buffer for error message on failure.
+ * @param err_sz  Size of the error buffer.
+ * @return Array of root TreeNode pointers, or NULL on error.
+ */
 TreeNode **load_msgarea_toml(MaxCfgToml *toml, int *count, char *err, size_t err_sz)
 {
     if (!toml || !count) {
@@ -554,7 +580,17 @@ TreeNode **load_msgarea_toml(MaxCfgToml *toml, int *count, char *err, size_t err
     return roots;
 }
 
-/* Save message areas to TOML */
+/**
+ * @brief Save message areas from a tree back to a TOML file.
+ *
+ * @param toml       TOML config handle.
+ * @param toml_path  Path to the TOML file to write.
+ * @param roots      Array of root TreeNode pointers.
+ * @param count      Number of roots.
+ * @param err        Buffer for error message on failure.
+ * @param err_sz     Size of the error buffer.
+ * @return true on success.
+ */
 bool save_msgarea_toml(MaxCfgToml *toml, const char *toml_path, TreeNode **roots, int count, char *err, size_t err_sz)
 {
     if (!toml || !toml_path || !roots) {
@@ -669,7 +705,15 @@ static bool file_area_types_to_strings(const FileAreaData *a, char ***out_types,
     return true;
 }
 
-/* Load file areas from TOML */
+/**
+ * @brief Load file areas from TOML config into a tree structure.
+ *
+ * @param toml    TOML config handle with areas.file loaded.
+ * @param count   Receives the number of root nodes.
+ * @param err     Buffer for error message on failure.
+ * @param err_sz  Size of the error buffer.
+ * @return Array of root TreeNode pointers, or NULL on error.
+ */
 TreeNode **load_filearea_toml(MaxCfgToml *toml, int *count, char *err, size_t err_sz)
 {
     if (!toml || !count) {
@@ -893,7 +937,17 @@ TreeNode **load_filearea_toml(MaxCfgToml *toml, int *count, char *err, size_t er
     return roots;
 }
 
-/* Save file areas to TOML */
+/**
+ * @brief Save file areas from a tree back to a TOML file.
+ *
+ * @param toml       TOML config handle.
+ * @param toml_path  Path to the TOML file to write.
+ * @param roots      Array of root TreeNode pointers.
+ * @param count      Number of roots.
+ * @param err        Buffer for error message on failure.
+ * @param err_sz     Size of the error buffer.
+ * @return true on success.
+ */
 bool save_filearea_toml(MaxCfgToml *toml, const char *toml_path, TreeNode **roots, int count, char *err, size_t err_sz)
 {
     if (!toml || !toml_path || !roots) {

@@ -1,12 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * max_rmen.c — Menu system runner/dispatcher
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -54,8 +55,12 @@ static word near mnu_menu_flag_from_types(MaxCfgStrView types, int kind);
 #define MENU_TYPE_FOOTER 1
 #define MENU_TYPE_BODY   2
 
-/* Count the number of menu options */
-
+/**
+ * @brief Count the number of visible menu options and set menu_lines.
+ *
+ * @param pam    Pointer to the loaded menu structure
+ * @param mname  Menu name (for access checking)
+ */
 static void near CountMenuLines(PAMENU pam, char *mname)
 {
   struct _opt *popt, *eopt;
@@ -96,6 +101,13 @@ static void near CountMenuLines(PAMENU pam, char *mname)
   }
 }
 
+/**
+ * @brief Read a menu definition, trying TOML first then legacy .mnu binary.
+ *
+ * @param menu   Output menu structure to populate
+ * @param mname  Menu name (without extension)
+ * @return 0 on success, -2 if not found, -1 on error
+ */
 sword Read_Menu(struct _amenu *menu, char *mname)
 {
   long where, end;
@@ -181,6 +193,13 @@ sword Read_Menu(struct _amenu *menu, char *mname)
 }
 
 
+/**
+ * @brief Map a command string token to a menu option enum value.
+ *
+ * @param cmd  Command string (e.g. "msg_enter", "goodbye")
+ * @param out  Output option enum value
+ * @return TRUE if matched, FALSE otherwise
+ */
 static int near mnu_cmd_to_opt(const char *cmd, option *out)
 {
   struct _cmdmap
@@ -348,6 +367,16 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out)
 }
 
 
+/**
+ * @brief Append a string to a menu heap buffer.
+ *
+ * @param pp    Pointer to current write position
+ * @param base  Base of heap buffer
+ * @param cap   Total capacity
+ * @param s     String to add
+ * @param out   Output: offset within heap
+ * @return TRUE on success, FALSE on overflow
+ */
 static int near mnu_heap_add(char **pp, char *base, size_t cap, const char *s, zstr *out)
 {
   size_t len;
@@ -377,6 +406,13 @@ static int near mnu_heap_add(char **pp, char *base, size_t cap, const char *s, z
 }
 
 
+/**
+ * @brief Parse modifier strings into menu option flags and area type.
+ *
+ * @param mods       String array of modifier keywords
+ * @param pflag      Output: OFLAG_* bits
+ * @param pareatype  Output: AREATYPE_* bits
+ */
 static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pareatype)
 {
   size_t i;
@@ -454,6 +490,13 @@ static void near mnu_apply_modifiers(MaxCfgStrView mods, word *pflag, byte *pare
 }
 
 
+/**
+ * @brief Convert display-type strings to MFLAG_* bits for a menu section.
+ *
+ * @param types  String array of display types (Novice, Regular, Expert, RIP)
+ * @param kind   Section kind: MENU_TYPE_HEADER, _FOOTER, or _BODY
+ * @return Bitmask of MFLAG_* flags
+ */
 static word near mnu_menu_flag_from_types(MaxCfgStrView types, int kind)
 {
   size_t i;
@@ -486,6 +529,13 @@ static word near mnu_menu_flag_from_types(MaxCfgStrView types, int kind)
 }
 
 
+/**
+ * @brief Load a menu definition from the TOML configuration tree.
+ *
+ * @param menu   Output menu structure to populate
+ * @param mname  Menu name (matched case-insensitively under menus.*)
+ * @return 0 on success, -2 if not found, -1 on error
+ */
 static int near Read_Menu_Toml(struct _amenu *menu, const char *mname)
 {
   MaxCfgNgMenu ng;
@@ -761,6 +811,11 @@ fail:
   return -1;
 }
 
+/**
+ * @brief Zero-initialize a menu structure.
+ *
+ * @param menu  Menu structure to clear
+ */
 void Initialize_Menu(struct _amenu *menu)
 {
   memset(menu,'\0',sizeof(struct _amenu));
@@ -770,6 +825,11 @@ void Initialize_Menu(struct _amenu *menu)
 
 
 
+/**
+ * @brief Free all memory associated with a loaded menu and re-initialize it.
+ *
+ * @param menu  Menu structure to free
+ */
 void Free_Menu(struct _amenu *menu)
 {
   if (menu->menuheap)

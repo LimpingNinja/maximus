@@ -1,9 +1,21 @@
 /*
- * libmaxdb - User CRUD operations
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * db_user.c — User CRUD operations on SQLite
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdlib.h>
@@ -70,7 +82,15 @@ const char *SQL_FIND_NEXT_AFTER_ID =
 const char *SQL_FIND_PREV_BEFORE_ID =
     "SELECT * FROM users WHERE id < ? ORDER BY id DESC LIMIT 1";
 
-/* Helper: Bind MaxDBUser to prepared statement (for INSERT/UPDATE) */
+/**
+ * @brief Bind all MaxDBUser fields to a prepared INSERT or UPDATE statement.
+ *
+ * Automatically detects UPDATE vs INSERT by inspecting the SQL text.
+ *
+ * @param stmt  Prepared statement with positional placeholders.
+ * @param user  User record to bind.
+ * @return SQLITE_OK on success.
+ */
 int bind_user_to_stmt(sqlite3_stmt *stmt, const MaxDBUser *user) {
     int idx = 1;
     
@@ -158,7 +178,12 @@ int bind_user_to_stmt(sqlite3_stmt *stmt, const MaxDBUser *user) {
     return SQLITE_OK;
 }
 
-/* Helper: Extract MaxDBUser from result row */
+/**
+ * @brief Extract a MaxDBUser from the current result row.
+ *
+ * @param stmt  Stepped statement positioned on a row.
+ * @return Heap-allocated user (caller must free), or NULL on OOM.
+ */
 MaxDBUser* extract_user_from_stmt(sqlite3_stmt *stmt) {
     MaxDBUser *user;
     const unsigned char *text;
@@ -268,7 +293,13 @@ MaxDBUser* extract_user_from_stmt(sqlite3_stmt *stmt) {
     return user;
 }
 
-/* Find user by name */
+/**
+ * @brief Find a user by exact name (case-insensitive).
+ *
+ * @param db    Database handle.
+ * @param name  User name to search for.
+ * @return Heap-allocated user, or NULL if not found.
+ */
 MaxDBUser* maxdb_user_find_by_name(MaxDB *db, const char *name) {
     sqlite3_stmt *stmt;
     MaxDBUser *user = NULL;
@@ -297,7 +328,13 @@ MaxDBUser* maxdb_user_find_by_name(MaxDB *db, const char *name) {
     return user;
 }
 
-/* Find user by alias */
+/**
+ * @brief Find a user by alias (case-insensitive).
+ *
+ * @param db     Database handle.
+ * @param alias  Alias to search for.
+ * @return Heap-allocated user, or NULL if not found.
+ */
 MaxDBUser* maxdb_user_find_by_alias(MaxDB *db, const char *alias) {
     sqlite3_stmt *stmt;
     MaxDBUser *user = NULL;
@@ -326,7 +363,13 @@ MaxDBUser* maxdb_user_find_by_alias(MaxDB *db, const char *alias) {
     return user;
 }
 
-/* Find user by ID */
+/**
+ * @brief Find a user by numeric ID.
+ *
+ * @param db  Database handle.
+ * @param id  User ID to look up.
+ * @return Heap-allocated user, or NULL if not found.
+ */
 MaxDBUser* maxdb_user_find_by_id(MaxDB *db, int id) {
     sqlite3_stmt *stmt;
     MaxDBUser *user = NULL;
@@ -355,7 +398,14 @@ MaxDBUser* maxdb_user_find_by_id(MaxDB *db, int id) {
     return user;
 }
 
-/* Create user */
+/**
+ * @brief Create a new user with auto-assigned ID.
+ *
+ * @param db      Database handle.
+ * @param user    User record to insert (id field is overwritten).
+ * @param out_id  Receives the assigned ID on success (may be NULL).
+ * @return MAXDB_OK on success, or an error code.
+ */
 int maxdb_user_create(MaxDB *db, const MaxDBUser *user, int *out_id) {
     MaxDBUser tmp;
     int new_id;
@@ -378,7 +428,13 @@ int maxdb_user_create(MaxDB *db, const MaxDBUser *user, int *out_id) {
     return rc;
 }
 
-/* Create user with explicit ID (legacy record offset compatibility) */
+/**
+ * @brief Create a new user with an explicit ID (for import/migration).
+ *
+ * @param db    Database handle.
+ * @param user  User record (id field used as-is).
+ * @return MAXDB_OK on success, MAXDB_CONSTRAINT on duplicate, or MAXDB_ERROR.
+ */
 int maxdb_user_create_with_id(MaxDB *db, const MaxDBUser *user) {
     sqlite3_stmt *stmt;
     int rc;
@@ -407,7 +463,13 @@ int maxdb_user_create_with_id(MaxDB *db, const MaxDBUser *user) {
     return MAXDB_OK;
 }
 
-/* Determine next available legacy-style ID */
+/**
+ * @brief Compute the next available user ID (max + 1).
+ *
+ * @param db      Database handle.
+ * @param out_id  Receives the next available ID.
+ * @return MAXDB_OK on success, or MAXDB_ERROR.
+ */
 int maxdb_user_next_id(MaxDB *db, int *out_id) {
     sqlite3_stmt *stmt;
     int rc;
@@ -435,6 +497,13 @@ int maxdb_user_next_id(MaxDB *db, int *out_id) {
     return MAXDB_ERROR;
 }
 
+/**
+ * @brief Find the user with the smallest ID greater than the given ID.
+ *
+ * @param db  Database handle.
+ * @param id  Reference ID.
+ * @return Heap-allocated user, or NULL if none found.
+ */
 MaxDBUser* maxdb_user_find_next_after_id(MaxDB *db, int id) {
     sqlite3_stmt *stmt;
     MaxDBUser *user = NULL;
@@ -462,6 +531,13 @@ MaxDBUser* maxdb_user_find_next_after_id(MaxDB *db, int id) {
     return user;
 }
 
+/**
+ * @brief Find the user with the largest ID less than the given ID.
+ *
+ * @param db  Database handle.
+ * @param id  Reference ID.
+ * @return Heap-allocated user, or NULL if none found.
+ */
 MaxDBUser* maxdb_user_find_prev_before_id(MaxDB *db, int id) {
     sqlite3_stmt *stmt;
     MaxDBUser *user = NULL;
@@ -489,7 +565,13 @@ MaxDBUser* maxdb_user_find_prev_before_id(MaxDB *db, int id) {
     return user;
 }
 
-/* Update user */
+/**
+ * @brief Update an existing user record by ID.
+ *
+ * @param db    Database handle.
+ * @param user  User record (id field identifies the row).
+ * @return MAXDB_OK on success, MAXDB_NOTFOUND if no such row, or MAXDB_ERROR.
+ */
 int maxdb_user_update(MaxDB *db, const MaxDBUser *user) {
     sqlite3_stmt *stmt;
     int rc;
@@ -522,7 +604,13 @@ int maxdb_user_update(MaxDB *db, const MaxDBUser *user) {
     return MAXDB_OK;
 }
 
-/* Delete user */
+/**
+ * @brief Delete a user record by ID.
+ *
+ * @param db  Database handle.
+ * @param id  User ID to delete.
+ * @return MAXDB_OK on success, MAXDB_NOTFOUND if no such row, or MAXDB_ERROR.
+ */
 int maxdb_user_delete(MaxDB *db, int id) {
     sqlite3_stmt *stmt;
     int rc;
@@ -555,7 +643,12 @@ int maxdb_user_delete(MaxDB *db, int id) {
     return MAXDB_OK;
 }
 
-/* Find all users (returns cursor) */
+/**
+ * @brief Open a cursor over all users ordered by ID.
+ *
+ * @param db  Database handle.
+ * @return Cursor handle, or NULL on error.
+ */
 MaxDBUserCursor* maxdb_user_find_all(MaxDB *db) {
     MaxDBUserCursor *cursor;
     int rc;
@@ -581,7 +674,12 @@ MaxDBUserCursor* maxdb_user_find_all(MaxDB *db) {
     return cursor;
 }
 
-/* Get next user from cursor */
+/**
+ * @brief Advance the cursor and return the next user.
+ *
+ * @param cursor  Cursor handle.
+ * @return Heap-allocated user (caller must free), or NULL when exhausted.
+ */
 MaxDBUser* maxdb_user_cursor_next(MaxDBUserCursor *cursor) {
     int rc;
     
@@ -602,7 +700,11 @@ MaxDBUser* maxdb_user_cursor_next(MaxDBUserCursor *cursor) {
     return NULL;
 }
 
-/* Close cursor */
+/**
+ * @brief Close a user cursor and release its resources.
+ *
+ * @param cursor  Cursor handle (NULL-safe).
+ */
 void maxdb_user_cursor_close(MaxDBUserCursor *cursor) {
     if (!cursor) {
         return;
@@ -615,7 +717,12 @@ void maxdb_user_cursor_close(MaxDBUserCursor *cursor) {
     free(cursor);
 }
 
-/* Get user count */
+/**
+ * @brief Return the total number of user records.
+ *
+ * @param db  Database handle.
+ * @return Row count, or -1 on error.
+ */
 int maxdb_user_count(MaxDB *db) {
     sqlite3_stmt *stmt;
     int count = 0;
@@ -639,7 +746,11 @@ int maxdb_user_count(MaxDB *db) {
     return count;
 }
 
-/* Free user object */
+/**
+ * @brief Free a heap-allocated MaxDBUser returned by find/cursor functions.
+ *
+ * @param user  User to free (NULL-safe).
+ */
 void maxdb_user_free(MaxDBUser *user) {
     if (user) {
         free(user);

@@ -1,13 +1,21 @@
-/**
- * @file local_term_ansi.c
- * @brief ANSI + UTF-8 local terminal backend for modern terminals.
+/*
+ * local_term_ansi.c — ANSI+UTF-8 local terminal backend implementation
  *
- * Converts PC/DOS attribute bytes to ANSI SGR sequences and
- * maps CP437 high-byte characters (0x80-0xFF) to their Unicode
- * equivalents, emitted as UTF-8.  Output goes directly to stdout.
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -243,6 +251,11 @@ static void emit_cp437(int ch)
 /* Backend implementation                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * @brief Initialize the ANSI/UTF-8 backend.
+ *
+ * Resets attribute tracking and sets stdout to full buffering.
+ */
 static void lt_ansi_init(void)
 {
   s_cur_attr = -1;
@@ -251,6 +264,11 @@ static void lt_ansi_init(void)
   setvbuf(stdout, NULL, _IOFBF, 8192);
 }
 
+/**
+ * @brief Shut down the ANSI/UTF-8 backend.
+ *
+ * Resets terminal attributes, drains the write buffer, and flushes stdout.
+ */
 static void lt_ansi_fini(void)
 {
   /* Reset terminal attributes on shutdown. */
@@ -265,6 +283,11 @@ static void lt_ansi_fini(void)
   s_cur_attr = -1;
 }
 
+/**
+ * @brief Set the current display attribute via ANSI SGR.
+ *
+ * @param pc_attr PC/DOS attribute byte.
+ */
 static void lt_ansi_set_attr(byte pc_attr)
 {
   if ((int)pc_attr == s_cur_attr)
@@ -274,6 +297,12 @@ static void lt_ansi_set_attr(byte pc_attr)
   s_cur_attr = (int)pc_attr;
 }
 
+/**
+ * @brief Move cursor to an absolute position via ANSI CUP.
+ *
+ * @param row 1-based row.
+ * @param col 1-based column.
+ */
 static void lt_ansi_goto_xy(int row, int col)
 {
   char tmp[24];
@@ -281,6 +310,11 @@ static void lt_ansi_goto_xy(int row, int col)
   buf_append(tmp, n);
 }
 
+/**
+ * @brief Output a single character, mapping CP437 high bytes to UTF-8.
+ *
+ * @param ch Character byte (may be CP437 high byte).
+ */
 static void lt_ansi_putc(int ch)
 {
   unsigned char uch = (unsigned char)ch;
@@ -349,12 +383,22 @@ static void lt_ansi_putc(int ch)
   /* Everything else: drop silently (NUL, etc.) */
 }
 
+/**
+ * @brief Clear screen and home cursor via ANSI escape sequences.
+ */
 static void lt_ansi_cls(void)
 {
   buf_puts("\x1b[H\x1b[2J\x1b[J");
   s_cur_attr = -1;  /* force re-emit after clear */
 }
 
+/**
+ * @brief Clear from cursor to end of line via ANSI EL.
+ *
+ * @param row  Current cursor row (unused).
+ * @param col  Current cursor column (unused).
+ * @param attr Fill attribute (unused — ANSI EL uses current attr).
+ */
 static void lt_ansi_cleol(int row, int col, byte attr)
 {
   (void)row;
@@ -363,26 +407,41 @@ static void lt_ansi_cleol(int row, int col, byte attr)
   buf_puts("\x1b[K");
 }
 
+/**
+ * @brief Move cursor up one row via ANSI CUU.
+ */
 static void lt_ansi_cursor_up(void)
 {
   buf_puts("\x1b[A");
 }
 
+/**
+ * @brief Move cursor down one row via ANSI CUD.
+ */
 static void lt_ansi_cursor_down(void)
 {
   buf_puts("\x1b[B");
 }
 
+/**
+ * @brief Move cursor left one column via ANSI CUB.
+ */
 static void lt_ansi_cursor_left(void)
 {
   buf_puts("\x1b[D");
 }
 
+/**
+ * @brief Move cursor right one column via ANSI CUF.
+ */
 static void lt_ansi_cursor_right(void)
 {
   buf_puts("\x1b[C");
 }
 
+/**
+ * @brief Enable blink attribute via ANSI SGR 5.
+ */
 static void lt_ansi_set_blink(void)
 {
   buf_puts("\x1b[5m");
@@ -390,12 +449,21 @@ static void lt_ansi_set_blink(void)
     s_cur_attr |= 0x80;
 }
 
+/**
+ * @brief Write raw bytes directly to the terminal buffer.
+ *
+ * @param s   Byte string.
+ * @param len Number of bytes to write.
+ */
 static void lt_ansi_raw_write(const char *s, int len)
 {
   if (s && len > 0)
     buf_append(s, len);
 }
 
+/**
+ * @brief Flush the internal write buffer and stdout.
+ */
 static void lt_ansi_flush(void)
 {
   if (s_buf_len > 0)

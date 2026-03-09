@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * ctl_to_ng.c — CTL-to-NextGen config converter
  *
- * ctl_to_ng.c - CTL file to MaxCfgNg* struct population (zero PRM dependency)
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <ctype.h>
@@ -15,7 +27,7 @@
 #include "ctl_to_ng.h"
 #include "libmaxcfg.h"
 
-/* Helper to trim whitespace */
+/** @brief Trim leading and trailing whitespace in-place. */
 static char *trim_ws(char *s)
 {
     if (!s) return NULL;
@@ -27,7 +39,7 @@ static char *trim_ws(char *s)
     return s;
 }
 
-/* Helper to check if line starts with keyword (case-insensitive) */
+/** @brief Check if a line starts with the given keyword (case-insensitive). */
 static bool line_starts_with_keyword(const char *line, const char *keyword)
 {
     size_t kw_len = strlen(keyword);
@@ -37,7 +49,7 @@ static bool line_starts_with_keyword(const char *line, const char *keyword)
     return (*after == '\0' || isspace((unsigned char)*after));
 }
 
-/* Helper to extract value after keyword */
+/** @brief Extract the value portion following a keyword on a line. */
 static char *extract_value_after_keyword(char *line, const char *keyword)
 {
     size_t kw_len = strlen(keyword);
@@ -47,7 +59,13 @@ static char *extract_value_after_keyword(char *line, const char *keyword)
     return trim_ws(line);
 }
 
-/* Parse privilege level from access level name using access.ctl */
+/**
+ * @brief Resolve a privilege level name to its numeric value via access.ctl.
+ *
+ * @param sys_path    System path root.
+ * @param level_name  Symbolic access level name (e.g. "Normal").
+ * @return Numeric privilege level, or 0 if not found.
+ */
 static int parse_priv_level(const char *sys_path, const char *level_name)
 {
     if (!sys_path || !level_name) return 0;
@@ -91,7 +109,15 @@ static int parse_priv_level(const char *sys_path, const char *level_name)
     return level;
 }
 
-/* Parse a keyword value from a CTL file */
+/**
+ * @brief Parse a keyword value from a CTL file.
+ *
+ * @param ctl_path   Path to the CTL file.
+ * @param keyword    Keyword to match.
+ * @param value_buf  Buffer for the extracted value.
+ * @param value_sz   Size of value_buf.
+ * @return true if found.
+ */
 bool ctl_to_ng_parse_keyword(const char *ctl_path, const char *keyword, char *value_buf, size_t value_sz)
 {
     if (!ctl_path || !keyword || !value_buf || value_sz == 0) return false;
@@ -119,7 +145,14 @@ bool ctl_to_ng_parse_keyword(const char *ctl_path, const char *keyword, char *va
     return found;
 }
 
-/* Parse a boolean keyword from a CTL file */
+/**
+ * @brief Parse a boolean keyword from a CTL file.
+ *
+ * @param ctl_path  Path to the CTL file.
+ * @param keyword   Keyword to match.
+ * @param value     Receives the boolean result.
+ * @return true if the keyword or its negation was found.
+ */
 bool ctl_to_ng_parse_boolean(const char *ctl_path, const char *keyword, bool *value)
 {
     if (!ctl_path || !keyword || !value) return false;
@@ -153,7 +186,14 @@ bool ctl_to_ng_parse_boolean(const char *ctl_path, const char *keyword, bool *va
     return found;
 }
 
-/* Parse an integer keyword from a CTL file */
+/**
+ * @brief Parse an integer keyword from a CTL file.
+ *
+ * @param ctl_path  Path to the CTL file.
+ * @param keyword   Keyword to match.
+ * @param value     Receives the integer result.
+ * @return true if found and parsed.
+ */
 bool ctl_to_ng_parse_int(const char *ctl_path, const char *keyword, int *value)
 {
     char buf[64];
@@ -162,14 +202,22 @@ bool ctl_to_ng_parse_int(const char *ctl_path, const char *keyword, int *value)
     return true;
 }
 
-/* Helper to duplicate a string, returning NULL for empty strings */
+/** @brief Duplicate a string, returning NULL for empty or NULL input. */
 static char *dup_str_or_null(const char *s)
 {
     if (!s || s[0] == '\0') return NULL;
     return strdup(s);
 }
 
-/* Populate MaxCfgNgSystem from max.ctl */
+/**
+ * @brief Populate a MaxCfgNgSystem struct from max.ctl keywords.
+ *
+ * @param maxctl_path  Path to max.ctl.
+ * @param sys_path     System base path.
+ * @param config_dir   Config directory path.
+ * @param sys          Output system struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_system(const char *maxctl_path, const char *sys_path, const char *config_dir, MaxCfgNgSystem *sys)
 {
     if (!maxctl_path || !sys) return false;
@@ -288,7 +336,13 @@ bool ctl_to_ng_populate_system(const char *maxctl_path, const char *sys_path, co
     return true;
 }
 
-/* Populate MaxCfgNgGeneralSession from max.ctl */
+/**
+ * @brief Populate a MaxCfgNgGeneralSession struct from max.ctl keywords.
+ *
+ * @param maxctl_path  Path to max.ctl.
+ * @param session      Output session struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_session(const char *maxctl_path, MaxCfgNgGeneralSession *session)
 {
     if (!maxctl_path || !session) return false;
@@ -544,7 +598,13 @@ bool ctl_to_ng_populate_session(const char *maxctl_path, MaxCfgNgGeneralSession 
     return true;
 }
 
-/* Populate MaxCfgNgEquipment from max.ctl */
+/**
+ * @brief Populate a MaxCfgNgEquipment struct from max.ctl keywords.
+ *
+ * @param maxctl_path  Path to max.ctl.
+ * @param equip        Output equipment struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_equipment(const char *maxctl_path, MaxCfgNgEquipment *equip)
 {
     if (!maxctl_path || !equip) return false;
@@ -606,7 +666,13 @@ bool ctl_to_ng_populate_equipment(const char *maxctl_path, MaxCfgNgEquipment *eq
     return true;
 }
 
-/* Populate MaxCfgNgReader from reader.ctl or max.ctl */
+/**
+ * @brief Populate a MaxCfgNgReader struct from reader.ctl (or max.ctl fallback).
+ *
+ * @param sys_path  System base path.
+ * @param reader    Output reader struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_reader(const char *sys_path, MaxCfgNgReader *reader)
 {
     if (!sys_path || !reader) return false;
@@ -642,7 +708,13 @@ bool ctl_to_ng_populate_reader(const char *sys_path, MaxCfgNgReader *reader)
     return true;
 }
 
-/* Populate MaxCfgNgGeneralDisplayFiles from max.ctl */
+/**
+ * @brief Populate a MaxCfgNgGeneralDisplayFiles struct from max.ctl keywords.
+ *
+ * @param maxctl_path  Path to max.ctl.
+ * @param files        Output display files struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_display_files(const char *maxctl_path, MaxCfgNgGeneralDisplayFiles *files)
 {
     if (!maxctl_path || !files) return false;
@@ -798,7 +870,13 @@ bool ctl_to_ng_populate_display_files(const char *maxctl_path, MaxCfgNgGeneralDi
     return true;
 }
 
-/* Populate MaxCfgNgLanguage from language.ctl */
+/**
+ * @brief Populate a MaxCfgNgLanguage struct from language.ctl.
+ *
+ * @param sys_path  System base path.
+ * @param lang      Output language struct to populate.
+ * @return true on success.
+ */
 bool ctl_to_ng_populate_language(const char *sys_path, MaxCfgNgLanguage *lang)
 {
     if (!sys_path || !lang) return false;

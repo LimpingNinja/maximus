@@ -1,3 +1,23 @@
+/*
+ * nextgen_export.c — NextGen config exporter
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
@@ -2712,6 +2732,19 @@ static bool export_areas_file(const char *sys_path, const char *config_dir, cons
     return true;
 }
 
+/**
+ * @brief Export legacy CTL configuration to NextGen TOML format.
+ *
+ * Reads CTL files from the system path, converts them to TOML, and
+ * writes the output files to config_dir with atomic file operations.
+ *
+ * @param sys_path    Maximus system base directory.
+ * @param config_dir  Output directory for TOML config files.
+ * @param flags       Bitmask of NG_EXPORT_* flags controlling which sections to export.
+ * @param err         Buffer for error message on failure.
+ * @param err_len     Size of the error buffer.
+ * @return true on success.
+ */
 bool nextgen_export_config(const char *sys_path,
                            const char *config_dir,
                            unsigned int flags,
@@ -2783,6 +2816,18 @@ bool nextgen_export_config(const char *sys_path,
     return true;
 }
 
+/**
+ * @brief Export legacy configuration to NextGen TOML given a max.ctl path.
+ *
+ * Derives sys_path from maxctl_path and delegates to nextgen_export_config().
+ *
+ * @param maxctl_path  Path to max.ctl.
+ * @param config_dir   Output directory for TOML config files.
+ * @param flags        Bitmask of NG_EXPORT_* flags.
+ * @param err          Buffer for error message on failure.
+ * @param err_len      Size of the error buffer.
+ * @return true on success.
+ */
 bool nextgen_export_config_from_maxctl(const char *maxctl_path,
                                        const char *config_dir,
                                        unsigned int flags,

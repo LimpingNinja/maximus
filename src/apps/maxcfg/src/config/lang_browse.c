@@ -1,12 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * lang_browse.c — Language string browser implementation
  *
- * lang_browse.c - TOML language file string browser for maxcfg
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Parses a TOML language file as text to extract section headers and
- * key=value pairs, then presents them in a filterable list picker.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -361,6 +370,7 @@ static bool lb_parse_toml(const char *path, LbEntry **out_entries, int *out_coun
     return true;
 }
 
+/** @brief Free an array of LbEntry and all owned strings. */
 static void lb_free_entries(LbEntry *entries, int count)
 {
     for (int i = 0; i < count; i++) {
@@ -499,6 +509,7 @@ static bool lb_write_back(const char *path, int line_num, const char *key_bare,
 /* Heap list + filtering                                                       */
 /* ========================================================================== */
 
+/** @brief Collect unique heap names from the entry array into a string list. */
 static void lb_collect_heaps(LbEntry *entries, int count,
                              char ***out_heaps, int *out_hcount)
 {
@@ -514,6 +525,7 @@ static void lb_collect_heaps(LbEntry *entries, int count,
     *out_hcount = hc;
 }
 
+/** @brief Free a heap name list produced by lb_collect_heaps(). */
 static void lb_free_heaps(char **heaps, int count)
 {
     for (int i = 0; i < count; i++) free(heaps[i]);
@@ -523,6 +535,7 @@ static void lb_free_heaps(char **heaps, int count)
 static const char *flags_opts[] = { "All", "mex", "(none)" };
 #define FLAGS_OPT_COUNT 3
 
+/** @brief Build a visibility index array for the current filter/heap/flags combo. */
 static int *lb_build_vis(LbEntry *entries, int count, const char *filter,
                          const char *heap_filter, int flags_idx, int *out_vc)
 {
@@ -742,6 +755,7 @@ found_last:
 #define ED_MAX_LINES 128
 #define ED_MAX_COLS  1024
 
+/** @brief Split a \\n-escaped string into separate editor lines. */
 static int le_split_lines(const char *text, char lines[][ED_MAX_COLS], int max)
 {
     int lc = 0, col = 0;
@@ -761,6 +775,7 @@ static int le_split_lines(const char *text, char lines[][ED_MAX_COLS], int max)
     return lc + 1;
 }
 
+/** @brief Join editor lines back into a single \\n-escaped string. */
 static char *le_join_lines(char lines[][ED_MAX_COLS], int lc)
 {
     size_t total = 0;
@@ -1415,6 +1430,14 @@ static bool le_edit_entry(LbEntry *entry, const char *toml_path)
 /* Public API                                                                  */
 /* ========================================================================== */
 
+/**
+ * @brief Browse language strings from a TOML language file.
+ *
+ * Shows a filterable list of all key = value entries found in the
+ * specified TOML language file.  Pressing Enter opens the string editor.
+ *
+ * @param toml_path  Full path to the .toml language file to browse.
+ */
 void lang_browse_strings(const char *toml_path)
 {
     LbEntry *entries = NULL;
@@ -1693,6 +1716,14 @@ void lang_browse_strings(const char *toml_path)
     }
 }
 
+/**
+ * @brief Action callback for the Language Settings form.
+ *
+ * Resolves the language path from the current TOML config and opens
+ * a picker to select a .toml file, then browses its strings.
+ *
+ * @param unused  Ignored (FIELD_ACTION signature).
+ */
 void action_browse_lang_strings(void *unused)
 {
     (void)unused;

@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_scroll.c — Scrolling region UI
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -134,6 +132,11 @@ static void near ui_scroll_clamp_view(int *view_top, int line_count, int height,
     *out_at_bottom = (*view_top >= max_top);
 }
 
+/**
+ * @brief Initialize a scrolling region style with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_scrolling_region_style_default(ui_scrolling_region_style_t *style)
 {
   if (!style)
@@ -144,6 +147,13 @@ void ui_scrolling_region_style_default(ui_scrolling_region_style_t *style)
   style->flags = UI_SCROLL_REGION_AUTO_FOLLOW;
 }
 
+/**
+ * @brief Snapshot the scrolling region viewport for an overlay.
+ *
+ * @param r  Scrolling region.
+ * @param ov Overlay state to populate.
+ * @return   Non-zero on success.
+ */
 int ui_scrolling_region_overlay_push(const ui_scrolling_region_t *r, ui_shadow_overlay_t *ov)
 {
   if (!r || !ov)
@@ -155,6 +165,12 @@ int ui_scrolling_region_overlay_push(const ui_scrolling_region_t *r, ui_shadow_o
   return ui_shadowbuf_overlay_push(&r->sb, 1, 1, r->sb.width, r->sb.height, ov);
 }
 
+/**
+ * @brief Restore a previously pushed scrolling region overlay.
+ *
+ * @param r  Scrolling region.
+ * @param ov Overlay state to restore.
+ */
 void ui_scrolling_region_overlay_pop(ui_scrolling_region_t *r, ui_shadow_overlay_t *ov)
 {
   if (!r || !ov)
@@ -166,6 +182,17 @@ void ui_scrolling_region_overlay_pop(ui_scrolling_region_t *r, ui_shadow_overlay
   ui_shadowbuf_overlay_pop(&r->sb, ov);
 }
 
+/**
+ * @brief Initialize a scrolling region widget.
+ *
+ * @param r         Region to initialize.
+ * @param x         Screen column (1-based).
+ * @param y         Screen row (1-based).
+ * @param width     Width in columns.
+ * @param height    Height in rows.
+ * @param max_lines Maximum buffered lines before trimming.
+ * @param style     Style configuration (NULL for defaults).
+ */
 void ui_scrolling_region_init(ui_scrolling_region_t *r, int x, int y, int width, int height, int max_lines, const ui_scrolling_region_style_t *style)
 {
   if (!r)
@@ -196,6 +223,11 @@ void ui_scrolling_region_init(ui_scrolling_region_t *r, int x, int y, int width,
   r->last_thumb_len = -1;
 }
 
+/**
+ * @brief Free resources owned by a scrolling region.
+ *
+ * @param r Region to free.
+ */
 void ui_scrolling_region_free(ui_scrolling_region_t *r)
 {
   if (!r)
@@ -209,6 +241,11 @@ void ui_scrolling_region_free(ui_scrolling_region_t *r)
   r->at_bottom = 1;
 }
 
+/**
+ * @brief Clear all buffered lines from the scrolling region.
+ *
+ * @param r Region to clear.
+ */
 void ui_scrolling_region_clear(ui_scrolling_region_t *r)
 {
   if (!r)
@@ -251,6 +288,14 @@ static void near ui_scrolling_region_trim(ui_scrolling_region_t *r)
     r->view_top = 0;
 }
 
+/**
+ * @brief Append text to the scrolling region buffer.
+ *
+ * @param r            Region to append to.
+ * @param text         Text to append.
+ * @param append_flags UI_SCROLL_APPEND_* flags.
+ * @return             Non-zero on success.
+ */
 int ui_scrolling_region_append(ui_scrolling_region_t *r, const char *text, int append_flags)
 {
   const char *p;
@@ -386,6 +431,11 @@ static void near ui_scrolling_region_ensure_sb(ui_scrolling_region_t *r)
   r->sb.default_attr = r->style.attr;
 }
 
+/**
+ * @brief Render the scrolling region viewport to the terminal.
+ *
+ * @param r Region to render.
+ */
 void ui_scrolling_region_render(ui_scrolling_region_t *r)
 {
   int row;
@@ -479,6 +529,13 @@ void ui_scrolling_region_render(ui_scrolling_region_t *r)
   ui_shadowbuf_paint_region(&r->sb, r->x, r->y, 1, 1, r->sb.width, r->sb.height);
 }
 
+/**
+ * @brief Handle a navigation key for the scrolling region.
+ *
+ * @param r   Region to scroll.
+ * @param key Key code.
+ * @return    1 if the view changed, 0 otherwise.
+ */
 int ui_scrolling_region_handle_key(ui_scrolling_region_t *r, int key)
 {
   int old_top;
@@ -527,6 +584,11 @@ int ui_scrolling_region_handle_key(ui_scrolling_region_t *r, int key)
   return (r->view_top != old_top);
 }
 
+/**
+ * @brief Initialize a text viewer style with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_text_viewer_style_default(ui_text_viewer_style_t *style)
 {
   if (!style)
@@ -538,6 +600,13 @@ void ui_text_viewer_style_default(ui_text_viewer_style_t *style)
   style->flags = UI_TBV_SHOW_STATUS | UI_TBV_SHOW_SCROLLBAR;
 }
 
+/**
+ * @brief Snapshot the text viewer area for an overlay.
+ *
+ * @param v  Text viewer.
+ * @param ov Overlay state to populate.
+ * @return   Non-zero on success.
+ */
 int ui_text_viewer_overlay_push(const ui_text_viewer_t *v, ui_shadow_overlay_t *ov)
 {
   if (!v || !ov)
@@ -549,6 +618,12 @@ int ui_text_viewer_overlay_push(const ui_text_viewer_t *v, ui_shadow_overlay_t *
   return ui_shadowbuf_overlay_push(&v->sb, 1, 1, v->sb.width, v->sb.height, ov);
 }
 
+/**
+ * @brief Restore a previously pushed text viewer overlay.
+ *
+ * @param v  Text viewer.
+ * @param ov Overlay state to restore.
+ */
 void ui_text_viewer_overlay_pop(ui_text_viewer_t *v, ui_shadow_overlay_t *ov)
 {
   if (!v || !ov)
@@ -560,6 +635,16 @@ void ui_text_viewer_overlay_pop(ui_text_viewer_t *v, ui_shadow_overlay_t *ov)
   ui_shadowbuf_overlay_pop(&v->sb, ov);
 }
 
+/**
+ * @brief Initialize a text viewer widget.
+ *
+ * @param v      Viewer to initialize.
+ * @param x      Screen column (1-based).
+ * @param y      Screen row (1-based).
+ * @param width  Width in columns.
+ * @param height Height in rows.
+ * @param style  Style configuration (NULL for defaults).
+ */
 void ui_text_viewer_init(ui_text_viewer_t *v, int x, int y, int width, int height, const ui_text_viewer_style_t *style)
 {
   if (!v)
@@ -588,6 +673,11 @@ void ui_text_viewer_init(ui_text_viewer_t *v, int x, int y, int width, int heigh
   v->last_thumb_len = -1;
 }
 
+/**
+ * @brief Free resources owned by a text viewer.
+ *
+ * @param v Viewer to free.
+ */
 void ui_text_viewer_free(ui_text_viewer_t *v)
 {
   if (!v)
@@ -602,6 +692,13 @@ void ui_text_viewer_free(ui_text_viewer_t *v)
   v->last_thumb_len = -1;
 }
 
+/**
+ * @brief Set the text content of the viewer.
+ *
+ * @param v    Viewer to update.
+ * @param text Text content.
+ * @return     Non-zero on success.
+ */
 int ui_text_viewer_set_text(ui_text_viewer_t *v, const char *text)
 {
   const char *p;
@@ -775,6 +872,11 @@ static void near ui_text_viewer_ensure_sb(ui_text_viewer_t *v)
   v->sb.default_attr = v->style.attr;
 }
 
+/**
+ * @brief Render the text viewer viewport to the terminal.
+ *
+ * @param v Viewer to render.
+ */
 void ui_text_viewer_render(ui_text_viewer_t *v)
 {
   int row;
@@ -878,6 +980,13 @@ void ui_text_viewer_render(ui_text_viewer_t *v)
   ui_shadowbuf_paint_region(&v->sb, v->x, v->y, 1, 1, v->sb.width, v->sb.height);
 }
 
+/**
+ * @brief Handle a navigation key for the text viewer.
+ *
+ * @param v   Viewer to scroll.
+ * @param key Key code.
+ * @return    1 if the view changed, 0 otherwise.
+ */
 int ui_text_viewer_handle_key(ui_text_viewer_t *v, int key)
 {
   int old_top;
@@ -931,6 +1040,12 @@ int ui_text_viewer_handle_key(ui_text_viewer_t *v, int key)
   return (v->view_top != old_top);
 }
 
+/**
+ * @brief Read a key and auto-consume scroll/navigation keys.
+ *
+ * @param v Viewer.
+ * @return  0 if consumed, or the key code if not consumed.
+ */
 int ui_text_viewer_read_key(ui_text_viewer_t *v)
 {
   int key;

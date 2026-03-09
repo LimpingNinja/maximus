@@ -1,3 +1,23 @@
+/*
+ * libmaxcfg.h — Public API header for config library
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #ifndef LIBMAXCFG_H
 #define LIBMAXCFG_H
 
@@ -60,10 +80,38 @@ typedef enum MaxCfgStatus {
     MAXCFG_ERR_DUPLICATE           /**< Key/namespace already exists */
 } MaxCfgStatus;
 
+/**
+ * @brief Get the element count of an array-type config variable.
+ *
+ * @param var       Pointer to a MaxCfgVar (must be an array type).
+ * @param out_count Receives the element count.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_var_count(const MaxCfgVar *var, size_t *out_count);
 
+/**
+ * @brief Convert a DOS color name string to its numeric index (0–15).
+ *
+ * @param s  Color name (e.g. "blue", "light_green"). Case-insensitive.
+ * @return Color index 0–15, or -1 if unrecognized.
+ */
 int maxcfg_dos_color_from_name(const char *s);
+
+/**
+ * @brief Convert a numeric DOS color index to its display name.
+ *
+ * @param color  Color index (0–15).
+ * @return Human-readable color name, or "" if out of range.
+ */
 const char *maxcfg_dos_color_to_name(int color);
+
+/**
+ * @brief Build a DOS attribute byte from foreground and background colors.
+ *
+ * @param fg  Foreground color (0–15).
+ * @param bg  Background color (0–15).
+ * @return Combined attribute byte.
+ */
 unsigned char maxcfg_make_attr(int fg, int bg);
 
 typedef struct {
@@ -617,131 +665,392 @@ typedef struct {
     size_t capacity;
 } MaxCfgNgAccessLevelList;
 
+/**
+ * @brief Open a config context rooted at the given base directory.
+ *
+ * @param out_cfg   Receives the allocated config handle.
+ * @param base_dir  Root directory for config file resolution.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_open(MaxCfg **out_cfg, const char *base_dir);
+
+/**
+ * @brief Close a config context and free all associated memory.
+ *
+ * @param cfg  Config handle to close (NULL-safe).
+ */
 void maxcfg_close(MaxCfg *cfg);
 
+/**
+ * @brief Return the base directory path for a config handle.
+ *
+ * @param cfg  Config handle.
+ * @return Base directory string, or NULL if cfg is NULL.
+ */
 const char *maxcfg_base_dir(const MaxCfg *cfg);
 
+/**
+ * @brief Resolve a path relative to a base directory.
+ *
+ * Absolute paths are returned unchanged; relative paths are joined
+ * to base_dir.
+ *
+ * @param base_dir       Base directory for resolution.
+ * @param path           Path to resolve (absolute or relative).
+ * @param out_path       Output buffer for the resolved path.
+ * @param out_path_size  Size of the output buffer.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_resolve_path(const char *base_dir,
                                 const char *path,
                                 char *out_path,
                                 size_t out_path_size);
 
+/**
+ * @brief Join a relative path to the config base directory.
+ *
+ * @param cfg            Config handle providing the base directory.
+ * @param relative_path  Relative path to append.
+ * @param out_path       Output buffer for the joined path.
+ * @param out_path_size  Size of the output buffer.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_join_path(const MaxCfg *cfg,
                              const char *relative_path,
                              char *out_path,
                              size_t out_path_size);
 
+/**
+ * @brief Return a human-readable string for a status code.
+ *
+ * @param st  Status code.
+ * @return Static string describing the status.
+ */
 const char *maxcfg_status_string(MaxCfgStatus st);
 
+/** @brief Allocate and initialize a TOML store handle. */
 MaxCfgStatus maxcfg_toml_init(MaxCfgToml **out_toml);
+
+/** @brief Free a TOML store handle and all loaded data. */
 void maxcfg_toml_free(MaxCfgToml *toml);
+
+/**
+ * @brief Load a TOML file into the store under an optional dotted prefix.
+ *
+ * @param toml    TOML store handle.
+ * @param path    Filesystem path to the .toml file.
+ * @param prefix  Dotted prefix for all keys (e.g. "general"), or "" for root.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_toml_load_file(MaxCfgToml *toml, const char *path, const char *prefix);
+
+/**
+ * @brief Retrieve a value from the TOML store by dotted path.
+ *
+ * @param toml  TOML store handle.
+ * @param path  Dotted key path (e.g. "maximus.sys_path").
+ * @param out   Receives the value.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_NOT_FOUND if absent.
+ */
 MaxCfgStatus maxcfg_toml_get(const MaxCfgToml *toml, const char *path, MaxCfgVar *out);
+
+/** @brief Set an integer override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_int(MaxCfgToml *toml, const char *path, int v);
+
+/** @brief Set an unsigned integer override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_uint(MaxCfgToml *toml, const char *path, unsigned int v);
+
+/** @brief Set a boolean override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_bool(MaxCfgToml *toml, const char *path, bool v);
+
+/** @brief Set a string override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_string(MaxCfgToml *toml, const char *path, const char *v);
+
+/** @brief Set a string array override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_string_array(MaxCfgToml *toml, const char *path, const char **items, size_t count);
+
+/** @brief Set an empty table array override in the TOML store. */
 MaxCfgStatus maxcfg_toml_override_set_table_array_empty(MaxCfgToml *toml, const char *path);
+
+/** @brief Remove an override at the given path. */
 MaxCfgStatus maxcfg_toml_override_unset(MaxCfgToml *toml, const char *path);
+
+/** @brief Clear all overrides from the TOML store. */
 void maxcfg_toml_override_clear(MaxCfgToml *toml);
+
+/** @brief Save all loaded files back to disk (with overrides merged). */
 MaxCfgStatus maxcfg_toml_save_loaded_files(const MaxCfgToml *toml);
+
+/** @brief Save only the file(s) matching a given prefix. */
 MaxCfgStatus maxcfg_toml_save_prefix(const MaxCfgToml *toml, const char *prefix);
+
+/** @brief Persist a single override into the base TOML data. */
 MaxCfgStatus maxcfg_toml_persist_override(MaxCfgToml *toml, const char *path);
+
+/** @brief Persist a single override and immediately save its file. */
 MaxCfgStatus maxcfg_toml_persist_override_and_save(MaxCfgToml *toml, const char *path);
+
+/** @brief Persist all pending overrides into the base TOML data. */
 MaxCfgStatus maxcfg_toml_persist_overrides(MaxCfgToml *toml);
+
+/** @brief Persist all pending overrides and save all affected files. */
 MaxCfgStatus maxcfg_toml_persist_overrides_and_save(MaxCfgToml *toml);
+
+/**
+ * @brief Look up a key within a table-type MaxCfgVar.
+ *
+ * @param table  Table variable to search.
+ * @param key    Key name to look up.
+ * @param out    Receives the value.
+ * @return MAXCFG_OK on success, MAXCFG_ERR_NOT_FOUND if absent.
+ */
 MaxCfgStatus maxcfg_toml_table_get(const MaxCfgVar *table, const char *key, MaxCfgVar *out);
+
+/**
+ * @brief Access an element by index within an array-type MaxCfgVar.
+ *
+ * @param array  Array variable to index.
+ * @param index  Zero-based element index.
+ * @param out    Receives the value.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_toml_array_get(const MaxCfgVar *array, size_t index, MaxCfgVar *out);
 
+/** @brief Parse a video mode string into numeric constants. */
 MaxCfgStatus maxcfg_ng_parse_video_mode(const char *s, int *out_video, bool *out_has_snow);
+
+/** @brief Parse a log mode string ("terse", "verbose", "trace"). */
 MaxCfgStatus maxcfg_ng_parse_log_mode(const char *s, int *out_log_mode);
+
+/** @brief Parse a multitasker name string into its numeric constant. */
 MaxCfgStatus maxcfg_ng_parse_multitasker(const char *s, int *out_multitasker);
+
+/** @brief Parse a single handshaking token ("xon", "cts", "dsr") to bit flags. */
 MaxCfgStatus maxcfg_ng_parse_handshaking_token(const char *s, int *out_bits);
+
+/** @brief Parse a charset name into its numeric constant and high-bit flag. */
 MaxCfgStatus maxcfg_ng_parse_charset(const char *s, int *out_charset, bool *out_global_high_bit);
+
+/** @brief Parse a nodelist version string ("5", "6", "7", "fd"). */
 MaxCfgStatus maxcfg_ng_parse_nodelist_version(const char *s, int *out_nlver);
 
+/** @brief Read and parse the video mode from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_video_mode(const MaxCfgToml *toml, int *out_video, bool *out_has_snow);
+
+/** @brief Read and parse the log mode from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_log_mode(const MaxCfgToml *toml, int *out_log_mode);
+
+/** @brief Read and parse the multitasker setting from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_multitasker(const MaxCfgToml *toml, int *out_multitasker);
+
+/** @brief Read and combine handshaking flags from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_handshake_mask(const MaxCfgToml *toml, int *out_mask);
+
+/** @brief Read and parse the charset from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_charset(const MaxCfgToml *toml, int *out_charset);
+
+/** @brief Read and parse the nodelist version from the TOML config. */
 MaxCfgStatus maxcfg_ng_get_nodelist_version(const MaxCfgToml *toml, int *out_nlver);
 
+/**
+ * @brief Return the library ABI version number.
+ *
+ * @return Current ABI version (LIBMAXCFG_ABI_VERSION).
+ */
 int maxcfg_abi_version(void);
 
+/** @brief Initialize an NgSystem struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_system_init(MaxCfgNgSystem *sys);
+
+/** @brief Free all heap memory owned by an NgSystem struct. */
 void maxcfg_ng_system_free(MaxCfgNgSystem *sys);
 
+/** @brief Initialize an NgGeneralSession struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_general_session_init(MaxCfgNgGeneralSession *session);
+
+/** @brief Free all heap memory owned by an NgGeneralSession struct. */
 void maxcfg_ng_general_session_free(MaxCfgNgGeneralSession *session);
 
+/** @brief Initialize an NgMatrix struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_matrix_init(MaxCfgNgMatrix *matrix);
+
+/** @brief Free all heap memory owned by an NgMatrix struct. */
 void maxcfg_ng_matrix_free(MaxCfgNgMatrix *matrix);
 
+/** @brief Initialize an NgReader struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_reader_init(MaxCfgNgReader *reader);
+
+/** @brief Free all heap memory owned by an NgReader struct. */
 void maxcfg_ng_reader_free(MaxCfgNgReader *reader);
 
+/** @brief Initialize an NgEquipment struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_equipment_init(MaxCfgNgEquipment *equip);
+
+/** @brief Free all heap memory owned by an NgEquipment struct. */
 void maxcfg_ng_equipment_free(MaxCfgNgEquipment *equip);
 
+/** @brief Initialize a protocol list to empty. */
 MaxCfgStatus maxcfg_ng_protocol_list_init(MaxCfgNgProtocolList *list);
+
+/** @brief Free a protocol list and all its entries. */
 void maxcfg_ng_protocol_list_free(MaxCfgNgProtocolList *list);
+
+/** @brief Append a protocol entry to the list (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_protocol_list_add(MaxCfgNgProtocolList *list, const MaxCfgNgProtocol *proto);
 
+/** @brief Initialize an NgLanguage struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_language_init(MaxCfgNgLanguage *lang);
+
+/** @brief Free all heap memory owned by an NgLanguage struct. */
 void maxcfg_ng_language_free(MaxCfgNgLanguage *lang);
 
+/** @brief Initialize an NgGeneralDisplayFiles struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_general_display_files_init(MaxCfgNgGeneralDisplayFiles *files);
+
+/** @brief Free all heap memory owned by an NgGeneralDisplayFiles struct. */
 void maxcfg_ng_general_display_files_free(MaxCfgNgGeneralDisplayFiles *files);
 
+/** @brief Initialize an NgGeneralDisplay struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_general_display_init(MaxCfgNgGeneralDisplay *disp);
+
+/** @brief Free all heap memory owned by an NgGeneralDisplay struct. */
 void maxcfg_ng_general_display_free(MaxCfgNgGeneralDisplay *disp);
+
+/** @brief Parse the general.display section from TOML into the struct. */
 MaxCfgStatus maxcfg_ng_get_general_display(const MaxCfgToml *toml, const char *prefix, MaxCfgNgGeneralDisplay *disp);
 
+/** @brief Initialize an NgGeneralColors struct to safe defaults. */
 MaxCfgStatus maxcfg_ng_general_colors_init(MaxCfgNgGeneralColors *colors);
 
+/** @brief Initialize an NgMenu struct to empty. */
 MaxCfgStatus maxcfg_ng_menu_init(MaxCfgNgMenu *menu);
+
+/** @brief Free a menu struct and all its option entries. */
 void maxcfg_ng_menu_free(MaxCfgNgMenu *menu);
+
+/** @brief Append a menu option to the menu (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_menu_add_option(MaxCfgNgMenu *menu, const MaxCfgNgMenuOption *opt);
 
+/** @brief Initialize a division list to empty. */
 MaxCfgStatus maxcfg_ng_division_list_init(MaxCfgNgDivisionList *list);
+
+/** @brief Free a division list and all its entries. */
 void maxcfg_ng_division_list_free(MaxCfgNgDivisionList *list);
+
+/** @brief Append a division to the list (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_division_list_add(MaxCfgNgDivisionList *list, const MaxCfgNgDivision *div);
 
+/** @brief Initialize a message area list to empty. */
 MaxCfgStatus maxcfg_ng_msg_area_list_init(MaxCfgNgMsgAreaList *list);
+
+/** @brief Free a message area list and all its entries. */
 void maxcfg_ng_msg_area_list_free(MaxCfgNgMsgAreaList *list);
+
+/** @brief Append a message area to the list (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_msg_area_list_add(MaxCfgNgMsgAreaList *list, const MaxCfgNgMsgArea *area);
 
+/** @brief Initialize a file area list to empty. */
 MaxCfgStatus maxcfg_ng_file_area_list_init(MaxCfgNgFileAreaList *list);
+
+/** @brief Free a file area list and all its entries. */
 void maxcfg_ng_file_area_list_free(MaxCfgNgFileAreaList *list);
+
+/** @brief Append a file area to the list (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_file_area_list_add(MaxCfgNgFileAreaList *list, const MaxCfgNgFileArea *area);
 
+/** @brief Initialize an access level list to empty. */
 MaxCfgStatus maxcfg_ng_access_level_list_init(MaxCfgNgAccessLevelList *list);
+
+/** @brief Free an access level list and all its entries. */
 void maxcfg_ng_access_level_list_free(MaxCfgNgAccessLevelList *list);
+
+/** @brief Append an access level to the list (deep-copies fields). */
 MaxCfgStatus maxcfg_ng_access_level_list_add(MaxCfgNgAccessLevelList *list, const MaxCfgNgAccessLevel *lvl);
 
+/**
+ * @brief Parse message area definitions from TOML.
+ *
+ * @param toml       TOML store handle.
+ * @param prefix     Dotted prefix to the message area config section.
+ * @param divisions  Receives parsed division list.
+ * @param areas      Receives parsed message area list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_msg_areas(const MaxCfgToml *toml, const char *prefix,
                                     MaxCfgNgDivisionList *divisions, MaxCfgNgMsgAreaList *areas);
+
+/**
+ * @brief Parse file area definitions from TOML.
+ *
+ * @param toml       TOML store handle.
+ * @param prefix     Dotted prefix to the file area config section.
+ * @param divisions  Receives parsed division list.
+ * @param areas      Receives parsed file area list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_file_areas(const MaxCfgToml *toml, const char *prefix,
                                      MaxCfgNgDivisionList *divisions, MaxCfgNgFileAreaList *areas);
+
+/**
+ * @brief Parse a menu definition from TOML.
+ *
+ * @param toml    TOML store handle.
+ * @param prefix  Dotted prefix to the menu config section.
+ * @param menu    Receives the parsed menu.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_menu(const MaxCfgToml *toml, const char *prefix, MaxCfgNgMenu *menu);
+
+/**
+ * @brief Parse access level definitions from TOML.
+ *
+ * @param toml    TOML store handle.
+ * @param prefix  Dotted prefix to the access level config section.
+ * @param levels  Receives the parsed access level list.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_ng_get_access_levels(const MaxCfgToml *toml, const char *prefix, MaxCfgNgAccessLevelList *levels);
 
+/** @brief Write the [maximus] system section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_maximus_toml(FILE *fp, const MaxCfgNgSystem *sys);
+
+/** @brief Write the [general.session] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_general_session_toml(FILE *fp, const MaxCfgNgGeneralSession *session);
+
+/** @brief Write the [general.display_files] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_general_display_files_toml(FILE *fp, const MaxCfgNgGeneralDisplayFiles *files);
+
+/** @brief Write the [general.display] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_general_display_toml(FILE *fp, const MaxCfgNgGeneralDisplay *disp);
+
+/** @brief Write the [general.colors] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_general_colors_toml(FILE *fp, const MaxCfgNgGeneralColors *colors);
+
+/** @brief Write the [matrix] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_matrix_toml(FILE *fp, const MaxCfgNgMatrix *matrix);
+
+/** @brief Write the [reader] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_reader_toml(FILE *fp, const MaxCfgNgReader *reader);
+
+/** @brief Write the [general.equipment] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_equipment_toml(FILE *fp, const MaxCfgNgEquipment *equip);
+
+/** @brief Write the [[protocol]] array section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_protocols_toml(FILE *fp, const MaxCfgNgProtocolList *list);
+
+/** @brief Write the [language] section to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_language_toml(FILE *fp, const MaxCfgNgLanguage *lang);
+
+/** @brief Write a menu definition to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_menu_toml(FILE *fp, const MaxCfgNgMenu *menu);
+
+/** @brief Write message area definitions to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_msg_areas_toml(FILE *fp, const MaxCfgNgDivisionList *divisions, const MaxCfgNgMsgAreaList *areas);
+
+/** @brief Write file area definitions to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_file_areas_toml(FILE *fp, const MaxCfgNgDivisionList *divisions, const MaxCfgNgFileAreaList *areas);
+
+/** @brief Write access level definitions to a TOML file. */
 MaxCfgStatus maxcfg_ng_write_access_levels_toml(FILE *fp, const MaxCfgNgAccessLevelList *levels);
 
 #ifdef __cplusplus

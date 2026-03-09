@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * menu_parse.c — Menu definition parser
  *
- * menu_parse.c - Menu configuration parser
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -19,6 +31,7 @@
 #include "ctl_parse.h"
 #include "libmaxcfg.h"
 
+/** @brief Check if a line starts with a keyword and extract the trailing value. */
 static bool kw_value(const char *line, const char *kw, const char **out_value)
 {
     if (line == NULL || kw == NULL) {
@@ -45,7 +58,7 @@ static bool kw_value(const char *line, const char *kw, const char **out_value)
     return true;
 }
 
-/* Helper to trim whitespace */
+/** @brief Trim leading and trailing whitespace in-place. */
 static char *trim_whitespace(char *str) {
     char *end;
     while (isspace((unsigned char)*str)) str++;
@@ -56,11 +69,12 @@ static char *trim_whitespace(char *str) {
     return str;
 }
 
-/* Helper to duplicate a string or return NULL */
+/** @brief Duplicate a string; returns NULL if input is NULL. */
 static char *safe_strdup(const char *s) {
     return s ? strdup(s) : NULL;
 }
 
+/** @brief Append a duplicated string to a dynamic string vector. */
 static bool strv_add(char ***items_io, size_t *count_io, const char *s)
 {
     if (items_io == NULL || count_io == NULL) {
@@ -84,6 +98,7 @@ static bool strv_add(char ***items_io, size_t *count_io, const char *s)
     return true;
 }
 
+/** @brief Free all strings in a vector and reset count/pointer. */
 static void strv_free(char ***items_io, size_t *count_io)
 {
     if (items_io == NULL || *items_io == NULL) {
@@ -111,7 +126,7 @@ static void set_err(char *err, size_t err_len, const char *fmt, ...)
     va_end(ap);
 }
 
-/* DOS color name to value mapping */
+/** @brief Map a DOS color index (0–15) to its name string. */
 static const char *dos_color_name(int color_val)
 {
     static const char *names[] = {
@@ -124,7 +139,7 @@ static const char *dos_color_name(int color_val)
     return "Black";
 }
 
-/* DOS color name to value */
+/** @brief Map a DOS color name string to its numeric index (0–15). */
 static int dos_color_value(const char *name)
 {
     if (!name) return 0;
@@ -378,6 +393,17 @@ static bool menu_definition_from_ng(const MaxCfgNgMenu *ng, MenuDefinition **out
     return true;
 }
 
+/**
+ * @brief Save a menu definition to a TOML file and reload it into the config handle.
+ *
+ * @param toml         TOML config handle.
+ * @param toml_path    Path to the output TOML file.
+ * @param toml_prefix  Config prefix for reload (e.g. "menus.main").
+ * @param menu         Menu definition to serialize.
+ * @param err          Buffer for error message on failure.
+ * @param err_len      Size of the error buffer.
+ * @return true on success.
+ */
 bool save_menu_toml(MaxCfgToml *toml, const char *toml_path, const char *toml_prefix, const MenuDefinition *menu, char *err, size_t err_len)
 {
     if (toml == NULL || toml_path == NULL || toml_prefix == NULL || menu == NULL) {
@@ -548,6 +574,22 @@ oom:
     return true;
 }
 
+/**
+ * @brief Load all menu TOML files from the menus directory.
+ *
+ * Scans <sys_path>/config/menus/ for .toml files and loads each into
+ * a MenuDefinition. Returns parallel arrays of menus, paths, and prefixes.
+ *
+ * @param toml          TOML config handle.
+ * @param sys_path      System base path.
+ * @param out_menus     Receives array of MenuDefinition pointers.
+ * @param out_paths     Receives array of file path strings.
+ * @param out_prefixes  Receives array of TOML prefix strings.
+ * @param out_count     Receives the number of menus loaded.
+ * @param err           Buffer for error message on failure.
+ * @param err_len       Size of the error buffer.
+ * @return true on success.
+ */
 bool load_menus_toml(MaxCfgToml *toml,
                      const char *sys_path,
                      MenuDefinition ***out_menus,
@@ -704,7 +746,12 @@ fail:
     return false;
 }
 
-/* Create a new empty menu definition */
+/**
+ * @brief Create a new empty menu definition with default values.
+ *
+ * @param name  Menu name (e.g. "main").
+ * @return Heap-allocated MenuDefinition, or NULL on failure.
+ */
 MenuDefinition *create_menu_definition(const char *name) {
     MenuDefinition *menu = calloc(1, sizeof(MenuDefinition));
     if (!menu) return NULL;
@@ -759,13 +806,21 @@ MenuDefinition *create_menu_definition(const char *name) {
     return menu;
 }
 
-/* Create a new empty menu option */
+/**
+ * @brief Create a new empty menu option (all fields zeroed).
+ *
+ * @return Heap-allocated MenuOption, or NULL on failure.
+ */
 MenuOption *create_menu_option(void) {
     MenuOption *opt = calloc(1, sizeof(MenuOption));
     return opt;
 }
 
-/* Free a menu option */
+/**
+ * @brief Free a menu option and its owned strings.
+ *
+ * @param option  Option to free (may be NULL).
+ */
 void free_menu_option(MenuOption *option) {
     if (!option) return;
     free(option->command);
@@ -776,7 +831,11 @@ void free_menu_option(MenuOption *option) {
     free(option);
 }
 
-/* Free a single menu definition */
+/**
+ * @brief Free a menu definition, its options, and all owned strings.
+ *
+ * @param menu  Menu to free (may be NULL).
+ */
 void free_menu_definition(MenuDefinition *menu) {
     if (!menu) return;
     
@@ -803,7 +862,12 @@ void free_menu_definition(MenuDefinition *menu) {
     free(menu);
 }
 
-/* Free menu definitions */
+/**
+ * @brief Free an array of menu definitions.
+ *
+ * @param menus       Array of MenuDefinition pointers.
+ * @param menu_count  Number of menus in the array.
+ */
 void free_menu_definitions(MenuDefinition **menus, int menu_count) {
     if (!menus) return;
     for (int i = 0; i < menu_count; i++) {
@@ -812,7 +876,13 @@ void free_menu_definitions(MenuDefinition **menus, int menu_count) {
     free(menus);
 }
 
-/* Add an option to a menu */
+/**
+ * @brief Append a menu option to the end of a menu's option list.
+ *
+ * @param menu    Menu to add the option to.
+ * @param option  Option to add (ownership transferred).
+ * @return true on success.
+ */
 bool add_menu_option(MenuDefinition *menu, MenuOption *option) {
     if (!menu || !option) return false;
     
@@ -829,7 +899,14 @@ bool add_menu_option(MenuDefinition *menu, MenuOption *option) {
     return true;
 }
 
-/* Insert an option at a specific position in a menu */
+/**
+ * @brief Insert a menu option at a specific position.
+ *
+ * @param menu    Menu to insert into.
+ * @param option  Option to insert (ownership transferred).
+ * @param index   Zero-based position to insert at.
+ * @return true on success.
+ */
 bool insert_menu_option(MenuDefinition *menu, MenuOption *option, int index) {
     if (!menu || !option || index < 0 || index > menu->option_count) return false;
     
@@ -852,7 +929,13 @@ bool insert_menu_option(MenuDefinition *menu, MenuOption *option, int index) {
     return true;
 }
 
-/* Remove an option from a menu */
+/**
+ * @brief Remove and free a menu option at the given index.
+ *
+ * @param menu   Menu to remove from.
+ * @param index  Zero-based index of the option to remove.
+ * @return true on success.
+ */
 bool remove_menu_option(MenuDefinition *menu, int index) {
     if (!menu || index < 0 || index >= menu->option_count) return false;
     
@@ -866,7 +949,7 @@ bool remove_menu_option(MenuDefinition *menu, int index) {
     return true;
 }
 
-/* Helper to parse flag types from space-separated list */
+/** @brief Parse space-separated type flag names into a bitmask. */
 static word parse_type_flags(const char *types, int kind) {
     word flags = 0;
     if (!types || !*types) {
@@ -898,7 +981,7 @@ static word parse_type_flags(const char *types, int kind) {
                             (kind == MENU_TYPE_FOOTER) ? MFLAG_FF_ALL : MFLAG_MF_ALL);
 }
 
-/* Helper to parse option modifiers and return flags */
+/** @brief Parse option modifier keywords from a line, advancing the pointer. */
 static word parse_option_modifiers(char **line_ptr, byte *areatype) {
     word flags = 0;
     *areatype = ATYPE_NONE;
@@ -965,7 +1048,15 @@ static word parse_option_modifiers(char **line_ptr, byte *areatype) {
     return flags;
 }
 
-/* Parse menus.ctl */
+/**
+ * @brief Parse legacy menus.ctl into an array of MenuDefinition structs.
+ *
+ * @param sys_path    System base path.
+ * @param menu_count  Receives the number of menus parsed.
+ * @param err         Buffer for error message on failure.
+ * @param err_len     Size of the error buffer.
+ * @return Array of MenuDefinition pointers, or NULL on error.
+ */
 MenuDefinition **parse_menus_ctl(const char *sys_path, int *menu_count, char *err, size_t err_len) {
     if (!sys_path || !menu_count) {
         if (err) snprintf(err, err_len, "Invalid parameters");

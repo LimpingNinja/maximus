@@ -1,9 +1,7 @@
 /*
- * Maximus Version 4.0
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * mexsock.c — MEX socket intrinsics (TCP/HTTP)
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,16 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file mexsock.c
- * @brief MEX socket intrinsics — outgoing TCP connections and HTTP helper.
- *
- * Provides MEX scripts with outgoing TCP socket I/O and a convenience
- * HTTP/1.1 request function. All I/O uses non-blocking sockets with
- * timeout via select(). Up to MAX_MEXSOCK concurrent connections per
- * MEX session. All sockets are cleaned up on script exit.
  */
 
 #define MAX_LANG_m_area

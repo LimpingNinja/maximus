@@ -1,7 +1,39 @@
+/*
+ * path.c — Path resolution utilities
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include "libmaxcfg.h"
 
 #include <string.h>
 
+/**
+ * @brief Join a relative path to the config base directory.
+ *
+ * Concatenates the base directory from the MaxCfg handle with the given
+ * relative path, inserting a slash separator if needed.
+ *
+ * @param cfg            Config handle providing the base directory.
+ * @param relative_path  Relative path to append.
+ * @param out_path       Output buffer for the joined path.
+ * @param out_path_size  Size of the output buffer.
+ * @return MAXCFG_OK on success, or an error status.
+ */
 MaxCfgStatus maxcfg_join_path(const MaxCfg *cfg,
                              const char *relative_path,
                              char *out_path,

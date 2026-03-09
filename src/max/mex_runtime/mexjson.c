@@ -1,9 +1,7 @@
 /*
- * Maximus Version 4.0
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * mexjson.c — MEX JSON intrinsics (cJSON bridge)
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,16 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file mexjson.c
- * @brief MEX JSON intrinsics — cursor-based parser with path convenience.
- *
- * Provides MEX scripts with the ability to parse, navigate, query, build,
- * and serialize JSON data. Uses cJSON (MIT) internally. Each parsed document
- * is held in a handle slot with a navigable cursor (enter/next/exit/find).
- * Path-based convenience accessors resolve from root without moving the cursor.
  */
 
 #define MAX_LANG_m_area

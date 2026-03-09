@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * ctl_parse.c — Legacy .CTL file parser
  *
- * ctl_parse.c - CTL file parser for reading configuration values
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -13,7 +25,7 @@
 #include "ctl_parse.h"
 #include "prog.h"
 
-/* Helper to trim leading/trailing whitespace */
+/** @brief Trim leading and trailing whitespace in-place. */
 static char *trim_whitespace(char *str)
 {
     char *end;
@@ -31,7 +43,7 @@ static char *trim_whitespace(char *str)
     return str;
 }
 
-/* Helper to check if line starts with keyword (case-insensitive) */
+/** @brief Check if a line starts with the given keyword (case-insensitive). */
 static bool line_starts_with_keyword(const char *line, const char *keyword)
 {
     size_t kw_len = strlen(keyword);
@@ -49,7 +61,7 @@ static bool line_starts_with_keyword(const char *line, const char *keyword)
     return (*after == '\0' || isspace((unsigned char)*after));
 }
 
-/* Helper to extract value after keyword */
+/** @brief Extract the value portion following a keyword on a line. */
 static char *extract_value_after_keyword(char *line, const char *keyword)
 {
     size_t kw_len = strlen(keyword);
@@ -66,6 +78,15 @@ static char *extract_value_after_keyword(char *line, const char *keyword)
     return trim_whitespace(line);
 }
 
+/**
+ * @brief Search a CTL file for a keyword and extract its value.
+ *
+ * @param ctl_path   Path to the .CTL file.
+ * @param keyword    Keyword to search for (case-insensitive).
+ * @param value_buf  Buffer to receive the value string.
+ * @param value_sz   Size of value_buf.
+ * @return true if the keyword was found.
+ */
 bool ctl_parse_keyword_from_file(const char *ctl_path, const char *keyword, char *value_buf, size_t value_sz)
 {
     if (!ctl_path || !keyword || !value_buf || value_sz == 0) {
@@ -129,6 +150,14 @@ bool ctl_parse_keyword_from_file(const char *ctl_path, const char *keyword, char
     return found;
 }
 
+/**
+ * @brief Search a CTL file for a boolean keyword (presence = true, "No" prefix = false).
+ *
+ * @param ctl_path  Path to the .CTL file.
+ * @param keyword   Keyword to search for.
+ * @param value     Receives the boolean result.
+ * @return true if the keyword or its negation was found.
+ */
 bool ctl_parse_boolean_from_file(const char *ctl_path, const char *keyword, bool *value)
 {
     if (!ctl_path || !keyword || !value) {

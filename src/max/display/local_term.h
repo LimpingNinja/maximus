@@ -1,21 +1,21 @@
-/**
- * @file local_term.h
- * @brief Pluggable local terminal output backend.
+/*
+ * local_term.h — ANSI+UTF-8 local terminal backend header
  *
- * Defines the vtable interface for local console rendering.
- * The AVATAR state machine in Lputc (max_outl.c) interprets
- * AVATAR/pipe-color byte streams and calls through the active
- * backend to produce actual terminal output.
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Backends:
- *   - ansi_utf8  : Modern terminals (macOS/Linux). ANSI SGR + UTF-8
- *                  with CP437→Unicode mapping.
- *   - null       : No-op backend for headless/daemon mode.
- *   - (future)   : curses, Win32 console, etc.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #ifndef __LOCAL_TERM_H_DEFINED

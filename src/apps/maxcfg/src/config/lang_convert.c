@@ -1,13 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * lang_convert.c — Legacy .MAD to TOML converter
  *
- * lang_convert.c - Legacy .MAD language file to TOML converter
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Parses MAID-format .mad language source files, resolves #include/#define
- * directives, converts AVATAR color/cursor sequences to MCI codes, and
- * writes TOML output compatible with the new maxlang API.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -102,6 +110,7 @@ static void lc_cleanup(LcState *st);
 /* Utility helpers                                                             */
 /* ========================================================================== */
 
+/** @brief Format an error message into the caller's buffer. */
 static void set_err(char *err, size_t len, const char *fmt, ...)
 {
     if (!err || !len) return;
@@ -145,6 +154,7 @@ static bool starts_with_ci(const char *s, const char *prefix, size_t prefix_len)
 /* Preprocessor: #define handling                                               */
 /* ========================================================================== */
 
+/** @brief Register a #define macro in the converter state. */
 static bool lc_add_define(LcState *st, const char *line)
 {
     if (st->num_defines >= LC_MAX_DEFINES) {
@@ -237,6 +247,7 @@ static void lc_expand_macros(LcState *st, const char *input, char *output, size_
 /* Preprocessor: #include handling                                             */
 /* ========================================================================== */
 
+/** @brief Push a new #include file onto the include stack. */
 static bool lc_push_include(LcState *st, const char *filename)
 {
     if (st->include_depth + 1 >= LC_MAX_INCLUDES) {
@@ -267,6 +278,7 @@ static bool lc_push_include(LcState *st, const char *filename)
     return true;
 }
 
+/** @brief Parse a #include directive and push the referenced file. */
 static bool lc_handle_include(LcState *st, const char *line)
 {
     /* Skip "#include" and whitespace */
@@ -1094,6 +1106,7 @@ static bool lc_write_toml(LcState *st, const char *out_path)
 /* Cleanup                                                                     */
 /* ========================================================================== */
 
+/** @brief Free all resources held by the converter state. */
 static void lc_cleanup(LcState *st)
 {
     /* Free defines */

@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_lightbar.h — Lightbar menus header
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -75,12 +73,47 @@ typedef struct {
   int show_brackets; /* 1 => show [X], 0 => show just X highlighted */
 } ui_lightbar_pos_menu_t;
 
+/**
+ * @brief Run a vertical lightbar menu with keyboard navigation.
+ *
+ * @param m Menu configuration (items, position, colors, hotkeys).
+ * @return  Selected index (0-based), or -1 if cancelled (ESC).
+ */
 int ui_lightbar_run(ui_lightbar_menu_t *m);
 
+/**
+ * @brief Run a vertical lightbar menu, returning both index and hotkey.
+ *
+ * @param m       Menu configuration.
+ * @param out_key Receives the hotkey character of the selected item.
+ * @return        Selected index, or -1 if cancelled.
+ */
 int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key);
 
+/**
+ * @brief Run a positioned (free-layout) lightbar menu with hotkey support.
+ *
+ * @param m       Positional menu configuration.
+ * @param out_key Receives the hotkey character of the selected item.
+ * @return        Selected index, or -1 if cancelled.
+ */
 int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key);
 
+/**
+ * @brief Run a horizontal inline select prompt with lightbar navigation.
+ *
+ * @param prompt       Prompt text displayed before the options.
+ * @param options      Array of option strings (may contain [X] hotkey markers).
+ * @param option_count Number of options.
+ * @param prompt_attr  Attribute for the prompt text.
+ * @param normal_attr  Attribute for unselected options.
+ * @param selected_attr Attribute for the selected option.
+ * @param flags        Packed flags (strip brackets, hotkey attr, default index).
+ * @param margin       Extra padding columns around each option.
+ * @param separator    String drawn between options (may be NULL).
+ * @param out_key      Receives the hotkey of the selected option.
+ * @return             Selected index, or -1 if cancelled.
+ */
 int ui_select_prompt(
     const char *prompt,
     const char **options,

@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * mexui.c — MEX UI intrinsics (popup overlays, lightbar, etc.)
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,6 +26,12 @@
 #include "ui_form.h"
 #include "ui_scroll.h"
 
+/**
+ * @brief Duplicate a MEX VM string into a heap-allocated C string.
+ *
+ * @param pia  Pointer to the IADDR of the VM string.
+ * @return Heap-allocated copy of the string, or NULL on failure.
+ */
 static char * near MexDupVMString(const IADDR *pia)
 {
   char *vm_str;
@@ -53,6 +57,11 @@ static char * near MexDupVMString(const IADDR *pia)
   return rc;
 }
 
+/**
+ * @brief Allocate a heap string containing just a NUL terminator.
+ *
+ * @return Heap-allocated empty string, or NULL on allocation failure.
+ */
 static char * near MexDupEmptyString(void)
 {
   char *rc;
@@ -84,6 +93,12 @@ typedef struct mex_text_viewer_obj
 static mex_scroll_region_obj_t *near g_scroll_regions = NULL;
 static mex_text_viewer_obj_t *near g_text_viewers = NULL;
 
+/**
+ * @brief Look up a scrolling region object by key name.
+ *
+ * @param key  Unique key string identifying the region.
+ * @return Pointer to the matching object, or NULL if not found.
+ */
 static mex_scroll_region_obj_t *near mex_find_scroll_region(const char *key)
 {
   mex_scroll_region_obj_t *cur;
@@ -98,6 +113,12 @@ static mex_scroll_region_obj_t *near mex_find_scroll_region(const char *key)
   return NULL;
 }
 
+/**
+ * @brief Look up a text viewer object by key name.
+ *
+ * @param key  Unique key string identifying the viewer.
+ * @return Pointer to the matching object, or NULL if not found.
+ */
 static mex_text_viewer_obj_t *near mex_find_text_viewer(const char *key)
 {
   mex_text_viewer_obj_t *cur;
@@ -112,7 +133,11 @@ static mex_text_viewer_obj_t *near mex_find_text_viewer(const char *key)
   return NULL;
 }
 
-/* ui_goto(row, col) - Position cursor */
+/**
+ * @brief MEX intrinsic: ui_goto(row, col) — Position cursor at row/col.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_goto(void)
 {
   MA ma;
@@ -139,6 +164,14 @@ word EXPENTRY intrin_ui_read_key(void)
   return 0;
 }
 
+/**
+ * @brief MEX intrinsic: ui_lightbar_pos() — Run a positioned lightbar menu.
+ *
+ * Each item has independent x/y/width coordinates. Returns 1-based selection
+ * index or -1 on cancel. The selected hotkey is stored in style->out_hotkey.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_lightbar_pos(void)
 {
   MA ma;
@@ -222,6 +255,14 @@ word EXPENTRY intrin_ui_lightbar_pos(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_select_prompt_hotkey() — Inline select prompt with hotkey output.
+ *
+ * Legacy wrapper that takes individual attribute parameters instead of a style
+ * struct. Returns 1-based selection index or -1 on cancel.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_select_prompt_hotkey(void)
 {
   MA ma;
@@ -312,6 +353,14 @@ word EXPENTRY intrin_ui_select_prompt_hotkey(void)
    return MexArgEnd(&ma);
  }
 
+/**
+ * @brief MEX intrinsic: ui_lightbar_hotkey() — Vertical lightbar with hotkey output.
+ *
+ * Legacy wrapper using individual attribute parameters. Returns 1-based
+ * selection index or -1 on cancel. The pressed hotkey is returned via ref.
+ *
+ * @return MEX status.
+ */
  word EXPENTRY intrin_ui_lightbar_hotkey(void)
  {
    MA ma;
@@ -402,7 +451,11 @@ word EXPENTRY intrin_ui_select_prompt_hotkey(void)
    return MexArgEnd(&ma);
  }
 
-/* ui_set_attr(attr) - Set display attribute */
+/**
+ * @brief MEX intrinsic: ui_set_attr(attr) — Set the current display attribute byte.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_set_attr(void)
 {
   MA ma;
@@ -419,7 +472,13 @@ word EXPENTRY intrin_ui_set_attr(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_make_attr(fg, bg) - Return attribute byte composed from foreground/background */
+/**
+ * @brief MEX intrinsic: ui_make_attr(fg, bg) — Compose a DOS attribute byte.
+ *
+ * Combines a 4-bit foreground and 4-bit background into a single attribute.
+ *
+ * @return MEX status; result in regs_2[0].
+ */
 word EXPENTRY intrin_ui_make_attr(void)
 {
   MA ma;
@@ -454,7 +513,11 @@ word EXPENTRY intrin_mci2attr(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_fill_rect(row, col, width, height, ch, attr) - Fill rectangle */
+/**
+ * @brief MEX intrinsic: ui_fill_rect(row, col, width, height, ch, attr) — Fill a screen rectangle.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_fill_rect(void)
 {
   MA ma;
@@ -478,7 +541,11 @@ word EXPENTRY intrin_ui_fill_rect(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_write_padded(row, col, width, s, attr) - Write padded string */
+/**
+ * @brief MEX intrinsic: ui_write_padded(row, col, width, s, attr) — Write a string padded to width.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_write_padded(void)
 {
   MA ma;
@@ -505,7 +572,14 @@ word EXPENTRY intrin_ui_write_padded(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_prompt_field(prompt, width, max_len, buf, ref style) - Prompt with field using style struct */
+/**
+ * @brief MEX intrinsic: ui_prompt_field() — Inline prompt followed by an editable field.
+ *
+ * Displays a prompt string then an editable input field. Returns the edited
+ * string and a result code (UI_EDIT_OK, UI_EDIT_CANCEL, etc.) in regs_2[0].
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_prompt_field(void)
 {
   MA ma;
@@ -580,7 +654,14 @@ word EXPENTRY intrin_ui_prompt_field(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_edit_field(row, col, width, max_len, buf, ref style) - Edit field using style struct */
+/**
+ * @brief MEX intrinsic: ui_edit_field() — In-place editable field at row/col.
+ *
+ * Renders an editable field at the given screen position. Returns the edited
+ * string and a result code in regs_2[0].
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_edit_field(void)
 {
   MA ma;
@@ -644,7 +725,11 @@ word EXPENTRY intrin_ui_edit_field(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_edit_field_style_default(ref style) - Initialize edit field style with defaults */
+/**
+ * @brief MEX intrinsic: ui_edit_field_style_default(ref style) — Fill style with theme defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_edit_field_style_default(void)
 {
   MA ma;
@@ -665,7 +750,11 @@ word EXPENTRY intrin_ui_edit_field_style_default(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_prompt_field_style_default(ref style) - Initialize prompt field style with defaults */
+/**
+ * @brief MEX intrinsic: ui_prompt_field_style_default(ref style) — Fill style with theme defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_prompt_field_style_default(void)
 {
   MA ma;
@@ -687,7 +776,14 @@ word EXPENTRY intrin_ui_prompt_field_style_default(void)
   return MexArgEnd(&ma);
 }
 
- /* ui_lightbar(ref array of string: items, int: count, int: x, int: y, int: width, ref struct ui_lightbar_style: style) - Vertical lightbar menu */
+/**
+ * @brief MEX intrinsic: ui_lightbar() — Vertical lightbar menu with style struct.
+ *
+ * Presents a vertical list of items as a lightbar menu. Returns 1-based index
+ * of the selected item or -1 on cancel. Hotkey stored in style->out_hotkey.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_lightbar(void)
 {
   MA ma;
@@ -767,7 +863,14 @@ word EXPENTRY intrin_ui_lightbar(void)
   return MexArgEnd(&ma);
 }
 
- /* ui_select_prompt(string: prompt, ref array of string: options, int: count, ref struct ui_select_prompt_style: style) - Inline select prompt */
+/**
+ * @brief MEX intrinsic: ui_select_prompt() — Inline horizontal select prompt with style struct.
+ *
+ * Displays a prompt followed by bracketed options the user can arrow through.
+ * Returns 1-based index of the selected option or -1 on cancel.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_select_prompt(void)
 {
   MA ma;
@@ -866,7 +969,11 @@ word EXPENTRY intrin_ui_select_prompt(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_lightbar_style_default(ref struct ui_lightbar_style: s) - Initialize with defaults */
+/**
+ * @brief MEX intrinsic: ui_lightbar_style_default(ref style) — Fill lightbar style with theme defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_lightbar_style_default(void)
 {
   MA ma;
@@ -892,7 +999,11 @@ word EXPENTRY intrin_ui_lightbar_style_default(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_select_prompt_style_default(ref struct ui_select_prompt_style: s) - Initialize with defaults */
+/**
+ * @brief MEX intrinsic: ui_select_prompt_style_default(ref style) — Fill select prompt style with theme defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_select_prompt_style_default(void)
 {
   MA ma;
@@ -917,7 +1028,11 @@ word EXPENTRY intrin_ui_select_prompt_style_default(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_form_style_default */
+/**
+ * @brief MEX intrinsic: ui_form_style_default(ref style) — Fill form style with theme defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_form_style_default(void)
 {
   MA ma;
@@ -943,7 +1058,15 @@ word EXPENTRY intrin_ui_form_style_default(void)
   return MexArgEnd(&ma);
 }
 
-/* ui_form_run */
+/**
+ * @brief MEX intrinsic: ui_form_run() — Run a multi-field form editor.
+ *
+ * Accepts an array of form field descriptors and a style struct, runs the
+ * interactive form, and copies edited values back to the MEX field structs
+ * on save (rc == 1).
+ *
+ * @return MEX status; result code in regs_2[0] (1 = saved, -1 = cancel/error).
+ */
 word EXPENTRY intrin_ui_form_run(void)
 {
   MA ma;
@@ -1057,6 +1180,11 @@ word EXPENTRY intrin_ui_form_run(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_style_default(ref style) — Fill scroll region style with defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_scroll_region_style_default(void)
 {
   MA ma;
@@ -1078,6 +1206,14 @@ word EXPENTRY intrin_ui_scroll_region_style_default(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_create() — Create a named scrolling region.
+ *
+ * Allocates and initializes a scrolling region identified by a unique key.
+ * Returns 0 on success, -1 on error, -2 if key already exists, -3 on alloc failure.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_scroll_region_create(void)
 {
   MA ma;
@@ -1138,6 +1274,11 @@ word EXPENTRY intrin_ui_scroll_region_create(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_destroy(key) — Destroy a named scrolling region.
+ *
+ * @return MEX status; 0 on success, -1 if not found.
+ */
 word EXPENTRY intrin_ui_scroll_region_destroy(void)
 {
   MA ma;
@@ -1177,6 +1318,11 @@ word EXPENTRY intrin_ui_scroll_region_destroy(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_append(key, text, flags) — Append text to a scrolling region.
+ *
+ * @return MEX status; 0 on success, -1 if region not found.
+ */
 word EXPENTRY intrin_ui_scroll_region_append(void)
 {
   MA ma;
@@ -1207,6 +1353,11 @@ word EXPENTRY intrin_ui_scroll_region_append(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_render(key) — Redraw a scrolling region to screen.
+ *
+ * @return MEX status; 0 on success, -1 if region not found.
+ */
 word EXPENTRY intrin_ui_scroll_region_render(void)
 {
   MA ma;
@@ -1233,6 +1384,11 @@ word EXPENTRY intrin_ui_scroll_region_render(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_scroll_region_handle_key(key, keycode) — Pass a keypress to a scrolling region.
+ *
+ * @return MEX status; result in regs_2[0] (1 if handled, 0 if not).
+ */
 word EXPENTRY intrin_ui_scroll_region_handle_key(void)
 {
   MA ma;
@@ -1256,6 +1412,11 @@ word EXPENTRY intrin_ui_scroll_region_handle_key(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_style_default(ref style) — Fill text viewer style with defaults.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_text_viewer_style_default(void)
 {
   MA ma;
@@ -1278,6 +1439,14 @@ word EXPENTRY intrin_ui_text_viewer_style_default(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_create() — Create a named text viewer widget.
+ *
+ * Allocates and initializes a text viewer identified by a unique key.
+ * Returns 0 on success, -1 on error, -2 if key exists, -3 on alloc failure.
+ *
+ * @return MEX status.
+ */
 word EXPENTRY intrin_ui_text_viewer_create(void)
 {
   MA ma;
@@ -1337,6 +1506,11 @@ word EXPENTRY intrin_ui_text_viewer_create(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_destroy(key) — Destroy a named text viewer.
+ *
+ * @return MEX status; 0 on success, -1 if not found.
+ */
 word EXPENTRY intrin_ui_text_viewer_destroy(void)
 {
   MA ma;
@@ -1376,6 +1550,11 @@ word EXPENTRY intrin_ui_text_viewer_destroy(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_set_text(key, text) — Load text content into a viewer.
+ *
+ * @return MEX status; 0 on success, -1 if viewer not found.
+ */
 word EXPENTRY intrin_ui_text_viewer_set_text(void)
 {
   MA ma;
@@ -1404,6 +1583,11 @@ word EXPENTRY intrin_ui_text_viewer_set_text(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_render(key) — Redraw a text viewer to screen.
+ *
+ * @return MEX status; 0 on success, -1 if viewer not found.
+ */
 word EXPENTRY intrin_ui_text_viewer_render(void)
 {
   MA ma;
@@ -1430,6 +1614,11 @@ word EXPENTRY intrin_ui_text_viewer_render(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_handle_key(key, keycode) — Pass a keypress to a text viewer.
+ *
+ * @return MEX status; result in regs_2[0] (1 if handled, 0 if not).
+ */
 word EXPENTRY intrin_ui_text_viewer_handle_key(void)
 {
   MA ma;
@@ -1453,6 +1642,14 @@ word EXPENTRY intrin_ui_text_viewer_handle_key(void)
   return MexArgEnd(&ma);
 }
 
+/**
+ * @brief MEX intrinsic: ui_text_viewer_read_key(key) — Read and process a key within a text viewer.
+ *
+ * Blocks until a key is pressed, processes scroll/navigation internally,
+ * and returns the key code for unhandled keys.
+ *
+ * @return MEX status; key code in regs_2[0].
+ */
 word EXPENTRY intrin_ui_text_viewer_read_key(void)
 {
   MA ma;

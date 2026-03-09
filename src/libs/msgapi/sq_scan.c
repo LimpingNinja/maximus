@@ -1,7 +1,7 @@
 /*
- * Maximus Version 3.02+
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
- * Copyright 2024-2026 MaximusNG contributors.
+ * sq_scan.c — Bulk message header scanning for Squish API
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,25 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file sq_scan.c
- * @brief Bulk message header scanning for the MsgAPI.
- *
- * Provides MsgScanHeaders() — a high-performance bulk scan that reads all
- * message headers from an area in a single pass, avoiding the per-message
- * overhead of MsgOpenMsg/MsgReadMsg/MsgCloseMsg.
- *
- * For Squish areas:
- *   1. Bulk-read the entire .SQI index into memory (_SquishBeginBuffer)
- *   2. Collect frame offsets from the buffered index
- *   3. Sort by .SQD file offset for sequential I/O
- *   4. Single forward pass reading XMSG headers from .SQD
- *
- * For SDM (*.msg) areas:
- *   Falls back to standard MsgOpenMsg/MsgReadMsg/MsgCloseMsg per message,
- *   since SDM areas are rarely large enough to benefit from optimization.
  */
 
 #define MSGAPI_HANDLERS

@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_form.c — Form runner
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,6 +35,11 @@
 #include "ui_form.h"
 #include "ui_field.h"
 
+/**
+ * @brief Hide the terminal cursor if the user has ANSI/AVATAR video.
+ *
+ * @param did_hide Receives 1 if cursor was hidden, 0 otherwise.
+ */
 static void near ui_form_hide_cursor(int *did_hide)
 {
   if (did_hide)
@@ -50,6 +53,11 @@ static void near ui_form_hide_cursor(int *did_hide)
   }
 }
 
+/**
+ * @brief Restore the terminal cursor if it was previously hidden.
+ *
+ * @param did_hide Value from ui_form_hide_cursor().
+ */
 static void near ui_form_show_cursor(int did_hide)
 {
   if (!did_hide)
@@ -59,7 +67,11 @@ static void near ui_form_show_cursor(int did_hide)
     Printf("\x1b[?25h");
 }
 
-/* Initialize form style with defaults */
+/**
+ * @brief Initialize a ui_form_style_t with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_form_style_default(ui_form_style_t *style)
 {
   if (!style)
@@ -76,13 +88,23 @@ void ui_form_style_default(ui_form_style_t *style)
   style->required_attr = 0x0c;   /* light red */
 }
 
-/* Calculate field center X coordinate */
+/**
+ * @brief Calculate the horizontal center of a form field.
+ *
+ * @param f Form field.
+ * @return  Center X coordinate as a float.
+ */
 static float near ui_form_field_center_x(const ui_form_field_t *f)
 {
   return (float)f->x + ((float)f->width - 1.0f) / 2.0f;
 }
 
-/* Calculate label X position */
+/**
+ * @brief Calculate the X position where a field's label should start.
+ *
+ * @param f Form field.
+ * @return  Column for the label (accounts for "Label: " prefix).
+ */
 static int near ui_form_field_label_x(const ui_form_field_t *f)
 {
   int label_len;
@@ -94,7 +116,13 @@ static int near ui_form_field_label_x(const ui_form_field_t *f)
   return f->x - (label_len + 2);  /* "Label: " */
 }
 
-/* Draw a single field */
+/**
+ * @brief Draw a single form field (label + value) with focus styling.
+ *
+ * @param f       Form field definition.
+ * @param focused Non-zero if this field has focus.
+ * @param style   Form style for default colors.
+ */
 static void near ui_form_draw_field(const ui_form_field_t *f, int focused, const ui_form_style_t *style)
 {
   byte label_attr;
@@ -154,7 +182,14 @@ static void near ui_form_draw_field(const ui_form_field_t *f, int focused, const
   vbuf_flush();
 }
 
-/* Redraw all fields */
+/**
+ * @brief Redraw all form fields, highlighting the selected one.
+ *
+ * @param fields      Array of form fields.
+ * @param field_count Number of fields.
+ * @param selected    Index of the currently selected field.
+ * @param style       Form style.
+ */
 static void near ui_form_redraw(ui_form_field_t *fields, int field_count, int selected, const ui_form_style_t *style)
 {
   int i;
@@ -163,7 +198,16 @@ static void near ui_form_redraw(ui_form_field_t *fields, int field_count, int se
     ui_form_draw_field(&fields[i], i == selected, style);
 }
 
-/* Find nearest neighbor in a given direction */
+/**
+ * @brief Find the nearest field neighbor in a given direction.
+ *
+ * @param fields      Array of form fields.
+ * @param field_count Number of fields.
+ * @param current     Index of the current field.
+ * @param direction   "up", "down", "left", or "right".
+ * @param wrap        Non-zero to wrap around edges.
+ * @return            Index of the best neighbor, or -1 if none.
+ */
 static int near ui_form_find_neighbor(ui_form_field_t *fields, int field_count, int current, const char *direction, int wrap)
 {
   float cur_cx, cx;
@@ -303,7 +347,14 @@ static int near ui_form_find_neighbor(ui_form_field_t *fields, int field_count, 
   return best_idx;
 }
 
-/* Find next/previous field sequentially */
+/**
+ * @brief Find the next or previous field in sequential (tab) order.
+ *
+ * @param current     Current field index.
+ * @param field_count Total number of fields.
+ * @param forward     Non-zero for next, zero for previous.
+ * @return            New field index (wraps around).
+ */
 static int near ui_form_find_sequential(int current, int field_count, int forward)
 {
   if (forward)
@@ -312,7 +363,12 @@ static int near ui_form_find_sequential(int current, int field_count, int forwar
     return (current - 1 + field_count) % field_count;
 }
 
-/* Check if required field is valid */
+/**
+ * @brief Check whether a required field has a valid (non-empty) value.
+ *
+ * @param f Form field to validate.
+ * @return  Non-zero if valid or not required.
+ */
 static int near ui_form_field_required_ok(const ui_form_field_t *f)
 {
   int needed;
@@ -355,7 +411,13 @@ static int near ui_form_field_required_ok(const ui_form_field_t *f)
   return 1;
 }
 
-/* Find first invalid required field */
+/**
+ * @brief Find the first required field that fails validation.
+ *
+ * @param fields      Array of form fields.
+ * @param field_count Number of fields.
+ * @return            Index of first invalid field, or -1 if all valid.
+ */
 static int near ui_form_first_invalid_required(ui_form_field_t *fields, int field_count)
 {
   int i;
@@ -369,7 +431,11 @@ static int near ui_form_first_invalid_required(ui_form_field_t *fields, int fiel
   return -1;
 }
 
-/* Show required field splash message */
+/**
+ * @brief Display the "required field" splash message at the configured position.
+ *
+ * @param style Form style containing splash message and coordinates.
+ */
 static void near ui_form_show_required_splash(const ui_form_style_t *style)
 {
   if (!style || !style->required_msg || !*style->required_msg)
@@ -381,7 +447,11 @@ static void near ui_form_show_required_splash(const ui_form_style_t *style)
   vbuf_flush();
 }
 
-/* Clear required field splash message */
+/**
+ * @brief Clear the "required field" splash message from the screen.
+ *
+ * @param style Form style containing splash message and coordinates.
+ */
 static void near ui_form_clear_required_splash(const ui_form_style_t *style)
 {
   int len;
@@ -398,7 +468,13 @@ static void near ui_form_clear_required_splash(const ui_form_style_t *style)
   vbuf_flush();
 }
 
-/* Edit a single field */
+/**
+ * @brief Enter edit mode for a single form field.
+ *
+ * @param f     Form field to edit.
+ * @param style Form style for colors and behavior.
+ * @return      ui_edit_field result code.
+ */
 static int near ui_form_edit_field(ui_form_field_t *f, const ui_form_style_t *style)
 {
   ui_edit_field_style_t edit_style;
@@ -428,7 +504,14 @@ static int near ui_form_edit_field(ui_form_field_t *f, const ui_form_style_t *st
   return rc;
 }
 
-/* Main form runner */
+/**
+ * @brief Run an interactive form with keyboard navigation and field editing.
+ *
+ * @param fields      Array of form field definitions.
+ * @param field_count Number of fields.
+ * @param style       Form style configuration.
+ * @return            1 = saved, 0 = cancelled, -1 = error.
+ */
 int ui_form_run(ui_form_field_t *fields, int field_count, const ui_form_style_t *style)
 {
   int selected = 0;

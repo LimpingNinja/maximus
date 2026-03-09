@@ -1,19 +1,21 @@
 /*
- * maxtel - Multi-node Telnet Supervisor for Maximus BBS
+ * maxtel.c — Telnet gateway/frontend application
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
  *
- * Features:
- *   - Spawns and manages multiple Maximus BBS nodes
- *   - Built-in TCP listener for telnet connections
- *   - ncurses status display showing all node activity
- *   - Kick, snoop, and message functionality
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -182,6 +184,12 @@ static char         popup_title[128];
 static char         popup_msg[512];
 static time_t       popup_dismiss_at = 0;
 
+/**
+ * @brief Display a timed popup overlay on the ncurses status display.
+ *
+ * @param title  Popup title string (or NULL)
+ * @param msg    Popup body message (or NULL)
+ */
 static void show_popup(const char *title, const char *msg)
 {
     if (headless_mode || config_mode)
@@ -260,7 +268,9 @@ static void detect_layout(void);
 static void handle_resize(void);
 static void request_terminal_size(int cols, int rows);
 
-/* Signal setup */
+/**
+ * @brief Install signal handlers for graceful shutdown, SIGCHLD, and SIGWINCH.
+ */
 static void setup_signals(void)
 {
     struct sigaction sa;
@@ -422,7 +432,12 @@ static void request_terminal_size(int cols, int rows)
     DEBUG("Requested terminal resize to %dx%d", cols, rows);
 }
 
-/* TCP Listener */
+/**
+ * @brief Create and bind a TCP listening socket for incoming telnet connections.
+ *
+ * @param port  TCP port number to listen on
+ * @return Listening socket fd on success, -1 on failure
+ */
 static int setup_listener(int port)
 {
     int fd;
@@ -464,7 +479,12 @@ static int setup_listener(int port)
     return fd;
 }
 
-/* Spawn a max node process */
+/**
+ * @brief Fork and exec a Maximus BBS node process.
+ *
+ * @param node_num  Zero-based node index
+ * @return 0 on success, -1 on failure
+ */
 static int spawn_node(int node_num)
 {
     pid_t pid;
@@ -585,7 +605,11 @@ static int spawn_node(int node_num)
     return 0;
 }
 
-/* Kill a node */
+/**
+ * @brief Forcefully terminate a running node and its bridge process.
+ *
+ * @param node_num  Zero-based node index
+ */
 static void kill_node(int node_num)
 {
     if (node_num < 0 || node_num >= num_nodes)
@@ -621,7 +645,11 @@ static void kill_node(int node_num)
     need_refresh = 1;
 }
 
-/* Restart a node */
+/**
+ * @brief Restart a node (kill if running, then re-spawn).
+ *
+ * @param node_num  Zero-based node index
+ */
 static void restart_node(int node_num)
 {
     if (node_num < 0 || node_num >= num_nodes)
@@ -686,7 +714,14 @@ static void snoop_draw_header(int node_num, node_info_t *node, time_t start)
     fflush(stdout);
 }
 
-/* Enter snoop mode - view and interact with a node's session */
+/**
+ * @brief Enter snoop mode — view and interact with a node's PTY session.
+ *
+ * Temporarily exits ncurses and puts the terminal into raw mode to
+ * relay I/O between the sysop console and the node's PTY master.
+ *
+ * @param node_num  Zero-based node index
+ */
 static void enter_snoop_mode(int node_num)
 {
     if (node_num < 0 || node_num >= num_nodes)
@@ -816,7 +851,11 @@ static void enter_snoop_mode(int node_num)
     DEBUG("Exited snoop mode for node %d", node_num + 1);
 }
 
-/* Find a free node for incoming connection */
+/**
+ * @brief Find a node in WFC state with a valid IPC socket.
+ *
+ * @return Zero-based node index, or -1 if all nodes are busy
+ */
 static int find_free_node(void)
 {
     for (int i = 0; i < num_nodes; i++) {
@@ -1138,7 +1177,15 @@ static void detect_ansi_dimensions(int fd, int *out_cols, int *out_rows)
     if (out_rows) *out_rows = 24;
 }
 
-/* Telnet detection and negotiation (from maxcomm) */
+/**
+ * @brief Detect telnet/ANSI capabilities and negotiate terminal parameters.
+ *
+ * @param fd           Client socket file descriptor
+ * @param telnet_mode  Output: 1 if telnet IAC was detected
+ * @param ansi_mode   Output: 1 if ANSI escape response was detected
+ * @param term_cols   Output: detected terminal width (default 80)
+ * @param term_rows   Output: detected terminal height (default 24)
+ */
 static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode, int *term_cols, int *term_rows)
 {
     unsigned char probe[8];
@@ -1293,7 +1340,12 @@ static void detect_and_negotiate(int fd, int *telnet_mode, int *ansi_mode, int *
     if (term_rows) *term_rows = rows;
 }
 
-/* Handle incoming telnet connection */
+/**
+ * @brief Handle an incoming telnet connection by assigning it to a free node.
+ *
+ * @param client_fd  Accepted client socket fd
+ * @param addr       Client address information
+ */
 static void handle_connection(int client_fd, struct sockaddr_in *addr)
 {
     int node_idx;
@@ -1357,7 +1409,15 @@ static void write_term_caps(int node_num, int telnet_mode, int ansi_mode, int wi
     }
 }
 
-/* Bridge client to max node (runs in child process) */
+/**
+ * @brief Bridge data between a telnet client and a Maximus node IPC socket.
+ *
+ * Runs in a forked child process. Performs terminal detection, writes
+ * capability info for the node, then relays data bidirectionally.
+ *
+ * @param client_fd  Client socket fd
+ * @param node_num   Zero-based node index
+ */
 static void bridge_connection(int client_fd, int node_num)
 {
     int sock_fd;
@@ -2715,6 +2775,16 @@ static void usage(const char *prog)
     exit(1);
 }
 
+/**
+ * @brief Entry point for the MaxTEL telnet supervisor.
+ *
+ * Parses arguments, spawns BBS nodes, listens for telnet connections,
+ * and manages an ncurses status display.
+ *
+ * @param argc  Argument count
+ * @param argv  Argument vector
+ * @return 0 on clean exit, 1 on fatal error
+ */
 int main(int argc, char *argv[])
 {
     int opt;

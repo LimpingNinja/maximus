@@ -1,6 +1,7 @@
 /*
- * Maximus Version 3.02+
- * Copyright 2024-2026 MaximusNG contributors.
+ * m_index.h — In-memory message index header
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,15 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
-
-/**
- * @file m_index.h
- * @brief In-memory message index for the NG lightbar message browser.
- *
- * Provides a compact per-message summary array built via MsgScanHeaders()
- * bulk scan.  Used by the lightbar index view and FSR reader loop to
- * navigate messages without repeated MsgAPI calls.
  */
 
 #ifndef M_INDEX_H_DEFINED

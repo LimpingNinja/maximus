@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * treenode_edit.c — Tree node property editor
  *
- * treenode_edit.c - Shared form helpers for TreeNode editing
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdlib.h>
@@ -16,7 +28,13 @@
 extern TreeNode *g_tree_focus_root;
 extern bool g_tree_unfocus_requested;
 
-/* Helper to check if node is descendant of ancestor */
+/**
+ * @brief Check if a node is a descendant of (or is) the given ancestor.
+ *
+ * @param ancestor Potential ancestor node.
+ * @param node     Node to test.
+ * @return true if node is ancestor or a descendant of it.
+ */
 static bool is_descendant_or_self(const TreeNode *ancestor, const TreeNode *node)
 {
     if (!ancestor || !node) return false;
@@ -28,6 +46,11 @@ static bool is_descendant_or_self(const TreeNode *ancestor, const TreeNode *node
     return false;
 }
 
+/**
+ * @brief Recursively rebuild dotted full_name paths after reparenting.
+ *
+ * @param node Root of the subtree to rebuild.
+ */
 static void rebuild_full_name_recursive(TreeNode *node)
 {
     if (node == NULL) {
@@ -53,7 +76,12 @@ static void rebuild_full_name_recursive(TreeNode *node)
     }
 }
 
-/* Load division form values from TreeNode */
+/**
+ * @brief Load division properties from a TreeNode into form value strings.
+ *
+ * @param node   Division tree node to read from.
+ * @param values Output array of heap-allocated strings.
+ */
 void treenode_load_division_form(TreeNode *node, char **values)
 {
     if (!node || !values) return;
@@ -68,7 +96,12 @@ void treenode_load_division_form(TreeNode *node, char **values)
     values[4] = strdup((dd && dd->acs) ? dd->acs : "Demoted");
 }
 
-/* Load message area form values from TreeNode */
+/**
+ * @brief Load message area properties from a TreeNode into form value strings.
+ *
+ * @param node   Message area tree node to read from.
+ * @param values Output array of heap-allocated strings.
+ */
 void treenode_load_msgarea_form(TreeNode *node, char **values)
 {
     if (!node || !values) return;
@@ -103,7 +136,12 @@ void treenode_load_msgarea_form(TreeNode *node, char **values)
     for (int i = 27; i <= 35; i++) values[i] = strdup("");
 }
 
-/* Load file area form values from TreeNode */
+/**
+ * @brief Load file area properties from a TreeNode into form value strings.
+ *
+ * @param node   File area tree node to read from.
+ * @param values Output array of heap-allocated strings.
+ */
 void treenode_load_filearea_form(TreeNode *node, char **values)
 {
     if (!node || !values) return;
@@ -133,8 +171,19 @@ void treenode_load_filearea_form(TreeNode *node, char **values)
     values[22] = strdup("");
 }
 
-/* Save division form values back to TreeNode */
-bool treenode_save_division_form(TreeNode ***roots, int *root_count, TreeNode *node, 
+/**
+ * @brief Save edited division form values back to the TreeNode.
+ *
+ * Handles name/description updates, division data, and reparenting.
+ *
+ * @param roots      Pointer to the root nodes array (may be reallocated).
+ * @param root_count Pointer to the root count.
+ * @param node       Division node to update.
+ * @param values     Array of form value strings.
+ * @param context    Tree context type (message or file).
+ * @return true if any field was modified.
+ */
+bool treenode_save_division_form(TreeNode ***roots, int *root_count, TreeNode *node,
                                  char **values, TreeContextType context)
 {
     if (!node || !values || !roots || !root_count) return false;
@@ -216,7 +265,15 @@ bool treenode_save_division_form(TreeNode ***roots, int *root_count, TreeNode *n
     return modified;
 }
 
-/* Save message area form values back to TreeNode */
+/**
+ * @brief Save edited message area form values back to the TreeNode.
+ *
+ * @param roots      Pointer to the root nodes array.
+ * @param root_count Pointer to the root count.
+ * @param node       Message area node to update.
+ * @param values     Array of form value strings.
+ * @return true if any field was modified.
+ */
 bool treenode_save_msgarea_form(TreeNode ***roots, int *root_count, TreeNode *node, char **values)
 {
     if (!node || !values || !roots || !root_count) return false;
@@ -310,7 +367,15 @@ bool treenode_save_msgarea_form(TreeNode ***roots, int *root_count, TreeNode *no
     return modified;
 }
 
-/* Save file area form values back to TreeNode */
+/**
+ * @brief Save edited file area form values back to the TreeNode.
+ *
+ * @param roots      Pointer to the root nodes array.
+ * @param root_count Pointer to the root count.
+ * @param node       File area node to update.
+ * @param values     Array of form value strings.
+ * @return true if any field was modified.
+ */
 bool treenode_save_filearea_form(TreeNode ***roots, int *root_count, TreeNode *node, char **values)
 {
     if (!node || !values || !roots || !root_count) return false;

@@ -1,3 +1,23 @@
+/*
+ * xspawn.c — External program spawning
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #define MAX_LANG_global
 #define MAX_LANG_m_area
 #include <stdio.h>
@@ -29,11 +49,21 @@ extern void Puts(char *s);
 
 #define unixfd(hc)      FileHandle_fromCommHandle(ComGetHandle(hc))
 
+/**
+ * @brief No-op signal handler used to temporarily override SIGCHLD.
+ *
+ * @param sig  Signal number (unused)
+ */
 static void noop(int sig)
 {
   ;
 }
 
+/**
+ * @brief Set a file descriptor to non-blocking mode.
+ *
+ * @param fd  File descriptor to modify
+ */
 static void set_nonblock(int fd)
 {
   int flags;
@@ -50,6 +80,19 @@ static void set_nonblock(int fd)
 
 extern HCOMM hcModem;
 
+/**
+ * @brief Spawn an external program with PTY/socket I/O bridging.
+ *
+ * Forks a child process and optionally bridges I/O between the caller's
+ * session socket and a pseudo-terminal allocated for the child. Supports
+ * Door32 mode where the child uses the session fd directly.
+ *
+ * @param mode       Spawn mode (P_WAIT, P_NOWAIT, P_NOWAITO, P_OVERLAY)
+ * @param Cfile      Path to the executable (used for logging)
+ * @param argv       NULL-terminated argument vector
+ * @param is_door32  Non-zero if the door uses Door32 socket protocol
+ * @return Exit status of child on P_WAIT success, 0 on P_NOWAIT, -1 on error
+ */
 int xxspawnvp(int mode, const char *Cfile, char *const argv[], int is_door32)
 {
   pid_t		pid;

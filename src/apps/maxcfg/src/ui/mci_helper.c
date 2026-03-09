@@ -1,13 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * mci_helper.c — MCI code helper/insertion dialog
  *
- * mci_helper.c - MCI code reference helper dialog for the language editor
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Presents a tabbed popup with all MCI code categories.  Color codes
- * render an inline color sample using ncurses color pairs.  Based on
- * the picker_with_help pattern used by the command picker.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <string.h>
@@ -201,6 +209,12 @@ static int mci_build_categories(MciCategory cats[MCI_MAX_CATS], int num_refs)
     return num_cats;
 }
 
+/**
+ * @brief Free category index arrays allocated by mci_build_categories().
+ *
+ * @param cats     Array of MciCategory structs.
+ * @param num_cats Number of categories to free.
+ */
 static void mci_free_categories(MciCategory *cats, int num_cats)
 {
     for (int i = 0; i < num_cats; i++)
@@ -244,6 +258,14 @@ static void render_color_sample(int screen_y, int screen_x, int color_idx)
 /* Main MCI helper dialog                                                   */
 /* ======================================================================== */
 
+/**
+ * @brief Display the MCI helper dialog and return the selected code string.
+ *
+ * Shows a tabbed popup with all MCI code categories. The user can
+ * navigate between tabs with left/right and select a code with Enter.
+ *
+ * @return The selected MCI code string, or NULL if the user cancelled.
+ */
 const char *mci_helper_show(void)
 {
     /* Count total entries */

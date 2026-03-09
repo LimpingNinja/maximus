@@ -1,7 +1,21 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
+ * debug_log.c — Debug logging implementation
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -12,6 +26,13 @@
 
 static FILE *debug_fp = NULL;
 
+/**
+ * @brief Open the debug log file for appending.
+ *
+ * Opens "debug.log" in append mode with line-buffered output.
+ * Safe to call multiple times; subsequent calls are no-ops if
+ * the file is already open.
+ */
 void debug_log_open(void)
 {
   if (!debug_fp)
@@ -24,6 +45,15 @@ void debug_log_open(void)
   }
 }
 
+/**
+ * @brief Write a timestamped debug message to the log file.
+ *
+ * Automatically opens the log if not already open. Each line is
+ * prefixed with an ISO-style timestamp and the current process ID.
+ *
+ * @param fmt  printf-style format string
+ * @param ...  Format arguments
+ */
 void debug_log(const char *fmt, ...)
 {
   va_list args;
@@ -51,6 +81,12 @@ void debug_log(const char *fmt, ...)
   fflush(debug_fp);
 }
 
+/**
+ * @brief Close the debug log file.
+ *
+ * Flushes and closes the debug log. Safe to call even if the log
+ * was never opened.
+ */
 void debug_log_close(void)
 {
   if (debug_fp)

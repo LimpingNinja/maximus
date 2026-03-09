@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_scroll.h — Scrolling region UI header
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -103,15 +101,64 @@ int ui_scrolling_region_overlay_push(const ui_scrolling_region_t *r, ui_shadow_o
  */
 void ui_scrolling_region_overlay_pop(ui_scrolling_region_t *r, ui_shadow_overlay_t *ov);
 
+/**
+ * @brief Initialize a scrolling region style with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_scrolling_region_style_default(ui_scrolling_region_style_t *style);
+
+/**
+ * @brief Initialize a scrolling region widget.
+ *
+ * @param r         Region to initialize.
+ * @param x         Screen column (1-based).
+ * @param y         Screen row (1-based).
+ * @param width     Width in columns.
+ * @param height    Height in rows.
+ * @param max_lines Maximum number of buffered lines before trimming.
+ * @param style     Style configuration (NULL for defaults).
+ */
 void ui_scrolling_region_init(ui_scrolling_region_t *r, int x, int y, int width, int height, int max_lines, const ui_scrolling_region_style_t *style);
+
+/**
+ * @brief Free resources owned by a scrolling region.
+ *
+ * @param r Region to free.
+ */
 void ui_scrolling_region_free(ui_scrolling_region_t *r);
 
+/**
+ * @brief Append text (may contain newlines) to the scrolling region buffer.
+ *
+ * @param r            Region to append to.
+ * @param text         Text to append (newlines cause line breaks and wrapping).
+ * @param append_flags UI_SCROLL_APPEND_* flags.
+ * @return             Non-zero on success.
+ */
 int ui_scrolling_region_append(ui_scrolling_region_t *r, const char *text, int append_flags);
+
+/**
+ * @brief Clear all buffered lines from the scrolling region.
+ *
+ * @param r Region to clear.
+ */
 void ui_scrolling_region_clear(ui_scrolling_region_t *r);
+
+/**
+ * @brief Render the current viewport of the scrolling region to the terminal.
+ *
+ * @param r Region to render.
+ */
 void ui_scrolling_region_render(ui_scrolling_region_t *r);
 
-/* Returns 1 if key was consumed (scroll changed), 0 otherwise */
+/**
+ * @brief Handle a navigation key for the scrolling region.
+ *
+ * @param r   Region to scroll.
+ * @param key Key code (K_UP, K_DOWN, K_PGUP, K_PGDN, K_HOME, K_END).
+ * @return    1 if the key was consumed (view changed), 0 otherwise.
+ */
 int ui_scrolling_region_handle_key(ui_scrolling_region_t *r, int key);
 
 /*
@@ -162,21 +209,65 @@ int ui_text_viewer_overlay_push(const ui_text_viewer_t *v, ui_shadow_overlay_t *
  */
 void ui_text_viewer_overlay_pop(ui_text_viewer_t *v, ui_shadow_overlay_t *ov);
 
+/**
+ * @brief Initialize a text viewer style with sensible defaults.
+ *
+ * @param style Style struct to initialize.
+ */
 void ui_text_viewer_style_default(ui_text_viewer_style_t *style);
+
+/**
+ * @brief Initialize a text viewer widget.
+ *
+ * @param v      Viewer to initialize.
+ * @param x      Screen column (1-based).
+ * @param y      Screen row (1-based).
+ * @param width  Width in columns.
+ * @param height Height in rows.
+ * @param style  Style configuration (NULL for defaults).
+ */
 void ui_text_viewer_init(ui_text_viewer_t *v, int x, int y, int width, int height, const ui_text_viewer_style_t *style);
+
+/**
+ * @brief Free resources owned by a text viewer.
+ *
+ * @param v Viewer to free.
+ */
 void ui_text_viewer_free(ui_text_viewer_t *v);
 
+/**
+ * @brief Set the text content of the viewer, replacing any existing content.
+ *
+ * @param v    Viewer to update.
+ * @param text Text content (may contain newlines and color codes).
+ * @return     Non-zero on success.
+ */
 int ui_text_viewer_set_text(ui_text_viewer_t *v, const char *text);
+
+/**
+ * @brief Render the current viewport of the text viewer to the terminal.
+ *
+ * @param v Viewer to render.
+ */
 void ui_text_viewer_render(ui_text_viewer_t *v);
 
-/* Returns 1 if key consumed, 0 otherwise */
+/**
+ * @brief Handle a navigation key for the text viewer.
+ *
+ * @param v   Viewer to scroll.
+ * @param key Key code.
+ * @return    1 if the key was consumed (view changed), 0 otherwise.
+ */
 int ui_text_viewer_handle_key(ui_text_viewer_t *v, int key);
 
-/*
- * Convenience: reads a key, consumes only scroll/navigation keys, re-renders
- * on consume, and returns:
- * - 0 if consumed
- * - key code if not consumed
+/**
+ * @brief Read a key and auto-consume scroll/navigation keys.
+ *
+ * If the key is a scroll key, re-renders and returns 0.
+ * Otherwise returns the key code for the caller to handle.
+ *
+ * @param v Viewer.
+ * @return  0 if consumed, or the key code if not consumed.
  */
 int ui_text_viewer_read_key(ui_text_viewer_t *v);
 

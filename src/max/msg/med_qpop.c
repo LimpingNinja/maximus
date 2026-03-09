@@ -443,6 +443,11 @@ static int near Quote_PreloadMessage(struct _replyp *pr, quote_popup_t *qp)
 /*  Quote_FreeLines — release all preloaded raw text lines                */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
+/**
+ * @brief Release all preloaded raw text lines and reset the line count.
+ *
+ * @param qp  Popup state whose lines[] array will be freed.
+ */
 static void near Quote_FreeLines(quote_popup_t *qp)
 {
   if (qp->lines)

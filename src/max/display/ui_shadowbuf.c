@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_shadowbuf.c — Shadow buffer for popups
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -161,6 +159,14 @@ static int near ui_shadowbuf_idx(const ui_shadowbuf_t *b, int row, int col)
   return (row - 1) * b->width + (col - 1);
 }
 
+/**
+ * @brief Initialize a shadow buffer with given dimensions and default attribute.
+ *
+ * @param b            Shadow buffer to initialize.
+ * @param width        Width in columns.
+ * @param height       Height in rows.
+ * @param default_attr Default PC attribute for clears and resets.
+ */
 void ui_shadowbuf_init(ui_shadowbuf_t *b, int width, int height, byte default_attr)
 {
   if (!b)
@@ -185,6 +191,11 @@ void ui_shadowbuf_init(ui_shadowbuf_t *b, int width, int height, byte default_at
   ui_shadowbuf_clear(b, default_attr);
 }
 
+/**
+ * @brief Free resources owned by a shadow buffer.
+ *
+ * @param b Shadow buffer to free.
+ */
 void ui_shadowbuf_free(ui_shadowbuf_t *b)
 {
   if (!b)
@@ -196,6 +207,12 @@ void ui_shadowbuf_free(ui_shadowbuf_t *b)
   memset(b, 0, sizeof(*b));
 }
 
+/**
+ * @brief Clear the buffer to spaces with the given attribute.
+ *
+ * @param b    Shadow buffer.
+ * @param attr PC attribute for the fill.
+ */
 void ui_shadowbuf_clear(ui_shadowbuf_t *b, byte attr)
 {
   int i;
@@ -217,6 +234,13 @@ void ui_shadowbuf_clear(ui_shadowbuf_t *b, byte attr)
   b->current_attr = attr;
 }
 
+/**
+ * @brief Move the shadow cursor to a position (clamped to bounds).
+ *
+ * @param b   Shadow buffer.
+ * @param row 1-based row.
+ * @param col 1-based column.
+ */
 void ui_shadowbuf_goto(ui_shadowbuf_t *b, int row, int col)
 {
   if (!b)
@@ -235,6 +259,12 @@ void ui_shadowbuf_goto(ui_shadowbuf_t *b, int row, int col)
   b->cursor_col = col;
 }
 
+/**
+ * @brief Set the current attribute for subsequent writes.
+ *
+ * @param b    Shadow buffer.
+ * @param attr PC attribute.
+ */
 void ui_shadowbuf_set_attr(ui_shadowbuf_t *b, byte attr)
 {
   if (!b)
@@ -243,6 +273,12 @@ void ui_shadowbuf_set_attr(ui_shadowbuf_t *b, byte attr)
   b->current_attr = attr;
 }
 
+/**
+ * @brief Write a character at the current cursor position and advance.
+ *
+ * @param b  Shadow buffer.
+ * @param ch Character to write.
+ */
 void ui_shadowbuf_putc(ui_shadowbuf_t *b, int ch)
 {
   int r;
@@ -341,6 +377,17 @@ static const char *near ui_shadowbuf_parse_csi_sgr(ui_shadowbuf_t *b, const char
   return ui_shadowbuf_parse_csi_sgr_attr(&b->current_attr, b->default_attr, s);
 }
 
+/**
+ * @brief Normalize a text line into (ch, attr) cells.
+ *
+ * @param text         Input text (single line).
+ * @param start_attr   Starting PC attribute.
+ * @param default_attr Default attribute for SGR 0 resets.
+ * @param out_cells    Receives allocated cell array.
+ * @param out_count    Receives cell count.
+ * @param out_end_attr Receives attribute after processing.
+ * @return             1 on success, 0 on failure.
+ */
 int ui_shadowbuf_normalize_line(const char *text, byte start_attr, byte default_attr, ui_shadow_cell_t **out_cells, int *out_count, byte *out_end_attr)
 {
   const unsigned char *p;
@@ -468,12 +515,23 @@ int ui_shadowbuf_normalize_line(const char *text, byte start_attr, byte default_
   return 1;
 }
 
+/**
+ * @brief Free a cell array allocated by ui_shadowbuf_normalize_line().
+ *
+ * @param cells Cell array to free.
+ */
 void ui_shadowbuf_free_cells(ui_shadow_cell_t *cells)
 {
   if (cells)
     free(cells);
 }
 
+/**
+ * @brief Write text into the shadow buffer, interpreting ANSI/AVATAR sequences.
+ *
+ * @param b    Shadow buffer.
+ * @param text Text to write.
+ */
 void ui_shadowbuf_write(ui_shadowbuf_t *b, const char *text)
 {
   const unsigned char *p;
@@ -522,6 +580,16 @@ void ui_shadowbuf_write(ui_shadowbuf_t *b, const char *text)
   }
 }
 
+/**
+ * @brief Extract a rectangular block of cells from the buffer.
+ *
+ * @param b      Shadow buffer.
+ * @param left   Left column (1-indexed, inclusive).
+ * @param top    Top row (1-indexed, inclusive).
+ * @param right  Right column (1-indexed, inclusive).
+ * @param bottom Bottom row (1-indexed, inclusive).
+ * @return       Extracted block (caller frees with ui_shadowbuf_free_block()).
+ */
 ui_shadow_block_t ui_shadowbuf_gettext(const ui_shadowbuf_t *b, int left, int top, int right, int bottom)
 {
   ui_shadow_block_t out;
@@ -584,6 +652,14 @@ ui_shadow_block_t ui_shadowbuf_gettext(const ui_shadowbuf_t *b, int left, int to
   return out;
 }
 
+/**
+ * @brief Restore a block of cells into the buffer at a given position.
+ *
+ * @param b     Shadow buffer.
+ * @param left  Left column (1-indexed).
+ * @param top   Top row (1-indexed).
+ * @param block Block to restore.
+ */
 void ui_shadowbuf_puttext(ui_shadowbuf_t *b, int left, int top, const ui_shadow_block_t *block)
 {
   int rr;
@@ -610,6 +686,11 @@ void ui_shadowbuf_puttext(ui_shadowbuf_t *b, int left, int top, const ui_shadow_
   }
 }
 
+/**
+ * @brief Free a block created by ui_shadowbuf_gettext().
+ *
+ * @param block Block to free.
+ */
 void ui_shadowbuf_free_block(ui_shadow_block_t *block)
 {
   if (!block)
@@ -623,6 +704,17 @@ void ui_shadowbuf_free_block(ui_shadow_block_t *block)
   block->height = 0;
 }
 
+/**
+ * @brief Snapshot a region for overlay support.
+ *
+ * @param b      Shadow buffer.
+ * @param left   Left column (1-indexed).
+ * @param top    Top row (1-indexed).
+ * @param right  Right column (1-indexed).
+ * @param bottom Bottom row (1-indexed).
+ * @param ov     Overlay state to populate.
+ * @return       Non-zero on success.
+ */
 int ui_shadowbuf_overlay_push(const ui_shadowbuf_t *b, int left, int top, int right, int bottom, ui_shadow_overlay_t *ov)
 {
   if (!b || !ov)
@@ -642,6 +734,12 @@ int ui_shadowbuf_overlay_push(const ui_shadowbuf_t *b, int left, int top, int ri
   return 1;
 }
 
+/**
+ * @brief Restore and free a previously pushed overlay snapshot.
+ *
+ * @param b  Shadow buffer.
+ * @param ov Overlay state to restore.
+ */
 void ui_shadowbuf_overlay_pop(ui_shadowbuf_t *b, ui_shadow_overlay_t *ov)
 {
   if (!b || !ov)
@@ -655,6 +753,17 @@ void ui_shadowbuf_overlay_pop(ui_shadowbuf_t *b, ui_shadow_overlay_t *ov)
   ov->top = 0;
 }
 
+/**
+ * @brief Paint a rectangular region of the buffer to the terminal.
+ *
+ * @param b        Shadow buffer.
+ * @param screen_x Screen column for buffer column 1.
+ * @param screen_y Screen row for buffer row 1.
+ * @param left     Left column (1-indexed).
+ * @param top      Top row (1-indexed).
+ * @param right    Right column (1-indexed).
+ * @param bottom   Bottom row (1-indexed).
+ */
 void ui_shadowbuf_paint_region(const ui_shadowbuf_t *b, int screen_x, int screen_y, int left, int top, int right, int bottom)
 {
   int l;

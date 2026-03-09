@@ -1,3 +1,23 @@
+/*
+ * mci.c — MCI expand/parse engine
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #define MAX_LANG_global
  #include <ctype.h>
  #include <stdio.h>
@@ -36,6 +56,14 @@ enum
   MCI_FMT_CENTER
 };
 
+/**
+ * @brief Append a single character to the MCI output buffer.
+ *
+ * @param out      Output buffer.
+ * @param out_size Total capacity of output buffer.
+ * @param io_len   Pointer to current length (updated on append).
+ * @param ch       Character to append.
+ */
 static void mci_out_append_ch(char *out, size_t out_size, size_t *io_len, char ch)
 {
   if (out_size==0)
@@ -51,6 +79,14 @@ static void mci_out_append_ch(char *out, size_t out_size, size_t *io_len, char c
   out[*io_len]='\0';
 }
 
+/**
+ * @brief Append a NUL-terminated string to the MCI output buffer.
+ *
+ * @param out      Output buffer.
+ * @param out_size Total capacity of output buffer.
+ * @param io_len   Pointer to current length (updated on append).
+ * @param s        String to append.
+ */
 static void mci_out_append_str(char *out, size_t out_size, size_t *io_len, const char *s)
 {
   if (out_size==0)
@@ -70,6 +106,15 @@ static void mci_out_append_str(char *out, size_t out_size, size_t *io_len, const
   out[*io_len]='\0';
 }
 
+/**
+ * @brief Calculate the visible (non-color-code) length of an MCI string.
+ *
+ * Skips pipe color codes, AVATAR attribute sequences, MCI codes,
+ * and cursor control sequences to count only printable characters.
+ *
+ * @param s Input string potentially containing MCI/pipe sequences.
+ * @return  Visible character count.
+ */
 static int mci_visible_len(const char *s)
 {
   int count=0;
@@ -147,6 +192,15 @@ static int mci_visible_len(const char *s)
   return count;
 }
 
+/**
+ * @brief Truncate a string to a visible character length.
+ *
+ * Walks the string counting visible characters and NUL-terminates
+ * at the point where trim_len visible chars have been emitted.
+ *
+ * @param s        String to trim in-place.
+ * @param trim_len Maximum visible characters to keep.
+ */
 static void mci_apply_trim(char *s, int trim_len)
 {
   if (trim_len < 0)
@@ -201,6 +255,11 @@ static void mci_apply_trim(char *s, int trim_len)
   }
 }
 
+/**
+ * @brief Return a short string describing the user's terminal emulation mode.
+ *
+ * @return "TTY", "ANSI", "AVATAR", or "?".
+ */
 static const char *mci_term_emul_str(void)
 {
   switch (usr.video)
@@ -216,11 +275,25 @@ static const char *mci_term_emul_str(void)
   return "?";
 }
 
+/**
+ * @brief Check if two characters are both uppercase letters.
+ *
+ * @param a First character.
+ * @param b Second character.
+ * @return  Non-zero if both are A-Z.
+ */
 static int mci_is_upper2(char a, char b)
 {
   return (a >= 'A' && a <= 'Z') && (b >= 'A' && b <= 'Z');
 }
 
+/**
+ * @brief Parse a two-digit decimal number from a string.
+ *
+ * @param s   Pointer to first digit character.
+ * @param out Receives the parsed value (0-99).
+ * @return    1 on success, 0 if either character is not a digit.
+ */
 static int mci_parse_2dig(const char *s, int *out)
 {
   if (!isdigit((unsigned char)s[0]) || !isdigit((unsigned char)s[1]))
@@ -230,6 +303,16 @@ static int mci_parse_2dig(const char *s, int *out)
   return 1;
 }
 
+/**
+ * @brief Emit a repeated character into the output buffer.
+ *
+ * @param out      Output buffer.
+ * @param out_size Total capacity of output buffer.
+ * @param out_len  Current output length.
+ * @param count    Number of repetitions.
+ * @param ch       Character to repeat.
+ * @return         Updated output length.
+ */
 static size_t mci_emit_repeated(char *out, size_t out_size, size_t out_len, int count, char ch)
 {
   for (int i=0; i < count; ++i)
@@ -328,16 +411,34 @@ static void mci_expand_code(char a, char b, char *out, size_t out_size)
     out[0]='\0'; /* Stub — substitution implemented in Round 2 */
 }
 
+/**
+ * @brief Set the global MCI parse flags.
+ *
+ * @param flags New flags value (combination of MCI_PARSE_* constants).
+ */
 void MciSetParseFlags(unsigned long flags)
 {
   g_mci_parse_flags = flags;
 }
 
+/**
+ * @brief Get the current global MCI parse flags.
+ *
+ * @return Current flags value.
+ */
 unsigned long MciGetParseFlags(void)
 {
   return g_mci_parse_flags;
 }
 
+/**
+ * @brief Push modified parse flags onto the internal stack.
+ *
+ * Saves the current flags and applies the masked changes.
+ *
+ * @param mask   Bitmask of flags to change.
+ * @param values New values for the masked flags.
+ */
 void MciPushParseFlags(unsigned long mask, unsigned long values)
 {
   if (g_flag_sp >= MCI_FLAG_STACK_MAX)
@@ -347,6 +448,9 @@ void MciPushParseFlags(unsigned long mask, unsigned long values)
   g_mci_parse_flags = (g_mci_parse_flags & ~mask) | (values & mask);
 }
 
+/**
+ * @brief Pop the most recently pushed parse flags from the stack.
+ */
 void MciPopParseFlags(void)
 {
   if (g_flag_sp <= 0)
@@ -355,6 +459,14 @@ void MciPopParseFlags(void)
   g_mci_parse_flags = g_flag_stack[--g_flag_sp];
 }
 
+/**
+ * @brief Expand MCI codes, pipe colors, and format operators in a string.
+ *
+ * @param in       Input string.
+ * @param out      Output buffer.
+ * @param out_size Size of output buffer in bytes.
+ * @return         Number of bytes written (excluding NUL terminator).
+ */
 size_t MciExpand(const char *in, char *out, size_t out_size)
 {
   if (out_size==0)
@@ -745,6 +857,15 @@ literal_dollar:
   return out_len;
 }
 
+/**
+ * @brief Strip MCI-related sequences from a string.
+ *
+ * @param in          Input string.
+ * @param out         Output buffer.
+ * @param out_size    Size of output buffer in bytes.
+ * @param strip_flags Bitmask of MCI_STRIP_COLORS, MCI_STRIP_INFO, MCI_STRIP_FORMAT.
+ * @return            Number of bytes written (excluding NUL terminator).
+ */
 size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_flags)
 {
   if (out_size==0)

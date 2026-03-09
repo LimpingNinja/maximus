@@ -1,9 +1,21 @@
 /*
- * libmaxdb - Connection management and schema versioning
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * db_init.c — Database initialization and schema management
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -84,7 +96,12 @@ const char *SQL_CREATE_USERS_NAME_INDEX =
 const char *SQL_CREATE_USERS_ALIAS_INDEX = 
     "CREATE INDEX IF NOT EXISTS users_alias_idx ON users(alias COLLATE NOCASE)";
 
-/* Helper functions */
+/**
+ * @brief Set the last error message on the database handle.
+ *
+ * @param db   Database handle.
+ * @param msg  Error message string (strdup'd internally).
+ */
 void maxdb_set_error(MaxDB *db, const char *msg) {
     if (db->error_msg) {
         free(db->error_msg);
@@ -92,6 +109,11 @@ void maxdb_set_error(MaxDB *db, const char *msg) {
     db->error_msg = msg ? strdup(msg) : NULL;
 }
 
+/**
+ * @brief Clear the last error message on the database handle.
+ *
+ * @param db  Database handle.
+ */
 void maxdb_clear_error(MaxDB *db) {
     if (db->error_msg) {
         free(db->error_msg);
@@ -100,7 +122,15 @@ void maxdb_clear_error(MaxDB *db) {
     db->last_error = MAXDB_OK;
 }
 
-/* Open database connection */
+/**
+ * @brief Open a database connection with the given flags.
+ *
+ * Enables WAL journal mode, foreign keys, and a 5-second busy timeout.
+ *
+ * @param db_path  Path to the SQLite database file.
+ * @param flags    Combination of MAXDB_OPEN_* flags.
+ * @return Database handle on success, or NULL on failure.
+ */
 MaxDB* maxdb_open(const char *db_path, int flags) {
     MaxDB *db;
     int sqlite_flags = 0;
@@ -151,7 +181,11 @@ MaxDB* maxdb_open(const char *db_path, int flags) {
     return db;
 }
 
-/* Close database connection */
+/**
+ * @brief Close a database connection and free resources.
+ *
+ * @param db  Database handle (NULL-safe).
+ */
 void maxdb_close(MaxDB *db) {
     if (!db) {
         return;
@@ -168,7 +202,12 @@ void maxdb_close(MaxDB *db) {
     free(db);
 }
 
-/* Get last error message */
+/**
+ * @brief Return the last error message string.
+ *
+ * @param db  Database handle.
+ * @return Error message, or "No error" if none.
+ */
 const char* maxdb_error(MaxDB *db) {
     if (!db) {
         return "Invalid database handle";
@@ -176,7 +215,12 @@ const char* maxdb_error(MaxDB *db) {
     return db->error_msg ? db->error_msg : "No error";
 }
 
-/* Begin transaction */
+/**
+ * @brief Begin an explicit database transaction.
+ *
+ * @param db  Database handle.
+ * @return MAXDB_OK on success, or MAXDB_ERROR.
+ */
 int maxdb_begin_transaction(MaxDB *db) {
     int rc;
     
@@ -193,7 +237,12 @@ int maxdb_begin_transaction(MaxDB *db) {
     return MAXDB_OK;
 }
 
-/* Commit transaction */
+/**
+ * @brief Commit the current transaction.
+ *
+ * @param db  Database handle.
+ * @return MAXDB_OK on success, or MAXDB_ERROR.
+ */
 int maxdb_commit(MaxDB *db) {
     int rc;
     
@@ -210,7 +259,12 @@ int maxdb_commit(MaxDB *db) {
     return MAXDB_OK;
 }
 
-/* Rollback transaction */
+/**
+ * @brief Roll back the current transaction.
+ *
+ * @param db  Database handle.
+ * @return MAXDB_OK on success, or MAXDB_ERROR.
+ */
 int maxdb_rollback(MaxDB *db) {
     int rc;
     
@@ -227,7 +281,12 @@ int maxdb_rollback(MaxDB *db) {
     return MAXDB_OK;
 }
 
-/* Get schema version */
+/**
+ * @brief Query the current schema version (PRAGMA user_version).
+ *
+ * @param db  Database handle.
+ * @return Schema version number, or -1 on error.
+ */
 int maxdb_schema_version(MaxDB *db) {
     sqlite3_stmt *stmt;
     int version = 0;
@@ -250,7 +309,15 @@ int maxdb_schema_version(MaxDB *db) {
     return version;
 }
 
-/* Upgrade schema to target version */
+/**
+ * @brief Upgrade the database schema to the target version.
+ *
+ * Creates tables and indexes as needed within a transaction.
+ *
+ * @param db              Database handle.
+ * @param target_version  Desired schema version.
+ * @return MAXDB_OK on success, or MAXDB_ERROR.
+ */
 int maxdb_schema_upgrade(MaxDB *db, int target_version) {
     int current_version;
     int rc;
@@ -322,7 +389,12 @@ int maxdb_schema_upgrade(MaxDB *db, int target_version) {
     return MAXDB_OK;
 }
 
-/* Helper: Convert SCOMBO to unix timestamp */
+/**
+ * @brief Convert an SCOMBO date/time to a Unix timestamp.
+ *
+ * @param sc  Source SCOMBO value.
+ * @return Unix timestamp, or 0 if sc is NULL/zeroed.
+ */
 time_t scombo_to_unix(const SCOMBO *sc) {
     struct tm tm_time;
     
@@ -341,7 +413,12 @@ time_t scombo_to_unix(const SCOMBO *sc) {
     return mktime(&tm_time);
 }
 
-/* Helper: Convert unix timestamp to SCOMBO */
+/**
+ * @brief Convert a Unix timestamp to an SCOMBO date/time.
+ *
+ * @param t   Unix timestamp (0 produces a zeroed SCOMBO).
+ * @param sc  Output SCOMBO.
+ */
 void unix_to_scombo(time_t t, SCOMBO *sc) {
     struct tm *tm_time;
     

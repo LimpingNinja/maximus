@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * ui_lightbar.c — Lightbar menus
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,11 +51,22 @@ typedef struct {
    long cx2;
  } ui_lb_pos_item_t;
 
+/**
+ * @brief Check if a character is in the printable ASCII range.
+ *
+ * @param ch Character to test.
+ * @return   Non-zero if printable (32-126).
+ */
 static int near ui_lb_is_printable(int ch)
 {
   return (ch >= 32 && ch <= 126);
 }
 
+/**
+ * @brief Hide the terminal cursor for ANSI/AVATAR terminals.
+ *
+ * @param did_hide Receives 1 if cursor was hidden.
+ */
 static void near ui_lb_hide_cursor(int *did_hide)
 {
   if (did_hide)
@@ -91,6 +100,11 @@ static void ui_lb_prepare_row(char *row, int width)
   }
 }
 
+/**
+ * @brief Restore the terminal cursor if previously hidden.
+ *
+ * @param did_hide Value from ui_lb_hide_cursor().
+ */
 static void near ui_lb_show_cursor(int did_hide)
 {
   if (!did_hide)
@@ -100,6 +114,12 @@ static void near ui_lb_show_cursor(int did_hide)
     Printf("\x1b[?25h");
 }
 
+/**
+ * @brief Duplicate a string using malloc.
+ *
+ * @param s String to duplicate (NULL treated as empty).
+ * @return  Newly allocated copy, or NULL on failure.
+ */
 static char *near ui_lb_strdup(const char *s)
 {
   char *rc;
@@ -118,6 +138,14 @@ static char *near ui_lb_strdup(const char *s)
   return rc;
 }
 
+/**
+ * @brief Strip a [X] hotkey marker from a string, extracting the hotkey.
+ *
+ * @param s              Input string (may contain "[X]" marker).
+ * @param out_hotkey     Receives lowercase hotkey character, or 0 if none.
+ * @param out_hotkey_pos Receives position of the hotkey in the stripped string.
+ * @return               Newly allocated string with marker removed.
+ */
 static char *near ui_lb_strip_marker(const char *s, int *out_hotkey, int *out_hotkey_pos)
 {
   const char *p;
@@ -170,6 +198,12 @@ static char *near ui_lb_strip_marker(const char *s, int *out_hotkey, int *out_ho
   return ui_lb_strdup(s);
 }
 
+/**
+ * @brief Auto-assign a hotkey from the first unused alpha character.
+ *
+ * @param it   Lightbar item to assign a hotkey to.
+ * @param used Bitmap tracking which hotkeys are already taken.
+ */
 static void near ui_lb_autohotkey(ui_lb_item_t *it, byte used[256])
 {
   const char *s;
@@ -197,6 +231,13 @@ static void near ui_lb_autohotkey(ui_lb_item_t *it, byte used[256])
   }
 }
 
+/**
+ * @brief Compute display geometry (width_used, cx2) for a positioned item.
+ *
+ * @param m     Positional menu configuration.
+ * @param items Array of positioned items.
+ * @param idx   Index of the item to compute.
+ */
 static void near ui_lb_pos_compute_geometry(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t *items, int idx)
 {
   const char *text;
@@ -218,6 +259,14 @@ static void near ui_lb_pos_compute_geometry(ui_lightbar_pos_menu_t *m, ui_lb_pos
   items[idx].cx2 = (long)(2 * items[idx].x + (items[idx].width_used - 1));
 }
 
+/**
+ * @brief Draw a single positioned lightbar item with selection highlighting.
+ *
+ * @param m        Positional menu configuration.
+ * @param items    Array of positioned items.
+ * @param idx      Index of the item to draw.
+ * @param selected Non-zero if this item is the current selection.
+ */
 static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t *items, int idx, int selected)
 {
   const char *s;
@@ -363,6 +412,16 @@ static void near ui_sp_draw_option_margined(int row, int col, const ui_lb_item_t
     Putc(' ');
 }
 
+/**
+ * @brief Find the nearest positioned item in a given direction.
+ *
+ * @param items     Array of positioned items.
+ * @param count     Number of items.
+ * @param cur       Current selected index.
+ * @param direction Key code (K_UP, K_DOWN, K_LEFT, K_RIGHT).
+ * @param wrap      Non-zero to wrap around edges.
+ * @return          Index of best neighbor, or -1 if none.
+ */
 static int near ui_lb_find_neighbor_pos(ui_lb_pos_item_t *items, int count, int cur, int direction, int wrap)
 {
   long cur_cx2;
@@ -527,6 +586,13 @@ static int near ui_lb_find_neighbor_pos(ui_lb_pos_item_t *items, int count, int 
   }
 }
 
+/**
+ * @brief Run a positioned lightbar menu with hotkey support.
+ *
+ * @param m       Positional menu configuration.
+ * @param out_key Receives the hotkey of the selected item.
+ * @return        Selected index, or -1 if cancelled.
+ */
 int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key)
 {
   ui_lb_pos_item_t *items = NULL;
@@ -654,6 +720,15 @@ int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key)
   }
 }
 
+/**
+ * @brief Draw a single vertical lightbar menu item.
+ *
+ * @param m        Menu configuration.
+ * @param items    Parsed item array.
+ * @param idx      Index of item to draw.
+ * @param selected Non-zero if selected.
+ * @param width    Computed display width.
+ */
 static void near ui_lb_draw_item(
     ui_lightbar_menu_t *m,
     ui_lb_item_t *items,
@@ -773,6 +848,12 @@ static void near ui_lb_draw_item(
     Putc(' ');
 }
 
+/**
+ * @brief Run a vertical lightbar menu with keyboard navigation.
+ *
+ * @param m Menu configuration.
+ * @return  Selected index, or -1 if cancelled.
+ */
 int ui_lightbar_run(ui_lightbar_menu_t *m)
 {
   ui_lb_item_t *items = NULL;
@@ -926,6 +1007,13 @@ int ui_lightbar_run(ui_lightbar_menu_t *m)
   }
 }
 
+/**
+ * @brief Run a vertical lightbar menu, returning both index and hotkey.
+ *
+ * @param m       Menu configuration.
+ * @param out_key Receives the hotkey of the selected item.
+ * @return        Selected index, or -1 if cancelled.
+ */
 int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
 {
   ui_lb_item_t *items = NULL;
@@ -1089,6 +1177,18 @@ int ui_lightbar_run_hotkey(ui_lightbar_menu_t *m, int *out_key)
 /* UI_SP_FLAG_STRIP_BRACKETS, UI_SP_HOTKEY_ATTR_SHIFT, UI_SP_DEFAULT_SHIFT
  * are defined in ui_lightbar.h */
 
+/**
+ * @brief Draw a single inline select-prompt option with hotkey highlighting.
+ *
+ * @param row             Screen row.
+ * @param col             Screen column.
+ * @param opt             Parsed option item.
+ * @param selected        Non-zero if this option is the current selection.
+ * @param normal_attr     Attribute for unselected state.
+ * @param selected_attr   Attribute for selected state.
+ * @param hotkey_attr     Attribute for the hotkey character.
+ * @param strip_brackets  Non-zero to strip [X] markers.
+ */
 static void near ui_sp_draw_option(int row, int col, const ui_lb_item_t *opt, int selected, byte normal_attr, byte selected_attr, byte hotkey_attr, int strip_brackets)
 {
   const char *text;
@@ -1157,6 +1257,21 @@ static void near ui_sp_draw_option(int row, int col, const ui_lb_item_t *opt, in
   }
 }
 
+/**
+ * @brief Run a horizontal inline select prompt with lightbar navigation.
+ *
+ * @param prompt        Prompt text.
+ * @param options       Option strings.
+ * @param option_count  Number of options.
+ * @param prompt_attr   Prompt text attribute.
+ * @param normal_attr   Unselected option attribute.
+ * @param selected_attr Selected option attribute.
+ * @param flags         Packed flags.
+ * @param margin        Padding columns.
+ * @param separator     Separator string between options.
+ * @param out_key       Receives hotkey of selected option.
+ * @return              Selected index, or -1 if cancelled.
+ */
 int ui_select_prompt(
     const char *prompt,
     const char **options,
@@ -1408,6 +1523,12 @@ static void ui_lb_draw_list_row(const ui_lightbar_list_t *list, int screen_row,
  * - Home/End jump to first/last
  * - Enter returns selected index
  * - ESC returns -1
+ */
+/**
+ * @brief Run a paged lightbar list with Storm-style keyboard navigation.
+ *
+ * @param list Configuration and callbacks.
+ * @return     Selected index, -1 if cancelled, or LB_LIST_KEY_PASSTHROUGH.
  */
 int ui_lightbar_list_run(ui_lightbar_list_t *list)
 {

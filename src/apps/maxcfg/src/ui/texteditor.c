@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * texteditor.c — Full-screen text editor component
  *
- * texteditor.c - Full-screen text editor for display files
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -89,6 +101,12 @@ static const char *insert_menu_items[] = {
 
 static int menu_x_positions[NUM_MENUS] = { 0 };
 
+/**
+ * @brief Detect file type from extension for syntax highlighting hints.
+ *
+ * @param filepath Path to examine.
+ * @return Detected FileType enum value.
+ */
 static FileType detect_filetype(const char *filepath)
 {
     if (!filepath) return FILETYPE_UNKNOWN;
@@ -102,6 +120,13 @@ static FileType detect_filetype(const char *filepath)
     return FILETYPE_TEXT;
 }
 
+/**
+ * @brief Load a file into the editor buffer, one line per entry.
+ *
+ * @param buf      Editor buffer to populate.
+ * @param filepath Path to the file to load.
+ * @return true on success.
+ */
 static bool load_file(EditorBuffer *buf, const char *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
@@ -160,6 +185,12 @@ static bool load_file(EditorBuffer *buf, const char *filepath)
     return true;
 }
 
+/**
+ * @brief Save the editor buffer contents back to the file.
+ *
+ * @param buf Editor buffer to save.
+ * @return true on success.
+ */
 static bool save_file(EditorBuffer *buf)
 {
     if (!buf->filepath) return false;
@@ -176,6 +207,7 @@ static bool save_file(EditorBuffer *buf)
     return true;
 }
 
+/** @brief Free all memory owned by an EditorBuffer. */
 static void free_buffer(EditorBuffer *buf)
 {
     if (buf->lines) {
@@ -187,6 +219,7 @@ static void free_buffer(EditorBuffer *buf)
     free(buf->filepath);
 }
 
+/** @brief Draw the editor's top menubar with hotkeys and filename. */
 static void draw_editor_menubar(EditorBuffer *buf, EditorMenuState *menu_state)
 {
     attron(COLOR_PAIR(CP_TITLE_BAR));
@@ -246,6 +279,7 @@ static void draw_editor_menubar(EditorBuffer *buf, EditorMenuState *menu_state)
     wnoutrefresh(stdscr);
 }
 
+/** @brief Draw the horizontal separator line below the menubar. */
 static void draw_editor_separator(void)
 {
     attron(COLOR_PAIR(CP_DIALOG_BORDER));
@@ -257,6 +291,7 @@ static void draw_editor_separator(void)
     wnoutrefresh(stdscr);
 }
 
+/** @brief Draw the currently open dropdown menu, if any. */
 static void draw_editor_dropdown(EditorMenuState *menu_state)
 {
     if (!menu_state->dropdown_open || menu_state->active_menu < 0 || menu_state->active_menu >= NUM_MENUS) {
@@ -326,6 +361,7 @@ static void draw_editor_dropdown(EditorMenuState *menu_state)
     wnoutrefresh(stdscr);
 }
 
+/** @brief Draw the visible text content area with cursor positioning. */
 static void draw_editor_content(EditorBuffer *buf)
 {
     int edit_height = EDITOR_STATUS_ROW - EDITOR_EDIT_TOP;
@@ -379,6 +415,7 @@ static void draw_editor_content(EditorBuffer *buf)
     wnoutrefresh(stdscr);
 }
 
+/** @brief Draw the bottom status bar with filename, line, and column. */
 static void draw_editor_status(EditorBuffer *buf)
 {
     attron(COLOR_PAIR(CP_STATUS_BAR));
@@ -404,6 +441,7 @@ static void draw_editor_status(EditorBuffer *buf)
     wnoutrefresh(stdscr);
 }
 
+/** @brief Move the ncurses cursor to the logical editor cursor position. */
 static void place_editor_cursor(EditorBuffer *buf)
 {
     int edit_height = EDITOR_STATUS_ROW - EDITOR_EDIT_TOP;
@@ -422,6 +460,7 @@ static void place_editor_cursor(EditorBuffer *buf)
     }
 }
 
+/** @brief Draw a visible software cursor block at the current position. */
 static void draw_software_cursor(EditorBuffer *buf)
 {
     int edit_height = EDITOR_STATUS_ROW - EDITOR_EDIT_TOP;
@@ -462,6 +501,14 @@ static void draw_software_cursor(EditorBuffer *buf)
     wnoutrefresh(stdscr);
 }
 
+/**
+ * @brief Handle keyboard input while a dropdown menu is open.
+ *
+ * @param buf        Editor buffer (for save operations).
+ * @param menu_state Current menu state (active menu, selection, etc.).
+ * @param ch         Input character/keycode.
+ * @param quit       Set to true if the user requests exit.
+ */
 static void handle_menu_input(EditorBuffer *buf, EditorMenuState *menu_state, int ch, bool *quit)
 {
     if (!menu_state->dropdown_open) {
@@ -540,6 +587,15 @@ static void handle_menu_input(EditorBuffer *buf, EditorMenuState *menu_state, in
     }
 }
 
+/**
+ * @brief Handle keyboard input in normal text editing mode.
+ *
+ * Processes cursor movement, character insertion, backspace, delete,
+ * line splitting/joining, and page navigation.
+ *
+ * @param buf Editor buffer to modify.
+ * @param ch  Input character/keycode.
+ */
 static void handle_edit_input(EditorBuffer *buf, int ch)
 {
     int edit_height = EDITOR_STATUS_ROW - EDITOR_EDIT_TOP;
@@ -738,6 +794,12 @@ static void handle_edit_input(EditorBuffer *buf, int ch)
     }
 }
 
+/**
+ * @brief Read a key, detecting Alt+key combinations via ESC prefix.
+ *
+ * @param out_is_alt Set to true if the key was preceded by ESC (Alt).
+ * @return The key character/code.
+ */
 static int read_key_with_alt(bool *out_is_alt)
 {
     if (out_is_alt) {
@@ -766,6 +828,12 @@ static int read_key_with_alt(bool *out_is_alt)
     return next;
 }
 
+/**
+ * @brief Open the full-screen text editor on a file.
+ *
+ * @param filepath Path to the file to edit.
+ * @return EditorResult indicating save/cancel/error outcome.
+ */
 EditorResult text_editor_edit(const char *filepath)
 {
     if (!filepath) return EDITOR_ERROR;

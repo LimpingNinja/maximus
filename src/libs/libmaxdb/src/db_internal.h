@@ -1,9 +1,21 @@
 /*
- * libmaxdb - Internal definitions and helpers
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * db_internal.h — Internal database header
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * https://github.com/LimpingNinja
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #ifndef DB_INTERNAL_H
@@ -27,7 +39,11 @@ struct MaxDBUserCursor {
 };
 
 /* Helper functions */
+
+/** @brief Set the last error message on the database handle. */
 void maxdb_set_error(MaxDB *db, const char *msg);
+
+/** @brief Clear the last error message on the database handle. */
 void maxdb_clear_error(MaxDB *db);
 
 /* SQL statement strings */
@@ -48,16 +64,37 @@ extern const char *SQL_NEXT_USER_ID;
 extern const char *SQL_FIND_ALL_USERS;
 extern const char *SQL_COUNT_USERS;
 
-/* Helper: Bind MaxDBUser to prepared statement */
+/**
+ * @brief Bind all MaxDBUser fields to a prepared INSERT or UPDATE statement.
+ *
+ * @param stmt  Prepared statement with positional placeholders.
+ * @param user  User record to bind.
+ * @return SQLITE_OK on success.
+ */
 int bind_user_to_stmt(sqlite3_stmt *stmt, const MaxDBUser *user);
 
-/* Helper: Extract MaxDBUser from result row */
+/**
+ * @brief Extract a MaxDBUser from the current result row.
+ *
+ * @param stmt  Stepped statement positioned on a row.
+ * @return Heap-allocated user (caller must free), or NULL on OOM.
+ */
 MaxDBUser* extract_user_from_stmt(sqlite3_stmt *stmt);
 
-/* Helper: Convert SCOMBO to unix timestamp */
+/**
+ * @brief Convert an SCOMBO date/time to a Unix timestamp.
+ *
+ * @param sc  Source SCOMBO value.
+ * @return Unix timestamp, or 0 if sc is NULL/zeroed.
+ */
 time_t scombo_to_unix(const SCOMBO *sc);
 
-/* Helper: Convert unix timestamp to SCOMBO */
+/**
+ * @brief Convert a Unix timestamp to an SCOMBO date/time.
+ *
+ * @param t   Unix timestamp (0 produces a zeroed SCOMBO).
+ * @param sc  Output SCOMBO.
+ */
 void unix_to_scombo(time_t t, SCOMBO *sc);
 
 #endif /* DB_INTERNAL_H */

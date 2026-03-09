@@ -1,9 +1,21 @@
 /*
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * treeview.c — Tree view navigation widget
  *
- * treeview.c - Tree view for hierarchical area/division editing
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * Copyright (C) 2025 Kevin Morgan (Limping Ninja) - https://github.com/LimpingNinja
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdlib.h>
@@ -70,7 +82,16 @@ static TreeContextType g_tree_context = TREE_CONTEXT_MESSAGE;
 TreeNode *g_tree_focus_root = NULL;
 bool g_tree_unfocus_requested = false;
 
-/* Create a new tree node */
+/**
+ * @brief Create a new tree node with the given properties.
+ *
+ * @param name           Short display name.
+ * @param full_name      Dotted full path name (e.g. "programming.languages.c").
+ * @param description    Human-readable description.
+ * @param type           TREENODE_DIVISION or TREENODE_AREA.
+ * @param division_level Nesting depth (0 = root).
+ * @return Newly allocated TreeNode, or NULL on failure.
+ */
 TreeNode *treenode_create(const char *name, const char *full_name,
                           const char *description, TreeNodeType type,
                           int division_level)
@@ -93,7 +114,12 @@ TreeNode *treenode_create(const char *name, const char *full_name,
     return node;
 }
 
-/* Add a child to a tree node */
+/**
+ * @brief Add a child node to a parent, growing the children array as needed.
+ *
+ * @param parent Parent node to add to.
+ * @param child  Child node to attach.
+ */
 void treenode_add_child(TreeNode *parent, TreeNode *child)
 {
     if (!parent || !child) return;
@@ -111,7 +137,11 @@ void treenode_add_child(TreeNode *parent, TreeNode *child)
     child->parent = parent;
 }
 
-/* Free a tree node and all its children */
+/**
+ * @brief Recursively free a tree node and all its children.
+ *
+ * @param node Node to free (may be NULL).
+ */
 void treenode_free(TreeNode *node)
 {
     if (!node) return;
@@ -128,7 +158,12 @@ void treenode_free(TreeNode *node)
     free(node);
 }
 
-/* Free an array of root nodes */
+/**
+ * @brief Free an array of root tree nodes and the array itself.
+ *
+ * @param nodes Array of root node pointers.
+ * @param count Number of entries.
+ */
 void treenode_array_free(TreeNode **nodes, int count)
 {
     if (!nodes) return;
@@ -138,11 +173,13 @@ void treenode_array_free(TreeNode **nodes, int count)
     free(nodes);
 }
 
+/** @brief Check if a string represents the "(None)" division choice. */
 bool is_none_choice(const char *s)
 {
     return (!s || !s[0] || strcmp(s, "(None)") == 0);
 }
 
+/** @brief Recursively update division_level after reparenting. */
 static void update_division_levels_recursive(TreeNode *node, int level)
 {
     if (!node) return;
@@ -152,6 +189,7 @@ static void update_division_levels_recursive(TreeNode *node, int level)
     }
 }
 
+/** @brief Recursively search for a division node by name. */
 static TreeNode *find_division_by_name_recursive(TreeNode *node, const char *name)
 {
     if (!node || !name || !name[0]) return NULL;
@@ -165,6 +203,14 @@ static TreeNode *find_division_by_name_recursive(TreeNode *node, const char *nam
     return NULL;
 }
 
+/**
+ * @brief Find a division node by name across all root trees.
+ *
+ * @param roots      Array of root nodes.
+ * @param root_count Number of roots.
+ * @param name       Division name to search for.
+ * @return Matching TreeNode pointer, or NULL if not found.
+ */
 TreeNode *find_division_by_name(TreeNode **roots, int root_count, const char *name)
 {
     if (!roots || root_count <= 0 || !name || !name[0]) return NULL;
@@ -175,6 +221,14 @@ TreeNode *find_division_by_name(TreeNode **roots, int root_count, const char *na
     return NULL;
 }
 
+/**
+ * @brief Detach a node from its parent or the root array.
+ *
+ * @param root_nodes Pointer to the root nodes array.
+ * @param root_count Pointer to the root count.
+ * @param node       Node to detach.
+ * @return true if the node was found and detached.
+ */
 bool treenode_detach(TreeNode ***root_nodes, int *root_count, TreeNode *node)
 {
     if (!node || !root_nodes || !root_count || !*root_nodes) return false;
@@ -212,6 +266,15 @@ bool treenode_detach(TreeNode ***root_nodes, int *root_count, TreeNode *node)
     return false;
 }
 
+/**
+ * @brief Attach a node under a parent division, or as a new root if parent is NULL.
+ *
+ * @param root_nodes Pointer to the root nodes array (may be reallocated).
+ * @param root_count Pointer to the root count.
+ * @param node       Node to attach.
+ * @param parent_div Parent division, or NULL for root level.
+ * @return true on success.
+ */
 bool treenode_attach(TreeNode ***root_nodes, int *root_count, TreeNode *node, TreeNode *parent_div)
 {
     if (!node || !root_nodes || !root_count || !*root_nodes) return false;
@@ -231,6 +294,16 @@ bool treenode_attach(TreeNode ***root_nodes, int *root_count, TreeNode *node, Tr
     return true;
 }
 
+/**
+ * @brief Attach a node before a specific sibling under a parent division.
+ *
+ * @param root_nodes Pointer to the root nodes array.
+ * @param root_count Pointer to the root count.
+ * @param node       Node to attach.
+ * @param parent_div Parent division, or NULL for root level.
+ * @param before     Sibling to insert before, or NULL for end.
+ * @return true on success.
+ */
 static bool treenode_attach_before(TreeNode ***root_nodes, int *root_count, TreeNode *node, TreeNode *parent_div, TreeNode *before)
 {
     if (!node || !root_nodes || !root_count || !*root_nodes) return false;
@@ -288,6 +361,7 @@ static bool treenode_attach_before(TreeNode ***root_nodes, int *root_count, Tree
     return true;
 }
 
+/** @brief Recursively free context-specific data attached to tree nodes. */
 static void free_tree_data_recursive(TreeNode *node, TreeContextType context)
 {
     if (!node) return;
@@ -309,6 +383,7 @@ static void free_tree_data_recursive(TreeNode *node, TreeContextType context)
     }
 }
 
+/** @brief Free an entire tree array including context-specific data. */
 static void free_tree_with_data(TreeNode **roots, int count, TreeContextType context)
 {
     if (!roots) return;
@@ -319,6 +394,7 @@ static void free_tree_with_data(TreeNode **roots, int count, TreeContextType con
     free(roots);
 }
 
+/** @brief Deep-clone a tree node and all its children including data. */
 static TreeNode *clone_node_recursive(const TreeNode *src, TreeContextType context)
 {
     if (!src) return NULL;
@@ -389,6 +465,7 @@ static TreeNode *clone_node_recursive(const TreeNode *src, TreeContextType conte
     return dst;
 }
 
+/** @brief Clone an array of root nodes (deep copy). */
 static TreeNode **clone_roots(TreeNode **roots, int count, TreeContextType context)
 {
     if (!roots || count <= 0) return NULL;
@@ -400,6 +477,7 @@ static TreeNode **clone_roots(TreeNode **roots, int count, TreeContextType conte
     return copy;
 }
 
+/** @brief Recursively remove disabled children from a node. */
 static void prune_disabled_recursive(TreeNode *node, TreeContextType context)
 {
     if (!node || node->child_count <= 0) return;
@@ -419,6 +497,7 @@ static void prune_disabled_recursive(TreeNode *node, TreeContextType context)
     node->child_count = write_idx;
 }
 
+/** @brief Remove disabled root nodes and prune disabled descendants. */
 static void prune_disabled_roots(TreeNode ***roots, int *count, TreeContextType context)
 {
     if (!roots || !count || !*roots || *count <= 0) return;
@@ -438,6 +517,7 @@ static void prune_disabled_roots(TreeNode ***roots, int *count, TreeContextType 
     *count = write_idx;
 }
 
+/** @brief Check if a node is a descendant of (or is) the given ancestor. */
 static bool is_descendant_or_self(const TreeNode *ancestor, const TreeNode *node)
 {
     if (!ancestor || !node) return false;
@@ -449,6 +529,7 @@ static bool is_descendant_or_self(const TreeNode *ancestor, const TreeNode *node
     return false;
 }
 
+/** @brief Populate the division options picklist for the current focus level. */
 static void populate_division_options_current_level(TreeNode **roots, int root_count, TreeContextType context, const TreeNode *exclude)
 {
     const char **options = (context == TREE_CONTEXT_FILE) ? file_division_options : msg_division_options;
@@ -480,13 +561,20 @@ static void populate_division_options_current_level(TreeNode **roots, int root_c
     options[idx] = NULL;
 }
 
-/* Public wrapper for picklists to use */
+/**
+ * @brief Public wrapper to populate division options for picker dialogs.
+ *
+ * @param roots      Array of root nodes.
+ * @param root_count Number of roots.
+ * @param context    TREE_CONTEXT_MESSAGE or TREE_CONTEXT_FILE.
+ * @param exclude    Node to exclude from the list (prevents self-parenting).
+ */
 void populate_division_options_for_context(TreeNode **roots, int root_count, TreeContextType context, const TreeNode *exclude)
 {
     populate_division_options_current_level(roots, root_count, context, exclude);
 }
 
-/* Add item to flattened list */
+/** @brief Add a node to the flattened display list with tree-drawing metadata. */
 static void add_flat_item(TreeViewState *state, TreeNode *node, int indent,
                           bool is_last, bool *parent_last, int parent_depth)
 {
@@ -515,7 +603,7 @@ static void add_flat_item(TreeViewState *state, TreeNode *node, int indent,
     }
 }
 
-/* Flatten a tree node and its children */
+/** @brief Recursively flatten a tree node and its children for display. */
 static void flatten_node(TreeViewState *state, TreeNode *node, int indent,
                          bool is_last, bool *parent_last, int parent_depth)
 {
@@ -543,7 +631,7 @@ static void flatten_node(TreeViewState *state, TreeNode *node, int indent,
     free(child_parent_last);
 }
 
-/* Flatten the tree for display */
+/** @brief Rebuild the flat item list from the current root/focus state. */
 static void flatten_tree(TreeViewState *state)
 {
     /* Free old items */
@@ -568,7 +656,7 @@ static void flatten_tree(TreeViewState *state)
     }
 }
 
-/* Draw a single tree item */
+/** @brief Draw a single tree item row with connectors, name, and description. */
 static void draw_tree_item(TreeViewState *state, int item_idx, int row)
 {
     FlatTreeItem *item = &state->items[item_idx];
@@ -695,7 +783,7 @@ static void draw_tree_item(TreeViewState *state, int item_idx, int row)
     }
 }
 
-/* Draw the tree view */
+/** @brief Draw the full tree view window with border, items, and status bar. */
 static void draw_tree_view(TreeViewState *state, const char *title)
 {
     /* Fill entire interior with black background first */
@@ -851,7 +939,14 @@ static void draw_tree_view(TreeViewState *state, const char *title)
     refresh();
 }
 
-/* Edit a tree item */
+/**
+ * @brief Edit a tree item (division or area) via the appropriate form.
+ *
+ * @param root_nodes Pointer to root nodes array (may change on reparent).
+ * @param root_count Pointer to root count.
+ * @param node       Node to edit.
+ * @return true if the node was modified.
+ */
 static bool edit_tree_item(TreeNode ***root_nodes, int *root_count, TreeNode *node)
 {
     if (!node || !root_nodes || !root_count) return false;
@@ -918,7 +1013,7 @@ static bool edit_tree_item(TreeNode ***root_nodes, int *root_count, TreeNode *no
     }
 }
 
-/* Get the parent division name for insert context */
+/** @brief Determine the default parent division name for a new insert. */
 static const char *get_insert_parent_division(TreeNode *current)
 {
     if (!current) return "(None)";
@@ -936,7 +1031,13 @@ static const char *get_insert_parent_division(TreeNode *current)
     return "(None)";
 }
 
-/* Insert a new tree item - returns NULL if cancelled */
+/**
+ * @brief Show the insert dialog and create a new tree node if confirmed.
+ *
+ * @param current              Context node (determines default parent).
+ * @param desired_parent_name  Receives the user-chosen parent name (heap-allocated).
+ * @return Newly created TreeNode, or NULL if cancelled.
+ */
 static TreeNode *insert_tree_item(TreeNode *current, char **desired_parent_name)
 {
     if (desired_parent_name) *desired_parent_name = NULL;
@@ -1108,7 +1209,19 @@ static TreeNode *insert_tree_item(TreeNode *current, char **desired_parent_name)
     return new_node;
 }
 
-/* Show the tree view */
+/**
+ * @brief Display the interactive tree view and handle user input.
+ *
+ * Supports drill-down into divisions, editing, inserting, deleting,
+ * and saving. The root array may be modified in-place on save.
+ *
+ * @param title      Window title.
+ * @param root_nodes Pointer to root nodes array.
+ * @param root_count Pointer to root count.
+ * @param focus_node Initial focus division (NULL for root view).
+ * @param context    TREE_CONTEXT_MESSAGE or TREE_CONTEXT_FILE.
+ * @return TREEVIEW_EDIT if changes were saved, TREEVIEW_EXIT otherwise.
+ */
 TreeViewResult treeview_show(const char *title, TreeNode ***root_nodes, int *root_count, TreeNode *focus_node, TreeContextType context)
 {
     /* Store context for insert operations */
@@ -1411,7 +1524,12 @@ TreeViewResult treeview_show(const char *title, TreeNode ***root_nodes, int *roo
     return result;
 }
 
-/* Build sample tree for testing */
+/**
+ * @brief Build a sample tree for testing and demonstration purposes.
+ *
+ * @param count Receives the number of root nodes created.
+ * @return Array of root TreeNode pointers.
+ */
 TreeNode **treeview_build_sample(int *count)
 {
     TreeNode **roots = malloc(4 * sizeof(TreeNode *));

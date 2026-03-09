@@ -1,16 +1,21 @@
-/**
- * @file mex_tls.h
- * @brief Isolated TLS layer for MEX socket intrinsics.
+/*
+ * mex_tls.h — TLS wrapper header for MEX socket intrinsics
  *
- * This header defines a clean C API that wraps OpenSSL. It is intentionally
- * free of both OpenSSL and Maximus includes so it can be safely included
- * from mexsock.c (which pulls in the full Maximus header tree).
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
- * The implementation lives in mex_tls.c, which is compiled with OpenSSL
- * headers only — no Maximus headers — avoiding all namespace conflicts.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- * SPDX-License-Identifier: GPL-2.0-or-later
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #ifndef MEX_TLS_H

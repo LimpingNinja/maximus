@@ -1,15 +1,13 @@
 /*
- * Maximus Version 3.02
- * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * dropfile.c — Door dropfile (DOOR32.SYS etc.) generation
  *
- * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
- *   - Added automatic dropfile generation for door programs
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -41,13 +39,22 @@
 #undef mkdir
 #endif
 
-/* Get node-specific temp directory path */
+/**
+ * @brief Get the node-specific temporary directory path.
+ *
+ * @param path    Output buffer for the path string
+ * @param maxlen  Size of the output buffer
+ */
 static void Get_Node_Temp_Path(char *path, size_t maxlen)
 {
   snprintf(path, maxlen, "%snode%02x", (char *)ngcfg_get_path("maximus.temp_path"), (int)task_num);
 }
 
-/* Create node temp directory if it doesn't exist */
+/**
+ * @brief Create the node-specific temp directory if it doesn't exist.
+ *
+ * @return 0 on success, -1 on failure
+ */
 static int Create_Node_Temp_Dir(void)
 {
   char path[PATHLEN];
@@ -67,7 +74,11 @@ static int Create_Node_Temp_Dir(void)
   return 0;
 }
 
-/* Write DORINFO1.DEF dropfile */
+/**
+ * @brief Write a DORINFO1.DEF dropfile for classic door compatibility.
+ *
+ * @return 0 on success, -1 on failure
+ */
 int Write_Dorinfo1(void)
 {
   char path[PATHLEN];
@@ -138,7 +149,11 @@ int Write_Dorinfo1(void)
   return 0;
 }
 
-/* Write DOOR.SYS dropfile */
+/**
+ * @brief Write a DOOR.SYS dropfile for PCBoard-style doors.
+ *
+ * @return 0 on success, -1 on failure
+ */
 int Write_DoorSys(void)
 {
   char path[PATHLEN];
@@ -208,7 +223,11 @@ int Write_DoorSys(void)
   return 0;
 }
 
-/* Write CHAIN.TXT dropfile */
+/**
+ * @brief Write a CHAIN.TXT dropfile for WWIV-style doors.
+ *
+ * @return 0 on success, -1 on failure
+ */
 int Write_ChainTxt(void)
 {
   char path[PATHLEN];
@@ -277,7 +296,11 @@ int Write_ChainTxt(void)
   return 0;
 }
 
-/* Write DOOR32.SYS dropfile */
+/**
+ * @brief Write a DOOR32.SYS dropfile for 32-bit telnet doors.
+ *
+ * @return 0 on success, -1 on failure
+ */
 int Write_Door32Sys(void)
 {
   char path[PATHLEN];
@@ -329,7 +352,9 @@ int Write_Door32Sys(void)
   return 0;
 }
 
-/* Clean up node temp directory */
+/**
+ * @brief Clean up the node temp directory by removing all files within it.
+ */
 void Clean_Node_Temp_Dir(void)
 {
   char path[PATHLEN];
@@ -367,7 +392,13 @@ void Clean_Node_Temp_Dir(void)
   }
 }
 
-/* Write all dropfiles */
+/**
+ * @brief Write all supported dropfile formats to the node temp directory.
+ *
+ * Generates DORINFO1.DEF, DOOR.SYS, CHAIN.TXT, and DOOR32.SYS.
+ *
+ * @return 0 if all succeeded, -1 if any failed
+ */
 int Write_All_Dropfiles(void)
 {
   int ret = 0;

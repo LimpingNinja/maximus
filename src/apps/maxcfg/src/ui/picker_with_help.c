@@ -1,9 +1,30 @@
+/*
+ * picker_with_help.c — Generic picker with help panel
+ *
+ * Copyright 2026 by Kevin Morgan.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include "maxcfg.h"
 #include "ui.h"
 
+/** @brief Internal category grouping for tabbed picker display. */
 typedef struct {
     const char *name;
     int *indices;
@@ -11,6 +32,19 @@ typedef struct {
     int capacity;
 } Category;
 
+/**
+ * @brief Display a scrollable picker dialog with category tabs and a help panel.
+ *
+ * Options may be grouped by category (via PickerOption.category). If categories
+ * are present, left/right arrows switch between tabs. The help panel at the
+ * bottom shows the description of the currently highlighted option.
+ *
+ * @param title       Dialog title shown in the border.
+ * @param options     Array of PickerOption entries (NULL-name terminates).
+ * @param num_options Number of valid entries in options[].
+ * @param current_idx Pre-selected index, or -1 for default.
+ * @return Selected option index, or -1 if the user cancelled.
+ */
 int picker_with_help_show(const char *title, const PickerOption *options, int num_options, int current_idx)
 {
     if (!options || num_options == 0) return -1;
