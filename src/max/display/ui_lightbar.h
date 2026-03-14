@@ -31,6 +31,9 @@
  *  Packed into the `flags` parameter of ui_select_prompt().
  * @{ */
 #define UI_SP_FLAG_STRIP_BRACKETS  0x0001  /**< Strip [X] markers, highlight char only */
+#define UI_SP_FLAG_BRACKET_SQUARE  0x0002  /**< Draw [X] brackets around selected option */
+#define UI_SP_FLAG_BRACKET_ROUNDED 0x0004  /**< Draw (X) brackets around selected option */
+#define UI_SP_FLAG_BRACKET_MASK    0x0006  /**< Mask for bracket type bits */
 #define UI_SP_HOTKEY_ATTR_SHIFT    8       /**< bits 8-15: hotkey attribute byte */
 #define UI_SP_DEFAULT_SHIFT        16      /**< bits 16-23: 1-based default index (0 = first) */
 /** @} */
@@ -108,11 +111,12 @@ int ui_lightbar_run_pos_hotkey(ui_lightbar_pos_menu_t *m, int *out_key);
  * @param prompt_attr  Attribute for the prompt text.
  * @param normal_attr  Attribute for unselected options.
  * @param selected_attr Attribute for the selected option.
- * @param flags        Packed flags (strip brackets, hotkey attr, default index).
- * @param margin       Extra padding columns around each option.
- * @param separator    String drawn between options (may be NULL).
- * @param out_key      Receives the hotkey of the selected option.
- * @return             Selected index, or -1 if cancelled.
+ * @param flags         Packed flags (strip brackets, hotkey attr, default, bracket type).
+ * @param margin        Extra padding columns around each option.
+ * @param separator     String drawn between options (may be NULL).
+ * @param last_separator Separator before the last option (verbose " or "), or NULL.
+ * @param out_key       Receives the hotkey of the selected option.
+ * @return              Selected index, or -1 if cancelled.
  */
 int ui_select_prompt(
     const char *prompt,
@@ -124,6 +128,7 @@ int ui_select_prompt(
     int flags,
     int margin,
     const char *separator,
+    const char *last_separator,
     int *out_key
 );
 

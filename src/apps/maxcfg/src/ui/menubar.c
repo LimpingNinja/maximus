@@ -4891,6 +4891,7 @@ static void action_msg_areas_picklist(void)
             for (int i = 22; i <= 24; i++) area_values[i] = strdup("0");
             area_values[25] = strdup("Demoted");
             for (int i = 27; i <= 35; i++) area_values[i] = strdup("");
+            area_values[36] = strdup("MCI");
             
             if (form_edit("New Message Area", msg_area_fields, msg_area_field_count, area_values, NULL, NULL)) {
                 if (area_values[0] && area_values[0][0]) {
@@ -4901,6 +4902,7 @@ static void action_msg_areas_picklist(void)
                     new_area->path = strdup(area_values[3]);
                     new_area->desc = strdup(area_values[4]);
                     new_area->owner = area_values[5][0] ? strdup(area_values[5]) : NULL;
+                    new_area->color_support = strdup(area_values[36] ? area_values[36] : "MCI");
                     
                     /* Set style flags */
                     new_area->style = 0;

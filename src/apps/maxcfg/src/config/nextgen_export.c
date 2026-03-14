@@ -2138,6 +2138,7 @@ static bool build_msg_areas_recursive(MaxCfgNgMsgAreaList *areas, TreeNode *node
                 .origin = a->origin,
                 .attach_path = a->attachpath,
                 .barricade = a->barricade,
+                .color_support = a->color_support,
                 .style = styles,
                 .style_count = style_count,
                 .renum_max = a->renum_max,

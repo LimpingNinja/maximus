@@ -51,6 +51,7 @@ static char rcs_id[]="$Id: display.c,v 1.4 2004/01/27 21:00:26 paltas Exp $";
 #include "max_file.h"
 #include "display.h"
 #include "displayp.h"
+#include "theme.h"
 
 typedef struct _raw_display_state
 {
@@ -264,104 +265,222 @@ static sword near DisplayOneFile(DSTK *d)
 }
 
 
+/**
+ * @brief Try to open a themed variant of a display file.
+ *
+ * Constructs path as <basename>.<theme_sname><ext> and attempts shopen().
+ * The ext parameter should include the leading dot (e.g., ".rbs"), or be
+ * empty string for a bare themed probe (<basename>.<theme_sname>).
+ *
+ * @param d           Display stack with scratch buffer and filename
+ * @param theme_sname Theme short_name (NULL or "" skips the probe)
+ * @param ext         Extension with leading dot, or "" for bare probe
+ * @return File descriptor, or -1 if not found or theme inactive
+ */
+static int near DisplayTryThemedOpen(DSTK *d, const char *theme_sname,
+                                      const char *ext)
+{
+  if (!theme_sname || !*theme_sname)
+    return -1;
+
+  sprintf(d->scratch, "%s.%s%s", d->filename, theme_sname, ext);
+  return shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
+}
+
+
+/**
+ * @brief Extension probe entry for tiered display file resolution.
+ *
+ * Each tier is a NULL-terminated array of these entries.  The probe
+ * helper walks the array twice: first with the theme prefix, then
+ * without.
+ */
+typedef struct {
+  const char *ext;   /**< Extension with leading dot (e.g. ".rbs") */
+  word flags;        /**< Display flags to OR into d->type          */
+  byte raw;          /**< 1 = raw display (no MECCA processing)     */
+} ext_probe_t;
+
+/* Tier 1 — RIP: only tried when hasRIP() is true */
+static const ext_probe_t rip_tier[] = {
+  { ".rbs", DISPLAY_NOLOCAL, 0 },
+  { ".rip", DISPLAY_NOLOCAL, 0 },
+  { NULL, 0, 0 }
+};
+
+/* Tier 2 — ANSI: only tried when usr.video == GRAPH_ANSI */
+static const ext_probe_t ansi_tier[] = {
+  { ".gbs", 0, 0 },
+  { ".bbs", 0, 0 },
+  { ".ans", 0, 1 },   /* raw ANSI — SAUCE checked after open */
+  { NULL, 0, 0 }
+};
+
+/* Tier 3 — Basic fallback for ANSI users (.bbs already covered above) */
+static const ext_probe_t basic_ansi_tier[] = {
+  { ".avt", 0, 1 },
+  { ".txt", 0, 1 },
+  { NULL, 0, 0 }
+};
+
+/* Tier 3 — Basic fallback for AVATAR users */
+static const ext_probe_t basic_avatar_tier[] = {
+  { ".avt", 0, 1 },
+  { ".bbs", 0, 0 },
+  { ".txt", 0, 1 },
+  { NULL, 0, 0 }
+};
+
+/* Tier 3 — Basic fallback for TTY users */
+static const ext_probe_t basic_tty_tier[] = {
+  { ".bbs", 0, 0 },
+  { ".txt", 0, 1 },
+  { NULL, 0, 0 }
+};
+
+
+/**
+ * @brief Probe a capability tier for a display file.
+ *
+ * Two passes over the tier array: pass 1 tries every extension with
+ * the theme short_name prefix; pass 2 tries each extension bare.
+ * This ensures all themed variants in the tier beat all non-themed
+ * variants, fixing the priority inversion where a non-themed .bbs
+ * could shadow a themed .ans.
+ *
+ * @param d           Display stack (uses scratch buffer, sets bbsfile)
+ * @param tier        NULL-terminated array of ext_probe_t entries
+ * @param theme_sname Current theme short_name (NULL/"" = skip pass 1)
+ * @return 0 if a file was opened (d->bbsfile set), -1 otherwise
+ */
+static int near DisplayTryTier(DSTK *d, const ext_probe_t *tier,
+                                const char *theme_sname)
+{
+  int fd;
+  int i;
+
+  /* Pass 1: themed variants — <basename>.<theme><ext> */
+  if (theme_sname && *theme_sname)
+  {
+    for (i = 0; tier[i].ext; i++)
+    {
+      sprintf(d->scratch, "%s.%s%s", d->filename, theme_sname,
+              tier[i].ext);
+      fd = shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
+      if (fd != -1)
+      {
+        d->bbsfile = fd;
+        d->type |= tier[i].flags;
+        if (tier[i].raw)
+        {
+          raw_display_state.active  = TRUE;
+          raw_display_state.raw_end = -1L;
+        }
+        return 0;
+      }
+    }
+  }
+
+  /* Pass 2: non-themed variants — <basename><ext> */
+  for (i = 0; tier[i].ext; i++)
+  {
+    sprintf(d->scratch, ss, d->filename, tier[i].ext);
+    fd = shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
+    if (fd != -1)
+    {
+      d->bbsfile = fd;
+      d->type |= tier[i].flags;
+      if (tier[i].raw)
+      {
+        raw_display_state.active  = TRUE;
+        raw_display_state.raw_end = -1L;
+      }
+      return 0;
+    }
+  }
+
+  return -1;
+}
+
+
+/**
+ * @brief Open a display file using tiered capability-based resolution.
+ *
+ * Resolution is split into capability tiers.  Within each tier every
+ * themed variant is tried before any non-themed variant, so a themed
+ * .ans always beats a non-themed .bbs for ANSI-capable terminals.
+ *
+ * Tier 1 — RIP   (hasRIP):          .rbs  .rip
+ * Tier 2 — ANSI  (GRAPH_ANSI):      .gbs  .bbs  .ans
+ * Tier 3 — Basic (always, varies):   ANSI  → .avt .txt
+ *                                     AVATAR→ .avt .bbs .txt
+ *                                     TTY   → .bbs .txt
+ * Tier 4 — Bare filename             <base>.<theme> then <base>
+ */
 static sword near DisplayOpenFile(DSTK *d)
 {
-  d->bbsfile=-1;
+  const char *theme_sname = theme_get_current_shortname();
+  const ext_probe_t *basic_tier;
 
-  /* DLN 28 Feb 95 Try to open a .RBS file first (if RIP support is enabled) */
+  d->bbsfile = -1;
 
+  /* Reset raw display state — must not leak between successive files */
+  raw_display_state.active  = FALSE;
+  raw_display_state.raw_end = -1L;
+
+  /* ---- Tier 1: RIP ------------------------------------------------- */
   if (hasRIP())
+    DisplayTryTier(d, rip_tier, theme_sname);
+
+  /* ---- Tier 2: ANSI ------------------------------------------------ */
+  if (d->bbsfile == -1 && usr.video == GRAPH_ANSI)
+    DisplayTryTier(d, ansi_tier, theme_sname);
+
+  /* ---- Tier 3: Basic / fallback ------------------------------------ */
+  if (d->bbsfile == -1)
   {
-    sprintf(d->scratch, ss, d->filename, dotrbs);
+    if (usr.video == GRAPH_ANSI)
+      basic_tier = basic_ansi_tier;
+    else if (usr.video == GRAPH_AVATAR)
+      basic_tier = basic_avatar_tier;
+    else
+      basic_tier = basic_tty_tier;
 
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
-
-    /* DLN 03 Mar 95 Suppress local output for .RBS files by default */
-
-    if (d->bbsfile != -1)
-      d->type |= DISPLAY_NOLOCAL;
+    DisplayTryTier(d, basic_tier, theme_sname);
   }
 
-  /* Try to open a .GBS file */
-
-  if (d->bbsfile==-1 && usr.video==GRAPH_ANSI)
+  /* ---- Tier 4: Bare filename — themed then unthemed ---------------- */
+  if (d->bbsfile == -1)
   {
-    sprintf(d->scratch, ss, d->filename, dotgbs);
+    d->bbsfile = DisplayTryThemedOpen(d, theme_sname, "");
 
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
+    if (d->bbsfile == -1)
+      d->bbsfile = shopen(d->filename, O_RDONLY | O_BINARY | O_NOINHERIT);
   }
 
-  /* If that didn't work, try a .BBS file */
-  
-  if (d->bbsfile==-1)
-  {
-    sprintf(d->scratch, ss, d->filename, dotbbs);
-
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
-  }
-
-  /* Try raw extensions based on user video mode */
-
-  if (d->bbsfile==-1 && usr.video==GRAPH_ANSI)
-  {
-    sprintf(d->scratch, ss, d->filename, ".ans");
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
-    if (d->bbsfile != -1)
-    {
-      raw_display_state.active=TRUE;
-      raw_display_state.raw_end=-1L;
-    }
-  }
-  else if (d->bbsfile==-1 && usr.video==GRAPH_AVATAR)
-  {
-    sprintf(d->scratch, ss, d->filename, ".avt");
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
-    if (d->bbsfile != -1)
-    {
-      raw_display_state.active=TRUE;
-      raw_display_state.raw_end=-1L;
-    }
-  }
-  else if (d->bbsfile==-1 && usr.video==GRAPH_TTY)
-  {
-    sprintf(d->scratch, ss, d->filename, ".txt");
-    d->bbsfile=shopen(d->scratch, O_RDONLY | O_BINARY | O_NOINHERIT);
-    if (d->bbsfile != -1)
-    {
-      raw_display_state.active=TRUE;
-      raw_display_state.raw_end=-1L;
-    }
-  }
-
-  /* Finally, try with no extension */
-  
-  if (d->bbsfile==-1)
-    d->bbsfile=shopen(d->filename, O_RDONLY | O_BINARY | O_NOINHERIT);
-
-  if (d->bbsfile==-1)
-    return (d->ret=DRET_NOTFOUND);
+  if (d->bbsfile == -1)
+    return (d->ret = DRET_NOTFOUND);
 
   /* Detect and suppress SAUCE metadata for raw ANSI files */
-  if (raw_display_state.active && usr.video==GRAPH_ANSI)
+  if (raw_display_state.active && usr.video == GRAPH_ANSI)
     DisplayDetectSauce(d, &raw_display_state);
-
 
   /* Allocate memory for this file's buffer */
 
-  if ((d->filebufr=malloc(FILEBUFSIZ))==NULL)
-    return (d->ret=DRET_NOMEM);
-  
-  d->bufp=d->highp=d->filebufr;
+  if ((d->filebufr = malloc(FILEBUFSIZ)) == NULL)
+    return (d->ret = DRET_NOMEM);
+
+  d->bufp = d->highp = d->filebufr;
 
   /* Seek to the restore offset, if any */
-  
+
   if (rst_offset != -1L)
   {
     lseek(d->bbsfile, rst_offset, SEEK_SET);
     strcpy(d->onexit, last_onexit);
-    rst_offset=-1L;
+    rst_offset = -1L;
   }
-  
+
   return 0;
 }
 

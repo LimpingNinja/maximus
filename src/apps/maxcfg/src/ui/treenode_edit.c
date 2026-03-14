@@ -134,6 +134,7 @@ void treenode_load_msgarea_form(TreeNode *node, char **values)
     
     /* Paths */
     for (int i = 27; i <= 35; i++) values[i] = strdup("");
+    values[36] = strdup(area && area->color_support ? area->color_support : "MCI");
 }
 
 /**
@@ -325,6 +326,12 @@ bool treenode_save_msgarea_form(TreeNode ***roots, int *root_count, TreeNode *no
     if (strcmp(values[25] ? values[25] : "", area->acs ? area->acs : "") != 0) {
         free(area->acs);
         area->acs = strdup(values[25] ? values[25] : "");
+        modified = true;
+    }
+
+    if (strcmp(values[36] ? values[36] : "MCI", area->color_support ? area->color_support : "MCI") != 0) {
+        free(area->color_support);
+        area->color_support = strdup(values[36] ? values[36] : "MCI");
         modified = true;
     }
     

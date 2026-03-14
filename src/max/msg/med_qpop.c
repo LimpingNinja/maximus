@@ -134,15 +134,19 @@ int Quote_Popup(struct _replyp *pr)
 
   if (pr == NULL)
   {
-    Goto(usrlen, 1);
-    Puts(max_not_reply);
-    Goto(cursor_x, cursor_y);
+    Goto(MAGNET_CONTEXT_ROW, 1);
+    PutsForce(max_not_reply);
+    GOTO_TEXT(cursor_x, cursor_y);
     vbuf_flush();
 
     while (!Mdm_keyp())
       Giveaway_Slice();
 
     Mdm_getcwcc();  /* eat the key */
+    MagnEt_ClearContextLine();
+    GOTO_TEXT(cursor_x, cursor_y);
+    EMIT_MSG_TEXT_COL();
+    vbuf_flush();
     return 0;
   }
 
@@ -837,16 +841,20 @@ static int near Quote_KeyLoop(quote_popup_t *qp)
 
       case K_CTRLQ:           /* ^Q = close popup */
       case K_ESC:
-        /* ESC could be literal ESC or start of ANSI sequence.
-         * Check for ANSI: ESC [ ... */
         if (ch == K_ESC)
         {
-          /* Peek: if next char is '[' or 'O', it's ANSI */
-          int ch2 = Mdm_getcwcc();
+          int ch2;
+
+          if (Mdm_kpeek_tic(2) == -1)
+          {
+            running = FALSE;
+            break;
+          }
+
+          ch2 = Mdm_getcwcc();
 
           if (ch2 == '[' || ch2 == 'O')
           {
-            /* Parse ANSI sequence */
             int ch3 = Mdm_getcwcc();
 
             switch (ch3)
@@ -888,23 +896,20 @@ static int near Quote_KeyLoop(quote_popup_t *qp)
                 break;
 
               default:
-                break;  /* Unknown ANSI sequence — ignore */
+                break;
             }
           }
           else if (ch2 == K_ESC)
           {
-            /* Double-ESC = exit */
             running = FALSE;
           }
           else
           {
-            /* Bare ESC followed by non-ANSI — treat as exit */
             running = FALSE;
           }
         }
         else
         {
-          /* ^Q = exit */
           running = FALSE;
         }
         break;

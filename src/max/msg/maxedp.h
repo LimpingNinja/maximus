@@ -31,6 +31,20 @@
   Putc('\x16'); Putc('\x01'); Putc((int)_a); \
 } while (0)
 
+#define MAGNET_ESC_NONE    0
+#define MAGNET_ESC_SAVE    1
+#define MAGNET_ESC_ABORT   2
+#define MAGNET_ESC_HELP    3
+#define MAGNET_ESC_QUOTE   4
+#define MAGNET_ESC_COLOR   5
+#define MAGNET_ESC_REDRAW  6
+
+#define MAGNET_TEXT_ROW(row) ((row) + text_start_row - 1)
+#define GOTO_TEXT(row, col)  Goto(MAGNET_TEXT_ROW((row)), (col))
+#define MAGNET_DIVIDER_ROW   (text_start_row + usrlen)
+#define MAGNET_CONTEXT_ROW   (text_start_row + usrlen + 1)
+#define MAGNET_STATUS_ROW    (text_start_row + usrlen + 2)
+
 void BackSpace(void);
 void Delete_Char(void);
 void Delete_Line(int cx);
@@ -42,6 +56,21 @@ word Carriage_Return(int hard);
 int Insert_Line_Before(int cx);
 void MagnEt_Help(void);
 void MagnEt_Menu(void);
+int MagnEt_ContextYesNo(const char *prompt);
+int MagnEt_EscMenu(struct _replyp *pr);
+int MagnEt_InsertColor(void);
+void MagnEt_ClearContextLine(void);
+void MagnEt_DrawFooterDivider(void);
+byte MagnEt_CalcHeaderHeight(void);
+void MagnEt_DrawHeader(void);
+void MagnEt_SpellInit(void);
+void MagnEt_SpellDone(void);
+void MagnEt_SpellClear(void);
+void MagnEt_SpellCheckCurrentWord(int skip_boundary);
+void MagnEt_SpellHandleTypedChar(int ch);
+int MagnEt_SpellApplySuggestion(int index);
+int MagnEt_SpellExtractWord(const char *line, word visible_col, int skip_boundary,
+                            char *word_out, size_t max_len);
 void Piggy(void);
 void MagnEt_Bad_Keystroke(void);
 void Cursor_Left(void);
@@ -61,6 +90,12 @@ void Quote_Up(void);
 void Quote_Down(void);
 void Quote_Copy(void);
 int  Quote_Popup(struct _replyp *pr);
+word MagnEt_LineVisibleLen(const char *line);
+word MagnEt_BufferPosFromVisibleCol(const char *line, word col);
+word MagnEt_VisibleColFromBufferPos(const char *line, word pos);
+char MagnEt_VisibleCharAt(const char *line, word col);
+int MagnEt_LineHasColorCodes(const char *line);
+void MagnEt_ClampCursor(void);
 void Read_DiskFile(void);
 void Load_Message(HMSG msgh);
 void Update_Line(word cx, word cy, word inc, word update_cursor);

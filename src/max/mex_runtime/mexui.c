@@ -323,6 +323,7 @@ word EXPENTRY intrin_ui_select_prompt_hotkey(void)
      flags,
      0,
      "",
+     NULL, /* last_separator */
      &out_key
    );
 
@@ -938,6 +939,7 @@ word EXPENTRY intrin_ui_select_prompt(void)
     flags,
     (int)style->margin,
     separator_str,
+    NULL, /* last_separator */
     &out_key
   );
   
@@ -1101,6 +1103,7 @@ word EXPENTRY intrin_ui_form_run(void)
   /* Convert MEX fields to C fields */
   for (i = 0; i < (int)field_count; i++)
   {
+    int j;
     char *value_str;
 
     fields[i].name = MexDupVMString(&fields_ref[i].name);
@@ -1116,6 +1119,28 @@ word EXPENTRY intrin_ui_form_run(void)
     fields[i].normal_attr = (byte)fields_ref[i].normal_attr;
     fields[i].focus_attr = (byte)fields_ref[i].focus_attr;
     fields[i].format_mask = MexDupVMString(&fields_ref[i].format_mask);
+    fields[i].option_count = (int)fields_ref[i].option_count;
+    if (fields[i].option_count < 0)
+      fields[i].option_count = 0;
+    if (fields[i].option_count > 8)
+      fields[i].option_count = 8;
+    if (fields[i].option_count > 0)
+    {
+      fields[i].options = (const char **)calloc((size_t)fields[i].option_count + 1, sizeof(char *));
+      if (fields[i].options)
+      {
+        for (j = 0; j < fields[i].option_count; j++)
+        {
+          ((char **)fields[i].options)[j] = MexDupVMString(&fields_ref[i].options[j]);
+          if (!((char **)fields[i].options)[j])
+            ((char **)fields[i].options)[j] = MexDupEmptyString();
+        }
+      }
+      else
+      {
+        fields[i].option_count = 0;
+      }
+    }
     
     /* Allocate value buffer and copy initial value */
     value_str = MexDupVMString(&fields_ref[i].value);
@@ -1165,12 +1190,20 @@ word EXPENTRY intrin_ui_form_run(void)
   
   for (i = 0; i < (int)field_count; i++)
   {
+    int j;
     if (fields[i].name)
       free((void *)fields[i].name);
     if (fields[i].label)
       free((void *)fields[i].label);
     if (fields[i].format_mask)
       free((void *)fields[i].format_mask);
+    if (fields[i].options)
+    {
+      for (j = 0; j < fields[i].option_count; j++)
+        if (((char **)fields[i].options)[j])
+          free(((char **)fields[i].options)[j]);
+      free((void *)fields[i].options);
+    }
     if (fields[i].value)
       free(fields[i].value);
   }

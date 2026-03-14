@@ -45,6 +45,7 @@ typedef struct {
     char *origin;         /* Custom origin line */
     char *attachpath;     /* File attachment path */
     char *barricade;      /* Barricade file */
+    char *color_support;  /* Stored message color format */
     char *menuname;       /* Alternate menu */
     unsigned int style;   /* Style flags */
     int renum_max;        /* Max messages (0 = not set) */

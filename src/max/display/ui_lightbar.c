@@ -393,7 +393,14 @@ static void near ui_lb_draw_pos_item(ui_lightbar_pos_menu_t *m, ui_lb_pos_item_t
 
 static void near ui_sp_draw_option(int row, int col, const ui_lb_item_t *opt, int selected, byte normal_attr, byte selected_attr, byte hotkey_attr, int strip_brackets);
 
-static void near ui_sp_draw_option_margined(int row, int col, const ui_lb_item_t *opt, int selected, byte normal_attr, byte selected_attr, byte hotkey_attr, int strip_brackets, int margin)
+/**
+ * @brief Draw an inline select-prompt option with margin padding and optional brackets.
+ *
+ * When bracket_open/bracket_close are non-zero, the selected option is
+ * wrapped in brackets (e.g. [Yes] or (Yes)); unselected options get a
+ * space placeholder so the layout stays stable.
+ */
+static void near ui_sp_draw_option_margined(int row, int col, const ui_lb_item_t *opt, int selected, byte normal_attr, byte selected_attr, byte hotkey_attr, int strip_brackets, int margin, char bracket_open, char bracket_close)
 {
   int i;
   int safe_margin;
@@ -403,13 +410,45 @@ static void near ui_sp_draw_option_margined(int row, int col, const ui_lb_item_t
   ui_set_attr(selected ? selected_attr : normal_attr);
   ui_goto(row, col);
 
+  /* Opening bracket or placeholder space */
+  if (bracket_open)
+  {
+    if (selected)
+    {
+      ui_set_attr(selected_attr);
+      Putc(bracket_open);
+    }
+    else
+    {
+      Putc(' ');
+    }
+  }
+
   for (i = 0; i < safe_margin; i++)
     Putc(' ');
 
-  ui_sp_draw_option(row, col + safe_margin, opt, selected, normal_attr, selected_attr, hotkey_attr, strip_brackets);
+  {
+    int text_col = col + (bracket_open ? 1 : 0) + safe_margin;
+    ui_sp_draw_option(row, text_col, opt, selected, normal_attr, selected_attr, hotkey_attr, strip_brackets);
+  }
 
   for (i = 0; i < safe_margin; i++)
     Putc(' ');
+
+  /* Closing bracket or placeholder space */
+  if (bracket_close)
+  {
+    if (selected)
+    {
+      ui_set_attr(selected_attr);
+      Putc(bracket_close);
+    }
+    else
+    {
+      ui_set_attr(selected ? selected_attr : normal_attr);
+      Putc(' ');
+    }
+  }
 }
 
 /**
@@ -1260,17 +1299,18 @@ static void near ui_sp_draw_option(int row, int col, const ui_lb_item_t *opt, in
 /**
  * @brief Run a horizontal inline select prompt with lightbar navigation.
  *
- * @param prompt        Prompt text.
- * @param options       Option strings.
- * @param option_count  Number of options.
- * @param prompt_attr   Prompt text attribute.
- * @param normal_attr   Unselected option attribute.
- * @param selected_attr Selected option attribute.
- * @param flags         Packed flags.
- * @param margin        Padding columns.
- * @param separator     Separator string between options.
- * @param out_key       Receives hotkey of selected option.
- * @return              Selected index, or -1 if cancelled.
+ * @param prompt         Prompt text.
+ * @param options        Option strings.
+ * @param option_count   Number of options.
+ * @param prompt_attr    Prompt text attribute.
+ * @param normal_attr    Unselected option attribute.
+ * @param selected_attr  Selected option attribute.
+ * @param flags          Packed flags (strip brackets, hotkey attr, default, bracket type).
+ * @param margin         Padding columns on each side of each option.
+ * @param separator      Separator string between options.
+ * @param last_separator Separator before the last option (verbose " or "), or NULL.
+ * @param out_key        Receives hotkey of selected option.
+ * @return               Selected index, or -1 if cancelled.
  */
 int ui_select_prompt(
     const char *prompt,
@@ -1282,6 +1322,7 @@ int ui_select_prompt(
     int flags,
     int margin,
     const char *separator,
+    const char *last_separator,
     int *out_key)
 {
   ui_lb_item_t *opts = NULL;
@@ -1296,14 +1337,32 @@ int ui_select_prompt(
   byte hk_attr;
   int did_hide_cursor = 0;
   int sep_len;
+  int last_sep_len;
   int safe_margin;
   const char *sep;
+  const char *lsep;
+  char bracket_open = 0;
+  char bracket_close = 0;
+  int bracket_extra;
 
   int default_idx;
 
   strip_brackets = (flags & UI_SP_FLAG_STRIP_BRACKETS) ? 1 : 0;
   hk_attr = (byte)((flags >> UI_SP_HOTKEY_ATTR_SHIFT) & 0xff);
   default_idx = (flags >> UI_SP_DEFAULT_SHIFT) & 0xff;
+
+  /* Decode bracket type from flags */
+  if (flags & UI_SP_FLAG_BRACKET_SQUARE)
+  {
+    bracket_open = '[';
+    bracket_close = ']';
+  }
+  else if (flags & UI_SP_FLAG_BRACKET_ROUNDED)
+  {
+    bracket_open = '(';
+    bracket_close = ')';
+  }
+  bracket_extra = (bracket_open ? 2 : 0); /* width added per option for brackets */
 
   if (out_key)
     *out_key = 0;
@@ -1344,9 +1403,14 @@ int ui_select_prompt(
 
   sep = separator ? separator : "";
   sep_len = (int)strlen(sep);
+
+  /* Use last_separator before the final option if provided, else fall back to sep */
+  lsep = (last_separator && *last_separator) ? last_separator : sep;
+  last_sep_len = (int)strlen(lsep);
+
   safe_margin = (margin > 0) ? margin : 0;
 
-  /* Layout options horizontally */
+  /* Layout options horizontally, accounting for bracket width */
   for (i = 0; i < option_count; i++)
   {
     const char *text = strip_brackets ? (opts[i].disp ? opts[i].disp : "") : (opts[i].orig ? opts[i].orig : "");
@@ -1358,25 +1422,32 @@ int ui_select_prompt(
     }
 
     start_col[i] = col;
-    opt_width[i] = (len + (safe_margin * 2));
+    opt_width[i] = (len + (safe_margin * 2) + bracket_extra);
     col += opt_width[i];
-    if (i != option_count - 1)
+    if (i < option_count - 2)
       col += sep_len;
+    else if (i == option_count - 2)
+      col += last_sep_len;
   }
 
   /* Draw all options */
   for (i = 0; i < option_count; i++)
   {
-    ui_sp_draw_option_margined(row, start_col[i], &opts[i], (i == selected), normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
-    if (i != option_count - 1 && sep_len > 0)
+    ui_sp_draw_option_margined(row, start_col[i], &opts[i], (i == selected), normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
+    if (i < option_count - 1)
     {
-      ui_set_attr(normal_attr);
-      ui_goto(row, start_col[i] + opt_width[i]);
-      Printf("%s", sep);
+      const char *gap = (i == option_count - 2) ? lsep : sep;
+      int gap_len = (i == option_count - 2) ? last_sep_len : sep_len;
+      if (gap_len > 0)
+      {
+        ui_set_attr(normal_attr);
+        ui_goto(row, start_col[i] + opt_width[i]);
+        Printf("%s", gap);
+      }
     }
   }
 
-  ui_goto(row, start_col[selected] + safe_margin);
+  ui_goto(row, start_col[selected] + (bracket_open ? 1 : 0) + safe_margin);
   vbuf_flush();
 
   while (1)
@@ -1417,21 +1488,21 @@ int ui_select_prompt(
       case K_UP:
         if (selected > 0)
         {
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
 
           selected--;
 
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
           vbuf_flush();
         }
         else
         {
           /* wrap */
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
 
           selected = option_count - 1;
 
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
           vbuf_flush();
         }
         break;
@@ -1440,20 +1511,20 @@ int ui_select_prompt(
       case K_DOWN:
         if (selected < option_count - 1)
         {
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
 
           selected++;
 
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
           vbuf_flush();
         }
         else
         {
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 0, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
 
           selected = 0;
 
-          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin);
+          ui_sp_draw_option_margined(row, start_col[selected], &opts[selected], 1, normal_attr, selected_attr, hk_attr, strip_brackets, safe_margin, bracket_open, bracket_close);
           vbuf_flush();
         }
         break;

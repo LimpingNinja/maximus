@@ -152,6 +152,9 @@ typedef struct login_ctx {
   /* -- flow flags -- */
   int  found_user;             /**< True if user record found in DB      */
   int  is_newuser;             /**< True if new registration             */
+  int  newuser_mex_ran;        /**< True if new-user questionnaire ran   */
+  int  newuser_mex_saved;      /**< True if questionnaire returned data  */
+  dword newuser_answered_mask; /**< Explicit handled-field bitmask       */
 
   /* -- saved state -- */
   byte saved_help;             /**< Original usr.help before confirm     */
@@ -175,6 +178,19 @@ typedef struct login_ctx {
   int  cfg_min_rip_baud;       /**< general.session.min_rip_baud         */
   int  cfg_disable_magnet;     /**< general.session.disable_magnet       */
 } login_ctx_t;
+
+#define NEWUSER_ANSWER_NAME        0x00000001UL
+#define NEWUSER_ANSWER_CITY        0x00000002UL
+#define NEWUSER_ANSWER_ALIAS       0x00000004UL
+#define NEWUSER_ANSWER_PHONE       0x00000008UL
+#define NEWUSER_ANSWER_DATAPHONE   0x00000010UL
+#define NEWUSER_ANSWER_SEX         0x00000020UL
+#define NEWUSER_ANSWER_DOB         0x00000040UL
+#define NEWUSER_ANSWER_ANSI        0x00000080UL
+#define NEWUSER_ANSWER_RIP         0x00000100UL
+#define NEWUSER_ANSWER_FSR         0x00000200UL
+#define NEWUSER_ANSWER_IBMCHARS    0x00000400UL
+#define NEWUSER_ANSWER_HOTKEYS     0x00000800UL
 
 
 /* ================================================================== */
@@ -799,6 +815,8 @@ static login_step_t handle_new_setup(login_ctx_t *ctx)
 static login_step_t handle_new_register(login_ctx_t *ctx)
 {
   HUF huf;
+  const char *newuser_mex;
+  int mex_rc;
 
   NW(ctx);
 
@@ -806,10 +824,31 @@ static login_step_t handle_new_register(login_ctx_t *ctx)
   if (*ngcfg_get_path("general.display_files.application"))
     Display_File(0, NULL, ngcfg_get_path("general.display_files.application"));
 
-  /* TODO: MEX newuser hook — check ngcfg_get_path("general.display_files.mex.newuser_mex") */
+  ctx->newuser_mex_ran = FALSE;
+  ctx->newuser_mex_saved = FALSE;
+  ctx->newuser_answered_mask = 0;
+
+  newuser_mex = ngcfg_get_path("general.display_files.newuser_mex");
+  if (newuser_mex && *newuser_mex)
+  {
+    MexSetNewUserAnsweredMask(0);
+    mex_rc = Mex((char *)newuser_mex);
+    ctx->newuser_mex_ran = (mex_rc >= 0);
+    ctx->newuser_answered_mask = MexGetNewUserAnsweredMask();
+    ctx->newuser_mex_saved = (ctx->newuser_answered_mask != 0);
+    logit("@newuser_mex path='%s' rc=%d ran=%d saved=%d mask=0x%08lx",
+          newuser_mex,
+          mex_rc,
+          ctx->newuser_mex_ran,
+          ctx->newuser_mex_saved,
+          (unsigned long)ctx->newuser_answered_mask);
+    SetUserName(&usr, usrname);
+    Set_Lang_Alternate(hasRIP());
+  }
 
   /* YES/YES mode: ask for real name (alias already set in NEW_SETUP) */
-  if (ctx->cfg_alias_system && ctx->cfg_ask_alias)
+  if (ctx->cfg_alias_system && ctx->cfg_ask_alias &&
+      !(ctx->newuser_answered_mask & NEWUSER_ANSWER_NAME))
   {
     char realname[PATHLEN];
 
@@ -832,7 +871,8 @@ static login_step_t handle_new_register(login_ctx_t *ctx)
   }
 
   /* Collect city */
-  Chg_City();
+  if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_CITY))
+    Chg_City();
 
   /* Alias handling by mode */
   if (!ctx->cfg_ask_alias)
@@ -846,15 +886,16 @@ static login_step_t handle_new_register(login_ctx_t *ctx)
   }
   else
   {
-    /* Other modes with Ask Alias: prompt for alias */
-    Chg_Alias();
+    /* Other modes with Ask Alias: prompt for alias unless MEX already did it */
+    if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_ALIAS))
+      Chg_Alias();
     Bad_Word_Check(usr.alias);
   }
 
   /* Phone number */
-  if (ctx->cfg_ask_phone)
+  if (ctx->cfg_ask_phone && !(ctx->newuser_answered_mask & NEWUSER_ANSWER_PHONE))
     Chg_Phone();
-  else
+  else if (!ctx->cfg_ask_phone)
     *usr.phone = '\0';
 
   /* First call date */
@@ -925,23 +966,28 @@ static login_step_t handle_term_setup(login_ctx_t *ctx)
       if (!*linebuf)
         Puts(get_ansi1);
 
-      if (GetListAnswer(x ? CYnq : yCNq, string, useyforyes, 0,
-                        get_ansi2) == YES)
+      if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_ANSI))
       {
-        usr.video = GRAPH_ANSI;
-        usr.bits |= BITS_FSR;
-      }
-      else
-      {
-        usr.video = GRAPH_TTY;
-        usr.bits &= ~BITS_FSR;
-        usr.bits2 |= BITS2_BORED;
+        if (GetListAnswer(x ? CYnq : yCNq, string, useyforyes, 0,
+                          get_ansi2) == YES)
+        {
+          usr.video = GRAPH_ANSI;
+          usr.bits |= BITS_FSR;
+        }
+        else
+        {
+          usr.video = GRAPH_TTY;
+          usr.bits &= ~BITS_FSR;
+          usr.bits2 |= BITS2_BORED;
+        }
       }
 
-      usr.bits &= ~BITS_RIP;
+      if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_RIP))
+        usr.bits &= ~BITS_RIP;
 
       /* --- RIP detection and prompt --- */
-      if (local || baud >= (dword)ctx->cfg_min_rip_baud)
+      if ((local || baud >= (dword)ctx->cfg_min_rip_baud) &&
+          !(ctx->newuser_answered_mask & NEWUSER_ANSWER_RIP))
       {
         NoWhiteN();
         sprintf(string, "%swhy_rip",
@@ -967,34 +1013,40 @@ static login_step_t handle_term_setup(login_ctx_t *ctx)
       /* --- Full-screen editor prompt (ANSI users only) --- */
       if (usr.video != GRAPH_TTY)
       {
-        sprintf(string, "%swhy_fsed",
-                (char *)ngcfg_get_path("maximus.display_path"));
-
-        NoWhiteN();
-
-        if (GetYnhAnswer(string, get_fsed, 0) == YES)
+        if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_FSR))
         {
-          usr.bits2 &= ~BITS2_BORED;
-          usr.bits  |= BITS_FSR;
-        }
-        else
-        {
-          usr.bits2 |= BITS2_BORED;
-          if (!(usr.bits & BITS_RIP))
-            usr.bits &= ~BITS_FSR;
+          sprintf(string, "%swhy_fsed",
+                  (char *)ngcfg_get_path("maximus.display_path"));
+
+          NoWhiteN();
+
+          if (GetYnhAnswer(string, get_fsed, 0) == YES)
+          {
+            usr.bits2 &= ~BITS2_BORED;
+            usr.bits  |= BITS_FSR;
+          }
+          else
+          {
+            usr.bits2 |= BITS2_BORED;
+            if (!(usr.bits & BITS_RIP))
+              usr.bits &= ~BITS_FSR;
+          }
         }
       }
 
       /* --- IBM PC character set prompt --- */
-      sprintf(string, "%swhy_pc",
-              (char *)ngcfg_get_path("maximus.display_path"));
+      if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_IBMCHARS))
+      {
+        sprintf(string, "%swhy_pc",
+                (char *)ngcfg_get_path("maximus.display_path"));
 
-      NoWhiteN();
+        NoWhiteN();
 
-      if (GetYnhAnswer(string, get_ibmpc, 0) == YES)
-        usr.bits2 |= BITS2_IBMCHARS;
-      else
-        usr.bits2 &= ~BITS2_IBMCHARS;
+        if (GetYnhAnswer(string, get_ibmpc, 0) == YES)
+          usr.bits2 |= BITS2_IBMCHARS;
+        else
+          usr.bits2 &= ~BITS2_IBMCHARS;
+      }
 
       /* --- Hotkeys prompt (non-RIP users) --- */
       if (usr.bits & BITS_RIP)
@@ -1002,7 +1054,7 @@ static login_step_t handle_term_setup(login_ctx_t *ctx)
         usr.bits  |= BITS_HOTKEYS | BITS_FSR;
         usr.bits2 |= BITS2_CLS;
       }
-      else
+      else if (!(ctx->newuser_answered_mask & NEWUSER_ANSWER_HOTKEYS))
       {
         NoWhiteN();
 

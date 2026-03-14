@@ -40,6 +40,7 @@ static char rcs_id[]="$Id: max_out.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 
 void MdmPipeFlush(void);
 void LPipeFlush(void);
+int _stdc Display_File(word type, char *o_nonstop, char *fname,...);
 
 #if defined(NT) || defined(UNIX)
 # include "ntcomm.h"
@@ -474,15 +475,94 @@ void Putc(int ch)
     Lputc(ch);
 }
 
-void Puts(char *s)
+/**
+ * @brief Output a substring of length @a len through the normal MCI
+ *        expansion + terminal path.  Used internally by Puts() when
+ *        splitting on |DF{...} boundaries.
+ */
+static void Puts_segment(const char *s, size_t len)
 {
-  const char *expanded=MciMaybeExpandString(s);
+  if (len == 0)
+    return;
+
+  char *tmp = malloc(len + 1);
+  if (!tmp)
+    return;
+
+  memcpy(tmp, s, len);
+  tmp[len] = '\0';
+
+  const char *expanded = MciMaybeExpandString(tmp);
 
   if (!no_remote_output)
     Mdm_puts((char *)expanded);
 
   if ((snoop || local) && !no_local_output)
     Lputs((char *)expanded);
+
+  free(tmp);
+}
+
+/**
+ * @brief Main string-output function.
+ *
+ * If the string contains |DF{path}, the text is split at each
+ * occurrence: preceding text is MCI-expanded and output, then
+ * Display_File() is called for the path.  The ':' prefix convention
+ * for MEX scripts is handled by Display_File internally.
+ */
+void Puts(char *s)
+{
+  /* Fast path: no |DF{ present or MCI codes not enabled */
+  if (!(g_mci_parse_flags & MCI_PARSE_MCI_CODES) || !strstr(s, "|DF{"))
+  {
+    const char *expanded = MciMaybeExpandString(s);
+
+    if (!no_remote_output)
+      Mdm_puts((char *)expanded);
+
+    if ((snoop || local) && !no_local_output)
+      Lputs((char *)expanded);
+
+    return;
+  }
+
+  /* Slow path: split on |DF{...} boundaries */
+  const char *p = s;
+  const char *df;
+
+  while ((df = strstr(p, "|DF{")) != NULL)
+  {
+    /* Output the text segment before |DF{ */
+    if (df > p)
+      Puts_segment(p, (size_t)(df - p));
+
+    /* Find the closing brace */
+    const char *end = strchr(df + 4, '}');
+    if (!end)
+    {
+      /* No closing brace — output the rest as literal text */
+      Puts_segment(df, strlen(df));
+      return;
+    }
+
+    /* Extract the file path / MEX script name */
+    size_t plen = (size_t)(end - (df + 4));
+    char path[PATHLEN];
+    if (plen >= sizeof(path))
+      plen = sizeof(path) - 1;
+    memcpy(path, df + 4, plen);
+    path[plen] = '\0';
+
+    /* Display_File handles .bbs/.ans resolution and the ':' MEX prefix */
+    Display_File(0, NULL, path);
+
+    p = end + 1;
+  }
+
+  /* Output any remaining text after the last |DF{...} */
+  if (*p)
+    Puts_segment(p, strlen(p));
 }
 
 void Mdm_puts(char *s)

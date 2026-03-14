@@ -36,11 +36,13 @@ static char rcs_id[]="$Id: max_chng.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include "libmaxcfg.h"
 #include "prog.h"
 #include "mm.h"
 #include "arc_def.h"
 #include "md5.h"
 #include "ui_field.h"
+#include "theme.h"
 
 static int near Invalid_City(char *usr_city);
 static int near Invalid_Name(char *usr_name);
@@ -654,6 +656,107 @@ byte Get_Archiver(void)
 }
 
 
+/**
+ * @brief Change the user's active theme.
+ *
+ * Lists available themes from the registry, accepts a numeric selection,
+ * updates usr.theme, resolves and switches to the theme's language, and
+ * reloads theme colors.
+ */
+static void near Chg_Theme(void)
+{
+  int count = theme_get_count();
+  char temp[PATHLEN];
+  int sel, pos, idx;
+  const char *dsp;
+
+  if (count <= 1)
+  {
+    Printf("|15Only one theme available.\n");
+    return;
+  }
+
+  /* Try to display optional theme selection screen */
+  dsp = ngcfg_get_path("general.display_files.theme_sel");
+  if (dsp && *dsp)
+    Display_File(0, NULL, dsp);
+
+  /* List available themes */
+  Printf("\n|15Available themes:\n\n");
+  for (pos = 0; pos < count; pos++)
+  {
+    idx = theme_get_entry_index(pos);
+    if (idx == (int)usr.theme)
+      Printf("|11  %d) %s (%s) |14*current*\n", pos + 1,
+             theme_get_name(idx), theme_get_shortname(idx));
+    else
+      Printf("|07  %d) %s (%s)\n", pos + 1,
+             theme_get_name(idx), theme_get_shortname(idx));
+  }
+
+  Printf("\n|15Select theme [1-%d]: ", count);
+  InputGetsLL(temp, 10, "");
+
+  sel = atoi(temp);
+  if (sel < 1 || sel > count)
+  {
+    Printf("|14No change.\n");
+    return;
+  }
+
+  idx = theme_get_entry_index(sel - 1);
+  if (idx == (int)usr.theme)
+  {
+    Printf("|14Already using that theme.\n");
+    return;
+  }
+
+  usr.theme = (byte)idx;
+
+  /* Resolve language from theme and switch if different */
+  {
+    const char *tlang = theme_get_lang(idx);
+    if (tlang && *tlang)
+    {
+      MaxCfgVar v, it;
+      size_t cnt = 0;
+      int found_lang = -1;
+
+      if (ng_cfg &&
+          maxcfg_toml_get(ng_cfg, "general.language.lang_file", &v) == MAXCFG_OK &&
+          v.type == MAXCFG_VAR_STRING_ARRAY)
+      {
+        if (maxcfg_var_count(&v, &cnt) == MAXCFG_OK)
+        {
+          size_t li;
+          for (li = 0; li < cnt; li++)
+          {
+            if (maxcfg_toml_array_get(&v, li, &it) == MAXCFG_OK &&
+                it.type == MAXCFG_VAR_STRING && it.v.s &&
+                stricmp(it.v.s, tlang) == 0)
+            {
+              found_lang = (int)li;
+              break;
+            }
+          }
+        }
+      }
+
+      if (found_lang >= 0 && found_lang != (int)usr.lang)
+      {
+        usr.lang = (byte)found_lang;
+        Switch_To_Language();
+      }
+    }
+  }
+
+  /* Reload colors for the new theme */
+  Reload_Theme_Colors();
+
+  Printf("|15Theme changed to |11%s|15.\n", theme_get_name(idx));
+}
+
+
 int Exec_Change(int type, char **result)
 {
   *result=NULL;
@@ -681,6 +784,7 @@ int Exec_Change(int type, char **result)
     case chg_fsr:       Chg_FSR();      break;
     case chg_archiver:  Chg_Archiver(); break;
     case chg_rip:       Chg_RIP();      break;
+    case chg_theme:     Chg_Theme();    break;
     default:            { char _ib[8]; snprintf(_ib, sizeof(_ib), "%u", type);
                           logit(bad_menu_opt, _ib); }  return 0;
   }

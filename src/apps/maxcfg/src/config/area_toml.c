@@ -233,6 +233,7 @@ static bool build_msg_areas_recursive(MaxCfgNgMsgAreaList *areas, TreeNode *node
                 .origin = a->origin,
                 .attach_path = a->attachpath,
                 .barricade = a->barricade,
+                .color_support = a->color_support,
                 .style = styles,
                 .style_count = style_count,
                 .renum_max = a->renum_max,
@@ -487,6 +488,7 @@ TreeNode **load_msgarea_toml(MaxCfgToml *toml, int *count, char *err, size_t err
             mad->origin = dup_str_or_null(area->origin);
             mad->attachpath = dup_str_or_null(area->attach_path);
             mad->barricade = dup_str_or_null(area->barricade);
+            mad->color_support = dup_str_or_null(area->color_support);
             mad->menuname = dup_str_or_null(area->menu);
             mad->renum_max = area->renum_max;
             mad->renum_days = area->renum_days;

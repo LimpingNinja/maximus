@@ -1024,6 +1024,7 @@ const int msg_division_field_count = sizeof(msg_division_fields) / sizeof(msg_di
 const char *msg_format_options[] = { "Squish", "*.MSG", NULL };
 const char *msg_type_options[] = { "Local", "NetMail", "EchoMail", "Conference", NULL };
 const char *msg_name_style_options[] = { "Real Name", "Alias", "Either", NULL };
+const char *msg_color_support_options[] = { "MCI", "Strip", "ANSI", "Avatar", NULL };
 
 /* Division options - populated dynamically at runtime */
 const char *msg_division_options[16] = { "(None)", NULL };
@@ -1367,6 +1368,17 @@ const FieldDef msg_area_fields[] = {
         .max_length = 80,
         .default_value = "",
         .toggle_options = NULL
+    },
+    {
+        .keyword = "ColorSupport",
+        .label = "Color support",
+        .help = "How message body colors are stored in this area. "
+                "MCI keeps Maximus pipe colors, Strip removes them, ANSI converts them to ANSI "
+                "sequences, and Avatar converts them to Avatar attributes.",
+        .type = FIELD_SELECT,
+        .max_length = 8,
+        .default_value = "MCI",
+        .toggle_options = msg_color_support_options
     },
 };
 

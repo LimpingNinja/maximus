@@ -104,6 +104,7 @@ typedef struct {
     long  kb_down_today;
     int   time_left;
     int   screen_len;
+    int   screen_width;  /**< Terminal width (columns) for |TW, |TC, |TH */
     char  term_emul[16];
     char  msg_area[64];
     char  file_area[64];

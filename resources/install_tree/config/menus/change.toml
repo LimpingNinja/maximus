@@ -137,6 +137,14 @@ key_poke = ""
 modifiers = []
 
 [[option]]
+command = "Chg_Theme"
+arguments = ""
+priv_level = "Demoted"
+description = "~Theme"
+key_poke = ""
+modifiers = []
+
+[[option]]
 command = "Chg_Userlist"
 arguments = ""
 priv_level = "Demoted"

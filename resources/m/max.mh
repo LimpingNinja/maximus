@@ -141,6 +141,19 @@
 #define VIDEO_ANSI      1
 #define VIDEO_AVATAR    2
 
+#define NEWUSER_ANSWER_NAME        0x00000001
+#define NEWUSER_ANSWER_CITY        0x00000002
+#define NEWUSER_ANSWER_ALIAS       0x00000004
+#define NEWUSER_ANSWER_PHONE       0x00000008
+#define NEWUSER_ANSWER_DATAPHONE   0x00000010
+#define NEWUSER_ANSWER_SEX         0x00000020
+#define NEWUSER_ANSWER_DOB         0x00000040
+#define NEWUSER_ANSWER_ANSI        0x00000080
+#define NEWUSER_ANSWER_RIP         0x00000100
+#define NEWUSER_ANSWER_FSR         0x00000200
+#define NEWUSER_ANSWER_IBMCHARS    0x00000400
+#define NEWUSER_ANSWER_HOTKEYS     0x00000800
+
 // usr.sex
 #define SEX_UNKNOWN     0
 #define SEX_MALE        1
@@ -459,6 +472,7 @@ struct _instancedata
   int:  alias_system;             // Is this an alias system?
   int:  ask_name;                 // Ask for user's real name?
   int:  use_umsgid;               // Uses umsgid's rather than msg numbers
+  unsigned long: newuser_answered_mask;
 };
 
 

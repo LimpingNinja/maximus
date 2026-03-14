@@ -95,7 +95,7 @@ int Editor(XMSG *msg, HMSG msgh, long msgnum, char *ctrl_buf, struct _replyp *pr
     Puts(CLS);
 
     inmagnet=last_maxed=TRUE;
-    ret=MagnEt(msg,msgh,pr);
+    ret=MagnEt(msg,msgh,msgnum,pr);
     inmagnet=FALSE;
   }
 

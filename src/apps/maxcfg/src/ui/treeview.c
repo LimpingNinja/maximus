@@ -428,6 +428,7 @@ static TreeNode *clone_node_recursive(const TreeNode *src, TreeContextType conte
                     a->origin = sa->origin ? strdup(sa->origin) : NULL;
                     a->attachpath = sa->attachpath ? strdup(sa->attachpath) : NULL;
                     a->barricade = sa->barricade ? strdup(sa->barricade) : NULL;
+                    a->color_support = sa->color_support ? strdup(sa->color_support) : NULL;
                     a->menuname = sa->menuname ? strdup(sa->menuname) : NULL;
                     a->style = sa->style;
                     a->renum_max = sa->renum_max;
@@ -1172,6 +1173,7 @@ static TreeNode *insert_tree_item(TreeNode *current, char **desired_parent_name)
             for (int i = 22; i <= 24; i++) area_values[i] = strdup("0");
             area_values[25] = strdup("Demoted");
             for (int i = 27; i <= 35; i++) area_values[i] = strdup("");
+            area_values[36] = strdup("MCI");
             
             bool ok = form_edit("New Message Area", msg_area_fields,
                                 msg_area_field_count, area_values, NULL, NULL);
@@ -1184,6 +1186,7 @@ static TreeNode *insert_tree_item(TreeNode *current, char **desired_parent_name)
                     ma->path = strdup(area_values[3] ? area_values[3] : "");
                     ma->desc = strdup(area_values[4] ? area_values[4] : "");
                     ma->owner = (area_values[5] && area_values[5][0]) ? strdup(area_values[5]) : NULL;
+                    ma->color_support = strdup(area_values[36] ? area_values[36] : "MCI");
                     ma->style = MSGSTYLE_SQUISH | MSGSTYLE_LOCAL | MSGSTYLE_PUB;
                     ma->acs = strdup(area_values[25] ? area_values[25] : "Demoted");
                 }

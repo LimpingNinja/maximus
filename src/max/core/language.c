@@ -85,6 +85,17 @@ static void near load_theme_colors(void)
 }
 
 /**
+ * @brief Reload theme colors after a theme switch.
+ *
+ * Called when the user changes their theme mid-session.
+ * Re-reads the color config through the themed getters.
+ */
+void Reload_Theme_Colors(void)
+{
+  load_theme_colors();
+}
+
+/**
  * @brief Global TOML-based language handle.
  *
  * All string retrieval (s_ret, s_reth, english.h macros) resolves through

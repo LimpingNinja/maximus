@@ -105,6 +105,7 @@ void mci_mock_load(MciMockData *m)
     m->kb_down_today = 128;
     m->time_left     = 60;
     m->screen_len    = 24;
+    m->screen_width  = 80;
     strcpy(m->term_emul, "ANSI");
     strcpy(m->msg_area,  "General");
     strcpy(m->file_area, "Uploads");
@@ -150,6 +151,7 @@ void mci_mock_load(MciMockData *m)
         m->files_up      = u->nup;
         m->kb_down_today = u->downtoday;
         m->screen_len    = u->len ? u->len : 24;
+        m->screen_width  = u->width ? u->width : 80;
         if (u->msg[0])   snprintf(m->msg_area, sizeof(m->msg_area), "%s", u->msg);
         if (u->files[0]) snprintf(m->file_area, sizeof(m->file_area), "%s", u->files);
         maxdb_user_free(u);
@@ -294,6 +296,11 @@ static const char *expand_info(char a, char b, const MciMockData *mock)
     if (a == 'T' && b == 'L') { snprintf(buf, sizeof(buf), "%d",  mock->time_left); return buf; }
     if (a == 'U' && b == 'S') { snprintf(buf, sizeof(buf), "%d",  mock->screen_len); return buf; }
     if (a == 'T' && b == 'E') return mock->term_emul;
+
+    /* Terminal geometry codes */
+    if (a == 'T' && b == 'W') { int w = mock->screen_width ? mock->screen_width : 80; snprintf(buf, sizeof(buf), "%02d", w > 99 ? 99 : w); return buf; }
+    if (a == 'T' && b == 'C') { int w = mock->screen_width ? mock->screen_width : 80; snprintf(buf, sizeof(buf), "%02d", (w + 1) / 2); return buf; }
+    if (a == 'T' && b == 'H') { int w = mock->screen_width ? mock->screen_width : 80; snprintf(buf, sizeof(buf), "%02d", w / 2); return buf; }
     if (a == 'M' && b == 'B') return mock->msg_area;
     if (a == 'M' && b == 'D') return mock->msg_area;
     if (a == 'F' && b == 'B') return mock->file_area;
@@ -317,6 +324,48 @@ static const char *expand_info(char a, char b, const MciMockData *mock)
     }
 
     return NULL;
+}
+
+/**
+ * @brief Parse a format-op width: literal 2-digit number or |XY info code.
+ *
+ * Mirrors mci_parse_width() in mci.c for the preview engine.
+ *
+ * @param p        Pointer into the input string (right after the op letter).
+ * @param mock     Mock data for info code expansion (may be NULL).
+ * @param out_val  Receives the parsed integer (0-99).
+ * @param out_len  Receives the number of input characters consumed.
+ * @return         1 on success, 0 on failure.
+ */
+static int parse_width_preview(const char *p, const MciMockData *mock,
+                               int *out_val, int *out_len)
+{
+    /* Fast path: literal two digits */
+    int n = parse_2dig(p);
+    if (n >= 0) {
+        *out_val = n;
+        *out_len = 2;
+        return 1;
+    }
+
+    /* Slow path: |XY info code that resolves to a number */
+    if (p[0] == '|' && p[1] && p[2] &&
+        ((p[1] >= 'A' && p[1] <= 'Z' && p[2] >= 'A' && p[2] <= 'Z') ||
+         (p[1] == 'U' && p[2] == '#')))
+    {
+        const char *val = expand_info(p[1], p[2], mock);
+        if (val && val[0]) {
+            char *end = NULL;
+            long v = strtol(val, &end, 10);
+            if (end != val && *end == '\0' && v >= 0 && v <= 99) {
+                *out_val = (int)v;
+                *out_len = 3; /* consumed |XY */
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }
 
 /* ======================================================================== */
@@ -398,11 +447,12 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
         /* ---- $ format operators ---- */
         if (p[0] == '$' && p[1]) {
             char op = p[1];
+            int n = 0;
+            int wlen = 0; /* chars consumed by width (2 for ##, 3 for |XY) */
 
-            /* $C##/$L##/$R##/$T## — pending format, space pad (4 chars) */
+            /* $C/$L/$R/$T — pending format, space pad */
             if ((op == 'C' || op == 'L' || op == 'R' || op == 'T') &&
-                isdigit((unsigned char)p[2]) && isdigit((unsigned char)p[3])) {
-                int n = parse_2dig(p + 2);
+                parse_width_preview(p + 2, mock, &n, &wlen)) {
                 if (op == 'T') {
                     st->pending_trim = n;
                 } else {
@@ -412,30 +462,27 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
                                     : (op == 'L') ? MCI_FMT_LEFTPAD
                                                   : MCI_FMT_RIGHTPAD;
                 }
-                p += 4; continue;
+                p += 2 + wlen; continue;
             }
 
-            /* $c##C/$l##C/$r##C — pending format, custom pad char (5 chars) */
+            /* $c/$l/$r — pending format, custom pad char */
             if ((op == 'c' || op == 'l' || op == 'r') &&
-                isdigit((unsigned char)p[2]) && isdigit((unsigned char)p[3]) && p[4]) {
-                int n = parse_2dig(p + 2);
+                parse_width_preview(p + 2, mock, &n, &wlen) && p[2 + wlen]) {
                 st->pending_width  = n;
-                st->pending_padch  = p[4];
+                st->pending_padch  = p[2 + wlen];
                 st->pending_fmt = (op == 'c') ? MCI_FMT_CENTER
                                 : (op == 'l') ? MCI_FMT_LEFTPAD
                                               : MCI_FMT_RIGHTPAD;
-                p += 5; continue;
+                p += 2 + wlen + 1; continue;
             }
 
             /* $D — repeat character */
             if (op == 'D') {
-                int n = parse_2dig(p + 2);
-                if (n >= 0 && p[4]) {
-                    /* $D##C — literal two-digit count + char */
-                    char ch = p[4];
+                if (parse_width_preview(p + 2, mock, &n, &wlen) && p[2 + wlen]) {
+                    char ch = p[2 + wlen];
                     for (int i = 0; i < n && st->cy < vs->rows; i++)
                         vs_putc(vs, st, ch);
-                    p += 5; continue;
+                    p += 2 + wlen + 1; continue;
                 }
                 /* $D|!N[suffix]C — positional param as count, then char.
                  * Optional type suffix (d/l/u/c) between slot and fill char. */
@@ -455,13 +502,12 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
 
             /* $X — goto column with fill */
             if (op == 'X') {
-                int n = parse_2dig(p + 2);
-                if (n >= 0 && p[4]) {
-                    char ch = p[4];
+                if (parse_width_preview(p + 2, mock, &n, &wlen) && p[2 + wlen]) {
+                    char ch = p[2 + wlen];
                     int target = n - 1;
                     while (st->cx < target && st->cx < vs->cols && st->cy < vs->rows)
                         vs_putc(vs, st, ch);
-                    p += 5; continue;
+                    p += 2 + wlen + 1; continue;
                 }
                 /* $X|!N[suffix]C — same type suffix handling as $D */
                 if (p[2] == '|' && p[3] == '!' && p[4] && p[5]) {
@@ -479,44 +525,72 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
             }
         }
 
-        /* ---- Cursor codes (|[X##, |[Y##, |[K, |[0, |[1, etc.) ---- */
+        /* ---- Cursor codes (|[X##, |[Y##, |[K, |[0, |[1, |[<, |[>, |[H, etc.) ---- */
+        if (p[0] == '|' && p[1] == '[') {
+            char cc = p[2];
+            int n = 0, wlen = 0;
 
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'X') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cx = n - 1; if (st->cx < 0) st->cx = 0; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'Y') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cy = n - 1; if (st->cy < 0) st->cy = 0; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'A') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cy -= n; if (st->cy < 0) st->cy = 0; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'B') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cy += n; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'C') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cx += n; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'D') {
-            int n = parse_2dig(p + 3);
-            if (n >= 0) { st->cx -= n; if (st->cx < 0) st->cx = 0; p += 5; continue; }
-        }
-        if (p[0] == '|' && p[1] == '[' && p[2] == 'K') {
-            if (st->cy >= 0 && st->cy < vs->rows) {
-                for (int c = st->cx; c < vs->cols; c++) {
-                    int off = st->cy * vs->cols + c;
-                    vs->ch[off]   = ' ';
-                    vs->attr[off] = st->ca;
+            /* Parameterless codes */
+            if (cc == 'K') {
+                if (st->cy >= 0 && st->cy < vs->rows) {
+                    for (int c = st->cx; c < vs->cols; c++) {
+                        int off = st->cy * vs->cols + c;
+                        vs->ch[off]   = ' ';
+                        vs->attr[off] = st->ca;
+                    }
                 }
+                p += 3; continue;
             }
-            p += 3; continue;
-        }
-        if (p[0] == '|' && p[1] == '[' && (p[2] == '0' || p[2] == '1')) {
-            p += 3; continue; /* hide/show cursor — no-op */
+            if (cc == '0' || cc == '1') { p += 3; continue; }
+            /* |[< — beginning of line */
+            if (cc == '<') { st->cx = 0; p += 3; continue; }
+            /* |[> — end of line */
+            if (cc == '>') {
+                int w = mock ? (mock->screen_width ? mock->screen_width : 80) : 80;
+                st->cx = w - 1;
+                p += 3; continue;
+            }
+            /* |[H — center column */
+            if (cc == 'H') {
+                int w = mock ? (mock->screen_width ? mock->screen_width : 80) : 80;
+                st->cx = ((w + 1) / 2) - 1;
+                p += 3; continue;
+            }
+
+            /* Parametric codes — ## or |XY width */
+            if (cc == 'X' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cx = n - 1; if (st->cx < 0) st->cx = 0;
+                p += 3 + wlen; continue;
+            }
+            if (cc == 'Y' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cy = n - 1; if (st->cy < 0) st->cy = 0;
+                p += 3 + wlen; continue;
+            }
+            if (cc == 'A' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cy -= n; if (st->cy < 0) st->cy = 0;
+                p += 3 + wlen; continue;
+            }
+            if (cc == 'B' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cy += n; p += 3 + wlen; continue;
+            }
+            if (cc == 'C' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cx += n; p += 3 + wlen; continue;
+            }
+            if (cc == 'D' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cx -= n; if (st->cx < 0) st->cx = 0;
+                p += 3 + wlen; continue;
+            }
+            if (cc == 'L' && parse_width_preview(p + 3, mock, &n, &wlen)) {
+                st->cx = n - 1; if (st->cx < 0) st->cx = 0;
+                if (st->cy >= 0 && st->cy < vs->rows) {
+                    for (int c = st->cx; c < vs->cols; c++) {
+                        int off = st->cy * vs->cols + c;
+                        vs->ch[off]   = ' ';
+                        vs->attr[off] = st->ca;
+                    }
+                }
+                p += 3 + wlen; continue;
+            }
         }
 
         /* ---- Pipe codes ---- */
@@ -574,6 +648,39 @@ void mci_preview_expand(MciVScreen *vs, MciState *st,
                 else if (code >= 24 && code <= 31)
                     st->ca = (st->ca & 0x0f) | (uint8_t)((code - 24) << 4);
                 p += 3; continue;
+            }
+
+            /* |DF{path} — display file embedding.
+             * In preview, render a placeholder since we can't display files. */
+            if (p[1] == 'D' && p[2] == 'F' && p[3] == '{') {
+                const char *end = strchr(p + 4, '}');
+                if (end) {
+                    /* Show [FILE:basename] placeholder in dim text */
+                    uint8_t saved_ca = st->ca;
+                    st->ca = 0x08; /* dark gray */
+                    vs_puts(vs, st, "[FILE]");
+                    st->ca = saved_ca;
+                    p = end + 1; continue;
+                }
+            }
+
+            /* |{string} — inline string literal, usable as a format-op value.
+             * Everything between '{' and '}' is the literal text. */
+            if (p[1] == '{') {
+                const char *end = strchr(p + 2, '}');
+                if (end) {
+                    size_t slen = (size_t)(end - (p + 2));
+                    char raw[256];
+                    if (slen >= sizeof(raw)) slen = sizeof(raw) - 1;
+                    memcpy(raw, p + 2, slen);
+                    raw[slen] = '\0';
+
+                    char fmtbuf[256];
+                    apply_fmt(fmtbuf, sizeof(fmtbuf), raw, st);
+                    vs_puts(vs, st, fmtbuf);
+                    p = end + 1; continue;
+                }
+                /* No closing brace — fall through to literal output */
             }
 
             /* |XY — terminal control + info codes (two uppercase letters) */

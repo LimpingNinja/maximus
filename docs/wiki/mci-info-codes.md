@@ -62,6 +62,48 @@ are replaced with live data about the BBS, the current user, or the system.
 
 ---
 
+## Terminal Geometry
+
+| Code   | Description                                      |
+|--------|--------------------------------------------------|
+| `\|TW`  | Terminal width in columns (2-digit, e.g. `80`)   |
+| `\|TC`  | Center column of screen (2-digit)                |
+| `\|TH`  | Half-screen width (2-digit)                      |
+
+These codes expose the current user's terminal width as zero-padded
+two-digit numbers so they can be used both for display and as dynamic
+width parameters in [format operators]({{ site.baseurl }}{% link mci-format-operators.md %}).
+
+### How the values are calculated
+
+All three derive from the user's configured terminal width (`usr.width`).
+If the width is unset or zero, **80 columns** is assumed.
+
+| Code   | Formula              | 80-col result | 97-col result |
+|--------|----------------------|:-------------:|:-------------:|
+| `\|TW`  | width (clamped ≤ 99) | `80`          | `97`          |
+| `\|TC`  | (width + 1) / 2      | `40`          | `49`          |
+| `\|TH`  | width / 2            | `40`          | `48`          |
+
+`|TC` and `|TH` differ only on **odd** widths: `|TC` rounds up (giving
+the true center column in a 1-based coordinate system), while `|TH`
+truncates (giving a pure half-width count).
+
+### Use as format-operator widths
+
+Because these codes resolve to numbers, they can replace the `##` width
+parameter in any format operator. See
+[Format Operators — Using Info Codes as Width]({{ site.baseurl }}{% link mci-format-operators.md %}#using-info-codes-as-width)
+for details.
+
+```
+$D|TW=           draw '=' across the full terminal width
+$r|TH-|UN        right-pad user name to half-width using '-'
+[X|TC             move cursor to the center column
+```
+
+---
+
 ## Date & Time
 
 | Code   | Description                    |
@@ -94,6 +136,33 @@ Info codes can be combined with
 ```
 $R30|UN          translates to: "Kevin Morgan                  "
 ```
+
+---
+
+## Inline String Literals
+
+The `|{text}` syntax provides an inline string literal that the MCI
+engine treats as a value — just like an info code — but containing
+arbitrary fixed text instead of dynamic data.
+
+```
+|{Hello, World!}
+```
+
+Produces: `Hello, World!`
+
+On its own, `|{text}` is simply a pass-through — the delimiters `|{`
+and `}` are stripped and the content is emitted directly.  Where it
+becomes useful is as the target of a
+[format operator]({{ site.baseurl }}{% link mci-format-operators.md %}#inline-string-literals):
+
+```
+$R30|{Welcome champ!}     "Welcome champ!                "
+$C|TW|{=== MENU ===}      center text across terminal width
+$T10|{Hello, World!}       "Hello, Wor"
+```
+
+If no closing `}` is found, the `|` is emitted as a literal character.
 
 ---
 

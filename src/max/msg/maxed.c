@@ -1,6 +1,7 @@
 /*
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,7 +39,7 @@ static char rcs_id[]="$Id: maxed.c,v 1.4 2004/01/28 06:38:10 paltas Exp $";
 #include "mci.h"
 
 static word near Process_Scan_Code(struct _replyp *pr);
-static word near Process_Cursor_Key(void);
+static word near Process_Cursor_Key(struct _replyp *pr);
 static word near Process_Control_K(struct _replyp *pr);
 static void near Init_Vars(void);
 
@@ -86,7 +87,7 @@ int Mdm_getcwcc(void)
 }
 #endif
 
-int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
+int MagnEt(XMSG *msg,HMSG msgh,long msgnum,struct _replyp *pr)
 {
   long now_cl;
 
@@ -98,6 +99,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
   char break_loop;
 
   mmsg=msg;
+  magnet_msgnum=msgnum;
   state=0;
 
   if ((update_table=malloc(UPDATEBUF_LEN))==NULL)
@@ -150,6 +152,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
     break_loop=FALSE;
 
     PutsForce(maxed_init);
+    MagnEt_DrawHeader();
     if (msgh)
     {
       Load_Message(msgh);
@@ -159,21 +162,20 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
     redo_status=FALSE;
 
-    /* If the user has a novice help level, print help msg on status line */
+    MagnEt_DrawFooterDivider();
+    MagnEt_ClearContextLine();
+    Redraw_StatusLine();
+    MagnEt_SpellInit();
 
     if (usr.help==NOVICE)
     {
       redo_status=TRUE;
 
-      Goto(usrlen, 1);
+      Goto(MAGNET_CONTEXT_ROW, 1);
       PutsForce(ck_for_help);
       Puts(CLEOL);
       EMIT_MSG_TEXT_COL();
-      Goto(cursor_x, cursor_y);
-    }
-    else
-    {
-      Redraw_StatusLine();
+      GOTO_TEXT(cursor_x, cursor_y);
     }
 
     if (setjmp(jumpto)==0) /* Really ugly, but the best way to handle errs */
@@ -213,7 +215,9 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
           if (redo_status)
           {
-            Redraw_StatusLine();
+            MagnEt_ClearContextLine();
+            GOTO_TEXT(cursor_x,cursor_y);
+            EMIT_MSG_TEXT_COL();
             redo_status=FALSE;
           }
 
@@ -233,26 +237,32 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               break;
 
             case K_CTRLA:
+              MagnEt_SpellClear();
               Word_Left();
               break;
 
             case K_CTRLC:
+              MagnEt_SpellClear();
               Page_Down();
               break;
 
             case K_CTRLD:
+              MagnEt_SpellClear();
               Cursor_Right();
               break;
 
             case K_CTRLE:
+              MagnEt_SpellClear();
               Cursor_Up();
               break;
 
             case K_CTRLF:
+              MagnEt_SpellClear();
               Word_Right();
               break;
 
             case K_CTRLG:    /* Delete character */
+              MagnEt_SpellClear();
               Delete_Char();
               break;
 
@@ -263,6 +273,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
               if (usr.bits2 & BITS2_IBMCHARS)
               {
+                MagnEt_SpellClear();
                 Delete_Char();
                 break;
               }
@@ -271,6 +282,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
             case K_BS:    /* Backspace */
             case K_VTDEL: /* Also treat DEL-as-Backspace on UNIX terminals */
+              MagnEt_SpellClear();
               BackSpace();
               break;
 
@@ -309,6 +321,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               break;
 
             case K_CR:    /* Return */
+              MagnEt_SpellCheckCurrentWord(FALSE);
               if (Carriage_Return(TRUE))
               {
                 ret=SAVE;
@@ -322,19 +335,23 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               break;
 
             case K_CTRLQ:
+              MagnEt_SpellClear();
               Quote_Popup(pr);
               Fix_MagnEt();
               break;
 
             case K_CTRLR:
+              MagnEt_SpellClear();
               Page_Up();
               break;
 
             case K_CTRLS:
+              MagnEt_SpellClear();
               Cursor_Left();
               break;
 
             case K_CTRLT:
+              MagnEt_SpellClear();
               Delete_Word(); 
               break;
 
@@ -343,15 +360,17 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               break;
 
             case K_CTRLW:
-              Redraw_Text();
-              Redraw_StatusLine();
+              MagnEt_SpellClear();
+              Fix_MagnEt();
               break;
 
             case K_CTRLX:
+              MagnEt_SpellClear();
               Cursor_Down(TRUE);
               break;
 
             case K_CTRLY:
+              MagnEt_SpellClear();
               /* If we're on the last line, simply blank it out */
 
               if (offset+cursor_x >= num_lines)
@@ -369,7 +388,7 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
 
               cursor_y=1;
 
-              Goto(cursor_x,cursor_y);
+              GOTO_TEXT(cursor_x,cursor_y);
               break;
 
             case K_CTRLZ:
@@ -377,8 +396,16 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
               goto BackToCaller;
 
             case K_ESC:
-              if (Process_Cursor_Key()==ABORT)
-                break_loop=TRUE;
+              switch (Process_Cursor_Key(pr))
+              {
+                case SAVE:
+                  ret=SAVE;
+                  goto BackToCaller;
+
+                case ABORT:
+                  break_loop=TRUE;
+                  break;
+              }
               break;
 
             case K_CTRLB:
@@ -403,40 +430,41 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
                   state=2;
                 else if (state==2 && (ch=='(' || ch=='{' || ch=='['))
                 {
-                  Goto(usrlen,10);
+                  Goto(MAGNET_CONTEXT_ROW,10);
 
                   /* Tell this deadbeat to lighten up! */
                   PutsForce(happy);
                   EMIT_MSG_TEXT_COL();
 
 
-                  Goto(cursor_x,cursor_y);
+                  GOTO_TEXT(cursor_x,cursor_y);
                   state=0;
                 }
                 else state=0;
 
+                if (ch >= '1' && ch <= '5' && MagnEt_SpellApplySuggestion(ch-'1'))
+                  break;
+
                 if (ch > 31 && (ch < 127 || ((mah.ma.attribs & MA_HIBIT))))
+                {
                   Add_Character(ch);
+                  MagnEt_SpellHandleTypedChar(ch);
+                }
               }
 
               break;
           }
         }
 
-        Puts("\n" CLEOL);
-
-        WhiteN();
-
         /* Make sure s/he really means it */
-        if (GetyNAnswer(isachange ? abortchange : abortmsg, 0)==YES)
+        if (MagnEt_ContextYesNo(isachange ? abortchange : abortmsg)==YES)
           break;  /* Get out of loop */
         else
         {
           (void)mdm_ctrlc(0);
           Mdm_Flow_Off();
 
-          Redraw_Text();
-          Redraw_StatusLine();
+          Fix_MagnEt();
 
           break_loop=FALSE; /* Keep on truckin' */
         }
@@ -457,6 +485,8 @@ int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr)
   ret=ABORT;
 
 BackToCaller:
+
+  MagnEt_SpellDone();
 
   in_msghibit--;
 
@@ -502,34 +532,42 @@ static word near Process_Scan_Code(struct _replyp *pr)
       break;
 
     case 71:
+      MagnEt_SpellClear();
       Cursor_BeginLine();
       break;
 
     case 72:
+      MagnEt_SpellClear();
       Cursor_Up();
       break;
 
     case 73:
+      MagnEt_SpellClear();
       Page_Up();
       break;
 
     case 75:
+      MagnEt_SpellClear();
       Cursor_Left();
       break;
 
     case 77:
+      MagnEt_SpellClear();
       Cursor_Right();
       break;
 
     case 79:
+      MagnEt_SpellClear();
       Cursor_EndLine();
       break;
 
     case 80:
+      MagnEt_SpellClear();
       Cursor_Down(TRUE);
       break;
 
     case 81:
+      MagnEt_SpellClear();
       Page_Down();
       break;
 
@@ -538,14 +576,17 @@ static word near Process_Scan_Code(struct _replyp *pr)
       break;
 
     case 83:
+      MagnEt_SpellClear();
       Delete_Char();
       break;
 
     case 115:
+      MagnEt_SpellClear();
       Word_Left();
       break;
 
     case 116:
+      MagnEt_SpellClear();
       Word_Right();
       break;
 
@@ -559,9 +600,44 @@ static word near Process_Scan_Code(struct _replyp *pr)
 
 
 
-static word near Process_Cursor_Key(void)
+static word near Process_Cursor_Key(struct _replyp *pr)
 {
-  switch(Mdm_getcwcc())
+  int ch;
+
+  if (Mdm_kpeek_tic(2) == -1)
+  {
+    switch (MagnEt_EscMenu(pr))
+    {
+      case MAGNET_ESC_SAVE:
+        return SAVE;
+
+      case MAGNET_ESC_ABORT:
+        return ABORT;
+
+      case MAGNET_ESC_HELP:
+        MagnEt_Help();
+        return NOTHING;
+
+      case MAGNET_ESC_QUOTE:
+        Quote_Popup(pr);
+        Fix_MagnEt();
+        return NOTHING;
+
+      case MAGNET_ESC_COLOR:
+        MagnEt_InsertColor();
+        return NOTHING;
+
+      case MAGNET_ESC_REDRAW:
+        Fix_MagnEt();
+        return NOTHING;
+    }
+
+    return NOTHING;
+  }
+
+  ch=Mdm_getcwcc();
+
+  switch(ch)
   {
     case '\x1b':      /* Abort message */
       return ABORT;
@@ -571,18 +647,22 @@ static word near Process_Cursor_Key(void)
       switch (Mdm_getcwcc())
       {
         case 'A':     /* Cursor Up */
+          MagnEt_SpellClear();
           Cursor_Up();
           break;
 
         case 'B':     /* Cursor Down */
+          MagnEt_SpellClear();
           Cursor_Down(TRUE);
           break;
 
         case 'C':     /* Cursor Right */
+          MagnEt_SpellClear();
           Cursor_Right();
           break;
 
         case 'D':     /* Cursor Left */
+          MagnEt_SpellClear();
           Cursor_Left();
           break;
 #ifdef UNIX
@@ -591,6 +671,7 @@ static word near Process_Cursor_Key(void)
 #else
         case 'H':     /* Home */
 #endif	
+          MagnEt_SpellClear();
           Cursor_BeginLine();
           break;
 #ifdef UNIX
@@ -599,16 +680,19 @@ static word near Process_Cursor_Key(void)
 #else	            
         case 'K':     /* End */
 #endif	
+          MagnEt_SpellClear();
           Cursor_EndLine();
           break;
 
 #ifdef UNIX
 	case '5':
 	  Mdm_getcwcc();
+	  MagnEt_SpellClear();
 	  Page_Up();
 	  break;
 	case '6':
 	  Mdm_getcwcc();
+	  MagnEt_SpellClear();
 	  Page_Down();
 	  break;
 #endif    
@@ -634,9 +718,9 @@ static word near Process_Control_K(struct _replyp *pr)
   int ret,
       ch;
 
-  Goto(usrlen,usrwidth-3);
+  Goto(MAGNET_CONTEXT_ROW,usrwidth-3);
   Puts(YELONBLUE "^K");
-  Goto(cursor_x,cursor_y);
+  GOTO_TEXT(cursor_x,cursor_y);
   EMIT_MSG_TEXT_COL();
   vbuf_flush();
 
@@ -680,7 +764,8 @@ static word near Process_Control_K(struct _replyp *pr)
       break;
 
     case 3:
-    case 'C':       /* Was Quote_Copy — now no-op */
+    case 'C':
+      MagnEt_InsertColor();
       break;
 
 
@@ -693,9 +778,8 @@ static word near Process_Control_K(struct _replyp *pr)
       MagnEt_Bad_Keystroke();
   }
 
-  Goto(usrlen,usrwidth-3);
-  Puts(YELONBLUE "  ");
-  Goto(cursor_x,cursor_y);
+  MagnEt_ClearContextLine();
+  GOTO_TEXT(cursor_x,cursor_y);
   EMIT_MSG_TEXT_COL();
   vbuf_flush();
 
@@ -722,8 +806,10 @@ static void near Init_Vars(void)
   /* Make sure that the user's screen is never larger than the Sysop's,    *
    * to avoid problems.                                                    */
 
-  usrlen=(byte)(TermLength()-((!local && ngcfg_get_bool("maximus.status_line")) ? 1 : 0));
-  usrlen=min(TermLength(), usrlen);
+  header_height=MagnEt_CalcHeaderHeight();
+  text_start_row=(byte)(header_height ? header_height+1 : 1);
+
+  usrlen=(byte)(TermLength() > header_height+3 ? TermLength()-header_height-3 : 1);
 
   for (line=0; line < max_lines; line++)
     update_table[line]=FALSE;

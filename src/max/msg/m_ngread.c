@@ -48,6 +48,150 @@
 static void draw_index_header(msg_index_t *idx);
 static void draw_index_footer(void);
 
+/* color_support enum and lookup live in protod.h / max_init.c:
+ * ngcfg_get_area_color_support() returns NGCFG_COLOR_MCI etc. */
+
+/**
+ * @brief Return the byte length of an inline |00..|31 MCI color token.
+ *
+ * @param p  Pointer into the text being scanned.
+ * @return   3 if a valid pipe-color token starts at @p p, else 0.
+ */
+static word near ng_color_code_len_at(const char *p)
+{
+  int code;
+
+  if (p == NULL || p[0] != '|' ||
+      !isdigit((unsigned char)p[1]) || !isdigit((unsigned char)p[2]))
+    return 0;
+
+  code = ((int)(p[1] - '0') * 10) + (int)(p[2] - '0');
+  return (code >= 0 && code <= 31) ? 3 : 0;
+}
+
+/**
+ * @brief Return the byte length of an ANSI CSI escape sequence at @p p.
+ *
+ * Recognises ESC [ ... <final-byte> per ECMA-48.
+ *
+ * @param p  Pointer into the text being scanned.
+ * @return   Full sequence length including ESC, or 0.
+ */
+static word near ng_ansi_seq_len(const char *p)
+{
+  const char *s;
+
+  if (p == NULL || p[0] != '\x1b' || p[1] != '[')
+    return 0;
+
+  s = p + 2;
+  while (*s >= 0x20 && *s <= 0x3F)   /* parameter / intermediate bytes */
+    s++;
+  if (*s >= 0x40 && *s <= 0x7E)       /* final byte */
+    return (word)(s - p + 1);
+
+  return 0;
+}
+
+/**
+ * @brief Append an Avatar attribute sequence (\x16\x01<attr>) to @p out.
+ *
+ * @param out      Destination buffer.
+ * @param out_cap  Capacity of @p out.
+ * @param out_len  Current write position.
+ * @param attr     DOS attribute byte.
+ * @return         Updated write position (unchanged on overflow).
+ */
+static size_t ng_append_attr(char *out, size_t out_cap, size_t out_len, byte attr)
+{
+  if (out_len + 3 >= out_cap)
+    return out_len;  /* silent truncation — buffer full */
+
+  out[out_len++] = '\x16';
+  out[out_len++] = '\x01';
+  out[out_len++] = (char)attr;
+  out[out_len]   = '\0';
+  return out_len;
+}
+
+/**
+ * @brief Append a line segment with per-mode color conversion and sterilisation.
+ *
+ * - NGCFG_COLOR_MCI:  Convert |00..|31 to Avatar attrs; drop ANSI escapes.
+ * - NGCFG_COLOR_ANSI: Pass ANSI escapes through; drop MCI pipe codes.
+ * - NGCFG_COLOR_STRIP: Drop both MCI pipe codes and ANSI escapes.
+ * - NGCFG_COLOR_AVATAR: Copy verbatim (Avatar handled by output engine).
+ *
+ * @param out        Destination buffer.
+ * @param out_cap    Capacity of @p out.
+ * @param out_len    Current write position.
+ * @param line       Source line pointer.
+ * @param line_len   Length of @p line in bytes.
+ * @param start_attr Starting DOS attribute (used for MCI conversion).
+ * @param mode       One of the NGCFG_COLOR_* constants.
+ * @return           Updated write position.
+ */
+static size_t ng_append_segment(char *out, size_t out_cap, size_t out_len,
+                                const char *line, size_t line_len,
+                                byte start_attr, int mode)
+{
+  size_t i = 0;
+  byte attr = start_attr;
+
+  while (i < line_len && out_len + 1 < out_cap)
+  {
+    /* --- MCI pipe-color token? --- */
+    word mci_len = ng_color_code_len_at(line + i);
+    if (mci_len && i + (size_t)mci_len <= line_len)
+    {
+      if (mode == NGCFG_COLOR_MCI)
+      {
+        char token[4] = { line[i], line[i+1], line[i+2], '\0' };
+        attr = Mci2Attr(token, attr);
+        out_len = ng_append_attr(out, out_cap, out_len, attr);
+      }
+      /* ANSI / STRIP / AVATAR: discard stray MCI codes */
+      i += mci_len;
+      continue;
+    }
+
+    /* --- ANSI escape sequence? --- */
+    word ansi_len = ng_ansi_seq_len(line + i);
+    if (ansi_len && i + (size_t)ansi_len <= line_len)
+    {
+      if (mode == NGCFG_COLOR_ANSI)
+      {
+        /* Pass ANSI sequence through verbatim */
+        if (out_len + ansi_len < out_cap)
+        {
+          memcpy(out + out_len, line + i, ansi_len);
+          out_len += ansi_len;
+          out[out_len] = '\0';
+        }
+      }
+      /* MCI / STRIP / AVATAR: discard stray ANSI sequences */
+      i += ansi_len;
+      continue;
+    }
+
+    /* --- Bare ESC (not a valid CSI)? --- */
+    if (line[i] == '\x1b')
+    {
+      if (mode == NGCFG_COLOR_ANSI && out_len + 1 < out_cap)
+        out[out_len++] = line[i];
+      /* else sterilise by dropping it */
+      i++;
+      continue;
+    }
+
+    /* --- Ordinary character --- */
+    out[out_len++] = line[i++];
+    out[out_len] = '\0';
+  }
+
+  return out_len;
+}
+
 /**
  * @brief Prompt for a message number using the shared "From which message #"
  *        wording and current area's highest message number.
@@ -670,33 +814,37 @@ static int near ng_line_is_quote(const char *line)
 }
 
 /**
- * @brief Colorize message body text using Avatar attribute sequences.
+ * @brief Colorize / sterilise message body text for the text viewer.
  *
- * Walks the raw body line by line. Quote lines are wrapped with
- * \x16\x01<quote_attr> at the start and \x16\x01<body_attr> at the
- * end so that ui_text_viewer / ui_shadowbuf_normalize_line picks them
- * up without needing MCI injection.
+ * Walks the raw body line by line.  Each line is processed through
+ * ng_append_segment() which handles per-mode conversion (MCI→Avatar)
+ * and cross-format sterilisation (ANSI in MCI areas, MCI in ANSI
+ * areas, etc.).  Quote lines are additionally wrapped with attribute
+ * sequences so the text viewer renders them in the quote colour.
  *
  * @param body       Raw message body (NUL-terminated).
  * @param body_attr  Default body attribute byte.
  * @param quote_attr Quote line attribute byte.
+ * @param color_mode One of the NGCFG_COLOR_* constants.
  * @return Newly allocated colorized string (caller frees), or NULL.
  */
-static char *ng_colorize_body(const char *body, byte body_attr, byte quote_attr)
+static char *ng_colorize_body(const char *body, byte body_attr, byte quote_attr, int color_mode)
 {
-  /* Worst case: every line is a quote line adding 6 extra bytes (two
-   * 3-byte Avatar sequences). Over-allocate generously. */
   size_t in_len = strlen(body);
-  size_t out_cap = in_len + (in_len / 2) + 64;
+  /* MCI conversion can expand each 3-byte token to 3 Avatar bytes plus
+   * surrounding text, so budget 4x; other modes are at most 1.5x. */
+  size_t out_cap = (color_mode == NGCFG_COLOR_MCI)
+                 ? (in_len * 4) + 64
+                 : in_len + (in_len / 2) + 64;
   char *out = (char *)malloc(out_cap);
-  char *wp;
+  size_t out_len = 0;
   const char *p;
   const char *line_start;
 
   if (!out)
     return NULL;
 
-  wp = out;
+  out[0] = '\0';
   p = body;
   line_start = p;
 
@@ -704,39 +852,47 @@ static char *ng_colorize_body(const char *body, byte body_attr, byte quote_attr)
   {
     if (*p == '\n' || *p == '\0')
     {
-      /* Ensure room for avatar prefix (3) + line + avatar suffix (3) + newline */
       size_t line_len = (size_t)(p - line_start);
-      size_t needed = (size_t)(wp - out) + line_len + 8;
+      size_t needed = out_len
+                    + ((color_mode == NGCFG_COLOR_MCI) ? (line_len * 4) : line_len)
+                    + 16;
+      int is_quote = ng_line_is_quote(line_start);
 
+      /* Grow buffer if needed (use temp to avoid leak on failure) */
       if (needed >= out_cap)
       {
-        size_t wp_off = (size_t)(wp - out);
+        char *tmp;
         out_cap = needed * 2 + 64;
-        char *new_out = (char *)realloc(out, out_cap);
-        if (!new_out) { free(out); return NULL; }
-        out = new_out;
-        wp = out + wp_off;
+        tmp = (char *)realloc(out, out_cap);
+        if (!tmp)
+        {
+          free(out);
+          return NULL;
+        }
+        out = tmp;
       }
 
-      if (ng_line_is_quote(line_start))
-      {
-        /* Inject quote color at start of line */
-        *wp++ = '\x16'; *wp++ = '\x01'; *wp++ = (char)quote_attr;
-        memcpy(wp, line_start, line_len);
-        wp += line_len;
-        /* Reset to body color at end of line */
-        *wp++ = '\x16'; *wp++ = '\x01'; *wp++ = (char)body_attr;
-      }
-      else
-      {
-        memcpy(wp, line_start, line_len);
-        wp += line_len;
-      }
+      /* Emit quote-colour prefix when applicable */
+      if (is_quote)
+        out_len = ng_append_attr(out, out_cap, out_len, quote_attr);
+      else if (color_mode == NGCFG_COLOR_MCI)
+        out_len = ng_append_attr(out, out_cap, out_len, body_attr);
+
+      /* Process the line through the mode-aware segment handler */
+      out_len = ng_append_segment(out, out_cap, out_len,
+                                  line_start, line_len,
+                                  is_quote ? quote_attr : body_attr,
+                                  color_mode);
+
+      /* Reset to body colour after a quote line */
+      if (is_quote)
+        out_len = ng_append_attr(out, out_cap, out_len, body_attr);
 
       if (*p == '\0')
         break;
 
-      *wp++ = '\n';
+      out[out_len++] = '\n';
+      out[out_len] = '\0';
       p++;
       line_start = p;
       continue;
@@ -748,7 +904,6 @@ static char *ng_colorize_body(const char *body, byte body_attr, byte quote_attr)
     p++;
   }
 
-  *wp = '\0';
   return out;
 }
 
@@ -783,6 +938,18 @@ int ng_msg_reader_loop(msg_index_t *idx, int entry_index, int *out_index)
   while (current >= 0 && current < idx->count)
   {
     msg_index_entry_t *e = &idx->entries[current];
+    word msgoffset = 0;
+    long highmsg;
+    int color_mode;
+    int tl;
+    int tw;
+    int body_y;
+    int body_h;
+    ui_text_viewer_style_t vs;
+    byte body_attr;
+    byte quote_attr;
+    char *cbody;
+    ui_text_viewer_t viewer;
 
     /* Read message header + body */
     XMSG xmsg;
@@ -799,29 +966,27 @@ int ng_msg_reader_loop(msg_index_t *idx, int entry_index, int *out_index)
     }
 
     /* Draw the standard reader header chrome (themed via lang strings) */
-    word msgoffset = 0;
-    long highmsg = (long)MsgGetHighMsg(sq);
+    highmsg = (long)MsgGetHighMsg(sq);
+    color_mode = ngcfg_get_area_color_support(MAS(mah, name));
     DrawReaderScreen(&mah, FALSE);
     DisplayMessageHeader(&xmsg, &msgoffset, (long)e->msgn, highmsg, &mah);
 
     /* Set up text viewer for the body area */
-    int tl = TermLength();
-    int tw = TermWidth();
-    int body_y = (int)msgoffset + 1; /* msgoffset is the header line count */
-    int body_h = tl - body_y;        /* Leave 1 row for footer */
+    tl = TermLength();
+    tw = TermWidth();
+    body_y = (int)msgoffset + 1; /* msgoffset is the header line count */
+    body_h = tl - body_y;        /* Leave 1 row for footer */
     if (body_h < 3) body_h = 3;
 
-    ui_text_viewer_style_t vs;
     ui_text_viewer_style_default(&vs);
     vs.attr = Mci2Attr("|tx", 0x07);
     vs.flags = UI_TBV_SHOW_SCROLLBAR | UI_TBV_SHOW_STATUS;
     vs.scrollbar_attr = Mci2Attr("|dm", 0x08);
 
-    byte body_attr  = Mci2Attr("|tx", 0x07);
-    byte quote_attr = Mci2Attr("|qt", 0x09);
-    char *cbody = ng_colorize_body(body, body_attr, quote_attr);
+    body_attr  = Mci2Attr("|tx", 0x07);
+    quote_attr = Mci2Attr("|qt", 0x09);
+    cbody = ng_colorize_body(body, body_attr, quote_attr, color_mode);
 
-    ui_text_viewer_t viewer;
     ui_text_viewer_init(&viewer, 1, body_y, tw - 1, body_h, &vs);
     ui_text_viewer_set_text(&viewer, cbody ? cbody : body);
     if (cbody) free(cbody);

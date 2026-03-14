@@ -600,6 +600,7 @@ typedef struct {
     char *origin;
     char *attach_path;
     char *barricade;
+    char *color_support;
 
     char **style;
     size_t style_count;

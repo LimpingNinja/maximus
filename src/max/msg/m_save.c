@@ -37,9 +37,11 @@ static char rcs_id[]="$Id: m_save.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 #include <ctype.h>
 #include <mem.h>
 #include "prog.h"
+#include "option.h"
 #include "cfg_consts.h"
 #include "max_msg.h"
 #include "max_edit.h"
+#include "mci.h"
 #include "m_for.h"
 #include "m_save.h"
 #include "debug_log.h"
@@ -47,8 +49,147 @@ static char rcs_id[]="$Id: m_save.c,v 1.5 2004/01/28 06:38:10 paltas Exp $";
 # include <errno.h>
 #endif
 
-static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int local_msg, PMAH pmah);
-static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah);
+static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int local_msg, PMAH pmah, int allow_raw_mci);
+static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah, int allow_raw_mci);
+
+/* color_support enum and lookup live in protod.h / max_init.c:
+ * ngcfg_get_area_color_support() returns NGCFG_COLOR_MCI etc. */
+
+static size_t near MagnEt_SaveCopyString(char *out, size_t out_size, size_t out_len, const char *src)
+{
+  size_t i;
+
+  if (out_size==0 || src==NULL)
+    return out_len;
+
+  for (i=0; src[i] != '\0' && out_len + 1 < out_size; i++)
+    out[out_len++]=src[i];
+
+  out[out_len]='\0';
+  return out_len;
+}
+
+static word near MagnEt_SaveColorCodeLenAt(const char *p)
+{
+  int code;
+
+  if (p==NULL || p[0] != '|' || !isdigit((unsigned char)p[1]) || !isdigit((unsigned char)p[2]))
+    return 0;
+
+  code=((int)(p[1]-'0') * 10) + (int)(p[2]-'0');
+  return (code >= 0 && code <= 31) ? 3 : 0;
+}
+
+static int near MagnEt_SaveAllowRawMci(PMAH pmah, XMSG *msg)
+{
+  if (pmah==NULL || msg==NULL)
+    return FALSE;
+
+  if (!CanKillMsg(msg))
+    return FALSE;
+
+  return (CanAccessMsgCommand(pmah, msg_kill, 0) ||
+          CanAccessMsgCommand(pmah, msg_hurl, 0));
+}
+
+static size_t near MagnEt_SaveColorize(const char *in, char *out, size_t out_size, int mode, int allow_raw_mci)
+{
+  size_t out_len=0;
+  byte attr=0x07;
+  sword old_attr=-1;
+  word cc_len;
+
+  if (out_size==0)
+    return 0;
+
+  out[0]='\0';
+
+  if (mode==NGCFG_COLOR_MCI && allow_raw_mci)
+  {
+    if (in)
+      snprintf(out, out_size, "%s", in);
+    return strlen(out);
+  }
+
+  if (!in)
+    return 0;
+
+  while (*in && out_len + 1 < out_size)
+  {
+    cc_len=MagnEt_SaveColorCodeLenAt(in);
+
+    if (cc_len)
+    {
+      if (mode==NGCFG_COLOR_MCI)
+      {
+        out[out_len++]=in[0];
+        if (out_len + 2 >= out_size)
+        {
+          out[out_len]='\0';
+          break;
+        }
+        out[out_len++]=in[1];
+        out[out_len++]=in[2];
+        out[out_len]='\0';
+      }
+      else if (mode==NGCFG_COLOR_AVATAR)
+      {
+        char token[4];
+        token[0]=in[0];
+        token[1]=in[1];
+        token[2]=in[2];
+        token[3]='\0';
+        attr=Mci2Attr(token, attr);
+
+        if (out_len + 3 >= out_size)
+          break;
+
+        out[out_len++]='\x16';
+        out[out_len++]='\x01';
+        out[out_len++]=(char)attr;
+        out[out_len]='\0';
+      }
+      else
+      {
+        if (mode==NGCFG_COLOR_ANSI)
+        {
+          char token[4];
+          char ansi[32];
+          token[0]=in[0];
+          token[1]=in[1];
+          token[2]=in[2];
+          token[3]='\0';
+          attr=Mci2Attr(token, attr);
+          out_len=MagnEt_SaveCopyString(out, out_size, out_len, (char *)avt2ansi(attr, old_attr, ansi));
+          old_attr=(sword)attr;
+        }
+        else if (mode==NGCFG_COLOR_STRIP)
+        {
+        }
+      }
+
+      in += cc_len;
+      continue;
+    }
+
+    if (*in=='|' && !allow_raw_mci)
+    {
+      if (out_len + 2 >= out_size)
+        break;
+
+      out[out_len++]='|';
+      out[out_len++]='|';
+      out[out_len]='\0';
+      in++;
+      continue;
+    }
+
+    out[out_len++]=*in++;
+    out[out_len]='\0';
+  }
+
+  return out_len;
+}
 
 int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
             long msgnum, int chg, PMAH pmah, char *msgarea,
@@ -65,12 +206,17 @@ int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
   int fResetFile;
   word found_tear;
   word line;
+  int allow_raw_mci;
+  int color_mode;
 
   char temp[PATHLEN];
+  char saved_line[MAX_LINELEN*8];
   char orig[MAX_OTEAR_LEN];
   char *kludge;
 
   ret=FALSE;
+  allow_raw_mci=MagnEt_SaveAllowRawMci(pmah, msg);
+  color_mode=ngcfg_get_area_color_support(pmah ? MAS(*pmah, name) : NULL);
 
   /* Tell the user what we're doing... */
   
@@ -138,7 +284,7 @@ int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
                 preview_len,
                 (char *)screen[line]+1);
 
-      total_len += strlen(screen[line]+1);
+      total_len += (long)MagnEt_SaveColorize(screen[line]+1, saved_line, sizeof(saved_line), color_mode, allow_raw_mci);
 
       if (screen[line][0]==HARD_CR)
         total_len++;
@@ -245,8 +391,9 @@ int SaveMsg(XMSG *msg, FILE *upfile, int local_msg,
    * use instead.                                                      */
 
   if (upfile)
-    SaveMsgFromUpfile(mh, upfile, total_len, local_msg, pmah);
-  else SaveMsgFromEditor(mh, total_len, pmah);
+    SaveMsgFromUpfile(mh, upfile, total_len, local_msg, pmah, allow_raw_mci);
+  else
+    SaveMsgFromEditor(mh, total_len, pmah, allow_raw_mci);
   
   /* And finish it off... */
 
@@ -306,10 +453,11 @@ static int near WriteErr(int opened)
 
 
 
-static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int local_msg, PMAH pmah)
+static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int local_msg, PMAH pmah, int allow_raw_mci)
 {
   char orig[MAX_OTEAR_LEN];
   char temp[PATHLEN*2+5];
+  char saved[PATHLEN*8];
   byte *s;
   
   int first=TRUE;
@@ -322,6 +470,7 @@ static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int lo
   int is_trimmed;
   unsigned char ch=HARD_CR;
   char c;
+  int color_mode=ngcfg_get_area_color_support(pmah ? MAS(*pmah, name) : NULL);
     
   fseek(upfile, 0L, SEEK_SET);
   
@@ -401,16 +550,16 @@ static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int lo
       }
     }
 
-    this_linelen=strlen(temp);
+    this_linelen=MagnEt_SaveColorize(temp, saved, sizeof(saved), color_mode, allow_raw_mci);
 
-    MsgWriteMsg(msgh, TRUE, NULL, temp, this_linelen, total_len, 0L, NULL);
+    MsgWriteMsg(msgh, TRUE, NULL, saved, this_linelen, total_len, 0L, NULL);
 
-    if (*temp)
-      last_char=temp[this_linelen-1];
+    if (*saved)
+      last_char=saved[this_linelen-1];
     else last_char='\0';
 
     last_len=this_linelen;
-    last_isblstr=isblstr(temp);
+    last_isblstr=isblstr(saved);
     if ((was_trimmed=is_trimmed)==0)
       line_len=0;
     else
@@ -454,18 +603,20 @@ static void near SaveMsgFromUpfile(HMSG msgh,FILE *upfile, long total_len,int lo
 }
 
 
-static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah)
+static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah, int allow_raw_mci)
 {
   static unsigned long s_savemsgfromeditor_seq;
   unsigned long call_id;
-  word found_tear;
+  char orig[MAX_OTEAR_LEN];
+  char saved[MAX_LINELEN*8];
+  word found_tear=0;
   word line;
-  sword rc;
+  int rc;
+  char c;
+  int color_mode=ngcfg_get_area_color_support(pmah ? MAS(*pmah, name) : NULL);
   int len;
   int preview_len;
 
-  char orig[MAX_OTEAR_LEN];
-  char c;
 
   call_id=++s_savemsgfromeditor_seq;
 
@@ -537,7 +688,8 @@ static void near SaveMsgFromEditor(HMSG msgh, long total_len, PMAH pmah)
     
     if (len > 0)
     {
-      rc = MsgWriteMsg(msgh, TRUE, NULL, (byte *)lineptr+1,
+      len=(int)MagnEt_SaveColorize((char *)lineptr+1, saved, sizeof(saved), color_mode, allow_raw_mci);
+      rc = MsgWriteMsg(msgh, TRUE, NULL, saved,
                        (long)len, total_len, 0L, NULL);
       
       debug_log("SaveMsgFromEditor[%lu]: MsgWriteMsg returned %d", call_id, (int)rc);

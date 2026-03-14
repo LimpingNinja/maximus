@@ -30,6 +30,7 @@
  #include "mm.h"
  #include "max_area.h"
  #include "mci.h"
+ #include "theme.h"
 
 /**
  * @brief Global MCI parse flags.
@@ -147,6 +148,26 @@ static int mci_visible_len(const char *s)
       continue;
     }
 
+    /* |DF{path} — display file embedding, zero visible width */
+    if (*s=='|' && s[1]=='D' && s[2]=='F' && s[3]=='{')
+    {
+      const char *end = strchr(s + 4, '}');
+      if (end) { s = end + 1; continue; }
+    }
+
+    /* |{string} — delimiters are invisible, content is visible */
+    if (*s=='|' && s[1]=='{')
+    {
+      const char *end = strchr(s + 2, '}');
+      if (end)
+      {
+        const char *p = s + 2;
+        while (p < end) { ++count; ++p; }
+        s = end + 1;
+        continue;
+      }
+    }
+
     if (*s=='|' && s[1]=='U' && s[2]=='#')
     {
       s += 3;
@@ -167,21 +188,32 @@ static int mci_visible_len(const char *s)
       continue;
     }
 
-    /* MCI cursor codes |[X##, |[Y##, etc. — zero visible width */
+    /* MCI cursor codes — zero visible width */
     if (*s=='|' && s[1]=='[')
     {
       char cc = s[2];
-      if (cc=='0' || cc=='1' || cc=='K')
+      /* Parameterless: |[0, |[1, |[K, |[<, |[>, |[H */
+      if (cc=='0' || cc=='1' || cc=='K' || cc=='<' || cc=='>' || cc=='H')
       {
         s += 3;
         continue;
       }
-      if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
-           cc=='L' || cc=='X' || cc=='Y') &&
-          isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]))
+      /* Parametric: |[A##, |[X|TW, etc. — 2-digit or |XY width */
+      if (cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
+          cc=='L' || cc=='X' || cc=='Y')
       {
-        s += 5;
-        continue;
+        if (isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]))
+        {
+          s += 5;
+          continue;
+        }
+        if (s[3]=='|' && s[4] && s[5] &&
+            ((s[4]>='A' && s[4]<='Z' && s[5]>='A' && s[5]<='Z') ||
+             (s[4]=='U' && s[5]=='#')))
+        {
+          s += 6; /* |[ + cc + |XY */
+          continue;
+        }
       }
     }
 
@@ -303,6 +335,54 @@ static int mci_parse_2dig(const char *s, int *out)
   return 1;
 }
 
+/* Forward declaration — defined below, needed by mci_parse_width */
+static void mci_expand_code(char a, char b, char *out, size_t out_size);
+
+/**
+ * @brief Parse a format-op width: either a literal 2-digit number or a |XY
+ *        info code that expands to a 2-digit number.
+ *
+ * Tries the literal path first (2 chars consumed).  If the next chars are
+ * a pipe followed by a recognised info code whose expansion is a 1- or
+ * 2-digit number, that value is used instead (3 chars consumed for |XY).
+ *
+ * @param s        Pointer into the input string (right after the op letter).
+ * @param out_val  Receives the parsed integer (0-99).
+ * @param out_len  Receives the number of input characters consumed.
+ * @return         1 on success, 0 on failure.
+ */
+static int mci_parse_width(const char *s, int *out_val, int *out_len)
+{
+  /* Fast path: literal two digits */
+  if (isdigit((unsigned char)s[0]) && isdigit((unsigned char)s[1]))
+  {
+    *out_val = ((int)(s[0] - '0') * 10) + (int)(s[1] - '0');
+    *out_len = 2;
+    return 1;
+  }
+
+  /* Slow path: |XY info code that resolves to a number */
+  if (s[0] == '|' && s[1] && s[2] &&
+      (mci_is_upper2(s[1], s[2]) || (s[1] == 'U' && s[2] == '#')))
+  {
+    char val[256];
+    mci_expand_code(s[1], s[2], val, sizeof(val));
+    if (val[0] != '\0')
+    {
+      char *end = NULL;
+      long v = strtol(val, &end, 10);
+      if (end != val && *end == '\0' && v >= 0 && v <= 99)
+      {
+        *out_val = (int)v;
+        *out_len = 3; /* consumed |XY */
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
 /**
  * @brief Emit a repeated character into the output buffer.
  *
@@ -373,6 +453,14 @@ static void mci_expand_code(char a, char b, char *out, size_t out_size)
   else if (a=='T' && b=='E')
     snprintf(out, out_size, "%s", mci_term_emul_str());
 
+  /* Terminal geometry codes — width clamped to 2 digits (max 99) */
+  else if (a=='T' && b=='W')
+    snprintf(out, out_size, "%02d", (int)(usr.width > 99 ? 99 : (usr.width ? usr.width : 80)));
+  else if (a=='T' && b=='C')
+    snprintf(out, out_size, "%02d", (int)(((usr.width ? usr.width : 80) + 1) / 2));
+  else if (a=='T' && b=='H')
+    snprintf(out, out_size, "%02d", (int)((usr.width ? usr.width : 80) / 2));
+
   /* Date/time codes */
   else if (a=='D' && b=='A')
   {
@@ -405,6 +493,13 @@ static void mci_expand_code(char a, char b, char *out, size_t out_size)
     snprintf(out, out_size, "%s", fah.heap ? FAS(fah, name) : "");
   else if (a=='F' && b=='D')
     snprintf(out, out_size, "%s", fah.heap ? FAS(fah, descript) : "");
+
+  /* Theme short_name: |TN */
+  else if (a=='T' && b=='N')
+  {
+    const char *tsn = theme_get_current_shortname();
+    snprintf(out, out_size, "%s", tsn ? tsn : "");
+  }
 
   /* Positional parameter stub |!1..|!9, |!A..|!F (Round 1: no-op) */
   else if (a=='!' && ((b >= '1' && b <= '9') || (b >= 'A' && b <= 'F')))
@@ -506,9 +601,11 @@ size_t MciExpand(const char *in, char *out, size_t out_size)
     {
       char op=in[i+1];
       int n=0;
-      if (op && mci_parse_2dig(in + i + 2, &n))
+      int wlen=0; /* chars consumed by the width specifier (2 for ##, 3 for |XY) */
+      if (op && mci_parse_width(in + i + 2, &n, &wlen))
       {
-        char ch=in[i+4];
+        /* base = $<op> (2) + width (wlen); fill char sits at i+2+wlen */
+        char ch=in[i + 2 + wlen];
 
         if (op=='C' || op=='L' || op=='R' || op=='T')
         {
@@ -520,7 +617,7 @@ size_t MciExpand(const char *in, char *out, size_t out_size)
             pending_padch=' ';
             pending_fmt=(op=='C') ? MCI_FMT_CENTER : (op=='L' ? MCI_FMT_LEFTPAD : MCI_FMT_RIGHTPAD);
           }
-          i += 4;
+          i += 2 + wlen;
           continue;
         }
         else if (op=='c' || op=='l' || op=='r')
@@ -531,7 +628,7 @@ size_t MciExpand(const char *in, char *out, size_t out_size)
           pending_width=n;
           pending_padch=ch;
           pending_fmt=(op=='c') ? MCI_FMT_CENTER : (op=='l' ? MCI_FMT_LEFTPAD : MCI_FMT_RIGHTPAD);
-          i += 5;
+          i += 2 + wlen + 1;
           continue;
         }
         else if (op=='D')
@@ -541,7 +638,7 @@ size_t MciExpand(const char *in, char *out, size_t out_size)
 
           out_len=mci_emit_repeated(out, out_size, out_len, n, ch);
           cur_col += n;
-          i += 5;
+          i += 2 + wlen + 1;
           continue;
         }
         else if (op=='X')
@@ -556,7 +653,7 @@ size_t MciExpand(const char *in, char *out, size_t out_size)
             cur_col += count;
           }
 
-          i += 5;
+          i += 2 + wlen + 1;
           continue;
         }
       }
@@ -605,11 +702,45 @@ literal_dollar:
         continue;
       }
 
-      /* |[A## through |[Y## — cursor movement with 2-digit parameter */
+      /* |[< — move cursor to beginning of line (column 1) */
+      if (cc=='<')
+      {
+        mci_out_append_str(out, out_size, &out_len, "\x1b[1G");
+        cur_col=1;
+        i += 3;
+        continue;
+      }
+      /* |[> — move cursor to end of line (last column) */
+      if (cc=='>')
+      {
+        int w = usr.width ? usr.width : 80;
+        char csi[32];
+        snprintf(csi, sizeof(csi), "\x1b[%dG", w);
+        mci_out_append_str(out, out_size, &out_len, csi);
+        cur_col=w;
+        i += 3;
+        continue;
+      }
+      /* |[H — move cursor to center column */
+      if (cc=='H')
+      {
+        int w = usr.width ? usr.width : 80;
+        int center = (w + 1) / 2;
+        char csi[32];
+        snprintf(csi, sizeof(csi), "\x1b[%dG", center);
+        mci_out_append_str(out, out_size, &out_len, csi);
+        cur_col=center;
+        i += 3;
+        continue;
+      }
+
+      /* |[A## through |[Y## — cursor movement with numeric parameter.
+       * The ## may be a literal 2-digit number or a |XY info code. */
       int nn=0;
+      int wlen=0;
       if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
            cc=='L' || cc=='X' || cc=='Y') &&
-          mci_parse_2dig(in + i + 3, &nn))
+          mci_parse_width(in + i + 3, &nn, &wlen))
       {
         char csi[32];
         switch (cc)
@@ -626,7 +757,7 @@ literal_dollar:
           default: csi[0]='\0'; break;
         }
         mci_out_append_str(out, out_size, &out_len, csi);
-        i += 5;
+        i += 3 + wlen;
         continue;
       }
     }
@@ -769,6 +900,78 @@ literal_dollar:
       }
     }
 
+    /* |{string} — inline string literal, usable as a format-op value.
+     * Everything between '{' and '}' is the literal text.  If no closing
+     * '}' is found, fall through to literal output. */
+    if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' && in[i+1]=='{')
+    {
+      /* Scan for the closing brace */
+      const char *start = in + i + 2;
+      const char *end   = strchr(start, '}');
+      if (end)
+      {
+        size_t slen = (size_t)(end - start);
+        char tmp[512];
+        if (slen >= sizeof(tmp))
+          slen = sizeof(tmp) - 1;
+        memcpy(tmp, start, slen);
+        tmp[slen] = '\0';
+
+        if (pending_pad_space)
+        {
+          char with_pad[512];
+          snprintf(with_pad, sizeof(with_pad), " %s", tmp);
+          snprintf(tmp, sizeof(tmp), "%s", with_pad);
+        }
+        pending_pad_space=0;
+
+        if (pending_trim >= 0)
+        {
+          mci_apply_trim(tmp, pending_trim);
+          pending_trim=-1;
+        }
+
+        if (pending_fmt != MCI_FMT_NONE && pending_width >= 0)
+        {
+          int vlen=mci_visible_len(tmp);
+          int pad=(pending_width > vlen) ? (pending_width - vlen) : 0;
+          int left=0, right=0;
+
+          if (pending_fmt==MCI_FMT_LEFTPAD)       left=pad;
+          else if (pending_fmt==MCI_FMT_RIGHTPAD)  right=pad;
+          else { left=pad/2; right=pad-left; }
+
+          if (left)
+          {
+            out_len=mci_emit_repeated(out, out_size, out_len, left, pending_padch);
+            cur_col += left;
+          }
+
+          mci_out_append_str(out, out_size, &out_len, tmp);
+          cur_col += mci_visible_len(tmp);
+
+          if (right)
+          {
+            out_len=mci_emit_repeated(out, out_size, out_len, right, pending_padch);
+            cur_col += right;
+          }
+
+          pending_fmt=MCI_FMT_NONE;
+          pending_width=-1;
+          pending_padch=' ';
+        }
+        else
+        {
+          mci_out_append_str(out, out_size, &out_len, tmp);
+          cur_col += mci_visible_len(tmp);
+        }
+
+        i += 2 + slen + 1; /* skip |{ ... } */
+        continue;
+      }
+      /* No closing brace — fall through to literal output */
+    }
+
     if ((g_mci_parse_flags & MCI_PARSE_MCI_CODES) && in[i]=='|' &&
         (mci_is_upper2(in[i+1], in[i+2]) || (in[i+1]=='U' && in[i+2]=='#')))
     {
@@ -902,6 +1105,32 @@ size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_
       }
     }
 
+    /* |DF{path} — strip entire display-file embedding */
+    if ((strip_flags & MCI_STRIP_INFO) && in[i]=='|' &&
+        in[i+1]=='D' && in[i+2]=='F' && in[i+3]=='{')
+    {
+      const char *end = strchr(in + i + 4, '}');
+      if (end)
+      {
+        i += 4 + (size_t)(end - (in + i + 4)) + 1;
+        continue;
+      }
+    }
+
+    /* |{string} — strip delimiters, keep content */
+    if ((strip_flags & MCI_STRIP_INFO) && in[i]=='|' && in[i+1]=='{')
+    {
+      const char *end = strchr(in + i + 2, '}');
+      if (end)
+      {
+        const char *p = in + i + 2;
+        while (p < end)
+          mci_out_append_ch(out, out_size, &out_len, *p++);
+        i += 2 + (size_t)(end - (in + i + 2)) + 1;
+        continue;
+      }
+    }
+
     if (in[i]=='|' && (mci_is_upper2(in[i+1], in[i+2]) || (in[i+1]=='U' && in[i+2]=='#')))
     {
       if (strip_flags & MCI_STRIP_INFO)
@@ -926,21 +1155,22 @@ size_t MciStrip(const char *in, char *out, size_t out_size, unsigned long strip_
       continue;
     }
 
-    /* Strip MCI cursor codes |[X##, |[Y##, |[K, |[0, |[1, etc. */
+    /* Strip MCI cursor codes |[X##, |[Y##, |[K, |[0, |[1, |[<, |[>, |[H, etc. */
     if ((strip_flags & MCI_STRIP_INFO) && in[i]=='|' && in[i+1]=='[')
     {
       char cc=in[i+2];
-      if (cc=='0' || cc=='1' || cc=='K')
+      if (cc=='0' || cc=='1' || cc=='K' || cc=='<' || cc=='>' || cc=='H')
       {
         i += 3;
         continue;
       }
       int nn=0;
+      int wlen=0;
       if ((cc=='A' || cc=='B' || cc=='C' || cc=='D' ||
            cc=='L' || cc=='X' || cc=='Y') &&
-          mci_parse_2dig(in + i + 3, &nn))
+          mci_parse_width(in + i + 3, &nn, &wlen))
       {
-        i += 5;
+        i += 3 + wlen;
         continue;
       }
     }

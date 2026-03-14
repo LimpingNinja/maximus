@@ -61,6 +61,145 @@ static int near ngcfg_get_kill_mode_int(const char *toml_path)
   return 0;
 }
 
+/* color_support enum and lookup live in protod.h / max_init.c:
+ * ngcfg_get_area_color_support() returns NGCFG_COLOR_MCI etc. */
+
+/**
+ * @brief Return the byte length of a |00..|31 inline MCI body color token.
+ *
+ * @param p  Pointer into the line being scanned.
+ * @return   3 if a valid pipe-color token starts at @p p, else 0.
+ */
+static word near ReadColorCodeLenAt(const char *p)
+{
+  int code;
+
+  if (p == NULL || p[0] != '|' ||
+      !isdigit((unsigned char)p[1]) || !isdigit((unsigned char)p[2]))
+    return 0;
+
+  code = ((int)(p[1] - '0') * 10) + (int)(p[2] - '0');
+  return (code >= 0 && code <= 31) ? 3 : 0;
+}
+
+/**
+ * @brief Return the byte length of an ANSI escape sequence at @p p.
+ *
+ * Recognises CSI sequences (ESC [ ... final-byte).  Returns the full
+ * length including the ESC, or 0 if @p p doesn't start one.
+ *
+ * @param p  Pointer into the line being scanned.
+ * @return   Length of the ANSI sequence, or 0.
+ */
+static word near ReadAnsiSeqLen(const char *p)
+{
+  const char *s;
+
+  if (p == NULL || p[0] != '\x1b' || p[1] != '[')
+    return 0;
+
+  /* Walk parameter bytes + intermediate bytes, then expect a final byte
+   * in the 0x40-0x7E range per ECMA-48. */
+  s = p + 2;
+  while (*s >= 0x20 && *s <= 0x3F)   /* parameter / intermediate bytes */
+    s++;
+  if (*s >= 0x40 && *s <= 0x7E)       /* final byte */
+    return (word)(s - p + 1);
+
+  return 0;
+}
+
+/**
+ * @brief Render one reader line according to the area's color_support mode.
+ *
+ * - NGCFG_COLOR_MCI:  Convert |00..|31 pipe codes to Avatar attribute
+ *   sequences; sterilise any stray ANSI escapes.
+ * - NGCFG_COLOR_ANSI: Pass ANSI escapes through; sterilise any stray
+ *   MCI pipe codes so they aren't misinterpreted.
+ * - NGCFG_COLOR_STRIP: Remove both MCI pipe codes and ANSI escapes.
+ * - NGCFG_COLOR_AVATAR: Pass through unchanged (Avatar is handled by
+ *   the output engine).
+ *
+ * @param in        NUL-terminated input line.
+ * @param out       Output buffer.
+ * @param out_size  Size of @p out in bytes.
+ * @param base_attr Starting DOS attribute (used for MCI conversion).
+ * @param mode      One of the NGCFG_COLOR_* constants.
+ * @return          Number of bytes written to @p out (excluding NUL).
+ */
+static size_t near ReadColorizeLine(const char *in, char *out, size_t out_size,
+                                    byte base_attr, int mode)
+{
+  size_t out_len = 0;
+  byte attr = base_attr;
+
+  if (out_size == 0)
+    return 0;
+  out[0] = '\0';
+
+  if (!in)
+    return 0;
+
+  while (*in && out_len + 1 < out_size)
+  {
+    /* --- MCI pipe-color token? --- */
+    word mci_len = ReadColorCodeLenAt(in);
+
+    if (mci_len)
+    {
+      if (mode == NGCFG_COLOR_MCI)
+      {
+        /* Convert pipe token to Avatar \x16\x01<attr> */
+        char token[4] = { in[0], in[1], in[2], '\0' };
+        attr = Mci2Attr(token, attr);
+
+        if (out_len + 3 >= out_size)
+          break;
+        out[out_len++] = '\x16';
+        out[out_len++] = '\x01';
+        out[out_len++] = (char)attr;
+      }
+      /* ANSI / STRIP / AVATAR: discard stray MCI codes silently */
+      in += mci_len;
+      continue;
+    }
+
+    /* --- ANSI escape sequence? --- */
+    word ansi_len = ReadAnsiSeqLen(in);
+
+    if (ansi_len)
+    {
+      if (mode == NGCFG_COLOR_ANSI)
+      {
+        /* Pass the ANSI sequence through verbatim */
+        if (out_len + ansi_len >= out_size)
+          break;
+        memcpy(out + out_len, in, ansi_len);
+        out_len += ansi_len;
+      }
+      /* MCI / STRIP / AVATAR: discard stray ANSI sequences */
+      in += ansi_len;
+      continue;
+    }
+
+    /* --- Bare ESC (not a valid CSI)? --- */
+    if (*in == '\x1b')
+    {
+      if (mode == NGCFG_COLOR_ANSI)
+        out[out_len++] = *in;
+      /* else sterilise by dropping it */
+      in++;
+      continue;
+    }
+
+    /* --- Ordinary character --- */
+    out[out_len++] = *in++;
+  }
+
+  out[out_len] = '\0';
+  return out_len;
+}
+
 static void near Clear_To_Screen_End();
 static int near Msg_Read_RepOrig(int orig);
 static int near Msg_Get_Msgs(int dir,dword startmsg,int nonstop,int exact,int show_err);
@@ -531,11 +670,12 @@ static int near CanShowLine(char linetype)
 static int near ShowMessageLines(int got, byte *outline[], byte lt[],
                                    char *paged, word msgoffset, int pause,
                                    char *nonstop,
-                                   int inbrowse)
+                                   int inbrowse, int color_mode)
 {
   int this;
+  byte body_attr = Mci2Attr(msg_text_col, 0x07);
 
-  for (this=0; this < got; this++)
+  for (this = 0; this < got; this++)
   {
     /* If we're near the end of the message, strip excess blank lines */
 
@@ -547,7 +687,20 @@ static int near ShowMessageLines(int got, byte *outline[], byte lt[],
 
     Puts(CLEOL);
 
-    PutsRaw(outline[this]);
+    if (color_mode == NGCFG_COLOR_AVATAR)
+    {
+      /* Avatar bodies are already in the output engine's native format */
+      PutsRaw(outline[this]);
+    }
+    else
+    {
+      /* MCI / ANSI / STRIP: run through ReadColorizeLine for
+       * conversion and cross-format sterilisation. */
+      char colorized[MAX_LINELEN * 8];
+      ReadColorizeLine((char *)outline[this], colorized,
+                       sizeof(colorized), body_attr, color_mode);
+      PutsRaw(colorized);
+    }
 
     if (lt[this] & MSGLINE_KLUDGE)
       Puts(msg_text_col);
@@ -579,13 +732,13 @@ int Msg_Display(HMSG msgh,
                 int inbrowse)
 {
   struct _show_kludges sk;
-  word msgoffset, got;
-  word wid, n_ol;
-  sword kret;
-
-  byte *ol[MAX_MSGDISPLAY];
-  byte lt[MAX_MSGDISPLAY];
+  word msgoffset;
+  word wid;
+  byte lt[MAX_LINES];
+  byte *ol[MAX_LINES];
+  int got, n_ol, kret;
   byte last_attr;
+  int color_mode;
   byte nonstop;
   byte paged;
 
@@ -598,6 +751,7 @@ int Msg_Display(HMSG msgh,
   msgoffset=5+offset;
   msgeof=nonstop=paged=FALSE;
   wid=TermWidth()-1;
+  color_mode = ngcfg_get_area_color_support(MAS(mah, name));
   usr.msgs_read++;
   ci_read();
 
@@ -676,7 +830,8 @@ int Msg_Display(HMSG msgh,
                                msgoffset,
                                pause,
                                &nonstop,
-                               inbrowse)) < 0)
+                               inbrowse,
+                               color_mode)) < 0)
     {
       Dealloc_Outline(ol);
 

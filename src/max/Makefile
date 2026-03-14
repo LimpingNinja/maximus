@@ -1,5 +1,8 @@
 include $(SRC)/vars.mk
 
+HUNSPELL_CFLAGS := $(shell pkg-config --cflags hunspell 2>/dev/null)
+HUNSPELL_LIBS   := $(shell pkg-config --libs hunspell 2>/dev/null)
+
 LANGHDR     	:=  $(SRC)/src/max/core/english.h
 # LANGSRC removed — MAID is no longer in the build pipeline.
 # english.h (formerly english.lth) lives in the source tree; english.toml is the source of truth.
@@ -17,6 +20,9 @@ CFLAGS 		+= -USWAP -UOVERLAY_BUILD
 CPPFLAGS	+= -I./core -I./display -I./msg -I./file -I./track -I./mex_runtime -I./netmail -I./platform_legacy
 
 CPPFLAGS	+= -I$(SRC)/src/libs/libmaxdb/include -I$(SRC)/src/libs/sqlite -I$(SRC)/src/libs/cjson
+CPPFLAGS	+= $(HUNSPELL_CFLAGS)
+
+LOADLIBES	+= $(HUNSPELL_LIBS)
 
 # OpenSSL paths — Homebrew on macOS, system on Linux/FreeBSD
 ifeq ($(PLATFORM),darwin)
@@ -35,6 +41,7 @@ MAXOBJ := max.o
 MOBJS :=        uedit.obj       ued_cmds.obj    ued_disp.obj    \
 display.obj     disp_dat.obj    disp_qu.obj     max_rip.obj     \
 disp_max.obj    disp_mis.obj    mci.obj         ui_field.obj    ui_lightbar.obj ui_form.obj     ui_shadowbuf.obj ui_scroll.obj   med_add.obj     maxed.obj       \
+med_spell.obj   \
 med_scrn.obj    med_move.obj    med_del.obj     med_quot.obj    med_qpop.obj    \
 med_read.obj    med_misc.obj    f_area.obj      f_con.obj       \
 f_intrin.obj    f_isval.obj     f_kill.obj      f_locate.obj    \
@@ -90,7 +97,7 @@ xspawn.obj
 MOBJS := $(strip $(MOBJS:.obj=.o))
 
 # Vendored cJSON library (MIT license) — built as a standalone object
-MOBJS += cJSON.o
+MOBJS += cJSON.o theme.o
 
 DEPEND_FILES = $(MOBJS:.o=.c) max.c date.c
 
@@ -176,7 +183,9 @@ language.o: $(LANGSRC)
 # (struct size changes, e.g. MCI_THEME_SLOT_COUNT, cause silent corruption otherwise)
 LIBMAXCFG_H := $(SRC)/src/libs/libmaxcfg/include/libmaxcfg.h
 language.o mci.o mexint.o f_xfer.o f_intrin.o ued_disp.o m_misc.o \
-max_cmod.o node.o max_init.o max_rmen.o max_fini.o: $(LIBMAXCFG_H)
+max_cmod.o node.o max_init.o max_rmen.o max_fini.o theme.o: $(LIBMAXCFG_H)
+
+theme.o: core/theme.c core/theme.h
 
 $(ZOBJS): xmodem.h pdata.h
 

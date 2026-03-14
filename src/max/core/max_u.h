@@ -158,7 +158,8 @@ struct   _usr
       dword down;           /* K-bytes downloaded, all calls             206*/
       sdword downtoday;     /* K-bytes downloaded, today                 210*/
 
-      byte rsvd45[18];      /* Reserved by Maximus for future use        214*/
+      byte theme;           /* Theme index (1-based, from theme.toml)    214*/
+      byte rsvd45[17];      /* Reserved by Maximus for future use        215*/
 
       word call;            /* Number of previous calls today            232*/
 

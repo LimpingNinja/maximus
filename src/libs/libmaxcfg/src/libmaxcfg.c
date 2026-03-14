@@ -1144,6 +1144,7 @@ MaxCfgStatus maxcfg_ng_get_msg_areas(const MaxCfgToml *toml, const char *prefix,
             const char *origin = "";
             const char *attach_path = "";
             const char *barricade = "";
+            const char *color_support = "";
             int renum_max = 0;
             int renum_days = 0;
             MaxCfgStrView style = {0};
@@ -1170,6 +1171,8 @@ MaxCfgStatus maxcfg_ng_get_msg_areas(const MaxCfgToml *toml, const char *prefix,
             if (st != MAXCFG_OK) goto fail_msg_areas;
             st = ng_tbl_get_string_default(&it, "barricade", &barricade, "");
             if (st != MAXCFG_OK) goto fail_msg_areas;
+            st = ng_tbl_get_string_default(&it, "color_support", &color_support, "");
+            if (st != MAXCFG_OK) goto fail_msg_areas;
             st = ng_tbl_get_string_array_view(&it, "style", &style);
             if (st != MAXCFG_OK) goto fail_msg_areas;
             st = ng_tbl_get_int_default(&it, "renum_max", &renum_max, 0);
@@ -1189,6 +1192,7 @@ MaxCfgStatus maxcfg_ng_get_msg_areas(const MaxCfgToml *toml, const char *prefix,
                 .origin = (char *)origin,
                 .attach_path = (char *)attach_path,
                 .barricade = (char *)barricade,
+                .color_support = (char *)color_support,
                 .style = (char **)style.items,
                 .style_count = style.count,
                 .renum_max = renum_max,
@@ -5442,6 +5446,7 @@ void maxcfg_ng_msg_area_list_free(MaxCfgNgMsgAreaList *list)
             maxcfg_free_and_null(&a->origin);
             maxcfg_free_and_null(&a->attach_path);
             maxcfg_free_and_null(&a->barricade);
+            maxcfg_free_and_null(&a->color_support);
             maxcfg_free_strv(&a->style, &a->style_count);
         }
         free(list->items);
@@ -5515,6 +5520,8 @@ MaxCfgStatus maxcfg_ng_msg_area_list_add(MaxCfgNgMsgAreaList *list, const MaxCfg
     if (st != MAXCFG_OK) goto fail;
     st = maxcfg_strdup_safe(&dst->barricade, area->barricade);
     if (st != MAXCFG_OK) goto fail;
+    st = maxcfg_strdup_safe(&dst->color_support, area->color_support);
+    if (st != MAXCFG_OK) goto fail;
 
     st = maxcfg_copy_strv(&dst->style, &dst->style_count, area->style, area->style_count);
     if (st != MAXCFG_OK) goto fail;
@@ -5536,6 +5543,7 @@ fail:
     maxcfg_free_and_null(&dst->origin);
     maxcfg_free_and_null(&dst->attach_path);
     maxcfg_free_and_null(&dst->barricade);
+    maxcfg_free_and_null(&dst->color_support);
     maxcfg_free_strv(&dst->style, &dst->style_count);
     return st;
 }
@@ -6523,6 +6531,7 @@ MaxCfgStatus maxcfg_ng_write_msg_areas_toml(FILE *fp, const MaxCfgNgDivisionList
         toml_kv_string(fp, "origin", a->origin);
         toml_kv_string(fp, "attach_path", a->attach_path);
         toml_kv_string(fp, "barricade", a->barricade);
+        toml_kv_string(fp, "color_support", a->color_support);
         toml_kv_string_array(fp, "style", a->style, a->style_count);
         toml_kv_int(fp, "renum_max", a->renum_max);
         toml_kv_int(fp, "renum_days", a->renum_days);

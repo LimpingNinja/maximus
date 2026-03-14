@@ -306,6 +306,7 @@ static int near mnu_cmd_to_opt(const char *cmd, option *out)
     {"chg_clear", chg_clear},
     {"chg_ibm", chg_ibm},
     {"chg_rip", chg_rip},
+    {"chg_theme", chg_theme},
     {"edit_save", edit_save},
     {"edit_abort", edit_abort},
     {"edit_list", edit_list},

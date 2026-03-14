@@ -41,6 +41,7 @@ struct mex_instancedata
     word  alias_system;
     word  ask_name;
     word  use_umsgid;
+    dword newuser_answered_mask;
 } __attribute__((packed));
 
 struct mex_cstat
@@ -339,6 +340,8 @@ struct mex_ui_form_field
   word normal_attr;
   word focus_attr;
   IADDR format_mask;    /* string pointer */
+  IADDR options[8];     /* string pointers */
+  word option_count;
   IADDR value;          /* string pointer */
 } __attribute__((packed));
 

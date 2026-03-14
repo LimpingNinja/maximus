@@ -53,6 +53,7 @@ static char rcs_id[]="$Id: mex.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #include "mexint.h"
 
 struct _mex_instance_stack *pmisThis=0;
+static dword mex_newuser_answered_mask=0;
 
 /* Table of intrinsic functions.  These are all defined in mexint.c */
 
@@ -390,6 +391,7 @@ int EXPENTRY intrin_setup(void)
   pmis->pmid->alias_system=ngcfg_get_bool("general.session.alias_system");
   pmis->pmid->ask_name=ngcfg_get_bool("general.session.ask_alias");
   pmis->pmid->use_umsgid=ngcfg_get_bool("general.session.use_umsgids");
+  pmis->pmid->newuser_answered_mask=mex_newuser_answered_mask;
 
   /* Fill out the mex_sys structure */
 
@@ -457,6 +459,7 @@ void MexImportData(struct _mex_instance_stack *pmis)
   Set_Lang_Alternate(hasRIP());
   Find_Class_Number();
   MexImportString(linebuf, pmis->vmaLinebuf, BUFLEN);
+  mex_newuser_answered_mask=pmis->pmid->newuser_answered_mask;
 }
 
 /*
@@ -475,6 +478,17 @@ void MexExportData(struct _mex_instance_stack *pmis)
 {
   MexExportString(pmis->vmaLinebuf, linebuf);
   MexExportUser(pmis->pmu, &usr);
+  pmis->pmid->newuser_answered_mask=mex_newuser_answered_mask;
+}
+
+void MexSetNewUserAnsweredMask(dword mask)
+{
+  mex_newuser_answered_mask=mask;
+}
+
+dword MexGetNewUserAnsweredMask(void)
+{
+  return mex_newuser_answered_mask;
 }
 
 
@@ -844,6 +858,7 @@ void EXPENTRY intrin_term(short *psRet)
   direction=(pmis->pmm->direction) ? DIRECTION_NEXT : DIRECTION_PREVIOUS;
 
   baud=pmis->pmid->speed;
+  mex_newuser_answered_mask=pmis->pmid->newuser_answered_mask;
 
   /* Free this stack entry */
 

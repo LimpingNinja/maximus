@@ -190,6 +190,8 @@ struct ui_form_field
   int: normal_attr;
   int: focus_attr;
   string: format_mask;
+  array [1..8] of string: options;
+  int: option_count;
   string: value;
 };
 

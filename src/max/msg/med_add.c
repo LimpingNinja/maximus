@@ -39,13 +39,15 @@ static void near Insert_At(word cx, word cy, char ch, word inc);
 
 static void near AddFill(void)
 {
-  if (cursor_y > strlen(screen[offset+cursor_x]+1)+1)
-  {
-    memset(screen[offset+cursor_x]+strlen(screen[offset+cursor_x]+1)+1,
-           ' ',
-           cursor_y-strlen(screen[offset+cursor_x]+1)); /*SJD Mon  07-06-1992  16:03:35 */
+  char *line=screen[offset+cursor_x];
+  word visible_len=MagnEt_LineVisibleLen(line);
+  word rawpos=MagnEt_BufferPosFromVisibleCol(line, visible_len+1);
 
-    screen[offset+cursor_x][cursor_y]='\0';
+  while (cursor_y > visible_len+1)
+  {
+    strocpy(line+rawpos+1, line+rawpos);
+    line[rawpos++]=' ';
+    visible_len++;
   }
 }
 
@@ -54,31 +56,41 @@ static void near AddFill(void)
 
 void Add_Character(int ch)
 {
+  char *line;
+  word rawpos;
   word cx, cy;
   word oldoffset;
   word col;
 
   AddFill();
+  line=screen[offset+cursor_x];
 
   if (cursor_y==usrwidth)
   {
-    cy=cursor_y;
-    col=Word_Wrap(MODE_SCROLL);            /* Scroll if necessary */
-    cursor_y=(cy-col)+1;
+    if (MagnEt_LineHasColorCodes(line))
+    {
+      if (Carriage_Return(FALSE))
+        return;
+    }
+    else
+    {
+      cy=cursor_y;
+      col=Word_Wrap(MODE_SCROLL);            /* Scroll if necessary */
+      cursor_y=(cy-col)+1;
+    }
   }
 
   AddFill();
+  line=screen[offset+cursor_x];
+  rawpos=MagnEt_BufferPosFromVisibleCol(line, cursor_y);
 
   /* If insert mode is on, or we're in the last column */
 
-  if (insert || screen[offset+cursor_x][cursor_y]=='\0')
+  if (insert || line[rawpos]=='\0')
   {
-    Insert_At(cursor_x,cursor_y,(char)ch,1);
+    Insert_At(cursor_x,rawpos,(char)ch,1);
 
-    if (screen[offset+cursor_x][cursor_y]=='\0')
-      Putc(ch);
-
-    if (strlen(screen[offset+cursor_x]+1) >= usrwidth)
+    if (!MagnEt_LineHasColorCodes(line) && strlen(screen[offset+cursor_x]+1) >= usrwidth)
     {
       cx=cursor_x;
       cy=cursor_y;
@@ -86,7 +98,7 @@ void Add_Character(int ch)
 
       cursor_y=usrwidth;
 
-      Goto(cx,cursor_y);
+      GOTO_TEXT(cx,cursor_y);
 
       col=Word_Wrap(MODE_UPDATE);
       
@@ -96,18 +108,19 @@ void Add_Character(int ch)
       if (cy > strlen(screen[oldoffset+cx]+1))
       {
         /*if (cy-x+1 >= 1 && cy-col+1 <= usrwidth)*/
-          Goto(cursor_x, cursor_y=cy-col+1);
+          GOTO_TEXT(cursor_x, cursor_y=cy-col+1);
       }
       else
       {
-        Goto(cursor_x=cx-(offset-oldoffset), cursor_y=cy);
+        GOTO_TEXT(cursor_x=cx-(offset-oldoffset), cursor_y=cy);
       }
     }
   }
   else
   {
-    screen[offset+cursor_x][cursor_y++]=(char)ch;
-    Putc(ch);
+    line[rawpos]=(char)ch;
+    cursor_y=MagnEt_VisibleColFromBufferPos(line, rawpos+1);
+    Update_Line(offset+cursor_x,1,0,FALSE);
   }
 
   Update_Position();
@@ -123,12 +136,8 @@ static void near Insert_At(word cx, word cy, char ch, word inc)
 
   screen[offset+cx][cy]=ch;
 
-  screen[offset+cx][usrwidth+1]='\0';
-
-  if (screen[offset+cx][cy+1] != '\0')
-    Update_Line(offset+cursor_x, cursor_y, inc, TRUE);
-
-  cursor_y += inc;
+  Update_Line(offset+cursor_x,1,0,FALSE);
+  cursor_y=MagnEt_VisibleColFromBufferPos(screen[offset+cx], cy+inc);
 }
 
 
@@ -163,6 +172,7 @@ word Carriage_Return(int hard)
   word temp;
   word added_line;
   word line;
+  word rawpos;
     
   byte save_cr;
 
@@ -195,6 +205,7 @@ word Carriage_Return(int hard)
   }
 
   temp=1;
+  rawpos=MagnEt_BufferPosFromVisibleCol(screen[offset+cursor_x], cursor_y);
 
   /* If we need to insert a line in the middle, and there's enough room */
   
@@ -220,10 +231,10 @@ word Carriage_Return(int hard)
     {
       /* If we need to split this line in two... */
 
-      if (cursor_y <= strlen(screen[offset+cursor_x]+1))
+      if (rawpos <= strlen(screen[offset+cursor_x]+1))
       {
         strocpy(screen[offset+cx]+1,
-                screen[offset+cursor_x]+cursor_y);
+                screen[offset+cursor_x]+rawpos);
       }
       else screen[offset+cx][1]='\0'; /* else blank out the next line */
 
@@ -233,7 +244,7 @@ word Carriage_Return(int hard)
 
       /* Chop off this line, where we split it. */
 
-      screen[offset+cursor_x][cursor_y]='\0';
+      screen[offset+cursor_x][rawpos]='\0';
 
       Update_Line(offset+cx, 1, 0, FALSE);
     }
@@ -241,7 +252,7 @@ word Carriage_Return(int hard)
 
   if (temp && offset+cursor_x != max_lines-1)
   {
-    Goto(++cursor_x, cursor_y=1);
+    GOTO_TEXT(++cursor_x, cursor_y=1);
 
     Update_Position();
   }
@@ -277,7 +288,7 @@ static int near Insert_Line_Before_CR(int cx)
   }
   else
   {
-    Goto(cursor_x,cursor_y=1);
+    GOTO_TEXT(cursor_x,cursor_y=1);
     return 0;
   }
 }
@@ -311,7 +322,7 @@ int Insert_Line_Before(int cx)
   }
   else
   {
-    Goto(cursor_x,cursor_y=1);
+    GOTO_TEXT(cursor_x,cursor_y=1);
     return 0;
   }
 }

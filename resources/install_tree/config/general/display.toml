@@ -3,6 +3,9 @@
 
 [general]
 lightbar_prompts = false
+lightbar_prompts_padding = 1       # Padding spaces on EITHER side of each option (int, default 1)
+lightbar_prompts_verbose = false   # When true, " or " between last two options
+lightbar_prompts_brackets = ""     # "" = none, "square" = [X], "rounded" = (X)
 
 # Login name + password entry
 bounded_input_login = true

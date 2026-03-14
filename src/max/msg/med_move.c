@@ -36,8 +36,9 @@ void Cursor_Left(void)
 {
   if (cursor_y > 1)
   {
-    Puts(LEFT);
+    MagnEt_SpellClear();
     cursor_y--;
+    GOTO_TEXT(cursor_x,cursor_y);
     Update_Position();
   }
 }
@@ -47,10 +48,16 @@ void Cursor_Left(void)
 
 void Cursor_Right(void)
 {
-  if (cursor_y < usrwidth)
+  word max_col=MagnEt_LineVisibleLen(screen[offset+cursor_x])+1;
+
+  if (max_col > usrwidth)
+    max_col=usrwidth;
+
+  if (cursor_y < max_col)
   {
-    Puts(RIGHT);
+    MagnEt_SpellClear();
     cursor_y++;
+    GOTO_TEXT(cursor_x,cursor_y);
     Update_Position();
   }
 }
@@ -62,11 +69,13 @@ void Cursor_Up(void)
 {
   if (offset+cursor_x > 1)
   {
+    MagnEt_SpellClear();
     if (cursor_x==1 && offset != 0)
       Scroll_Up(SCROLL_CASUAL,cursor_x+SCROLL_CASUAL);
+    else cursor_x--;
 
-    Puts(UP);
-    cursor_x--;
+    MagnEt_ClampCursor();
+    GOTO_TEXT(cursor_x,cursor_y);
     Update_Position();
   }
 }
@@ -80,14 +89,15 @@ void Cursor_Down(int update_pos)
 {
   if (cursor_x+offset < num_lines)
   {
+    MagnEt_SpellClear();
     if (cursor_x+1 >= usrlen)
       Scroll_Down(SCROLL_CASUAL,cursor_x-SCROLL_CASUAL);
-
-    cursor_x++;
+    else cursor_x++;
 
     if (update_pos)
     {
-      Puts(DOWN);
+      MagnEt_ClampCursor();
+      GOTO_TEXT(cursor_x,cursor_y);
       Update_Position();
     }
   }
@@ -98,7 +108,8 @@ void Cursor_Down(int update_pos)
 
 void Cursor_BeginLine(void)
 {
-  Goto(cursor_x,cursor_y=1);
+  MagnEt_SpellClear();
+  GOTO_TEXT(cursor_x,cursor_y=1);
   Update_Position();
 }
 
@@ -107,7 +118,8 @@ void Cursor_BeginLine(void)
 
 void Cursor_EndLine(void)
 {
-  Goto(cursor_x,cursor_y=strlen(screen[offset+cursor_x]+1)+1);
+  MagnEt_SpellClear();
+  GOTO_TEXT(cursor_x,cursor_y=MagnEt_LineVisibleLen(screen[offset+cursor_x])+1);
   Update_Position();
 }
 
@@ -117,53 +129,49 @@ void Word_Left(void)
 {
   word cx=cursor_x;
   word cy=cursor_y;
+  char ch;
 
-  if (cy > 2)
+  if (cy==1 && offset+cx != 1)
+  {
+    Up_a_Line(&cx,&cy);
+  }
+
+  if (cy > 1)
     cy--;
 
-  if (!isalnumpunct(screen[offset+cx][cy]) || 
-      !isalnumpunct(screen[offset+cx][cy-1]) || 
-      cy==1 ||
-      cy > strlen(screen[offset+cx]+1))
+  while (cx+offset > 1 || cy > 1)
   {
-    while (((! isalnumpunct(screen[offset+cx][cy])) ||
-            cy > strlen(screen[offset+cx]+1)) &&
-            cy > 1)
-      cy--;
+    ch=MagnEt_VisibleCharAt(screen[offset+cx], cy);
 
-    if (cy==1 && (isalnumpunct(screen[offset+cx][1]) ?
-                  ((isalnumpunct(screen[offset+cx][2]) || cursor_y==1)) :
-                  TRUE))
-    {
-      Up_a_Line(&cx,&cy);
-    }
+    if (isalnumpunct(ch))
+      break;
+
+    if (cy > 1)
+      cy--;
     else
-    {
-      while (isalnumpunct(screen[offset+cx][cy]) && cy > 1)
-        cy--;
-
-      if ((cy==1 && ! isalnumpunct(screen[offset+cx][1])) || cy > 1)
-        cy++;
-    }
+      Up_a_Line(&cx,&cy);
   }
-  else
-  {
-    while ((isalnumpunct(screen[offset+cx][cy])) && cy > 1)
-      cy--;
 
-    if ((cy==1 && ! isalnumpunct(screen[offset+cx][1])) || cy > 1)
-      cy++;
+  while (cy > 1)
+  {
+    ch=MagnEt_VisibleCharAt(screen[offset+cx], cy-1);
+
+    if (!isalnumpunct(ch))
+      break;
+
+    cy--;
   }
 
   if (cx != cursor_x || cy != cursor_y)
   {
+    MagnEt_SpellClear();
     cursor_x=cx;
     cursor_y=cy;
 
     if ((sword)cursor_x <= 0 && offset != 0)
       Scroll_Up(SCROLL_CASUAL,cursor_x+SCROLL_CASUAL);
 
-    Goto(cursor_x,cursor_y);
+    GOTO_TEXT(cursor_x,cursor_y);
     Update_Position();
   }
 }
@@ -173,35 +181,40 @@ void Word_Right(void)
 {
   word cx=cursor_x;
   word cy=cursor_y;
+  word max_col;
+  char ch;
 
-  if (isalnumpunct(screen[offset+cx][cy]) ||
-      isalnumpunct(screen[offset+cx][cy-1]) ||
-      cy==1 ||
-      cy > strlen(screen[offset+cx]+1))
+  for (;;)
   {
-    while (((isalnumpunct(screen[offset+cx][cy])) &&
-             cy <= strlen(screen[offset+cx]+1)) &&
-             cy < usrwidth)
+    max_col=MagnEt_LineVisibleLen(screen[offset+cx])+1;
+    ch=MagnEt_VisibleCharAt(screen[offset+cx], cy);
+
+    if (isalnumpunct(ch))
+    {
+      while (cy < max_col && isalnumpunct(MagnEt_VisibleCharAt(screen[offset+cx], cy)))
+        cy++;
+    }
+
+    while (cy < max_col && !isalnumpunct(MagnEt_VisibleCharAt(screen[offset+cx], cy)) &&
+           MagnEt_VisibleCharAt(screen[offset+cx], cy) != '\0')
       cy++;
 
-    if (cy >= strlen(screen[offset+cx]+1) && cy <= cursor_y)
-      Down_a_Line(&cx,&cy);
-    else while (! isalnumpunct(screen[offset+cx][cy]) &&
-                screen[offset+cx][cy] && cy < usrwidth)
-      cy++;
+    if (cy < max_col || cx+offset == num_lines)
+      break;
+
+    Down_a_Line(&cx,&cy);
   }
-  else while ((! isalnumpunct(screen[offset+cx][cy])) && cy < usrwidth)
-      cy++;
 
   if (cx != cursor_x || cy != cursor_y)
   {
+    MagnEt_SpellClear();
     cursor_x=cx;
     cursor_y=cy;
 
     if (cursor_x >= usrlen)
       Scroll_Down(SCROLL_CASUAL,cursor_x-SCROLL_CASUAL);
 
-    Goto(cursor_x,cursor_y);
+    GOTO_TEXT(cursor_x,cursor_y);
     Update_Position();
   }
 }
@@ -214,7 +227,7 @@ static void near Up_a_Line(word *cx, word *cy)
   if ((*cx)+offset != 1)
   {
     *cx=*cx-1;
-    *cy=strlen(screen[offset+(*cx)]+1)+1;
+    *cy=MagnEt_LineVisibleLen(screen[offset+(*cx)])+1;
   }
   else *cy=1;
 }
@@ -226,18 +239,16 @@ static void near Down_a_Line(word *cx, word *cy)
   if (*cx+offset != num_lines)
   {
     *cx=*cx+1;
-
-    for (*cy=1;screen[offset+*cx][*cy];(*cy)++)
-      if (isalnumpunct(screen[offset+*cx][*cy]))
-        break;
+    *cy=1;
   }
-  else *cy=strlen(screen[offset+*cx]+1)+1;
+  else *cy=MagnEt_LineVisibleLen(screen[offset+*cx])+1;
 }
 
 
 
 void Scroll_Up(int n,int location)
 {
+  MagnEt_SpellClear();
   if ((sword)offset-(sword)n >= 0)
     offset -= n;
   else offset=0;
@@ -251,6 +262,7 @@ void Scroll_Up(int n,int location)
 
 void Scroll_Down(int n,int location)
 {
+  MagnEt_SpellClear();
   if ((sword)offset+n >= (sword)num_lines)
   {
     offset=num_lines;
@@ -268,9 +280,10 @@ void Scroll_Down(int n,int location)
 
 void Page_Up(void)
 {
+  MagnEt_SpellClear();
   if (offset==0)
   {
-    Goto(cursor_x=1,cursor_y);
+    GOTO_TEXT(cursor_x=1,cursor_y);
   }
   else Scroll_Up(usrlen-1,cursor_x);
 
@@ -282,8 +295,9 @@ void Page_Up(void)
 
 void Page_Down(void)
 {
+  MagnEt_SpellClear();
   if (offset+usrlen > num_lines)
-    Goto(cursor_x=num_lines-offset,cursor_y);
+    GOTO_TEXT(cursor_x=num_lines-offset,cursor_y);
   else
   {
     offset += usrlen-1;

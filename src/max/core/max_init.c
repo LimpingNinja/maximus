@@ -61,6 +61,7 @@ static char rcs_id[]="$Id: max_init.c,v 1.7 2004/06/06 21:48:51 paltas Exp $";
 #include "max_edit.h"
 #include "emsi.h"
 #include "debug_log.h"
+#include "theme.h"
 
 #ifdef KEY
 #include "makekey.h"
@@ -194,6 +195,52 @@ static int near build_area_dats_from_toml(char *out_marea_base, size_t out_marea
 
 
 /**
+ * @brief Insert theme short_name after the second dot-segment.
+ *
+ * Only transforms keys with 3+ segments starting with "general." or "menus.".
+ * Example: "general.colors.theme.colors.text" + theme "maxng"
+ *       → "general.colors.maxng.theme.colors.text"
+ *
+ * @param key     Original dotted config key
+ * @param theme   Theme short_name to insert
+ * @param out     Output buffer for the themed key
+ * @param out_sz  Size of output buffer
+ * @return true if key was transformed, false if not applicable
+ */
+static bool build_themed_key(const char *key, const char *theme,
+                              char *out, size_t out_sz)
+{
+    /* Must start with "general." or "menus." */
+    const char *first_dot = strchr(key, '.');
+    if (!first_dot) return false;
+
+    size_t first_len = (size_t)(first_dot - key);
+    if (first_len != 7 && first_len != 5) return false;  /* "general" or "menus" */
+    if (first_len == 7 && strncmp(key, "general", 7) != 0) return false;
+    if (first_len == 5 && strncmp(key, "menus", 5) != 0) return false;
+
+    /* Find the second dot */
+    const char *second_dot = strchr(first_dot + 1, '.');
+    if (!second_dot) return false;  /* Only 2 segments — don't transform */
+
+    /* Build: prefix.segment2.theme.rest */
+    size_t prefix_len = (size_t)(second_dot - key);
+    size_t theme_len = strlen(theme);
+    size_t rest_len = strlen(second_dot);  /* includes the dot */
+
+    if (prefix_len + 1 + theme_len + rest_len + 1 > out_sz)
+        return false;  /* Doesn't fit */
+
+    memcpy(out, key, prefix_len);
+    out[prefix_len] = '.';
+    memcpy(out + prefix_len + 1, theme, theme_len);
+    memcpy(out + prefix_len + 1 + theme_len, second_dot, rest_len);
+    out[prefix_len + 1 + theme_len + rest_len] = '\0';
+
+    return true;
+}
+
+/**
  * @brief Retrieve a raw string value from the TOML configuration.
  *
  * @param toml_path  Dotted TOML key path (e.g. "maximus.system_name")
@@ -209,6 +256,66 @@ const char *ngcfg_get_string_raw(const char *toml_path)
     return v.v.s;
 
   return "";
+}
+
+/**
+ * @brief Resolve the color_support mode for a named message area.
+ *
+ * Walks the TOML areas.msg.area table array, matching the area by
+ * @p area_name (case-insensitive).  Returns one of the NGCFG_COLOR_*
+ * enum values.  Defaults to NGCFG_COLOR_MCI when the key is absent,
+ * empty, or contains an unrecognised value.
+ *
+ * @param area_name  Short area name to look up.
+ * @return           One of the NGCFG_COLOR_* enum values.
+ */
+int ngcfg_get_area_color_support(const char *area_name)
+{
+  MaxCfgVar areas;
+  size_t count, i;
+
+  if (!area_name || !ng_cfg)
+    return NGCFG_COLOR_MCI;
+
+  if (maxcfg_toml_get(ng_cfg, "areas.msg.area", &areas) != MAXCFG_OK ||
+      areas.type != MAXCFG_VAR_TABLE_ARRAY ||
+      maxcfg_var_count(&areas, &count) != MAXCFG_OK)
+    return NGCFG_COLOR_MCI;
+
+  for (i = 0; i < count; i++)
+  {
+    MaxCfgVar item, value;
+    const char *name = "";
+    const char *mode = "";
+
+    if (maxcfg_toml_array_get(&areas, i, &item) != MAXCFG_OK ||
+        item.type != MAXCFG_VAR_TABLE)
+      continue;
+
+    if (maxcfg_toml_table_get(&item, "name", &value) == MAXCFG_OK &&
+        value.type == MAXCFG_VAR_STRING && value.v.s)
+      name = value.v.s;
+
+    if (!eqstri(name, area_name))
+      continue;
+
+    if (maxcfg_toml_table_get(&item, "color_support", &value) == MAXCFG_OK &&
+        value.type == MAXCFG_VAR_STRING && value.v.s)
+      mode = value.v.s;
+
+    if (*mode == '\0' || eqstri(mode, "mci"))
+      return NGCFG_COLOR_MCI;
+    if (eqstri(mode, "strip"))
+      return NGCFG_COLOR_STRIP;
+    if (eqstri(mode, "ansi"))
+      return NGCFG_COLOR_ANSI;
+    if (eqstri(mode, "avatar"))
+      return NGCFG_COLOR_AVATAR;
+
+    return NGCFG_COLOR_MCI;
+  }
+
+  return NGCFG_COLOR_MCI;
 }
 
 /**
@@ -540,13 +647,29 @@ fail:
 }
 
 /**
- * @brief Retrieve a string value from config, returning "" if empty or absent.
+ * @brief Retrieve a string value from config with theme-aware resolution.
+ *
+ * If a theme is active, tries the themed key first (e.g.
+ * general.colors.maxng.key) before falling back to the base key.
  *
  * @param toml_path  Dotted TOML key path
  * @return Pointer to the string value, or "" if not found/empty
  */
 const char *ngcfg_get_string(const char *toml_path)
 {
+  const char *theme = theme_get_current_shortname();
+  if (theme && *theme)
+  {
+    char themed_key[256];
+    if (build_themed_key(toml_path, theme, themed_key, sizeof(themed_key)))
+    {
+      const char *result = ngcfg_get_string_raw(themed_key);
+      if (result && *result)
+        return result;
+    }
+  }
+
+  /* Fall back to base key */
   const char *s = ngcfg_get_string_raw(toml_path);
   if (s && *s)
     return s;
@@ -629,7 +752,7 @@ const char *ngcfg_get_path(const char *toml_path)
 }
 
 /**
- * @brief Retrieve an integer value from TOML configuration.
+ * @brief Retrieve an integer value from TOML configuration with theme-aware resolution.
  *
  * @param toml_path  Dotted TOML key path
  * @return Integer value, or 0 if not found
@@ -638,6 +761,25 @@ int ngcfg_get_int(const char *toml_path)
 {
   MaxCfgVar v;
 
+  /* Try themed key first */
+  const char *theme = theme_get_current_shortname();
+  if (theme && *theme)
+  {
+    char themed_key[256];
+    if (build_themed_key(toml_path, theme, themed_key, sizeof(themed_key)))
+    {
+      if (themed_key[0] && ng_cfg &&
+          maxcfg_toml_get(ng_cfg, themed_key, &v) == MAXCFG_OK)
+      {
+        if (v.type == MAXCFG_VAR_INT)
+          return v.v.i;
+        if (v.type == MAXCFG_VAR_UINT)
+          return (int)v.v.u;
+      }
+    }
+  }
+
+  /* Fall back to base key */
   if (toml_path && ng_cfg &&
       maxcfg_toml_get(ng_cfg, toml_path, &v) == MAXCFG_OK)
   {
@@ -651,7 +793,7 @@ int ngcfg_get_int(const char *toml_path)
 }
 
 /**
- * @brief Retrieve a boolean value from TOML configuration.
+ * @brief Retrieve a boolean value from TOML configuration with theme-aware resolution.
  *
  * @param toml_path  Dotted TOML key path
  * @return 1 if true, 0 if false or not found
@@ -660,6 +802,23 @@ int ngcfg_get_bool(const char *toml_path)
 {
   MaxCfgVar v;
 
+  /* Try themed key first */
+  const char *theme = theme_get_current_shortname();
+  if (theme && *theme)
+  {
+    char themed_key[256];
+    if (build_themed_key(toml_path, theme, themed_key, sizeof(themed_key)))
+    {
+      if (themed_key[0] && ng_cfg &&
+          maxcfg_toml_get(ng_cfg, themed_key, &v) == MAXCFG_OK &&
+          v.type == MAXCFG_VAR_BOOL)
+      {
+        return v.v.b ? 1 : 0;
+      }
+    }
+  }
+
+  /* Fall back to base key */
   if (toml_path && ng_cfg &&
       maxcfg_toml_get(ng_cfg, toml_path, &v) == MAXCFG_OK &&
       v.type == MAXCFG_VAR_BOOL)
@@ -671,7 +830,7 @@ int ngcfg_get_bool(const char *toml_path)
 }
 
 /**
- * @brief Retrieve a 2-element integer array from TOML configuration.
+ * @brief Retrieve a 2-element integer array from TOML configuration with theme-aware resolution.
  *
  * @param toml_path  Dotted TOML key path
  * @param out_a      Output for the first element
@@ -682,6 +841,26 @@ int ngcfg_get_int_array_2(const char *toml_path, int *out_a, int *out_b)
 {
   MaxCfgVar v;
 
+  /* Try themed key first */
+  const char *theme = theme_get_current_shortname();
+  if (theme && *theme)
+  {
+    char themed_key[256];
+    if (build_themed_key(toml_path, theme, themed_key, sizeof(themed_key)))
+    {
+      if (themed_key[0] && ng_cfg &&
+          maxcfg_toml_get(ng_cfg, themed_key, &v) == MAXCFG_OK &&
+          v.type == MAXCFG_VAR_INT_ARRAY &&
+          v.v.intv.count >= 2)
+      {
+        if (out_a) *out_a = v.v.intv.items[0];
+        if (out_b) *out_b = v.v.intv.items[1];
+        return 1;
+      }
+    }
+  }
+
+  /* Fall back to base key */
   if (toml_path && ng_cfg &&
       maxcfg_toml_get(ng_cfg, toml_path, &v) == MAXCFG_OK &&
       v.type == MAXCFG_VAR_INT_ARRAY &&
@@ -1516,6 +1695,45 @@ char * Startup(void)
 }
 
 /**
+ * @brief Load per-theme config namespace files for all registered themes.
+ *
+ * For each theme, tries to load colors.<theme>.toml, display.<theme>.toml,
+ * display_files.<theme>.toml, session.<theme>.toml with the appropriately
+ * prefixed namespace so the themed getters can resolve overrides.
+ */
+static void load_themed_config_files(void)
+{
+    int count = theme_get_count();
+    for (int i = 1; i <= count; i++)
+    {
+        const char *sn = theme_get_shortname(i);
+        if (!sn || !*sn) continue;
+
+        char path[256], prefix[256];
+
+        /* colors.<theme>.toml */
+        snprintf(path, sizeof(path), "config/general/colors.%s", sn);
+        snprintf(prefix, sizeof(prefix), "general.colors.%s", sn);
+        (void)maxcfg_toml_load_file(ng_cfg, path, prefix);
+
+        /* display.<theme>.toml */
+        snprintf(path, sizeof(path), "config/general/display.%s", sn);
+        snprintf(prefix, sizeof(prefix), "general.display.%s", sn);
+        (void)maxcfg_toml_load_file(ng_cfg, path, prefix);
+
+        /* display_files.<theme>.toml */
+        snprintf(path, sizeof(path), "config/general/display_files.%s", sn);
+        snprintf(prefix, sizeof(prefix), "general.display_files.%s", sn);
+        (void)maxcfg_toml_load_file(ng_cfg, path, prefix);
+
+        /* session.<theme>.toml */
+        snprintf(path, sizeof(path), "config/general/session.%s", sn);
+        snprintf(prefix, sizeof(prefix), "general.session.%s", sn);
+        (void)maxcfg_toml_load_file(ng_cfg, path, prefix);
+    }
+}
+
+/**
  * @brief Load the main TOML configuration files into ng_cfg.
  */
 void Read_Cfg(void)
@@ -1546,6 +1764,7 @@ void Read_Cfg(void)
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/protocol", "general.protocol");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/language", "general.language");
       (void)maxcfg_toml_load_file(ng_cfg, "config/general/mex", "mex");
+      (void)maxcfg_toml_load_file(ng_cfg, "config/general/theme", "general.theme");
       (void)maxcfg_toml_load_file(ng_cfg, "config/security/access_levels", "security.access_levels");
       (void)maxcfg_toml_load_file(ng_cfg, "config/areas/msg/areas", "areas.msg");
       (void)maxcfg_toml_load_file(ng_cfg, "config/areas/file/areas", "areas.file");
@@ -1553,6 +1772,12 @@ void Read_Cfg(void)
 
       load_menu_tomls();
     }
+
+    /* Initialize theme registry after all config is loaded */
+    theme_registry_init();
+
+    /* Load per-theme config namespace overlays */
+    load_themed_config_files();
   }
 
   /* Now figure out which main menu to display */

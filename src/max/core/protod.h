@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include "m_reply.h"
+#include "theme.h"
 
 cpp_begin()
 
@@ -266,7 +267,7 @@ void Zoquo(void);
 int Msg_Enter(void);
 int IsInUserList(char *name,int show_us);
 int CheckCredit(NETADDR *dest, PMAH pmah);
-int MagnEt(XMSG *msg,HMSG msgh,struct _replyp *pr);
+int MagnEt(XMSG *msg,HMSG msgh,long msgnum,struct _replyp *pr);
 void Redraw_Text(void);
 void Redraw_StatusLine(void);
 void Redraw_Quote(void);
@@ -355,6 +356,7 @@ int Get_FidoList_Name(XMSG *msg,char *netnode,char *fidouser);
 void Xpired(int reason);
 char * FileDateFormat(union stamp_combo *sc,char *temp);
 void Switch_To_Language(void);
+void Reload_Theme_Colors(void);
 int DoEditKey(int type,char *str,int key,int c);
 word ToOrFromUs(XMSG *msg);
 int Msg_Edit_User(void);
@@ -458,6 +460,8 @@ int PushFileArea(char *name, BARINFO *pbi);
 int PopPushFileArea(char *name, BARINFO *pbi);
 int ValidFileArea(char *name, FAH *pfah, unsigned flags, BARINFO *pbi);
 int Mex(char *arg);
+void MexSetNewUserAnsweredMask(dword mask);
+dword MexGetNewUserAnsweredMask(void);
 void AddToEchoToss(char *tag);
 dword SZKeysToMask(char *pszKeys);
 int GetBarPriv(char *barfile, int is_msg, PMAH pmah, PFAH pfah, BARINFO *pbi, int ext_only);
@@ -565,6 +569,31 @@ int ngcfg_get_handshake_mask_int(void);
 int ngcfg_get_nodelist_version_int(void);
 const char *ngcfg_get_string(const char *toml_path);
 const char *ngcfg_get_string_raw(const char *toml_path);
+
+/** @brief Supported message area color wire-formats. */
+#ifndef NGCFG_COLOR_SUPPORT_DEFINED
+#define NGCFG_COLOR_SUPPORT_DEFINED
+enum ngcfg_color_support
+{
+  NGCFG_COLOR_MCI = 0,   /**< MCI pipe codes (|00..|31) — default */
+  NGCFG_COLOR_STRIP,     /**< No color; codes stripped on save */
+  NGCFG_COLOR_ANSI,      /**< ANSI escape sequences */
+  NGCFG_COLOR_AVATAR     /**< Avatar attribute sequences */
+};
+#endif
+
+/**
+ * @brief Resolve the color_support mode for a named message area.
+ *
+ * Walks the TOML @c areas.msg.area table array, matching the area
+ * by @p area_name.  Returns an @c ngcfg_color_support enum value.
+ * Defaults to @c NGCFG_COLOR_MCI when absent, empty, or unrecognised.
+ *
+ * @param area_name  Short area name to look up (case-insensitive).
+ * @return           One of the @c NGCFG_COLOR_* enum values.
+ */
+int ngcfg_get_area_color_support(const char *area_name);
+
 size_t ngcfg_get_matrix_address_count(void);
 NETADDR ngcfg_get_matrix_address(size_t idx);
 NETADDR ngcfg_get_matrix_primary_address(void);

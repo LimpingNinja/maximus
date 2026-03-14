@@ -9,15 +9,15 @@
 [lightgreen]One line down....... [gray]   Down  ^x     Down     [white]³[      ] [lightgreen]Quote on/off...  [gray]^k^r <Alt-Q>[white]³
 [lightgreen]Previous page....... [gray]   PgUp  ^r     PgUp     [white]³[      ] [lightgreen]Prior 4 lines..  [gray]^r    <PgUp>[white]³
 [lightgreen]Next page........... [gray]   PgDn  ^c     PgDn     [white]³[      ] [lightgreen]Next 4 lines...  [gray]^c    <PgDn>[white]³
-[lightgreen]Move cursor left.... [gray]   Left  ^s     Left     [white]³[      ] [lightgreen]Copy lines.....  [gray]^k^c <Alt-C>[white]³
+[lightgreen]Move cursor left.... [gray]   Left  ^s     Left     [white]³[      ] [lightgreen]Insert color...  [gray]^k^c <Alt-C>[white]³
 [lightgreen]Move cursor right... [gray]  Right  ^d     Right    [white]³[      ] [          ]                  [    ]           [     ]³
 [lightgreen]Move one word left.. [gray]    ---  ^a     Ctl-Left [white]³[      ] [lightcyan ]Quoting can only be used     [white      ]³
 [lightgreen]Move one word right. [gray]    ---  ^f     Ctl-Rght [white]³[      ] [lightcyan ]when you're replying to a    [white      ]³
 [lightgreen]Start of line....... [gray]   Home  ^q^s   Home     [white]³[      ] [lightcyan ]message.  Press ^k^r to open [white      ]³
 [lightgreen]End of line......... [gray]    End  ^q^d   End      [white]³[      ] [lightcyan ]quote window, and use ^c and [white      ]³
 [lightgreen]Toggle insert mode.. [gray]    ---  ^v     Insert   [white]³[      ] [lightcyan ]^r to position it where you  [white      ]³
-[lightgreen]Edit menu........... [gray]    ---  ^k^h   F10      [white]³[      ] [lightcyan ]want.  Press ^k^c to copy    [white      ]³
-[lightgreen]Clear to EOL........ [gray]    ---  ^q^y   ---      [white]³[      ] [lightcyan ]quote window into message.   [white      ]³
+[lightgreen]Edit menu........... [gray]    ---  ^k^h   F10      [white]³[      ] [lightcyan ]want.  Press ^k^c for |00-23[white      ]³
+[lightgreen]Clear to EOL........ [gray]    ---  ^q^y   ---      [white]³[      ] [lightcyan ]literal color codes.         [white      ]³
 [lightgreen]Delete line......... [gray]    ---  ^y     ---      [white]À[      ]Ä[          ]ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ[           ]Ù
 [lightgreen]Delete right word... [gray]    ---  ^t     ---
 [lightred]Note:  A "^" means to hold down <Ctrl> and hit the specified key.

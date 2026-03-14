@@ -701,8 +701,33 @@ int cdecl GetListAnswer(char *list, char *help_file, char *invalid_response,
 
     if (opt_count > 0)
     {
+      /* Read lightbar prompt config */
+      int lb_padding = ngcfg_get_int("general.display.general.lightbar_prompts_padding");
+      if (lb_padding < 0) lb_padding = 1;  /* default */
+
+      int lb_verbose = ngcfg_get_bool("general.display.general.lightbar_prompts_verbose");
+      const char *lb_brackets = ngcfg_get_string("general.display.general.lightbar_prompts_brackets");
+      const char *lb_last_sep = NULL;
+
       flags = UI_SP_FLAG_STRIP_BRACKETS;
       flags |= ((default_idx + 1) << UI_SP_DEFAULT_SHIFT);
+
+      /* Bracket type flag */
+      if (lb_brackets && *lb_brackets)
+      {
+        if (strcmp(lb_brackets, "square") == 0)
+          flags |= UI_SP_FLAG_BRACKET_SQUARE;
+        else if (strcmp(lb_brackets, "rounded") == 0)
+          flags |= UI_SP_FLAG_BRACKET_ROUNDED;
+
+        /* Force padding to at least 1 when brackets are on */
+        if (lb_padding < 1)
+          lb_padding = 1;
+      }
+
+      /* Verbose separator before last option */
+      if (lb_verbose && opt_count >= 2)
+        lb_last_sep = " or ";
 
 lb_retry:
       Puts(scratch);
@@ -715,8 +740,9 @@ lb_retry:
         Mci2Attr("|tx", 0x07),            /* normal_attr — theme text color */
         Mci2Attr("|lf|lb", 0x07),         /* selected_attr — lightbar fg+bg */
         flags | (((int)Mci2Attr("|hk", 0x07)) << UI_SP_HOTKEY_ATTR_SHIFT),
-        1,    /* margin */
-        " ",  /* separator */
+        lb_padding,   /* margin */
+        " ",          /* separator */
+        lb_last_sep,  /* last_separator (verbose " or ", or NULL) */
         &out_key
       );
 

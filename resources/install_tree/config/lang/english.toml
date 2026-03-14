@@ -593,7 +593,7 @@ msg_attr14 = { text = "Trail Req.", flags = ["mex"] }
 msg_attr15 = { text = "Update Req.", flags = ["mex"] }
 word_not_found = { text = "\n\"|!1\" not found.\n", params = [{name = "search", type = "string", desc = "Search string", default = "hello"}] }
 happy = { text = "|15|17\aDon't worry, be happy!$D35 |03", flags = ["mex"] }
-max_status = { text = "|pr|tb|[K^Z=save|hi|tb  To: $T20|!1, Re: $T27|!2", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}] }
+max_status = { text = "|pr|tb|[K^Z=save|hi|tb  To: $T14|!1, Re: $T16|!2  |sy|tbL:|!3 C:|!4", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}, {name = "line", type = "string", desc = "Current editor line number", default = "1"}, {name = "column", type = "string", desc = "Current editor column number", default = "1"}] }
 end_widget = { text = "|hi-end-|!1", params = [{name = "msg_text_col", type = "string", desc = "Message display color", default = "|07"}] }
 end_widget2 = "|hi-end-|tx"
 status_insert = "|sy|tb Insert"
@@ -605,6 +605,9 @@ abortchange = { text = "|[KThrow away changes", flags = ["mex"] }
 req_graph = "\nMaxEd requires a non-TTY video mode, and a 79x24 monitor.\n\n"
 cant_change_field = { text = "|erYou cannot change that field.\n|cd", flags = ["mex"] }
 
+color_selector_prompt = "|pr|tbColor code (00-23): |hi"
+color_selector_preview = { text = "|pr|tbPreview: |!1 Sample|pr|tb", params = [{name = "color_code", type = "string", desc = "Numeric pipe color code", default = "|07"}] }
+color_selector_preview_box = "|br\xDA\xC4\xC4 |hi Color Grid |br\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n|br\xB3 |0000 |0101 |0202 |0303 |0404 |0505 |br\xB3\n|br\xB3 |0606 |0707 |0808 |0909 |1010 |1111 |br\xB3\n|br\xB3 |1212 |1313 |1414 |1515 |1616 |1717|cd |br\xB3\n|br\xB3 |1818|cd |1919|cd |2020|cd |2121|cd |2222|cd |2323|cd |br\xB3\n|br\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9"
 [m_area]
 msg_abbr = { text = "msg.", flags = ["mex"] }
 msg_prmpt = { text = "|prMessage area [Area, \"|!1\"=Prior, \"|!2\"=Next, \"|!3\"=List]: |in", params = [{name = "hotkey1", type = "string", desc = "First menu hotkey character", default = "N"}, {name = "hotkey2", type = "string", desc = "Second menu hotkey character", default = "P"}, {name = "hotkey3", type = "string", desc = "Third menu hotkey character", default = "?"}] }
@@ -1439,6 +1442,8 @@ chat_status = { text = " MEXChat V1.0", flags = ["mex"] }
 chat_needremote = { text = "|er\nMEXChat can only be used with a remote user.\n|cd", flags = ["mex"] }
 
 [editor]
+header = { text = "|cd|br\xB3|17|prSUBJECT: |hi|!5$X|TW |[>|cd|br\xB3\n|cd|br$X|TW\xC4|[<\xB4 |ac# |hi$L05|#2 |cd|br\xC3|[H|[D12\xC3 |hi$R20|#1 |cd|br\xB4|[>|cd|br\xB4", params = [{name = "message_area", type = "string", desc = "Current message area name", default = "Retro Gaming"}, {name = "message_number", type = "string", desc = "Displayed editor message number (existing message number or next assigned number for new entry)", default = "190"}, {name = "from", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "to", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Retro LockDown"}, {name = "reply_to", type = "string", desc = "Original message number being replied to when applicable", default = "189"}] }
+spell_unknown_word = { text = "|erUnknown: |hi\"|!1\"|cd", params = [{name = "word", type = "string", desc = "Misspelled word from the editor buffer", default = "teh"}] }
 quote_window_top = { text = "|br\xDA\xC4\xC4 |hi Quote Window |br$D|!1\xC4\xBF", params = [{name = "fill_width", type = "string", desc = "Padding repeat count for box-drawing fill (zero-padded)", default = "60"}] }
 quote_window_left = "|br\xB3"
 quote_window_bottom = { text = "|br\xC3 |hk^Q|ac/|hkESC|hi=End |br\xC4 |hkCR|hi=Accept |br\xC4 |hkUp|ac/|hkDn|ac/|hkPgUp|ac/|hkPgDn|hi=Scroll |br$D|!1\xC4\xD9", params = [{name = "fill_width", type = "string", desc = "Padding repeat count for box-drawing fill (zero-padded)", default = "30"}] }

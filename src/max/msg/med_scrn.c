@@ -1,6 +1,7 @@
 /*
  * Maximus Version 3.02
  * Copyright 1989, 2002 by Lanius Corporation.  All rights reserved.
+ * Modifications Copyright (C) 2025 Kevin Morgan (Limping Ninja)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,6 +35,405 @@ static char rcs_id[]="$Id: med_scrn.c,v 1.4 2004/01/28 06:38:11 paltas Exp $";
 #include "maxed.h"
 #include "mci.h"
 
+static byte redraw_statusline_active=FALSE;
+
+/**
+ * @brief Collect the fixed positional parameter set for the editor header.
+ *
+ * The language template is free to omit any of these slots, but the call site
+ * always binds all six so sparse `|!N`/`|#N` usage stays safe.
+ */
+static void near MagnEt_GetHeaderParams(char *area_buf, size_t area_sz,
+                                        char *msgnum_buf, size_t msgnum_sz,
+                                        char *from_buf, size_t from_sz,
+                                        char *to_buf, size_t to_sz,
+                                        char *subj_buf, size_t subj_sz,
+                                        char *replyto_buf, size_t replyto_sz)
+{
+  const char *area_name;
+  long replyto_msgnum=0;
+
+  area_name=(mah.heap && *PMAS(&mah, name)) ? PMAS(&mah, name) : usr.msg;
+
+  snprintf(area_buf, area_sz, "%s", area_name ? area_name : "");
+
+  if (magnet_msgnum > 0)
+    snprintf(msgnum_buf, msgnum_sz, "%ld", magnet_msgnum);
+  else
+  {
+    long next_msgnum=MsgGetHighMsg(sq);
+    snprintf(msgnum_buf, msgnum_sz, "%ld", UIDnum(next_msgnum) + 1L);
+  }
+
+  if (mmsg && mmsg->replyto)
+  {
+    int use_umsgids=ngcfg_get_bool("general.session.use_umsgids");
+    replyto_msgnum=use_umsgids ? (long)mmsg->replyto
+                               : MsgUidToMsgn(sq, mmsg->replyto, UID_EXACT);
+  }
+
+  if (replyto_msgnum > 0)
+    snprintf(replyto_buf, replyto_sz, "%ld", replyto_msgnum);
+  else
+    *replyto_buf='\0';
+
+  snprintf(from_buf, from_sz, "%s", (mmsg && mmsg->from) ? mmsg->from : "");
+  snprintf(to_buf, to_sz, "%s", (mmsg && mmsg->to) ? mmsg->to : "");
+  snprintf(subj_buf, subj_sz, "%s", (mmsg && mmsg->subj) ? mmsg->subj : "");
+}
+
+
+/**
+ * @brief Count newline-delimited display rows in an expanded header buffer.
+ */
+static byte near MagnEt_HeaderExpandedHeight(const char *expanded)
+{
+  byte lines;
+
+  if (expanded==NULL || *expanded=='\0')
+    return 0;
+
+  lines=1;
+
+  while (*expanded)
+  {
+    if (*expanded=='\n')
+      lines++;
+    expanded++;
+  }
+
+  return lines;
+}
+
+
+/**
+ * @brief Return the configured editor header height for the current session.
+ */
+byte MagnEt_CalcHeaderHeight(void)
+{
+  const char *tmpl;
+  char expanded[1024];
+  char area_buf[PATHLEN];
+  char msgnum_buf[32];
+  char from_buf[PATHLEN];
+  char to_buf[PATHLEN];
+  char subj_buf[PATHLEN];
+  char replyto_buf[32];
+  byte lines;
+
+  tmpl=maxlang_get(g_current_lang, "editor.header");
+  if (tmpl==NULL || *tmpl=='\0')
+    return 0;
+
+  MagnEt_GetHeaderParams(area_buf, sizeof(area_buf),
+                         msgnum_buf, sizeof(msgnum_buf),
+                         from_buf, sizeof(from_buf),
+                         to_buf, sizeof(to_buf),
+                         subj_buf, sizeof(subj_buf),
+                         replyto_buf, sizeof(replyto_buf));
+
+  LangSprintf(expanded, sizeof(expanded), tmpl,
+              area_buf, msgnum_buf, from_buf, to_buf, subj_buf, replyto_buf);
+
+  lines=MagnEt_HeaderExpandedHeight(expanded);
+
+  if (lines > (byte)(TermLength() > 4 ? TermLength()-4 : 0))
+    lines=(byte)(TermLength() > 4 ? TermLength()-4 : 0);
+
+  return lines;
+}
+
+
+/**
+ * @brief Draw the editor header above the text area.
+ *
+ * The entire layout is defined by the "editor.header" language template
+ * in delta_english.toml using MCI codes for colors, formatting operators
+ * ($c, $R, $L, $D, $X) for padding/centering, and terminal control codes
+ * (|[<, |[>, |[H, |[C##, |[D##) for cursor repositioning within lines.
+ *
+ * This function simply expands the template with the six positional
+ * parameters and prints each newline-delimited row at the correct
+ * screen position.
+ */
+void MagnEt_DrawHeader(void)
+{
+  const char *tmpl;
+  const char *line_start;
+  const char *line_end;
+  char area_buf[PATHLEN];
+  char msgnum_buf[32];
+  char from_buf[PATHLEN];
+  char to_buf[PATHLEN];
+  char subj_buf[PATHLEN];
+  char replyto_buf[32];
+  byte row;
+
+  if (header_height==0)
+    return;
+
+  tmpl=maxlang_get(g_current_lang, "editor.header");
+  if (tmpl==NULL || *tmpl=='\0')
+    return;
+
+  MagnEt_GetHeaderParams(area_buf, sizeof(area_buf),
+                         msgnum_buf, sizeof(msgnum_buf),
+                         from_buf, sizeof(from_buf),
+                         to_buf, sizeof(to_buf),
+                         subj_buf, sizeof(subj_buf),
+                         replyto_buf, sizeof(replyto_buf));
+
+  /* Expand the template with all six positional parameters and print
+   * each newline-delimited row.  LangPrintfForce handles MCI expansion
+   * including format ops, cursor codes, and pipe colors. */
+
+  line_start=tmpl;
+
+  for (row=1; row <= header_height && *line_start; row++)
+  {
+    char linebuf[512];
+    size_t len;
+
+    line_end=strchr(line_start, '\n');
+    len=(size_t)(line_end ? (line_end - line_start) : strlen(line_start));
+
+    if (len >= sizeof(linebuf))
+      len=sizeof(linebuf) - 1;
+
+    memcpy(linebuf, line_start, len);
+    linebuf[len]='\0';
+
+    Goto(row, 1);
+    LangPrintfForce(linebuf,
+                    area_buf, msgnum_buf, from_buf, to_buf, subj_buf, replyto_buf);
+
+    if (!line_end)
+      break;
+
+    line_start=line_end + 1;
+  }
+
+  EMIT_MSG_TEXT_COL();
+}
+
+
+static word near MagnEt_ColorCodeLenAt(const char *p)
+{
+  int code;
+
+  if (p==NULL || p[0] != '|' || !isdigit((unsigned char)p[1]) || !isdigit((unsigned char)p[2]))
+    return 0;
+
+  code=((int)(p[1]-'0') * 10) + (int)(p[2]-'0');
+  return (code >= 0 && code <= 31) ? 3 : 0;
+}
+
+static void near MagnEt_EmitAttr(byte attr)
+{
+  Putc('\x16');
+  Putc('\x01');
+  Putc((int)attr);
+}
+
+static void near MagnEt_RenderEditorLine(const char *line)
+{
+  word pos;
+  word cc_len;
+  char token[4];
+  byte attr=Mci2Attr(msg_text_col, 0x07);
+
+  if (line==NULL)
+    return;
+
+  pos=1;
+
+  while (line[pos])
+  {
+    cc_len=MagnEt_ColorCodeLenAt(line+pos);
+
+    if (cc_len)
+    {
+      token[0]=line[pos];
+      token[1]=line[pos+1];
+      token[2]=line[pos+2];
+      token[3]='\0';
+      attr=Mci2Attr(token, attr);
+      MagnEt_EmitAttr(attr);
+      pos += cc_len;
+      continue;
+    }
+
+    Putc(line[pos]);
+    pos++;
+  }
+}
+
+
+word MagnEt_LineVisibleLen(const char *line)
+{
+  word pos;
+  word len;
+  word cc_len;
+
+  if (line==NULL)
+    return 0;
+
+  pos=1;
+  len=0;
+
+  while (line[pos])
+  {
+    cc_len=MagnEt_ColorCodeLenAt(line+pos);
+
+    if (cc_len)
+    {
+      pos += cc_len;
+      continue;
+    }
+
+    pos++;
+    len++;
+  }
+
+  return len;
+}
+
+
+word MagnEt_BufferPosFromVisibleCol(const char *line, word col)
+{
+  word pos;
+  word visible;
+  word cc_len;
+
+  if (line==NULL)
+    return 1;
+
+  if (col < 1)
+    col=1;
+
+  pos=1;
+  visible=1;
+
+  while (line[pos] && visible < col)
+  {
+    cc_len=MagnEt_ColorCodeLenAt(line+pos);
+
+    if (cc_len)
+    {
+      pos += cc_len;
+      continue;
+    }
+
+    pos++;
+    visible++;
+  }
+
+  while ((cc_len=MagnEt_ColorCodeLenAt(line+pos)) != 0)
+    pos += cc_len;
+
+  return pos;
+}
+
+
+word MagnEt_VisibleColFromBufferPos(const char *line, word pos)
+{
+  word cur_pos;
+  word col;
+  word cc_len;
+
+  if (line==NULL || pos <= 1)
+    return 1;
+
+  cur_pos=1;
+  col=1;
+
+  while (line[cur_pos] && cur_pos < pos)
+  {
+    cc_len=MagnEt_ColorCodeLenAt(line+cur_pos);
+
+    if (cc_len)
+    {
+      cur_pos += cc_len;
+      continue;
+    }
+
+    cur_pos++;
+    col++;
+  }
+
+  return col;
+}
+
+
+char MagnEt_VisibleCharAt(const char *line, word col)
+{
+  word pos;
+
+  if (line==NULL || col < 1 || col > MagnEt_LineVisibleLen(line))
+    return '\0';
+
+  pos=MagnEt_BufferPosFromVisibleCol(line, col);
+  return line[pos];
+}
+
+
+int MagnEt_LineHasColorCodes(const char *line)
+{
+  word pos;
+
+  if (line==NULL)
+    return FALSE;
+
+  for (pos=1; line[pos]; pos++)
+    if (MagnEt_ColorCodeLenAt(line+pos))
+      return TRUE;
+
+  return FALSE;
+}
+
+
+void MagnEt_ClampCursor(void)
+{
+  word max_col;
+
+  if (offset+cursor_x > num_lines || screen[offset+cursor_x]==NULL)
+  {
+    if (cursor_y < 1)
+      cursor_y=1;
+    return;
+  }
+
+  max_col=MagnEt_LineVisibleLen(screen[offset+cursor_x])+1;
+
+  if (max_col > usrwidth)
+    max_col=usrwidth;
+
+  if (cursor_y < 1)
+    cursor_y=1;
+  else if (cursor_y > max_col)
+    cursor_y=max_col;
+}
+
+void MagnEt_DrawFooterDivider(void)
+{
+  int col;
+
+  Goto(MAGNET_DIVIDER_ROW, 1);
+  PutsForce("|br");
+
+  for (col=0; col < usrwidth; col++)
+    Putc('\xC4');
+
+  Puts(CLEOL);
+}
+
+
+void MagnEt_ClearContextLine(void)
+{
+  Goto(MAGNET_CONTEXT_ROW, 1);
+  Puts(CLEOL);
+}
+
 void Redraw_Text(void)
 {
   word x;
@@ -51,15 +451,26 @@ void Redraw_Text(void)
 
 void Redraw_StatusLine(void)
 {
-  Goto(usrlen, 1);
+  char linebuf[8];
+  char colbuf[8];
+
+  redraw_statusline_active=TRUE;
+  MagnEt_ClampCursor();
+
+  snprintf(linebuf, sizeof(linebuf), "%u", offset + cursor_x);
+  snprintf(colbuf, sizeof(colbuf), "%u", cursor_y);
+
+  Goto(MAGNET_STATUS_ROW, 1);
 
   LangPrintfForce(max_status,
              mmsg->to,
-             mmsg->subj+(strnicmp(mmsg->subj, "Re:", 3)==0 ? 4 : 0));
+             mmsg->subj+(strnicmp(mmsg->subj, "Re:", 3)==0 ? 4 : 0),
+             linebuf,
+             colbuf);
 
   if (insert)
   {
-    Goto(usrlen, usrwidth-13);
+    Goto(MAGNET_STATUS_ROW, usrwidth-13);
 
     PutsForce(status_insert);
   }
@@ -69,7 +480,8 @@ void Redraw_StatusLine(void)
   Puts(CLEOL);
   EMIT_MSG_TEXT_COL();
 
-  Goto(cursor_x, cursor_y);
+  GOTO_TEXT(cursor_x, cursor_y);
+  redraw_statusline_active=FALSE;
 }
 
 
@@ -82,34 +494,40 @@ void Redraw_Quote(void)
 
 void Update_Line(word cx, word cy, word inc, word update_cursor)
 {
+  word display_row;
+
   /* Only update lines which are on-screen! */
 
   if (cx > offset && cx < offset+usrlen)
   {
     if (!Mdm_keyp() || cx==cursor_x+offset)
     {
-      /* If we have to save and move */
-
-      if (cx-offset != cursor_x || cy != cursor_y)   
-        Goto(cx-offset,cy);
+      display_row=cx-offset;
 
       if (cx != max_lines)
       {
-        if (cx > max_lines || screen[cx]==NULL || (cx <= num_lines &&
-            screen[cx][cy]=='\0' && screen[cx][1]))
-        {
-/*          Putc(' '); */
-        }
-        else Printf("%0.*s",usrwidth-cy,screen[cx]+cy);
-      }
-      else LangPrintfForce(end_widget, msg_text_col);
+        GOTO_TEXT(display_row,1);
+        EMIT_MSG_TEXT_COL();
 
-      if (cx >= max_lines || screen[cx]==NULL ||
-          (cy+strlen(screen[cx]+cy) <= usrwidth))
+        if (cx > max_lines || screen[cx]==NULL)
+        {
+          Puts(CLEOL);
+        }
+        else
+        {
+          MagnEt_RenderEditorLine(screen[cx]);
+          Puts(CLEOL);
+        }
+      }
+      else
+      {
+        GOTO_TEXT(display_row,1);
+        LangPrintfForce(end_widget, msg_text_col);
         Puts(CLEOL);
+      }
 
       if (update_cursor)
-        Goto(cx-offset,cy+inc);
+        GOTO_TEXT(display_row,cy+inc);
 
       if ((word)update_table[cx] >= cy)
         update_table[cx]=FALSE;
@@ -152,7 +570,7 @@ int Word_Wrap(word mode)
       /* Put the cursor here, unless we're told not to move it */
       
       if (mode != MODE_NOUPDATE)
-        Goto(cursor_x, cursor_y-(usrwidth-col));
+        GOTO_TEXT(cursor_x, cursor_y-(usrwidth-col));
 
       /* Update virtual cursor position to reflect placement of new word */
       
@@ -303,8 +721,7 @@ int Word_Wrap(word mode)
       
       /* Put cursor in final spot */
 
-      if (cx < TermLength())
-        Goto(cx,cursor_y);
+      GOTO_TEXT(cx,cursor_y);
 
       /* Indicate that this line was updated */
       update_table[offset+cursor_x]=TRUE;
@@ -349,11 +766,12 @@ void Toggle_Insert(void)
 {
   insert=(char)!insert;
 
-  Goto(usrlen,usrwidth-13);
+  Goto(MAGNET_STATUS_ROW,usrwidth-13);
 
   PutsForce(insert ? status_insert : insrt_ovrwrt);
 
-  Goto(cursor_x, cursor_y);
+  MagnEt_ClampCursor();
+  GOTO_TEXT(cursor_x, cursor_y);
   EMIT_MSG_TEXT_COL();
 }
 
@@ -363,17 +781,16 @@ void Toggle_Insert(void)
 
 void Update_Position(void)
 {
-#ifdef UPDATE_POSITION
+  MagnEt_ClampCursor();
+
   if (! Mdm_keyp() && !skip_update)
   {
     pos_to_be_updated=FALSE;
 
-    Goto(usrlen,70);
-    Printf("%u:%u  ",offset+cursor_x,cursor_y);
-    Goto(cursor_x,cursor_y);
+    if (!redraw_statusline_active)
+      Redraw_StatusLine();
   }
   else pos_to_be_updated=TRUE;
-#endif
 
 #ifdef OS_2
 #ifdef TTYVIDEO
@@ -403,7 +820,10 @@ void Fix_MagnEt(void)
   if (!(usr.bits2 & BITS2_CLS))
     NoFF_CLS();
 
+  MagnEt_DrawHeader();
   Redraw_Text();
+  MagnEt_DrawFooterDivider();
+  MagnEt_ClearContextLine();
   Redraw_StatusLine();
   Redraw_Quote();
 
@@ -434,7 +854,7 @@ void Do_Update(void)
       if (update_table[x])
       {
         if (updated && offset+cursor_x==x)
-          Goto(cursor_x,cursor_y);
+          GOTO_TEXT(cursor_x,cursor_y);
 
         Update_Line(x, 1, 0, FALSE);
         updated=TRUE;
@@ -450,7 +870,7 @@ void Do_Update(void)
 
       if (last_update || offset != lastofs)
       {
-        Goto(x-offset, 1);
+        GOTO_TEXT(x-offset, 1);
         Puts(CLEOL);
       }
     }
@@ -460,7 +880,7 @@ void Do_Update(void)
 
   if (updated)
   {
-    Goto(cursor_x, cursor_y);
+    GOTO_TEXT(cursor_x, cursor_y);
     vbuf_flush();
   }
 }

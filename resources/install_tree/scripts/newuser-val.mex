@@ -1,0 +1,439 @@
+#include <max.mh>
+#include <maxui.mh>
+
+string bool_value(int: v)
+{
+  if (v)
+    return "Yes";
+  return "No";
+}
+
+int is_yes(string: s)
+{
+  return strupper(s) = "YES";
+}
+
+string sex_value(char: s)
+{
+  if (s = SEX_MALE)
+    return "Male";
+  if (s = SEX_FEMALE)
+    return "Female";
+  return "Nondisclosed";
+}
+
+char sex_code(string: s)
+{
+  if (strupper(s) = "MALE")
+    return SEX_MALE;
+  if (strupper(s) = "FEMALE")
+    return SEX_FEMALE;
+  return SEX_UNKNOWN;
+}
+
+string dob_digits(string: s)
+{
+  if (strlen(s) >= 10)
+    return substr(s, 1, 4) + substr(s, 6, 2) + substr(s, 9, 2);
+  return "";
+}
+
+string dob_value(string: s)
+{
+  if (strlen(s) = 8)
+    return substr(s, 1, 4) + "." + substr(s, 5, 2) + "." + substr(s, 7, 2);
+  return "";
+}
+
+void draw_screen(int: show_rip)
+{
+  int: shade;
+  int: shadow;
+  int: border;
+  int: inner;
+  int: title_bg;
+  int: title_tx;
+  int: sect_ln;
+  int: sect_tx;
+  int: label;
+  int: field;
+  int: ftr_key;
+  int: ftr_txt;
+
+  shade    := ui_make_attr(UI_BLUE, UI_BLACK);
+  shadow   := ui_make_attr(UI_DKGRAY, UI_BLACK);
+  border   := ui_make_attr(UI_LCYAN, UI_BLACK);
+  inner    := ui_make_attr(UI_CYAN, UI_BLACK);
+  title_bg := ui_make_attr(UI_LCYAN, UI_BLUE);
+  title_tx := ui_make_attr(UI_YELLOW, UI_BLUE);
+  sect_ln  := ui_make_attr(UI_CYAN, UI_BLACK);
+  sect_tx  := ui_make_attr(UI_WHITE, UI_BLACK);
+  label    := ui_make_attr(UI_CYAN, UI_BLACK);
+  field    := ui_make_attr(UI_WHITE, UI_BLUE);
+  ftr_key  := ui_make_attr(UI_LCYAN, UI_BLACK);
+  ftr_txt  := ui_make_attr(UI_DKGRAY, UI_BLACK);
+
+  print(AVATAR_CLS);
+
+  // Layer 1: Outer shading (char 176 = light shade)
+  ui_fill_rect(1, 1, 78, 22, 176, shade);
+
+  // Layer 2: Drop shadow (char 177 = medium shade)
+  ui_fill_rect(3, 77, 2, 20, 177, shadow);
+  ui_fill_rect(22, 5, 74, 1, 177, shadow);
+
+  // Layer 3: Double-line frame
+  ui_fill_rect(2, 3, 1, 1, 201, border);
+  ui_fill_rect(2, 4, 72, 1, 205, border);
+  ui_fill_rect(2, 76, 1, 1, 187, border);
+  ui_fill_rect(3, 3, 1, 18, 186, border);
+  ui_fill_rect(3, 76, 1, 18, 186, border);
+
+  // Title separator row 4
+  ui_fill_rect(4, 3, 1, 1, 204, border);
+  ui_fill_rect(4, 4, 72, 1, 205, border);
+  ui_fill_rect(4, 76, 1, 1, 185, border);
+
+  // Footer separator row 19
+  ui_fill_rect(19, 3, 1, 1, 204, border);
+  ui_fill_rect(19, 4, 72, 1, 205, border);
+  ui_fill_rect(19, 76, 1, 1, 185, border);
+
+  // Bottom border row 21
+  ui_fill_rect(21, 3, 1, 1, 200, border);
+  ui_fill_rect(21, 4, 72, 1, 205, border);
+  ui_fill_rect(21, 76, 1, 1, 188, border);
+
+  // Layer 4: Interior clear
+  ui_fill_rect(3, 4, 72, 1, ' ', title_bg);
+  ui_fill_rect(5, 4, 72, 14, ' ', inner);
+  ui_fill_rect(20, 4, 72, 1, ' ', inner);
+
+  // Layer 5: Title text (row 3, centered)
+  ui_write_padded(3, 14, 52, "N E W  U S E R  Q U E S T I O N N A I R E", title_tx);
+
+  // Layer 6: Section dividers
+  ui_fill_rect(6, 5, 3, 1, 196, sect_ln);
+  ui_write_padded(6, 9, 10, " Personal ", sect_tx);
+  ui_fill_rect(6, 19, 55, 1, 196, sect_ln);
+
+  ui_fill_rect(14, 5, 3, 1, 196, sect_ln);
+  ui_write_padded(14, 9, 10, " Terminal ", sect_tx);
+  ui_fill_rect(14, 19, 55, 1, 196, sect_ln);
+
+  // Layer 7: Field labels — right-aligned, colon@17 for left col, colon@47 for right col
+  ui_write_padded(8, 8, 10, "Real Name:", label);
+  ui_write_padded(9, 13, 5, "City:", label);
+  ui_write_padded(10, 12, 6, "Alias:", label);
+  ui_write_padded(11, 7, 11, "Home Phone:", label);
+  ui_write_padded(11, 37, 11, "Data Phone:", label);
+  ui_write_padded(12, 11, 7, "Gender:", label);
+  ui_write_padded(12, 37, 11, "Birth Date:", label);
+  ui_write_padded(16, 9, 5, "ANSI:", label);
+  ui_write_padded(16, 22, 15, "Full-screen Ed:", label);
+  if (show_rip)
+    ui_write_padded(16, 45, 4, "RIP:", label);
+  else
+  {
+    int: dim;
+    dim := ui_make_attr(UI_DKGRAY, UI_BLACK);
+    ui_write_padded(16, 45, 13, "RIP: Disabled", dim);
+  }
+  ui_write_padded(17, 7, 7, "IBM-PC:", label);
+  ui_write_padded(17, 22, 8, "Hotkeys:", label);
+
+  // Layer 8: Field backgrounds — 1 space after label colon
+  ui_fill_rect(8, 19, 22, 1, ' ', field);
+  ui_fill_rect(9, 19, 22, 1, ' ', field);
+  ui_fill_rect(10, 19, 22, 1, ' ', field);
+  ui_fill_rect(11, 19, 14, 1, ' ', field);
+  ui_fill_rect(11, 49, 14, 1, ' ', field);
+  ui_fill_rect(12, 19, 13, 1, ' ', field);
+  ui_fill_rect(12, 49, 10, 1, ' ', field);
+  ui_fill_rect(16, 15, 3, 1, ' ', field);
+  ui_fill_rect(16, 38, 3, 1, ' ', field);
+  if (show_rip)
+    ui_fill_rect(16, 50, 3, 1, ' ', field);
+  // else: disabled label already drawn - no field background needed
+  ui_fill_rect(17, 15, 3, 1, ' ', field);
+  ui_fill_rect(17, 31, 3, 1, ' ', field);
+
+  // Layer 9: Footer help line
+  ui_write_padded(20, 13, 10, "Tab/Arrows", ftr_key);
+  ui_write_padded(20, 24, 5, "Move", ftr_txt);
+  ui_write_padded(20, 33, 5, "Space", ftr_key);
+  ui_write_padded(20, 39, 7, "Toggle", ftr_txt);
+  ui_write_padded(20, 50, 6, "Ctrl-S", ftr_key);
+  ui_write_padded(20, 57, 5, "Save", ftr_txt);
+  ui_write_padded(20, 66, 3, "Esc", ftr_key);
+  ui_write_padded(20, 70, 4, "Exit", ftr_txt);
+}
+
+int main()
+{
+  array [1..12] of struct ui_form_field: fields;
+  struct ui_form_style: fs;
+  int: rc;
+  unsigned long: answered_mask;
+  int: detected_ansi;
+  int: detected_rip;
+  char: wasvideo;
+  char: wasrip;
+
+  wasvideo := usr.video;
+  wasrip := usr.rip;
+
+  detected_rip := usr.rip;
+  if (detected_rip = 0)
+    detected_rip := rip_detect();
+
+  detected_ansi := (usr.video <> VIDEO_TTY);
+  if (detected_ansi = 0)
+    detected_ansi := ansi_detect();
+
+  if (detected_rip = 0 and detected_ansi = 0)
+    return 0;
+
+  if (usr.video = VIDEO_TTY)
+    usr.video := VIDEO_ANSI;
+  if (detected_rip)
+    usr.rip := 1;
+
+  ui_form_style_default(fs);
+  fs.label_attr := ui_make_attr(UI_CYAN, UI_BLACK);
+  fs.normal_attr := ui_make_attr(UI_WHITE, UI_BLUE);
+  fs.focus_attr := ui_make_attr(UI_YELLOW, UI_RED);
+  fs.wrap := 1;
+  fs.required_msg := "Real name is required";
+  fs.required_x := 19;
+  fs.required_y := 23;
+  fs.required_attr := ui_make_attr(UI_LRED, UI_BLACK);
+
+  fields[1].name := "real_name";
+  fields[1].label := "";
+  fields[1].x := 19;
+  fields[1].y := 8;
+  fields[1].width := 22;
+  fields[1].max_len := 22;
+  fields[1].field_type := UI_FIELD_TEXT;
+  fields[1].hotkey := 'n';
+  fields[1].required := 1;
+  fields[1].value := usr.name;
+
+  fields[2].name := "city";
+  fields[2].label := "";
+  fields[2].x := 19;
+  fields[2].y := 9;
+  fields[2].width := 22;
+  fields[2].max_len := 22;
+  fields[2].field_type := UI_FIELD_TEXT;
+  fields[2].hotkey := 'c';
+  fields[2].required := 0;
+  fields[2].value := usr.city;
+
+  fields[3].name := "alias";
+  fields[3].label := "";
+  fields[3].x := 19;
+  fields[3].y := 10;
+  fields[3].width := 22;
+  fields[3].max_len := 22;
+  fields[3].field_type := UI_FIELD_TEXT;
+  fields[3].hotkey := 'a';
+  fields[3].required := 0;
+  fields[3].value := usr.alias;
+
+  fields[4].name := "phone";
+  fields[4].label := "";
+  fields[4].x := 19;
+  fields[4].y := 11;
+  fields[4].width := 14;
+  fields[4].max_len := 14;
+  fields[4].field_type := UI_FIELD_TEXT;
+  fields[4].hotkey := 'h';
+  fields[4].required := 0;
+  fields[4].value := usr.phone;
+
+  fields[5].name := "dataphone";
+  fields[5].label := "";
+  fields[5].x := 49;
+  fields[5].y := 11;
+  fields[5].width := 14;
+  fields[5].max_len := 14;
+  fields[5].field_type := UI_FIELD_TEXT;
+  fields[5].hotkey := 'd';
+  fields[5].required := 0;
+  fields[5].value := usr.dataphone;
+
+  fields[6].name := "gender";
+  fields[6].label := "";
+  fields[6].x := 19;
+  fields[6].y := 12;
+  fields[6].width := 13;
+  fields[6].max_len := 13;
+  fields[6].field_type := UI_FIELD_OPTION;
+  fields[6].hotkey := 'g';
+  fields[6].required := 0;
+  fields[6].options[1] := "Male";
+  fields[6].options[2] := "Female";
+  fields[6].options[3] := "Nondisclosed";
+  fields[6].option_count := 3;
+  fields[6].value := sex_value(usr.sex);
+
+  fields[7].name := "dob";
+  fields[7].label := "";
+  fields[7].x := 49;
+  fields[7].y := 12;
+  fields[7].width := 10;
+  fields[7].max_len := 8;
+  fields[7].field_type := UI_FIELD_FORMAT;
+  fields[7].hotkey := 'b';
+  fields[7].required := 0;
+  fields[7].format_mask := "0000.00.00";
+  fields[7].value := dob_digits(usr.dob);
+
+  fields[8].name := "ansi";
+  fields[8].label := "";
+  fields[8].x := 15;
+  fields[8].y := 16;
+  fields[8].width := 3;
+  fields[8].max_len := 3;
+  fields[8].field_type := UI_FIELD_OPTION;
+  fields[8].hotkey := 'i';
+  fields[8].required := 0;
+  fields[8].options[1] := "Yes";
+  fields[8].options[2] := "No";
+  fields[8].option_count := 2;
+  fields[8].value := bool_value((usr.video <> VIDEO_TTY) or detected_ansi or detected_rip);
+
+  fields[9].name := "rip";
+  fields[9].label := "";
+  fields[9].x := 50;
+  fields[9].y := 16;
+  fields[9].width := 3;
+  fields[9].max_len := 3;
+  fields[9].field_type := UI_FIELD_OPTION;
+  fields[9].hotkey := 'r';
+  fields[9].required := 0;
+  fields[9].options[1] := "Yes";
+  fields[9].options[2] := "No";
+  fields[9].option_count := 2;
+  fields[9].value := bool_value(usr.rip or detected_rip);
+
+  fields[10].name := "maxed";
+  fields[10].label := "";
+  fields[10].x := 38;
+  fields[10].y := 16;
+  fields[10].width := 3;
+  fields[10].max_len := 3;
+  fields[10].field_type := UI_FIELD_OPTION;
+  fields[10].hotkey := 'm';
+  fields[10].required := 0;
+  fields[10].options[1] := "Yes";
+  fields[10].options[2] := "No";
+  fields[10].option_count := 2;
+  fields[10].value := bool_value(usr.fsr and (usr.bored = 0));
+
+  fields[11].name := "ibmpc";
+  fields[11].label := "";
+  fields[11].x := 15;
+  fields[11].y := 17;
+  fields[11].width := 3;
+  fields[11].max_len := 3;
+  fields[11].field_type := UI_FIELD_OPTION;
+  fields[11].hotkey := 'p';
+  fields[11].required := 0;
+  fields[11].options[1] := "Yes";
+  fields[11].options[2] := "No";
+  fields[11].option_count := 2;
+  fields[11].value := bool_value(usr.ibmchars);
+
+  fields[12].name := "hotkeys";
+  fields[12].label := "";
+  fields[12].x := 31;
+  fields[12].y := 17;
+  fields[12].width := 3;
+  fields[12].max_len := 3;
+  fields[12].field_type := UI_FIELD_OPTION;
+  fields[12].hotkey := 'k';
+  fields[12].required := 0;
+  fields[12].options[1] := "Yes";
+  fields[12].options[2] := "No";
+  fields[12].option_count := 2;
+  fields[12].value := bool_value(usr.hotkeys);
+
+  if (detected_rip = 0)
+    fields[9].width := 0;
+
+  draw_screen(detected_rip);
+  rc := ui_form_run(fields, 12, fs);
+
+  if (rc <> 1)
+  {
+    id.newuser_answered_mask := 0;
+    usr.video := wasvideo;
+    usr.rip := wasrip;
+    print(AVATAR_CLS);
+    return 0;
+  }
+
+  usr.name := fields[1].value;
+  usr.city := fields[2].value;
+  usr.alias := fields[3].value;
+  usr.phone := fields[4].value;
+  usr.dataphone := fields[5].value;
+  usr.sex := sex_code(fields[6].value);
+  usr.dob := dob_value(fields[7].value);
+
+  if (is_yes(fields[9].value))
+  {
+    usr.rip := 1;
+    usr.video := VIDEO_ANSI;
+    usr.fsr := 1;
+    usr.bored := 0;
+    usr.hotkeys := 1;
+  }
+  else
+  {
+    usr.rip := 0;
+    if (is_yes(fields[8].value))
+    {
+      usr.video := VIDEO_ANSI;
+      if (is_yes(fields[10].value))
+      {
+        usr.fsr := 1;
+        usr.bored := 0;
+      }
+      else
+      {
+        usr.fsr := 0;
+        usr.bored := 1;
+      }
+    }
+    else
+    {
+      usr.video := VIDEO_TTY;
+      usr.bored := 1;
+      usr.fsr := 0;
+    }
+
+    usr.hotkeys := is_yes(fields[12].value);
+  }
+
+  usr.ibmchars := is_yes(fields[11].value);
+  answered_mask := NEWUSER_ANSWER_NAME +
+                   NEWUSER_ANSWER_CITY +
+                   NEWUSER_ANSWER_ALIAS +
+                   NEWUSER_ANSWER_PHONE +
+                   NEWUSER_ANSWER_DATAPHONE +
+                   NEWUSER_ANSWER_SEX +
+                   NEWUSER_ANSWER_DOB +
+                   NEWUSER_ANSWER_ANSI +
+                   NEWUSER_ANSWER_RIP +
+                   NEWUSER_ANSWER_FSR +
+                   NEWUSER_ANSWER_IBMCHARS +
+                   NEWUSER_ANSWER_HOTKEYS;
+  id.newuser_answered_mask := answered_mask;
+
+  print(AVATAR_CLS);
+  return 0;
+}

@@ -88,6 +88,54 @@ void ui_form_style_default(ui_form_style_t *style)
   style->required_attr = 0x0c;   /* light red */
 }
 
+static int near ui_form_option_index(const ui_form_field_t *f)
+{
+  int i;
+
+  if (!f || f->field_type != UI_FIELD_OPTION || !f->options || f->option_count < 1)
+    return -1;
+
+  if (!f->value || !*f->value)
+    return 0;
+
+  for (i = 0; i < f->option_count; i++)
+    if (f->options[i] && strcmp(f->options[i], f->value) == 0)
+      return i;
+
+  return -1;
+}
+
+static void near ui_form_option_set(ui_form_field_t *f, int idx)
+{
+  const char *src;
+
+  if (!f || f->field_type != UI_FIELD_OPTION || !f->options || f->option_count < 1 ||
+      !f->value || f->value_cap < 1)
+    return;
+
+  while (idx < 0)
+    idx += f->option_count;
+
+  idx %= f->option_count;
+  src = f->options[idx] ? f->options[idx] : "";
+  strncpy(f->value, src, (size_t)(f->value_cap - 1));
+  f->value[f->value_cap - 1] = 0;
+}
+
+static void near ui_form_option_step(ui_form_field_t *f, int delta)
+{
+  int idx;
+
+  if (!f || f->field_type != UI_FIELD_OPTION || !f->options || f->option_count < 1)
+    return;
+
+  idx = ui_form_option_index(f);
+  if (idx < 0)
+    idx = 0;
+
+  ui_form_option_set(f, idx + delta);
+}
+
 /**
  * @brief Calculate the horizontal center of a form field.
  *
@@ -157,6 +205,14 @@ static void near ui_form_draw_field(const ui_form_field_t *f, int focused, const
     int len = (int)strlen(f->value);
     for (i = 0; i < len && i < f->width; i++)
       Putc('*');
+    for (; i < f->width; i++)
+      Putc(' ');
+  }
+  else if (f->field_type == UI_FIELD_OPTION && f->options && f->option_count > 0)
+  {
+    const char *val = (f->value && *f->value) ? f->value : f->options[0];
+    for (i = 0; i < f->width && val && val[i]; i++)
+      Putc(val[i]);
     for (; i < f->width; i++)
       Putc(' ');
   }
@@ -395,6 +451,9 @@ static int near ui_form_field_required_ok(const ui_form_field_t *f)
     if (!*f->value)
       return 0;
   }
+
+  if (f->field_type == UI_FIELD_OPTION)
+    return f->option_count > 0;
   
   if (f->field_type == UI_FIELD_FORMAT && f->format_mask)
   {
@@ -493,7 +552,9 @@ static int near ui_form_edit_field(ui_form_field_t *f, const ui_form_style_t *st
   edit_style.flags = UI_EDIT_FLAG_FIELD_MODE;
   edit_style.format_mask = NULL;
   
-  if (f->field_type == UI_FIELD_MASKED)
+  if (f->field_type == UI_FIELD_OPTION)
+    return UI_EDIT_ACCEPT;
+  else if (f->field_type == UI_FIELD_MASKED)
     edit_style.flags |= UI_EDIT_FLAG_MASK;
   else if (f->field_type == UI_FIELD_FORMAT && f->format_mask)
     edit_style.format_mask = f->format_mask;
@@ -524,6 +585,12 @@ int ui_form_run(ui_form_field_t *fields, int field_count, const ui_form_style_t 
   
   if (!fields || field_count < 1 || !style)
     return -1;
+
+  for (rc = 0; rc < field_count; rc++)
+    if (fields[rc].field_type == UI_FIELD_OPTION &&
+        fields[rc].options && fields[rc].option_count > 0 &&
+        ui_form_option_index(&fields[rc]) < 0)
+      ui_form_option_set(&fields[rc], 0);
   
   ui_form_hide_cursor(&did_hide_cursor);
 
@@ -610,6 +677,12 @@ int ui_form_run(ui_form_field_t *fields, int field_count, const ui_form_style_t 
       /* Cancel */
       ret = 0;
       break;
+    }
+    else if (ch == ' ' && fields[selected].field_type == UI_FIELD_OPTION)
+    {
+      ui_form_option_step(&fields[selected], 1);
+      ui_form_clear_required_splash(style);
+      ui_form_draw_field(&fields[selected], 1, style);
     }
     else if (ch >= 32 && ch < 127)
     {

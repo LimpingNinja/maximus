@@ -34,8 +34,23 @@ They require an ANSI-capable terminal (most modern terminals support these).
 | `[K`    | Clear from cursor to end of line         |
 | `[0`    | Hide cursor                              |
 | `[1`    | Show cursor                              |
+| `[<`    | Move cursor to beginning of line (col 1) |
+| `[>`    | Move cursor to end of line (last column) |
+| `[H`    | Move cursor to center of line            |
 
 **Note:** `##` is always two digits. To move to column 5, use `[X05`.
+
+> **Info:** Anywhere a cursor code expects `##`, you can substitute an
+> `|XY` info code that resolves to a number. For example, `|[X|TC` moves
+> the cursor to the center column, and `|[C|TH` moves forward by half
+> the screen width. See
+> [terminal geometry codes]({{ site.baseurl }}{% link mci-info-codes.md %}#terminal-geometry)
+> for useful numeric codes.
+
+The `|[<`, `|[>`, and `|[H` codes use the user's terminal width to
+determine the target column. If the width is unset, **80 columns** is
+assumed. `|[H` uses `(width + 1) / 2` — the same formula as the `|TC`
+info code.
 
 ---
 
@@ -47,6 +62,40 @@ They require an ANSI-capable terminal (most modern terminals support these).
 | `\|RA`  | Restore cursor position and attributes   |
 | `\|SS`  | Save entire screen                       |
 | `\|RS`  | Restore entire screen                    |
+
+---
+
+## Display File Embedding
+
+| Code           | Description                                   |
+|----------------|-----------------------------------------------|
+| `\|DF{path}`   | Display a `.bbs`/`.ans` file or run a MEX script inline |
+
+The `|DF{path}` code embeds a display file (or MEX script) directly
+into a language string or prompt.  When the MCI engine encounters this
+code, it outputs any preceding text, then calls the display-file
+subsystem for the given path, and finally continues with any text that
+follows.
+
+- **Display files** — the path is resolved the same way as a menu
+  `Display_File` command: extensions (`.bbs`, `.ans`) are tried
+  automatically and the file contents are rendered with full MCI
+  processing.
+- **MEX scripts** — prefix the path with `:` to invoke a MEX script
+  instead, e.g. `|DF{:my_script}`.
+- If no closing `}` is found, the `|` is emitted as a literal
+  character.
+
+```
+|DF{display/screens/welcome}       show welcome.bbs / welcome.ans
+|DF{:login_script}                 run login_script.mex
+|14Header |DF{display/hdr/bar}|14 Footer   embed a file between text
+```
+
+> **Note:** `|DF{path}` is handled at the output layer, before MCI
+> expansion of the surrounding text.  It cannot be used as a value for
+> format operators (`$R`, `$C`, etc.) — it is a side-effect code, not
+> a value producer.
 
 ---
 

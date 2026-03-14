@@ -1,0 +1,20 @@
+# Theme registry — defines available visual themes
+# Each theme has: index (1-15), short_name (filesystem-safe), name (display), lang (language file or "" to inherit)
+# Index 0 is reserved: usr.theme = 0 means "no theme set" and resolves to default_theme.
+# Maximum 16 themes supported (indices 1-15 usable)
+
+[general]
+default_theme = "maxng"       # short_name of the default theme
+default_lang = "english"      # system default language file basename
+
+[[theme]]
+index = 1
+short_name = "max"
+name = "Maximus Classic"
+lang = ""                     # empty = inherit default_lang
+
+[[theme]]
+index = 2
+short_name = "maxng"
+name = "Maximus NG Skin"
+lang = ""                     # empty = inherit default_lang

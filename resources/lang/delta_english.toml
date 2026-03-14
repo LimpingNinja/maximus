@@ -1045,10 +1045,13 @@ edlist_quit = "|prQ|tx)uit\n\n|hi"
 e_numch = { text = "|okYou can put as many as |!1 characters\nhere.\n\n|hi", params = [{name = "max_chars", type = "string", desc = "Maximum characters allowed in editor", default = "4000"}] }
 
 # --- Batch 6: Section headers / status bars (|14|17 ? |pr|tb) ---
-max_status = { text = "|pr|tb|[K^Z=save|hi|tb  To: $T20|!1, Re: $T27|!2", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}] }
+max_status = { text = "|pr|tb|[K^Z=save|hi|tb  To: $T14|!1, Re: $T16|!2  |sy|tbL:|!3 C:|!4", params = [{name = "recipient", type = "string", desc = "Message recipient (To: field)", default = "All"}, {name = "subject", type = "string", desc = "Message subject (Re: field)", default = "Hello World"}, {name = "line", type = "string", desc = "Current editor line number", default = "1"}, {name = "column", type = "string", desc = "Current editor column number", default = "1"}] }
 status_insert = "|sy|tb Insert"
 max_not_reply = "|pr|tb|[K\aNot a reply"
 max_no_understand = { text = "|hi|tb|[K\aI don't understand.  |!1", flags = ["mex"], params = [{name = "ck_for_help", type = "string", desc = "Help hint text", default = "Type ? for help"}] }
+color_selector_prompt = "|pr|tbColor code (00-23): |hi"
+color_selector_preview = { text = "|pr|tbPreview: |!1 Sample|pr|tb", params = [{name = "color_code", type = "string", desc = "Numeric pipe color code", default = "|07"}] }
+color_selector_preview_box = "|br\xDA\xC4\xC4 |hi Color Grid |br\xC4\xC4\xC4\xC4\xC4\xC4\xBF\n|br\xB3 |0000 |0101 |0202 |0303 |0404 |0505 |br\xB3\n|br\xB3 |0606 |0707 |0808 |0909 |1010 |1111 |br\xB3\n|br\xB3 |1212 |1313 |1414 |1515 |1616 |1717|cd |br\xB3\n|br\xB3 |1818|cd |1919|cd |2020|cd |2121|cd |2222|cd |2323|cd |br\xB3\n|br\xC0\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xC4\xD9"
 
 # --- Batch 7: Info / body text (|07 ? |tx) ---
 bed_to = { text = "|tx\nTo: |pr|!1\n\n|cd", params = [{name = "recipient", type = "string", desc = "Message recipient (plain)", default = "All"}] }
@@ -1319,6 +1322,12 @@ trk_remalias_which = "|prRemove which alias (?=list): |in"
 type_keys_to_toggle = "|pr\nSysOp: Type letters/numbers of keys to toggle.  <enter> to save changes, or\n<esc> to restore old keys.\n\n|cd"
 
 [maximusng-editor]
+# Editor header — 2-line bar rendered above the text area; height is auto-calculated.
+# Line 1: black outer borders with blue-filled subject bar.
+# Line 2: full horiz rule with overlaid #/msgnum block and centered area block.
+# |!1 = message area, |!2 = message number, |!3 = from, |!4 = to, |!5 = subject, |!6 = reply-to message number
+header = { text = "|cd|br\xB3|17|prSUBJECT: |hi|!5$X|TW |[>|cd|br\xB3\n|cd|br$X|TW\xC4|[<\xB4 |ac# |hi$L05|#2 |cd|br\xC3|[H|[D12\xC3 |hi$R20|#1 |cd|br\xB4|[>|cd|br\xB4", params = [{name = "message_area", type = "string", desc = "Current message area name", default = "Retro Gaming"}, {name = "message_number", type = "string", desc = "Displayed editor message number (existing message number or next assigned number for new entry)", default = "190"}, {name = "from", type = "string", desc = "Message sender name", default = "Sysop"}, {name = "to", type = "string", desc = "Message recipient name", default = "All"}, {name = "subject", type = "string", desc = "Message subject line", default = "Retro LockDown"}, {name = "reply_to", type = "string", desc = "Original message number being replied to when applicable", default = "189"}] }
+spell_unknown_word = { text = "|erUnknown: |hi\"|!1\"|cd", params = [{name = "word", type = "string", desc = "Misspelled word from the editor buffer", default = "teh"}] }
 # Quote popup window chrome
 # |!1 = padding repeat count (calculated by C code)
 # $D|!1\xC4 = repeat ─ character |!1 times
